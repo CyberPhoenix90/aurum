@@ -1,0 +1,27 @@
+{
+	"name": "aurum",
+	"version": "1.0.0",
+	"description": "Fast and concise declarative DOM rendering library for javascript",
+	"main": "dist/aurum.js",
+	"typings": "dist/aurum.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"watch": "tsc -w"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CyberPhoenix90/aurum"
+	},
+	"keywords": [
+		"web-components",
+		"webcomponents",
+		"DOM",
+		"rendering"
+	],
+	"author": "Joao Santos (CyberPhoenix)",
+	"license": "MIT",
+	"devDependencies": {
+		"typescript": "^3.7.2"
+	},
+	"dependencies": {}
+}

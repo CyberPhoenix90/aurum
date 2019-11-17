@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "allowUnusedLabels": false,
+        "alwaysStrict": true,
+        "sourceRoot": "src",
+        "module": "amd",
+        "newLine": "LF",
+        "target": "es2019",
+        "declarationMap": true,
+        "declaration": true,
+        "inlineSources": true,
+        "sourceMap": true,
+        "watch": false,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "noEmitOnError": true,
+        "removeComments": true,
+        "outFile": "dist/aurum.js",
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node"
+    },
+    "include": [
+        "src/**/*.ts"
+    ]
+}
