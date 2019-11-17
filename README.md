@@ -1,5 +1,8 @@
-# aurum
-Fast and concise declarative DOM rendering library for javascript
+<p align="center">
+  <img src="https://i.imgur.com/Ru8maJS.png" width="100" alt="Aurum">
+</p>
+
+# Fast and concise declarative DOM rendering library for javascript
 
 Aurum is a DOM rendering library inspired by react and angular. 
 In Aurum you define your DOM using JSX and each thing that can change, be it attributes or inner text can be assigned to a data source.
