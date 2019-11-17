@@ -1,6 +1,6 @@
 {
 	"name": "aurum",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurum.js",
 	"typings": "dist/aurum.d.ts",
