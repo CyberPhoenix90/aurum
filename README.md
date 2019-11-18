@@ -61,4 +61,6 @@ import {Aurum, Div} from 'aurumjs'
 Aurum.attach((<Div>Hello Aurum</Div>), document.body)
 ```
 
+Simple TODO app in aurum: https://codepen.io/cyberphoenix90/pen/LYYMwVr
+
 Better examples, proper documentation and benchmarks will be added in the near future.
