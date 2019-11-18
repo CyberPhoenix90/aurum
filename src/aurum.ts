@@ -1,4 +1,3 @@
-export * from './jsx/jsx_factory';
 export * from './stream/array_data_source';
 export * from './stream/data_source';
 export * from './stream/event_emitter';
@@ -12,5 +11,4 @@ export * from './nodes/input';
 export * from './nodes/li';
 export * from './nodes/span';
 export * from './nodes/style';
-export * from './nodes/template';
 export * from './nodes/ul';

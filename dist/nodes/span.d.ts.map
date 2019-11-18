@@ -1,0 +1,1 @@
+{"version":3,"file":"span.d.ts","sourceRoot":"src/","sources":["nodes/span.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,iBAAiB,EAAE,MAAM,iBAAiB,CAAC;AAElE,MAAM,WAAW,SAAU,SAAQ,iBAAiB;CAAG;AAEvD,qBAAa,IAAK,SAAQ,YAAY;gBACzB,KAAK,EAAE,SAAS;CAG5B"}

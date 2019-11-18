@@ -1,7 +1,6 @@
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DataDrain } from '../utilities/common';
-import { Template } from './template';
 import { ArrayDataSource } from '../stream/array_data_source';
 
 export type StringSource = string | DataSource<string>;
@@ -323,5 +322,23 @@ export abstract class AurumElement {
 			const value: string = dataSegments.reduce<string>((p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c), '');
 			this.setInnerText(value);
 		}
+	}
+}
+
+export interface TemplateProps<T> extends AurumElementProps {
+	onAttach?(entity: Template<T>): void;
+	onDetach?(entity: Template<T>): void;
+	generator(model: T): AurumElement;
+	ref?: string;
+}
+
+export class Template<T> extends AurumElement {
+	public generate: (model: T) => AurumElement;
+	ref: string;
+
+	constructor(props: TemplateProps<T>) {
+		super(props, 'template');
+		this.ref = props.ref;
+		this.generate = props.generator;
 	}
 }

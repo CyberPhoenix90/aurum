@@ -19,4 +19,46 @@ To get started simply run
 
 > npm install aurumjs
 
-Examples, proper documentation and benchmarks will be added in the near future.
+## Getting started
+
+To use Aurum you need to compile JSX or TSX using babel or the typescript compiler.
+
+### With Babel
+
+Example .babelrc
+
+```
+{
+  "presets": [
+    "@babel/preset-env",
+  ],
+  "plugins": [
+    [
+      "@babel/transform-react-jsx",
+      {
+        "pragma": "Aurum.factory"
+      }
+    ]
+  ]
+}
+```
+
+### With typescript
+
+In tsconfig.json put the jsxFactory option
+
+```
+    "compilerOptions": {
+        "jsxFactory": "Aurum.factory"
+    }
+```
+
+Simple Aurum app to render a div with text in the DOM:
+
+```
+import {Aurum, Div} from 'aurumjs'
+
+Aurum.attach((<Div>Hello Aurum</Div>), document.body)
+```
+
+Better examples, proper documentation and benchmarks will be added in the near future.
