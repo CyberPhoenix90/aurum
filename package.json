@@ -1,5 +1,5 @@
 {
-	"name": "aurum",
+	"name": "aurumjs",
 	"version": "0.0.1",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurum.js",
