@@ -11,4 +11,8 @@ export * from './nodes/li';
 export * from './nodes/span';
 export * from './nodes/style';
 export * from './nodes/ul';
+export * from './nodes/p';
+export * from './nodes/img';
+export * from './nodes/link';
+export * from './nodes/canvas';
 //# sourceMappingURL=aurum.js.map

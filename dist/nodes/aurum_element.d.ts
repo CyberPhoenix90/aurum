@@ -1,12 +1,14 @@
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain } from '../utilities/common';
+import { DataDrain, StringSource, ClassType } from '../utilities/common';
 import { ArrayDataSource } from '../stream/array_data_source';
-export declare type StringSource = string | DataSource<string>;
-export declare type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
 export interface AurumElementProps {
     id?: StringSource;
+    draggable?: StringSource;
     class?: ClassType;
+    tabindex?: ClassType;
+    style?: StringSource;
+    title?: StringSource;
     repeatModel?: ArrayDataSource<any> | any[];
     onClick?: DataDrain<MouseEvent>;
     onKeydown?: DataDrain<KeyboardEvent>;
@@ -15,6 +17,7 @@ export interface AurumElementProps {
     onMouseup?: DataDrain<KeyboardEvent>;
     onMouseenter?: DataDrain<KeyboardEvent>;
     onMouseleave?: DataDrain<KeyboardEvent>;
+    onMousewheel?: DataDrain<WheelEvent>;
     onAttach?: (node: AurumElement) => void;
     template?: Template<any>;
 }
@@ -34,8 +37,9 @@ export declare abstract class AurumElement {
     onMouseenter: DataSource<KeyboardEvent>;
     onMouseleave: DataSource<KeyboardEvent>;
     constructor(props: AurumElementProps, domNodeName: string);
-    protected createEventHandlers(keys: string[], props: any): void;
     private initialize;
+    protected bindProps(keys: string[], props: any): void;
+    protected createEventHandlers(keys: string[], props: any): void;
     private handleRepeat;
     protected renderRepeat(): void;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;

@@ -5,9 +5,7 @@ export class Input extends AurumElement {
         if (props.inputValueSource) {
             props.inputValueSource.listen((value) => (this.node.value = value), this.cancellationToken);
         }
-        if (props.placeholder) {
-            this.assignStringSourceToAttribute(props.placeholder, 'placeholder');
-        }
+        this.bindProps(['placeholder'], props);
         this.createEventHandlers(['input', 'change', 'focus', 'blur'], props);
     }
 }

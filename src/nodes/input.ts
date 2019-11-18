@@ -1,6 +1,6 @@
-import { AurumElement, AurumElementProps, StringSource } from './aurum_element';
+import { AurumElement, AurumElementProps } from './aurum_element';
 import { DataSource } from '../stream/data_source';
-import { DataDrain } from '../utilities/common';
+import { DataDrain, StringSource } from '../utilities/common';
 
 export interface InputProps extends AurumElementProps {
 	onAttach?: (node: Input) => void;
@@ -23,10 +23,7 @@ export class Input extends AurumElement {
 		if (props.inputValueSource) {
 			props.inputValueSource.listen((value) => (this.node.value = value), this.cancellationToken);
 		}
-		if (props.placeholder) {
-			this.assignStringSourceToAttribute(props.placeholder, 'placeholder');
-		}
-
+		this.bindProps(['placeholder'], props);
 		this.createEventHandlers(['input', 'change', 'focus', 'blur'], props);
 	}
 }

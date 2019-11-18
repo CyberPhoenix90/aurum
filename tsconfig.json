@@ -5,7 +5,7 @@
 		"sourceRoot": "src",
 		"module": "esnext",
 		"newLine": "LF",
-		"target": "es2019",
+		"target": "es2017",
 		"declarationMap": true,
 		"declaration": true,
 		"inlineSources": true,

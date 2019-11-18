@@ -12,6 +12,25 @@ export class AurumElement {
             props.onAttach(this);
         }
     }
+    initialize(props) {
+        this.node.owner = this;
+        this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
+        this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
+        if (props.class) {
+            this.handleClass(props.class);
+        }
+        if (props.repeatModel) {
+            this.cachedChildren = [];
+            this.handleRepeat(props.repeatModel);
+        }
+    }
+    bindProps(keys, props) {
+        for (const key of keys) {
+            if (props[key]) {
+                this.assignStringSourceToAttribute(props[key], key);
+            }
+        }
+    }
     createEventHandlers(keys, props) {
         for (const key of keys) {
             const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
@@ -36,20 +55,6 @@ export class AurumElement {
                 }
             }
             this.cancellationToken.registerDomEvent(this.node, key, (e) => this[computedEventName].update(e));
-        }
-    }
-    initialize(props) {
-        this.node.owner = this;
-        this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave'], props);
-        if (props.id) {
-            this.assignStringSourceToAttribute(props.id, 'id');
-        }
-        if (props.class) {
-            this.handleClass(props.class);
-        }
-        if (props.repeatModel) {
-            this.cachedChildren = [];
-            this.handleRepeat(props.repeatModel);
         }
     }
     handleRepeat(dataSource) {

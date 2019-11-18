@@ -1,6 +1,6 @@
-import { AurumElement, AurumElementProps, StringSource } from './aurum_element';
+import { AurumElement, AurumElementProps } from './aurum_element';
 import { DataSource } from '../stream/data_source';
-import { DataDrain } from '../utilities/common';
+import { DataDrain, StringSource } from '../utilities/common';
 export interface InputProps extends AurumElementProps {
     onAttach?: (node: Input) => void;
     placeholder?: StringSource;

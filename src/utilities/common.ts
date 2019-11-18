@@ -1,4 +1,7 @@
-import { DataSource } from "../stream/data_source";
+import { DataSource } from '../stream/data_source';
+
+export type StringSource = string | DataSource<string>;
+export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
 
 export type Callback<T> = (data?: T) => void;
 export type Delegate = () => void;
@@ -17,4 +20,4 @@ export interface PointLike {
 	y: number;
 }
 
-export type DataDrain<T> = Callback<T> | DataSource<T>
+export type DataDrain<T> = Callback<T> | DataSource<T>;

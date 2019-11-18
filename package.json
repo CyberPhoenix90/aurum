@@ -1,12 +1,13 @@
 {
 	"name": "aurumjs",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurum.js",
 	"typings": "dist/aurum.d.ts",
 	"scripts": {
 		"build": "tsc",
-		"watch": "tsc -w"
+		"watch": "tsc -w",
+		"deploy": "npm run build && microbundle --entry dist/aurum.js --output prebuilt --name aurumjs"
 	},
 	"repository": {
 		"type": "git",
@@ -22,7 +23,8 @@
 	"license": "MIT",
 	"devDependencies": {
 		"prettier": "^1.19.1",
-		"typescript": "^3.7.2"
+		"typescript": "^3.7.2",
+		"microbundle": "^0.11.0"
 	},
 	"dependencies": {}
 }

@@ -1,14 +1,16 @@
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain } from '../utilities/common';
+import { DataDrain, StringSource, ClassType } from '../utilities/common';
 import { ArrayDataSource } from '../stream/array_data_source';
-
-export type StringSource = string | DataSource<string>;
-export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
 
 export interface AurumElementProps {
 	id?: StringSource;
+	draggable?: StringSource;
 	class?: ClassType;
+	tabindex?: ClassType;
+	style?: StringSource;
+	title?: StringSource;
+
 	repeatModel?: ArrayDataSource<any> | any[];
 
 	onClick?: DataDrain<MouseEvent>;
@@ -18,6 +20,7 @@ export interface AurumElementProps {
 	onMouseup?: DataDrain<KeyboardEvent>;
 	onMouseenter?: DataDrain<KeyboardEvent>;
 	onMouseleave?: DataDrain<KeyboardEvent>;
+	onMousewheel?: DataDrain<WheelEvent>;
 
 	onAttach?: (node: AurumElement) => void;
 	template?: Template<any>;
@@ -53,6 +56,31 @@ export abstract class AurumElement {
 		}
 	}
 
+	private initialize(props: AurumElementProps) {
+		//@ts-ignore
+		this.node.owner = this;
+
+		this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
+		this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
+
+		if (props.class) {
+			this.handleClass(props.class);
+		}
+
+		if (props.repeatModel) {
+			this.cachedChildren = [];
+			this.handleRepeat(props.repeatModel);
+		}
+	}
+
+	protected bindProps(keys: string[], props: any) {
+		for (const key of keys) {
+			if (props[key]) {
+				this.assignStringSourceToAttribute(props[key], key);
+			}
+		}
+	}
+
 	protected createEventHandlers(keys: string[], props: any) {
 		for (const key of keys) {
 			const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
@@ -78,25 +106,6 @@ export abstract class AurumElement {
 				}
 			}
 			this.cancellationToken.registerDomEvent(this.node, key, (e: MouseEvent) => this[computedEventName].update(e));
-		}
-	}
-
-	private initialize(props: AurumElementProps) {
-		//@ts-ignore
-		this.node.owner = this;
-
-		this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave'], props);
-
-		if (props.id) {
-			this.assignStringSourceToAttribute(props.id, 'id');
-		}
-		if (props.class) {
-			this.handleClass(props.class);
-		}
-
-		if (props.repeatModel) {
-			this.cachedChildren = [];
-			this.handleRepeat(props.repeatModel);
 		}
 	}
 
