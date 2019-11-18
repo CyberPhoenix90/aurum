@@ -12,13 +12,8 @@ export class Template<T> extends AurumElement {
 	ref: string;
 
 	constructor(props: TemplateProps<T>) {
-		super(props);
+		super(props, 'template');
 		this.ref = props.ref;
 		this.generate = props.generator;
-	}
-
-	public create(props: TemplateProps<T>): HTMLElement {
-		const input = document.createElement('template');
-		return input;
 	}
 }

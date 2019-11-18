@@ -257,240 +257,12 @@ define("nodes/template", ["require", "exports", "nodes/aurum_element"], function
     Object.defineProperty(exports, "__esModule", { value: true });
     class Template extends aurum_element_1.AurumElement {
         constructor(props) {
-            super(props);
+            super(props, 'template');
             this.ref = props.ref;
             this.generate = props.generator;
         }
-        create(props) {
-            const input = document.createElement('template');
-            return input;
-        }
     }
     exports.Template = Template;
-});
-define("nodes/aurum_element", ["require", "exports", "stream/data_source", "utilities/cancellation_token", "nodes/template"], function (require, exports, data_source_1, cancellation_token_1, template_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class AurumElement {
-        constructor(props) {
-            this.cancellationToken = new cancellation_token_1.CancellationToken();
-            this.node = this.create(props);
-            this.handleProps(props);
-            this.node.owner = this;
-            if (props.onAttach) {
-                props.onAttach(this);
-            }
-        }
-        handleProps(props) {
-            this.onClick = new data_source_1.DataSource();
-            if (props.onClick) {
-                if (props.onClick instanceof data_source_1.DataSource) {
-                    this.onClick.listen(props.onClick.update.bind(props.onClick), this.cancellationToken);
-                }
-                else {
-                    this.onClick.listen(props.onClick, this.cancellationToken);
-                }
-            }
-            this.cancellationToken.registerDomEvent(this.node, 'click', (e) => this.onClick.update(e));
-            if (props.id) {
-                this.handleStringSource(props.id, 'id');
-            }
-            if (props.class) {
-                this.handleClass(props.class);
-            }
-        }
-        handleStringSource(data, key) {
-            if (typeof data === 'string') {
-                this.node[key] = data;
-            }
-            else {
-                if (data.value) {
-                    this.node[key] = data.value;
-                }
-                data.unique(this.cancellationToken).listen((v) => (this.node.id = v), this.cancellationToken);
-            }
-        }
-        handleClass(data) {
-            if (typeof data === 'string') {
-                this.node.className = data;
-            }
-            else if (data instanceof data_source_1.DataSource) {
-                if (data.value) {
-                    if (Array.isArray(data.value)) {
-                        this.node.className = data.value.join(' ');
-                        data.unique(this.cancellationToken).listen(() => {
-                            this.node.className = data.value.join(' ');
-                        }, this.cancellationToken);
-                    }
-                    else {
-                        this.node.className = data.value;
-                        data.unique(this.cancellationToken).listen(() => {
-                            this.node.className = data.value;
-                        }, this.cancellationToken);
-                    }
-                }
-                data.unique(this.cancellationToken).listen((v) => (this.node.className = v), this.cancellationToken);
-            }
-            else {
-                const value = data.reduce((p, c) => {
-                    if (typeof c === 'string') {
-                        return `${p} ${c}`;
-                    }
-                    else {
-                        if (c.value) {
-                            return `${p} ${c.value}`;
-                        }
-                        else {
-                            return p;
-                        }
-                    }
-                }, '');
-                this.node.className = value;
-                for (const i of data) {
-                    if (i instanceof data_source_1.DataSource) {
-                        i.unique(this.cancellationToken).listen((v) => {
-                            const value = data.reduce((p, c) => {
-                                if (typeof c === 'string') {
-                                    return `${p} ${c}`;
-                                }
-                                else {
-                                    if (c.value) {
-                                        return `${p} ${c.value}`;
-                                    }
-                                    else {
-                                        return p;
-                                    }
-                                }
-                            }, '');
-                            this.node.className = value;
-                        }, this.cancellationToken);
-                    }
-                }
-            }
-        }
-        getChildIndex(node) {
-            let i = 0;
-            for (const child of node.children) {
-                if (child === node) {
-                    return i;
-                }
-                i++;
-            }
-            return -1;
-        }
-        hasChild(node) {
-            for (const child of node.children) {
-                if (child === node) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        setInnerText(value) {
-            this.node.innerText = value;
-        }
-        swapChildren(indexA, indexB) {
-            if (indexA === indexB) {
-                return;
-            }
-            const nodeA = this.node.children[indexA];
-            const nodeB = this.node.children[indexB];
-            nodeA.remove();
-            nodeB.remove();
-            if (indexA < indexB) {
-                this.addDomNodeAt(nodeB, indexA);
-                this.addDomNodeAt(nodeA, indexB);
-            }
-            else {
-                this.addDomNodeAt(nodeA, indexB);
-                this.addDomNodeAt(nodeB, indexA);
-            }
-        }
-        addDomNodeAt(node, index) {
-            if (index >= this.node.childElementCount) {
-                this.node.appendChild(node);
-            }
-            else {
-                this.node.insertBefore(node, this.node.children[index]);
-            }
-        }
-        addChildAt(child, index) {
-            if (child instanceof template_1.Template) {
-                return;
-            }
-            return this.addDomNodeAt(child.node, index);
-        }
-        addChildren(nodes) {
-            if (nodes.length === 0) {
-                return;
-            }
-            let dataSegments = [];
-            for (const c of nodes) {
-                if (c instanceof template_1.Template) {
-                    continue;
-                }
-                if (typeof c === 'string') {
-                    dataSegments.push(c);
-                }
-                else if (c instanceof data_source_1.DataSource) {
-                    dataSegments.push(c);
-                    this.setInnerText(c.value);
-                    c.listen((v) => {
-                        const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof data_source_1.DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
-                        this.setInnerText(value);
-                    }, this.cancellationToken);
-                }
-                else {
-                    this.node.appendChild(c.node);
-                }
-            }
-            if (dataSegments.length) {
-                const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof data_source_1.DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
-                this.setInnerText(value);
-            }
-        }
-    }
-    exports.AurumElement = AurumElement;
-});
-define("jsx/jsx_factory", ["require", "exports", "nodes/template"], function (require, exports, template_2) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class TypescriptXMLSyntax {
-        deserialize(node, args, ...innerNodes) {
-            if (typeof node === 'string') {
-                return;
-            }
-            const children = [].concat(...innerNodes).filter((e) => e);
-            const refs = {};
-            let hasRef = false;
-            for (const c of children) {
-                if (typeof c === 'string') {
-                    continue;
-                }
-                if (c instanceof template_2.Template && !c.ref) {
-                    refs['template'] = c;
-                    hasRef = true;
-                }
-                if (c.ref) {
-                    refs[c.ref] = c;
-                    hasRef = true;
-                }
-            }
-            if (hasRef) {
-                Object.assign(args, refs);
-            }
-            let instance;
-            if (node.prototype) {
-                instance = new node(args || {});
-            }
-            else {
-                instance = node(args || {});
-            }
-            instance.addChildren(children);
-            return instance;
-        }
-    }
-    exports.tsx = new TypescriptXMLSyntax();
 });
 define("stream/event_emitter", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -627,7 +399,7 @@ define("stream/event_emitter", ["require", "exports"], function (require, export
     }
     exports.EventEmitter = EventEmitter;
 });
-define("stream/array_data_source", ["require", "exports", "stream/event_emitter", "stream/data_source"], function (require, exports, event_emitter_1, data_source_2) {
+define("stream/array_data_source", ["require", "exports", "stream/event_emitter", "stream/data_source"], function (require, exports, event_emitter_1, data_source_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class ArrayDataSource {
@@ -738,7 +510,7 @@ define("stream/array_data_source", ["require", "exports", "stream/event_emitter"
             return this.data.forEach(callbackfn, thisArg);
         }
         toDataSource() {
-            const stream = new data_source_2.DataSource(this.data);
+            const stream = new data_source_1.DataSource(this.data);
             this.onChange.subscribe((s) => {
                 stream.update(s.newState);
             });
@@ -800,177 +572,72 @@ define("stream/array_data_source", ["require", "exports", "stream/event_emitter"
     }
     exports.FilteredArrayView = FilteredArrayView;
 });
-define("utilities/owner_symbol", ["require", "exports"], function (require, exports) {
+define("nodes/aurum_element", ["require", "exports", "stream/data_source", "utilities/cancellation_token", "nodes/template", "stream/array_data_source"], function (require, exports, data_source_2, cancellation_token_1, template_1, array_data_source_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ownerSymbol = Symbol('owner');
-});
-define("utilities/aurum", ["require", "exports", "utilities/owner_symbol"], function (require, exports, owner_symbol_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Aurum {
-        static attach(node, dom) {
-            if (dom[owner_symbol_1.ownerSymbol]) {
-                throw new Error('This node is already managed by aurum and cannot be used');
-            }
-            dom.appendChild(node.node);
-            dom[owner_symbol_1.ownerSymbol] = node;
-        }
-        static detach(domNode) {
-            if (domNode[owner_symbol_1.ownerSymbol]) {
-                domNode[owner_symbol_1.ownerSymbol].dispose();
-                domNode[owner_symbol_1.ownerSymbol] = undefined;
-            }
-        }
-    }
-    exports.Aurum = Aurum;
-});
-define("nodes/button", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_2) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Button extends aurum_element_2.AurumElement {
-        constructor(props) {
-            super(props);
-        }
-        create(props) {
-            const button = document.createElement('button');
-            return button;
-        }
-    }
-    exports.Button = Button;
-});
-define("nodes/div", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_3) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Div extends aurum_element_3.AurumElement {
-        constructor(props) {
-            super(props);
-        }
-        create(props) {
-            const div = document.createElement('div');
-            return div;
-        }
-    }
-    exports.Div = Div;
-});
-define("nodes/input", ["require", "exports", "nodes/aurum_element", "stream/data_source"], function (require, exports, aurum_element_4, data_source_3) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Input extends aurum_element_4.AurumElement {
-        constructor(props) {
-            super(props);
-            if (props.inputValueSource) {
-                props.inputValueSource.listen((value) => (this.node.value = value), this.cancellationToken);
-            }
-            if (props.placeholder) {
-                this.handleStringSource(props.placeholder, 'placeholder');
-            }
-        }
-        create(props) {
-            const input = document.createElement('input');
-            this.onKeyDown = new data_source_3.DataSource();
-            this.onInput = new data_source_3.DataSource();
-            this.onChange = new data_source_3.DataSource();
-            this.onFocus = new data_source_3.DataSource();
-            this.onBlur = new data_source_3.DataSource();
-            if (props.onChange) {
-                if (props.onChange instanceof data_source_3.DataSource) {
-                    this.onChange.listen(props.onChange.update.bind(props.onChange), this.cancellationToken);
-                }
-                else {
-                    this.onChange.listen(props.onChange, this.cancellationToken);
-                }
-            }
-            if (props.onKeyDown) {
-                if (props.onKeyDown instanceof data_source_3.DataSource) {
-                    this.onKeyDown.listen(props.onKeyDown.update.bind(props.onKeyDown), this.cancellationToken);
-                }
-                else {
-                    this.onKeyDown.listen(props.onKeyDown, this.cancellationToken);
-                }
-            }
-            if (props.onInput) {
-                if (props.onInput instanceof data_source_3.DataSource) {
-                    this.onInput.listen(props.onInput.update.bind(props.onInput), this.cancellationToken);
-                }
-                else {
-                    this.onInput.listen(props.onInput, this.cancellationToken);
-                }
-            }
-            this.cancellationToken.registerDomEvent(input, 'keydown', (e) => this.onKeyDown.update(e));
-            this.cancellationToken.registerDomEvent(input, 'input', (e) => this.onInput.update(e));
-            this.cancellationToken.registerDomEvent(input, 'change', (e) => this.onChange.update(e));
-            this.cancellationToken.registerDomEvent(input, 'focus', (e) => this.onFocus.update(e));
-            this.cancellationToken.registerDomEvent(input, 'blur', (e) => this.onBlur.update(e));
-            return input;
-        }
-    }
-    exports.Input = Input;
-});
-define("nodes/li", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_5) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Li extends aurum_element_5.AurumElement {
-        constructor(props) {
-            super(props);
-        }
-        create(props) {
-            const li = document.createElement('li');
-            return li;
-        }
-    }
-    exports.Li = Li;
-});
-define("nodes/span", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_6) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Span extends aurum_element_6.AurumElement {
-        constructor(props) {
-            super(props);
-        }
-        create(props) {
-            const span = document.createElement('span');
-            return span;
-        }
-    }
-    exports.Span = Span;
-});
-define("nodes/style", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_7) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Style extends aurum_element_7.AurumElement {
-        constructor(props) {
-            super(props);
-        }
-        create(props) {
-            const style = document.createElement('style');
-            return style;
-        }
-    }
-    exports.Style = Style;
-});
-define("nodes/ul", ["require", "exports", "nodes/aurum_element", "stream/array_data_source"], function (require, exports, aurum_element_8, array_data_source_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Ul extends aurum_element_8.AurumElement {
-        constructor(props) {
-            super(props);
+    class AurumElement {
+        constructor(props, domNodeName) {
+            this.domNodeName = domNodeName;
             this.template = props.template;
-            this.cachedChildren = [];
-            this.handleData(props.templateDataSource);
+            this.cancellationToken = new cancellation_token_1.CancellationToken();
+            this.node = this.create(props);
+            this.initialize(props);
+            if (props.onAttach) {
+                props.onAttach(this);
+            }
         }
-        handleData(dataSource) {
+        createEventHandlers(keys, props) {
+            for (const key of keys) {
+                const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
+                let eventEmitter;
+                Object.defineProperty(this, computedEventName, {
+                    get() {
+                        if (!eventEmitter) {
+                            eventEmitter = new data_source_2.DataSource();
+                        }
+                        return eventEmitter;
+                    },
+                    set() {
+                        throw new Error(computedEventName + ' is read only');
+                    }
+                });
+                if (props[computedEventName]) {
+                    if (props[computedEventName] instanceof data_source_2.DataSource) {
+                        this[computedEventName].listen(props[computedEventName].update.bind(props.onClick), this.cancellationToken);
+                    }
+                    else if (typeof props[computedEventName] === 'function') {
+                        this[computedEventName].listen(props[computedEventName], this.cancellationToken);
+                    }
+                }
+                this.cancellationToken.registerDomEvent(this.node, key, (e) => this[computedEventName].update(e));
+            }
+        }
+        initialize(props) {
+            this.node.owner = this;
+            this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave'], props);
+            if (props.id) {
+                this.assignStringSourceToAttribute(props.id, 'id');
+            }
+            if (props.class) {
+                this.handleClass(props.class);
+            }
+            if (props.repeatModel) {
+                this.cachedChildren = [];
+                this.handleRepeat(props.repeatModel);
+            }
+        }
+        handleRepeat(dataSource) {
             if (dataSource instanceof array_data_source_1.ArrayDataSource) {
-                this.data = dataSource;
+                this.repeatData = dataSource;
             }
             else {
-                this.data = new array_data_source_1.ArrayDataSource(dataSource);
+                this.repeatData = new array_data_source_1.ArrayDataSource(dataSource);
             }
-            if (this.data.length) {
-                this.cachedChildren.push(...this.data.toArray().map((i) => this.template.generate(i)));
-                this.render();
+            if (this.repeatData.length) {
+                this.cachedChildren.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
+                this.renderRepeat();
             }
-            this.data.onChange.subscribe((change) => {
+            this.repeatData.onChange.subscribe((change) => {
                 switch (change.operation) {
                     case 'append':
                         this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
@@ -986,13 +653,13 @@ define("nodes/ul", ["require", "exports", "nodes/aurum_element", "stream/array_d
                         break;
                     default:
                         this.cachedChildren.length = 0;
-                        this.cachedChildren.push(...this.data.toArray().map((i) => this.template.generate(i)));
+                        this.cachedChildren.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
                         break;
                 }
-                this.render();
+                this.renderRepeat();
             });
         }
-        render() {
+        renderRepeat() {
             if (this.rerenderPending) {
                 return;
             }
@@ -1024,14 +691,306 @@ define("nodes/ul", ["require", "exports", "nodes/aurum_element", "stream/array_d
             });
             this.rerenderPending = true;
         }
+        assignStringSourceToAttribute(data, key) {
+            if (typeof data === 'string') {
+                this.node[key] = data;
+            }
+            else {
+                if (data.value) {
+                    this.node[key] = data.value;
+                }
+                data.unique(this.cancellationToken).listen((v) => (this.node.id = v), this.cancellationToken);
+            }
+        }
+        handleClass(data) {
+            if (typeof data === 'string') {
+                this.node.className = data;
+            }
+            else if (data instanceof data_source_2.DataSource) {
+                if (data.value) {
+                    if (Array.isArray(data.value)) {
+                        this.node.className = data.value.join(' ');
+                        data.unique(this.cancellationToken).listen(() => {
+                            this.node.className = data.value.join(' ');
+                        }, this.cancellationToken);
+                    }
+                    else {
+                        this.node.className = data.value;
+                        data.unique(this.cancellationToken).listen(() => {
+                            this.node.className = data.value;
+                        }, this.cancellationToken);
+                    }
+                }
+                data.unique(this.cancellationToken).listen((v) => (this.node.className = v), this.cancellationToken);
+            }
+            else {
+                const value = data.reduce((p, c) => {
+                    if (typeof c === 'string') {
+                        return `${p} ${c}`;
+                    }
+                    else {
+                        if (c.value) {
+                            return `${p} ${c.value}`;
+                        }
+                        else {
+                            return p;
+                        }
+                    }
+                }, '');
+                this.node.className = value;
+                for (const i of data) {
+                    if (i instanceof data_source_2.DataSource) {
+                        i.unique(this.cancellationToken).listen((v) => {
+                            const value = data.reduce((p, c) => {
+                                if (typeof c === 'string') {
+                                    return `${p} ${c}`;
+                                }
+                                else {
+                                    if (c.value) {
+                                        return `${p} ${c.value}`;
+                                    }
+                                    else {
+                                        return p;
+                                    }
+                                }
+                            }, '');
+                            this.node.className = value;
+                        }, this.cancellationToken);
+                    }
+                }
+            }
+        }
         create(props) {
-            const ul = document.createElement('ul');
-            return ul;
+            const node = document.createElement(this.domNodeName);
+            return node;
+        }
+        getChildIndex(node) {
+            let i = 0;
+            for (const child of node.children) {
+                if (child === node) {
+                    return i;
+                }
+                i++;
+            }
+            return -1;
+        }
+        hasChild(node) {
+            for (const child of node.children) {
+                if (child === node) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        setInnerText(value) {
+            this.node.innerText = value;
+        }
+        swapChildren(indexA, indexB) {
+            if (indexA === indexB) {
+                return;
+            }
+            const nodeA = this.node.children[indexA];
+            const nodeB = this.node.children[indexB];
+            nodeA.remove();
+            nodeB.remove();
+            if (indexA < indexB) {
+                this.addDomNodeAt(nodeB, indexA);
+                this.addDomNodeAt(nodeA, indexB);
+            }
+            else {
+                this.addDomNodeAt(nodeA, indexB);
+                this.addDomNodeAt(nodeB, indexA);
+            }
+        }
+        addDomNodeAt(node, index) {
+            if (index >= this.node.childElementCount) {
+                this.node.appendChild(node);
+            }
+            else {
+                this.node.insertBefore(node, this.node.children[index]);
+            }
+        }
+        addChildAt(child, index) {
+            if (child instanceof template_1.Template) {
+                return;
+            }
+            return this.addDomNodeAt(child.node, index);
+        }
+        addChildren(nodes) {
+            if (nodes.length === 0) {
+                return;
+            }
+            let dataSegments = [];
+            for (const c of nodes) {
+                if (c instanceof template_1.Template) {
+                    continue;
+                }
+                if (typeof c === 'string') {
+                    dataSegments.push(c);
+                }
+                else if (c instanceof data_source_2.DataSource) {
+                    dataSegments.push(c);
+                    this.setInnerText(c.value);
+                    c.listen((v) => {
+                        const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof data_source_2.DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
+                        this.setInnerText(value);
+                    }, this.cancellationToken);
+                }
+                else {
+                    this.node.appendChild(c.node);
+                }
+            }
+            if (dataSegments.length) {
+                const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof data_source_2.DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
+                this.setInnerText(value);
+            }
+        }
+    }
+    exports.AurumElement = AurumElement;
+});
+define("jsx/jsx_factory", ["require", "exports", "nodes/template"], function (require, exports, template_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class JavascriptXMLSyntax {
+        deserialize(node, args, ...innerNodes) {
+            if (typeof node === 'string') {
+                return;
+            }
+            const children = [].concat(...innerNodes).filter((e) => e);
+            const refs = {};
+            let hasRef = false;
+            for (const c of children) {
+                if (typeof c === 'string') {
+                    continue;
+                }
+                if (c instanceof template_2.Template && !c.ref) {
+                    refs['template'] = c;
+                    hasRef = true;
+                }
+                if (c.ref) {
+                    refs[c.ref] = c;
+                    hasRef = true;
+                }
+            }
+            if (hasRef) {
+                Object.assign(args, refs);
+            }
+            let instance;
+            if (node.prototype) {
+                instance = new node(args || {});
+            }
+            else {
+                instance = node(args || {});
+            }
+            instance.addChildren(children);
+            return instance;
+        }
+    }
+    exports.jsx = new JavascriptXMLSyntax();
+});
+define("utilities/owner_symbol", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.ownerSymbol = Symbol('owner');
+});
+define("utilities/aurum", ["require", "exports", "utilities/owner_symbol"], function (require, exports, owner_symbol_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Aurum {
+        static attach(node, dom) {
+            if (dom[owner_symbol_1.ownerSymbol]) {
+                throw new Error('This node is already managed by aurum and cannot be used');
+            }
+            dom.appendChild(node.node);
+            dom[owner_symbol_1.ownerSymbol] = node;
+        }
+        static detach(domNode) {
+            if (domNode[owner_symbol_1.ownerSymbol]) {
+                domNode[owner_symbol_1.ownerSymbol].dispose();
+                domNode[owner_symbol_1.ownerSymbol] = undefined;
+            }
+        }
+    }
+    exports.Aurum = Aurum;
+});
+define("nodes/button", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Button extends aurum_element_2.AurumElement {
+        constructor(props) {
+            super(props, 'button');
+        }
+    }
+    exports.Button = Button;
+});
+define("nodes/div", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Div extends aurum_element_3.AurumElement {
+        constructor(props) {
+            super(props, 'div');
+        }
+    }
+    exports.Div = Div;
+});
+define("nodes/input", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_4) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Input extends aurum_element_4.AurumElement {
+        constructor(props) {
+            super(props, 'input');
+            if (props.inputValueSource) {
+                props.inputValueSource.listen((value) => (this.node.value = value), this.cancellationToken);
+            }
+            if (props.placeholder) {
+                this.assignStringSourceToAttribute(props.placeholder, 'placeholder');
+            }
+            this.createEventHandlers(['input', 'change', 'focus', 'blur'], props);
+        }
+    }
+    exports.Input = Input;
+});
+define("nodes/li", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_5) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Li extends aurum_element_5.AurumElement {
+        constructor(props) {
+            super(props, 'li');
+        }
+    }
+    exports.Li = Li;
+});
+define("nodes/span", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_6) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Span extends aurum_element_6.AurumElement {
+        constructor(props) {
+            super(props, 'span');
+        }
+    }
+    exports.Span = Span;
+});
+define("nodes/style", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_7) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Style extends aurum_element_7.AurumElement {
+        constructor(props) {
+            super(props, 'style');
+        }
+    }
+    exports.Style = Style;
+});
+define("nodes/ul", ["require", "exports", "nodes/aurum_element"], function (require, exports, aurum_element_8) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Ul extends aurum_element_8.AurumElement {
+        constructor(props) {
+            super(props, 'ul');
         }
     }
     exports.Ul = Ul;
 });
-define("index", ["require", "exports", "jsx/jsx_factory", "stream/array_data_source", "stream/data_source", "stream/event_emitter", "utilities/cancellation_token", "utilities/aurum", "nodes/aurum_element", "nodes/button", "nodes/div", "nodes/input", "nodes/li", "nodes/span", "nodes/style", "nodes/template", "nodes/ul"], function (require, exports, jsx_factory_1, array_data_source_2, data_source_4, event_emitter_2, cancellation_token_2, aurum_1, aurum_element_9, button_1, div_1, input_1, li_1, span_1, style_1, template_3, ul_1) {
+define("aurum", ["require", "exports", "jsx/jsx_factory", "stream/array_data_source", "stream/data_source", "stream/event_emitter", "utilities/cancellation_token", "utilities/aurum", "nodes/aurum_element", "nodes/button", "nodes/div", "nodes/input", "nodes/li", "nodes/span", "nodes/style", "nodes/template", "nodes/ul"], function (require, exports, jsx_factory_1, array_data_source_2, data_source_3, event_emitter_2, cancellation_token_2, aurum_1, aurum_element_9, button_1, div_1, input_1, li_1, span_1, style_1, template_3, ul_1) {
     "use strict";
     function __export(m) {
         for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -1039,7 +998,7 @@ define("index", ["require", "exports", "jsx/jsx_factory", "stream/array_data_sou
     Object.defineProperty(exports, "__esModule", { value: true });
     __export(jsx_factory_1);
     __export(array_data_source_2);
-    __export(data_source_4);
+    __export(data_source_3);
     __export(event_emitter_2);
     __export(cancellation_token_2);
     __export(aurum_1);

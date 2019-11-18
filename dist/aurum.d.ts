@@ -100,46 +100,7 @@ declare module "nodes/template" {
         generate: (model: T) => AurumElement;
         ref: string;
         constructor(props: TemplateProps<T>);
-        create(props: TemplateProps<T>): HTMLElement;
     }
-}
-declare module "nodes/aurum_element" {
-    import { DataSource } from "stream/data_source";
-    import { CancellationToken } from "utilities/cancellation_token";
-    import { DataDrain } from "utilities/common";
-    export type StringSource = string | DataSource<string>;
-    export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
-    export interface AurumElementProps {
-        id?: StringSource;
-        class?: ClassType;
-        onClick?: DataDrain<MouseEvent>;
-        onAttach?: (node: AurumElement) => void;
-    }
-    export abstract class AurumElement {
-        node: HTMLElement;
-        protected cancellationToken: CancellationToken;
-        onClick: DataSource<MouseEvent>;
-        constructor(props: AurumElementProps);
-        private handleProps;
-        protected handleStringSource(data: StringSource, key: string): void;
-        private handleClass;
-        abstract create(props: AurumElementProps): HTMLElement;
-        protected getChildIndex(node: HTMLElement): number;
-        protected hasChild(node: HTMLElement): boolean;
-        setInnerText(value: string): void;
-        swapChildren(indexA: number, indexB: number): void;
-        protected addDomNodeAt(node: HTMLElement, index: number): void;
-        addChildAt(child: AurumElement, index: number): void;
-        addChildren(nodes: AurumElement[]): void;
-    }
-}
-declare module "jsx/jsx_factory" {
-    import { MapLike, Constructor } from "utilities/common";
-    import { AurumElement } from "nodes/aurum_element";
-    class TypescriptXMLSyntax {
-        deserialize(node: Constructor<AurumElement> | ((...args: any[]) => AurumElement), args: MapLike<any>, ...innerNodes: AurumElement[]): AurumElement;
-    }
-    export const tsx: TypescriptXMLSyntax;
 }
 declare module "stream/event_emitter" {
     import { CancellationToken } from "utilities/cancellation_token";
@@ -223,6 +184,68 @@ declare module "stream/array_data_source" {
         protected refresh(): void;
     }
 }
+declare module "nodes/aurum_element" {
+    import { DataSource } from "stream/data_source";
+    import { CancellationToken } from "utilities/cancellation_token";
+    import { DataDrain } from "utilities/common";
+    import { Template } from "nodes/template";
+    import { ArrayDataSource } from "stream/array_data_source";
+    export type StringSource = string | DataSource<string>;
+    export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
+    export interface AurumElementProps {
+        id?: StringSource;
+        class?: ClassType;
+        repeatModel?: ArrayDataSource<any> | any[];
+        onClick?: DataDrain<MouseEvent>;
+        onKeydown?: DataDrain<KeyboardEvent>;
+        onKeyup?: DataDrain<KeyboardEvent>;
+        onMousedown?: DataDrain<KeyboardEvent>;
+        onMouseup?: DataDrain<KeyboardEvent>;
+        onMouseenter?: DataDrain<KeyboardEvent>;
+        onMouseleave?: DataDrain<KeyboardEvent>;
+        onAttach?: (node: AurumElement) => void;
+        template?: Template<any>;
+    }
+    export abstract class AurumElement {
+        protected cancellationToken: CancellationToken;
+        private cachedChildren;
+        protected repeatData: ArrayDataSource<any>;
+        private rerenderPending;
+        readonly node: HTMLElement;
+        readonly domNodeName: string;
+        template: Template<any>;
+        onClick: DataSource<MouseEvent>;
+        onKeydown: DataSource<KeyboardEvent>;
+        onKeyup: DataSource<KeyboardEvent>;
+        onMousedown: DataSource<KeyboardEvent>;
+        onMouseup: DataSource<KeyboardEvent>;
+        onMouseenter: DataSource<KeyboardEvent>;
+        onMouseleave: DataSource<KeyboardEvent>;
+        constructor(props: AurumElementProps, domNodeName: string);
+        protected createEventHandlers(keys: string[], props: any): void;
+        private initialize;
+        private handleRepeat;
+        protected renderRepeat(): void;
+        protected assignStringSourceToAttribute(data: StringSource, key: string): void;
+        private handleClass;
+        create(props: AurumElementProps): HTMLElement;
+        protected getChildIndex(node: HTMLElement): number;
+        protected hasChild(node: HTMLElement): boolean;
+        setInnerText(value: string): void;
+        swapChildren(indexA: number, indexB: number): void;
+        protected addDomNodeAt(node: HTMLElement, index: number): void;
+        addChildAt(child: AurumElement, index: number): void;
+        addChildren(nodes: AurumElement[]): void;
+    }
+}
+declare module "jsx/jsx_factory" {
+    import { MapLike, Constructor } from "utilities/common";
+    import { AurumElement } from "nodes/aurum_element";
+    class JavascriptXMLSyntax {
+        deserialize(node: Constructor<AurumElement> | ((...args: any[]) => AurumElement), args: MapLike<any>, ...innerNodes: AurumElement[]): AurumElement;
+    }
+    export const jsx: JavascriptXMLSyntax;
+}
 declare module "utilities/owner_symbol" {
     export const ownerSymbol: unique symbol;
 }
@@ -239,7 +262,6 @@ declare module "nodes/button" {
     }
     export class Button extends AurumElement {
         constructor(props: ButtonProps);
-        create(props: ButtonProps): HTMLElement;
     }
 }
 declare module "nodes/div" {
@@ -248,7 +270,6 @@ declare module "nodes/div" {
     }
     export class Div extends AurumElement {
         constructor(props: DivProps);
-        create(props: DivProps): HTMLElement;
     }
 }
 declare module "nodes/input" {
@@ -260,18 +281,15 @@ declare module "nodes/input" {
         placeholder?: StringSource;
         onChange?: DataDrain<InputEvent>;
         onInput?: DataDrain<InputEvent>;
-        onKeyDown?: DataDrain<KeyboardEvent>;
         inputValueSource?: DataSource<string>;
     }
     export class Input extends AurumElement {
         node: HTMLInputElement;
-        onKeyDown: DataSource<KeyboardEvent>;
         onChange: DataSource<InputEvent>;
         onInput: DataSource<InputEvent>;
         onFocus: DataSource<FocusEvent>;
         onBlur: DataSource<FocusEvent>;
         constructor(props: InputProps);
-        create(props: InputProps): HTMLElement;
     }
 }
 declare module "nodes/li" {
@@ -280,7 +298,6 @@ declare module "nodes/li" {
     }
     export class Li extends AurumElement {
         constructor(props: LiProps);
-        create(props: LiProps): HTMLElement;
     }
 }
 declare module "nodes/span" {
@@ -289,7 +306,6 @@ declare module "nodes/span" {
     }
     export class Span extends AurumElement {
         constructor(props: SpanProps);
-        create(props: SpanProps): HTMLElement;
     }
 }
 declare module "nodes/style" {
@@ -298,31 +314,18 @@ declare module "nodes/style" {
     }
     export class Style extends AurumElement {
         constructor(props: StyleProps);
-        create(props: StyleProps): HTMLElement;
     }
 }
 declare module "nodes/ul" {
     import { AurumElement, AurumElementProps } from "nodes/aurum_element";
-    import { Template } from "nodes/template";
-    import { ArrayDataSource } from "stream/array_data_source";
-    export interface UlProps<T> extends AurumElementProps {
+    export interface UlProps extends AurumElementProps {
         onAttach?: (node: Ul) => void;
-        templateDataSource?: ArrayDataSource<T> | T[];
-        template?: Template<T>;
     }
-    export class Ul<T = void> extends AurumElement {
-        node: HTMLInputElement;
-        template: Template<T>;
-        data: ArrayDataSource<T>;
-        private rerenderPending;
-        private cachedChildren;
-        constructor(props: UlProps<T>);
-        private handleData;
-        render(): void;
-        create(props: UlProps<T>): HTMLElement;
+    export class Ul extends AurumElement {
+        constructor(props: UlProps);
     }
 }
-declare module "index" {
+declare module "aurum" {
     export * from "jsx/jsx_factory";
     export * from "stream/array_data_source";
     export * from "stream/data_source";

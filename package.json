@@ -21,6 +21,7 @@
 	"author": "Joao Santos (CyberPhoenix)",
 	"license": "MIT",
 	"devDependencies": {
+		"prettier": "^1.19.1",
 		"typescript": "^3.7.2"
 	},
 	"dependencies": {}

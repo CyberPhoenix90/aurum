@@ -2,6 +2,7 @@ import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DataDrain } from '../utilities/common';
 import { Template } from './template';
+import { ArrayDataSource } from '../stream/array_data_source';
 
 export type StringSource = string | DataSource<string>;
 export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
@@ -9,49 +10,168 @@ export type ClassType = string | DataSource<string> | DataSource<string[]> | Arr
 export interface AurumElementProps {
 	id?: StringSource;
 	class?: ClassType;
+	repeatModel?: ArrayDataSource<any> | any[];
+
 	onClick?: DataDrain<MouseEvent>;
+	onKeydown?: DataDrain<KeyboardEvent>;
+	onKeyup?: DataDrain<KeyboardEvent>;
+	onMousedown?: DataDrain<KeyboardEvent>;
+	onMouseup?: DataDrain<KeyboardEvent>;
+	onMouseenter?: DataDrain<KeyboardEvent>;
+	onMouseleave?: DataDrain<KeyboardEvent>;
+
 	onAttach?: (node: AurumElement) => void;
+	template?: Template<any>;
 }
 
 export abstract class AurumElement {
-	public node: HTMLElement;
 	protected cancellationToken: CancellationToken;
-	public onClick: DataSource<MouseEvent>;
+	private cachedChildren: AurumElement[];
+	protected repeatData: ArrayDataSource<any>;
+	private rerenderPending: boolean;
 
-	constructor(props: AurumElementProps) {
+	public readonly node: HTMLElement;
+	public readonly domNodeName: string;
+
+	public template: Template<any>;
+	public onClick: DataSource<MouseEvent>;
+	public onKeydown: DataSource<KeyboardEvent>;
+	public onKeyup: DataSource<KeyboardEvent>;
+	public onMousedown: DataSource<KeyboardEvent>;
+	public onMouseup: DataSource<KeyboardEvent>;
+	public onMouseenter: DataSource<KeyboardEvent>;
+	public onMouseleave: DataSource<KeyboardEvent>;
+
+	constructor(props: AurumElementProps, domNodeName: string) {
+		this.domNodeName = domNodeName;
+		this.template = props.template;
 		this.cancellationToken = new CancellationToken();
 		this.node = this.create(props);
+		this.initialize(props);
 
-		this.handleProps(props);
-
-		//@ts-ignore
-		this.node.owner = this;
 		if (props.onAttach) {
 			props.onAttach(this);
 		}
 	}
 
-	private handleProps(props: AurumElementProps) {
-		this.onClick = new DataSource();
+	protected createEventHandlers(keys: string[], props: any) {
+		for (const key of keys) {
+			const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
 
-		if (props.onClick) {
-			if (props.onClick instanceof DataSource) {
-				this.onClick.listen(props.onClick.update.bind(props.onClick), this.cancellationToken);
-			} else {
-				this.onClick.listen(props.onClick, this.cancellationToken);
+			let eventEmitter;
+			Object.defineProperty(this, computedEventName, {
+				get() {
+					if (!eventEmitter) {
+						eventEmitter = new DataSource();
+					}
+					return eventEmitter;
+				},
+				set() {
+					throw new Error(computedEventName + ' is read only');
+				}
+			});
+
+			if (props[computedEventName]) {
+				if (props[computedEventName] instanceof DataSource) {
+					this[computedEventName].listen(props[computedEventName].update.bind(props.onClick), this.cancellationToken);
+				} else if (typeof props[computedEventName] === 'function') {
+					this[computedEventName].listen(props[computedEventName], this.cancellationToken);
+				}
 			}
+			this.cancellationToken.registerDomEvent(this.node, key, (e: MouseEvent) => this[computedEventName].update(e));
 		}
-		this.cancellationToken.registerDomEvent(this.node, 'click', (e: MouseEvent) => this.onClick.update(e));
+	}
+
+	private initialize(props: AurumElementProps) {
+		//@ts-ignore
+		this.node.owner = this;
+
+		this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave'], props);
 
 		if (props.id) {
-			this.handleStringSource(props.id, 'id');
+			this.assignStringSourceToAttribute(props.id, 'id');
 		}
 		if (props.class) {
 			this.handleClass(props.class);
 		}
+
+		if (props.repeatModel) {
+			this.cachedChildren = [];
+			this.handleRepeat(props.repeatModel);
+		}
 	}
 
-	protected handleStringSource(data: StringSource, key: string) {
+	private handleRepeat(dataSource: ArrayDataSource<any> | any[]): void {
+		if (dataSource instanceof ArrayDataSource) {
+			this.repeatData = dataSource;
+		} else {
+			this.repeatData = new ArrayDataSource<any>(dataSource);
+		}
+
+		if (this.repeatData.length) {
+			this.cachedChildren.push(...(this.repeatData as ArrayDataSource<any>).toArray().map((i) => this.template.generate(i)));
+			this.renderRepeat();
+		}
+
+		this.repeatData.onChange.subscribe((change) => {
+			switch (change.operation) {
+				case 'append':
+					this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
+					break;
+				case 'removeLeft':
+					this.cachedChildren.splice(0, change.count);
+					break;
+				case 'removeRight':
+					this.cachedChildren.splice(this.node.childElementCount - change.count, change.count);
+					break;
+				case 'remove':
+					this.cachedChildren.splice(change.index, change.count);
+					break;
+				default:
+					this.cachedChildren.length = 0;
+					this.cachedChildren.push(...(this.repeatData as ArrayDataSource<any>).toArray().map((i) => this.template.generate(i)));
+					break;
+			}
+			this.renderRepeat();
+		});
+	}
+
+	protected renderRepeat(): void {
+		if (this.rerenderPending) {
+			return;
+		}
+
+		setTimeout(() => {
+			for (let i = 0; i < this.cachedChildren.length; i++) {
+				if (this.node.childElementCount <= i) {
+					this.addChildren(this.cachedChildren.slice(i, this.cachedChildren.length));
+					break;
+				}
+				if (((this.node.children[i] as any).owner as AurumElement) !== this.cachedChildren[i]) {
+					if (!this.cachedChildren.includes((this.node.children[i] as any).owner as AurumElement)) {
+						this.node.children[i].remove();
+						i--;
+						continue;
+					}
+
+					const index = this.getChildIndex(this.cachedChildren[i].node);
+					if (index !== -1) {
+						this.swapChildren(i, index);
+					} else {
+						this.addChildAt(this.cachedChildren[i], i);
+					}
+				}
+			}
+			while (this.node.childElementCount > this.cachedChildren.length) {
+				this.node.removeChild(this.node.lastChild);
+			}
+			// this.onUpdate.fire(this);
+			this.rerenderPending = false;
+		});
+		this.rerenderPending = true;
+	}
+
+	protected assignStringSourceToAttribute(data: StringSource, key: string) {
 		if (typeof data === 'string') {
 			this.node[key] = data;
 		} else {
@@ -114,7 +234,10 @@ export abstract class AurumElement {
 		}
 	}
 
-	public abstract create(props: AurumElementProps): HTMLElement;
+	public create(props: AurumElementProps): HTMLElement {
+		const node = document.createElement(this.domNodeName);
+		return node;
+	}
 
 	protected getChildIndex(node: HTMLElement): number {
 		let i = 0;
@@ -189,10 +312,7 @@ export abstract class AurumElement {
 				dataSegments.push(c);
 				this.setInnerText(c.value);
 				c.listen((v) => {
-					const value: string = dataSegments.reduce<string>(
-						(p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c),
-						''
-					);
+					const value: string = dataSegments.reduce<string>((p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c), '');
 					this.setInnerText(value);
 				}, this.cancellationToken);
 			} else {
@@ -200,10 +320,7 @@ export abstract class AurumElement {
 			}
 		}
 		if (dataSegments.length) {
-			const value: string = dataSegments.reduce<string>(
-				(p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c),
-				''
-			);
+			const value: string = dataSegments.reduce<string>((p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c), '');
 			this.setInnerText(value);
 		}
 	}

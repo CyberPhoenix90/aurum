@@ -2,7 +2,7 @@ import { MapLike, Constructor } from '../utilities/common';
 import { AurumElement } from '../nodes/aurum_element';
 import { Template } from '../nodes/template';
 
-class TypescriptXMLSyntax {
+class JavascriptXMLSyntax {
 	public deserialize(node: Constructor<AurumElement> | ((...args: any[]) => AurumElement), args: MapLike<any>, ...innerNodes: AurumElement[]): AurumElement {
 		if (typeof node === 'string') {
 			return;
@@ -43,4 +43,4 @@ class TypescriptXMLSyntax {
 	}
 }
 
-export const tsx: TypescriptXMLSyntax = new TypescriptXMLSyntax();
+export const jsx: JavascriptXMLSyntax = new JavascriptXMLSyntax();
