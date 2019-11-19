@@ -8,6 +8,7 @@ export interface InputProps extends AurumElementProps {
 	onChange?: DataDrain<InputEvent>;
 	onInput?: DataDrain<InputEvent>;
 	inputValueSource?: DataSource<string>;
+	initialValue?: string;
 }
 
 export class Input extends AurumElement {
@@ -15,15 +16,16 @@ export class Input extends AurumElement {
 
 	public onChange: DataSource<InputEvent>;
 	public onInput: DataSource<InputEvent>;
-	public onFocus: DataSource<FocusEvent>;
-	public onBlur: DataSource<FocusEvent>;
 
 	constructor(props: InputProps) {
 		super(props, 'input');
 		if (props.inputValueSource) {
+			this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';
 			props.inputValueSource.listen((value) => (this.node.value = value), this.cancellationToken);
+		} else {
+			this.node.value = props.initialValue ?? '';
 		}
 		this.bindProps(['placeholder'], props);
-		this.createEventHandlers(['input', 'change', 'focus', 'blur'], props);
+		this.createEventHandlers(['input', 'change'], props);
 	}
 }

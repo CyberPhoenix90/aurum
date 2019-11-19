@@ -15,4 +15,5 @@ export * from './nodes/p';
 export * from './nodes/img';
 export * from './nodes/link';
 export * from './nodes/canvas';
-//# sourceMappingURL=aurum.js.map
+export * from './nodes/special/switch';
+//# sourceMappingURL=aurumjs.js.map

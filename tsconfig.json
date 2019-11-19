@@ -6,6 +6,7 @@
 		"module": "esnext",
 		"newLine": "LF",
 		"target": "es2017",
+		"noUnusedLocals": true,
 		"declarationMap": true,
 		"declaration": true,
 		"inlineSources": true,

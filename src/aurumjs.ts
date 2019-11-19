@@ -3,6 +3,7 @@ export * from './stream/data_source';
 export * from './stream/event_emitter';
 export * from './utilities/cancellation_token';
 export * from './utilities/aurum';
+
 export * from './nodes/aurum_element';
 export * from './nodes/button';
 export * from './nodes/div';
@@ -15,4 +16,5 @@ export * from './nodes/p';
 export * from './nodes/img';
 export * from './nodes/link';
 export * from './nodes/canvas';
-//# sourceMappingURL=aurum.d.ts.map
+
+export * from './nodes/special/switch';

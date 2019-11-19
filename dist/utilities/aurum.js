@@ -19,23 +19,27 @@ export class Aurum {
             return;
         }
         const children = [].concat(...innerNodes).filter((e) => e);
-        const refs = {};
+        const templateMap = {};
+        let defaultTemplate;
         let hasRef = false;
         for (const c of children) {
             if (typeof c === 'string') {
                 continue;
             }
-            if (c instanceof Template && !c.ref) {
-                refs['template'] = c;
-                hasRef = true;
+            if (c instanceof Template && (!c.ref || c.ref === 'default')) {
+                defaultTemplate = c;
             }
             if (c.ref) {
-                refs[c.ref] = c;
+                templateMap[c.ref] = c;
                 hasRef = true;
             }
         }
+        args = (args !== null && args !== void 0 ? args : {});
+        if (defaultTemplate) {
+            args.template = defaultTemplate;
+        }
         if (hasRef) {
-            Object.assign(args, refs);
+            args.templateMap = templateMap;
         }
         let instance;
         if (node.prototype) {

@@ -2,6 +2,7 @@ import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DataDrain, StringSource, ClassType } from '../utilities/common';
 import { ArrayDataSource } from '../stream/array_data_source';
+import { ownerSymbol } from '../utilities/owner_symbol';
 
 export interface AurumElementProps {
 	id?: StringSource;
@@ -13,6 +14,7 @@ export interface AurumElementProps {
 
 	repeatModel?: ArrayDataSource<any> | any[];
 
+	onDblclick?: DataDrain<MouseEvent>;
 	onClick?: DataDrain<MouseEvent>;
 	onKeydown?: DataDrain<KeyboardEvent>;
 	onKeyup?: DataDrain<KeyboardEvent>;
@@ -21,6 +23,8 @@ export interface AurumElementProps {
 	onMouseenter?: DataDrain<KeyboardEvent>;
 	onMouseleave?: DataDrain<KeyboardEvent>;
 	onMousewheel?: DataDrain<WheelEvent>;
+	onBlur?: DataDrain<FocusEvent>;
+	onFocus?: DataDrain<FocusEvent>;
 
 	onAttach?: (node: AurumElement) => void;
 	template?: Template<any>;
@@ -43,6 +47,8 @@ export abstract class AurumElement {
 	public onMouseup: DataSource<KeyboardEvent>;
 	public onMouseenter: DataSource<KeyboardEvent>;
 	public onMouseleave: DataSource<KeyboardEvent>;
+	public onFocus: DataSource<FocusEvent>;
+	public onBlur: DataSource<FocusEvent>;
 
 	constructor(props: AurumElementProps, domNodeName: string) {
 		this.domNodeName = domNodeName;
@@ -60,7 +66,10 @@ export abstract class AurumElement {
 		//@ts-ignore
 		this.node.owner = this;
 
-		this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
+		this.createEventHandlers(
+			['blur', 'focus', 'click', 'dblclick', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'],
+			props
+		);
 		this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
 
 		if (props.class) {
@@ -157,7 +166,7 @@ export abstract class AurumElement {
 				}
 				if (((this.node.children[i] as any).owner as AurumElement) !== this.cachedChildren[i]) {
 					if (!this.cachedChildren.includes((this.node.children[i] as any).owner as AurumElement)) {
-						this.node.children[i].remove();
+						this.node.children[i][ownerSymbol].remove();
 						i--;
 						continue;
 					}
@@ -171,7 +180,7 @@ export abstract class AurumElement {
 				}
 			}
 			while (this.node.childElementCount > this.cachedChildren.length) {
-				this.node.removeChild(this.node.lastChild);
+				this.node[ownerSymbol].removeChild(this.node.lastChild[ownerSymbol]);
 			}
 			// this.onUpdate.fire(this);
 			this.rerenderPending = false;
@@ -244,6 +253,7 @@ export abstract class AurumElement {
 
 	public create(props: AurumElementProps): HTMLElement {
 		const node = document.createElement(this.domNodeName);
+		node[ownerSymbol] = this;
 		return node;
 	}
 
@@ -268,6 +278,10 @@ export abstract class AurumElement {
 	}
 
 	public setInnerText(value: string) {
+		if (this.node.firstChild) {
+			throw new Error('Cannot combine text and child nodes into a single element');
+		}
+
 		this.node.innerText = value;
 	}
 
@@ -297,8 +311,53 @@ export abstract class AurumElement {
 		}
 	}
 
+	public remove(): void {
+		if (this.hasParent()) {
+			this.node.parentElement.removeChild(this.node);
+			this.dispose();
+		}
+	}
+
+	public hasParent(): boolean {
+		return !!this.node.parentElement;
+	}
+
+	public isConnected(): boolean {
+		return this.node.isConnected;
+	}
+
+	public removeChild(child: AurumElement): void {
+		child.dispose();
+		this.node.removeChild(child.node);
+	}
+
+	public removeChildAt(index: number): void {
+		const childNode = this.node.childNodes[index];
+		if (childNode) {
+			const child = childNode[ownerSymbol];
+			child.dispose();
+			this.node.removeChild(child.node);
+		}
+	}
+
+	public clearChildren(): void {
+		while (this.node.firstChild) {
+			const owner: AurumElement = this.node.firstChild[ownerSymbol];
+			owner.dispose();
+			this.node.removeChild(this.node.firstChild);
+		}
+	}
+
+	public addChild(child: AurumElement) {
+		if (child.node instanceof Template) {
+			return;
+		}
+
+		return this.node.appendChild(child.node);
+	}
+
 	public addChildAt(child: AurumElement, index: number) {
-		if (child instanceof Template) {
+		if (child.node instanceof Template) {
 			return;
 		}
 
@@ -309,6 +368,7 @@ export abstract class AurumElement {
 		if (nodes.length === 0) {
 			return;
 		}
+
 		let dataSegments: Array<string | DataSource<any>> = [];
 		for (const c of nodes) {
 			if (c instanceof Template) {
@@ -331,6 +391,10 @@ export abstract class AurumElement {
 			const value: string = dataSegments.reduce<string>((p, c) => p + (c instanceof DataSource ? (c.value ?? '').toString() : c), '');
 			this.setInnerText(value);
 		}
+	}
+
+	public dispose() {
+		this.cancellationToken.cancel();
 	}
 }
 

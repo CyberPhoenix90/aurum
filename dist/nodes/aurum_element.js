@@ -1,6 +1,7 @@
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { ArrayDataSource } from '../stream/array_data_source';
+import { ownerSymbol } from '../utilities/owner_symbol';
 export class AurumElement {
     constructor(props, domNodeName) {
         this.domNodeName = domNodeName;
@@ -14,7 +15,7 @@ export class AurumElement {
     }
     initialize(props) {
         this.node.owner = this;
-        this.createEventHandlers(['click', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
+        this.createEventHandlers(['blur', 'focus', 'click', 'dblclick', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
         this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
         if (props.class) {
             this.handleClass(props.class);
@@ -102,7 +103,7 @@ export class AurumElement {
                 }
                 if (this.node.children[i].owner !== this.cachedChildren[i]) {
                     if (!this.cachedChildren.includes(this.node.children[i].owner)) {
-                        this.node.children[i].remove();
+                        this.node.children[i][ownerSymbol].remove();
                         i--;
                         continue;
                     }
@@ -116,7 +117,7 @@ export class AurumElement {
                 }
             }
             while (this.node.childElementCount > this.cachedChildren.length) {
-                this.node.removeChild(this.node.lastChild);
+                this.node[ownerSymbol].removeChild(this.node.lastChild[ownerSymbol]);
             }
             this.rerenderPending = false;
         });
@@ -193,6 +194,7 @@ export class AurumElement {
     }
     create(props) {
         const node = document.createElement(this.domNodeName);
+        node[ownerSymbol] = this;
         return node;
     }
     getChildIndex(node) {
@@ -214,6 +216,9 @@ export class AurumElement {
         return false;
     }
     setInnerText(value) {
+        if (this.node.firstChild) {
+            throw new Error('Cannot combine text and child nodes into a single element');
+        }
         this.node.innerText = value;
     }
     swapChildren(indexA, indexB) {
@@ -241,8 +246,45 @@ export class AurumElement {
             this.node.insertBefore(node, this.node.children[index]);
         }
     }
+    remove() {
+        if (this.hasParent()) {
+            this.node.parentElement.removeChild(this.node);
+            this.dispose();
+        }
+    }
+    hasParent() {
+        return !!this.node.parentElement;
+    }
+    isConnected() {
+        return this.node.isConnected;
+    }
+    removeChild(child) {
+        child.dispose();
+        this.node.removeChild(child.node);
+    }
+    removeChildAt(index) {
+        const childNode = this.node.childNodes[index];
+        if (childNode) {
+            const child = childNode[ownerSymbol];
+            child.dispose();
+            this.node.removeChild(child.node);
+        }
+    }
+    clearChildren() {
+        while (this.node.firstChild) {
+            const owner = this.node.firstChild[ownerSymbol];
+            owner.dispose();
+            this.node.removeChild(this.node.firstChild);
+        }
+    }
+    addChild(child) {
+        if (child.node instanceof Template) {
+            return;
+        }
+        return this.node.appendChild(child.node);
+    }
     addChildAt(child, index) {
-        if (child instanceof Template) {
+        if (child.node instanceof Template) {
             return;
         }
         return this.addDomNodeAt(child.node, index);
@@ -275,6 +317,9 @@ export class AurumElement {
             const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
             this.setInnerText(value);
         }
+    }
+    dispose() {
+        this.cancellationToken.cancel();
     }
 }
 export class Template extends AurumElement {

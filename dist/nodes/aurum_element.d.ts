@@ -10,6 +10,7 @@ export interface AurumElementProps {
     style?: StringSource;
     title?: StringSource;
     repeatModel?: ArrayDataSource<any> | any[];
+    onDblclick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
     onKeydown?: DataDrain<KeyboardEvent>;
     onKeyup?: DataDrain<KeyboardEvent>;
@@ -18,6 +19,8 @@ export interface AurumElementProps {
     onMouseenter?: DataDrain<KeyboardEvent>;
     onMouseleave?: DataDrain<KeyboardEvent>;
     onMousewheel?: DataDrain<WheelEvent>;
+    onBlur?: DataDrain<FocusEvent>;
+    onFocus?: DataDrain<FocusEvent>;
     onAttach?: (node: AurumElement) => void;
     template?: Template<any>;
 }
@@ -36,6 +39,8 @@ export declare abstract class AurumElement {
     onMouseup: DataSource<KeyboardEvent>;
     onMouseenter: DataSource<KeyboardEvent>;
     onMouseleave: DataSource<KeyboardEvent>;
+    onFocus: DataSource<FocusEvent>;
+    onBlur: DataSource<FocusEvent>;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any): void;
@@ -50,8 +55,16 @@ export declare abstract class AurumElement {
     setInnerText(value: string): void;
     swapChildren(indexA: number, indexB: number): void;
     protected addDomNodeAt(node: HTMLElement, index: number): void;
+    remove(): void;
+    hasParent(): boolean;
+    isConnected(): boolean;
+    removeChild(child: AurumElement): void;
+    removeChildAt(index: number): void;
+    clearChildren(): void;
+    addChild(child: AurumElement): HTMLElement;
     addChildAt(child: AurumElement, index: number): void;
     addChildren(nodes: AurumElement[]): void;
+    dispose(): void;
 }
 export interface TemplateProps<T> extends AurumElementProps {
     onAttach?(entity: Template<T>): void;
