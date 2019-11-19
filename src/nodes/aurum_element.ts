@@ -278,7 +278,7 @@ export abstract class AurumElement {
 	}
 
 	public setInnerText(value: string) {
-		if (this.node.firstChild) {
+		if (this.node.firstChild instanceof HTMLElement) {
 			throw new Error('Cannot combine text and child nodes into a single element');
 		}
 
