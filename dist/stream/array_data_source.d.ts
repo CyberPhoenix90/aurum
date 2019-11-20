@@ -3,9 +3,10 @@ import { DataSource } from './data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Predicate } from '../utilities/common';
 export interface CollectionChange<T> {
-    operation: 'replace' | 'append' | 'prepend' | 'removeLeft' | 'removeRight' | 'remove';
-    count: number;
+    operation: 'replace' | 'append' | 'prepend' | 'remove' | 'swap';
+    count?: number;
     index: number;
+    index2?: number;
     target?: T;
     items: T[];
     newState: T[];
@@ -18,6 +19,8 @@ export declare class ArrayDataSource<T> {
     getData(): T[];
     get(index: number): T;
     set(index: number, item: T): void;
+    swap(indexA: number, indexB: number): void;
+    swapItems(itemA: T, itemB: T): void;
     push(...items: T[]): void;
     unshift(...items: T[]): void;
     pop(): T;

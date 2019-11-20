@@ -15,7 +15,26 @@ export class AurumElement {
     }
     initialize(props) {
         this.node.owner = this;
-        this.createEventHandlers(['blur', 'focus', 'click', 'dblclick', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'], props);
+        this.createEventHandlers([
+            'drag',
+            'dragstart',
+            'dragend',
+            'dragexit',
+            'dragover',
+            'dragenter',
+            'dragleave',
+            'blur',
+            'focus',
+            'click',
+            'dblclick',
+            'keydown',
+            'keyhit',
+            'keyup',
+            'mousedown, mouseup',
+            'mouseenter',
+            'mouseleave',
+            'mousewheel'
+        ], props);
         this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
         if (props.class) {
             this.handleClass(props.class);
@@ -71,14 +90,14 @@ export class AurumElement {
         }
         this.repeatData.onChange.subscribe((change) => {
             switch (change.operation) {
+                case 'swap':
+                    const itemA = this.cachedChildren[change.index];
+                    const itemB = this.cachedChildren[change.index2];
+                    this.cachedChildren[change.index2] = itemA;
+                    this.cachedChildren[change.index] = itemB;
+                    break;
                 case 'append':
                     this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
-                    break;
-                case 'removeLeft':
-                    this.cachedChildren.splice(0, change.count);
-                    break;
-                case 'removeRight':
-                    this.cachedChildren.splice(this.node.childElementCount - change.count, change.count);
                     break;
                 case 'remove':
                     this.cachedChildren.splice(change.index, change.count);
@@ -125,13 +144,13 @@ export class AurumElement {
     }
     assignStringSourceToAttribute(data, key) {
         if (typeof data === 'string') {
-            this.node[key] = data;
+            this.node.setAttribute(key, data);
         }
         else {
             if (data.value) {
-                this.node[key] = data.value;
+                this.node.setAttribute(key, data.value);
             }
-            data.unique(this.cancellationToken).listen((v) => (this.node.id = v), this.cancellationToken);
+            data.unique(this.cancellationToken).listen((v) => this.node.setAttribute(key, v), this.cancellationToken);
         }
     }
     handleClass(data) {

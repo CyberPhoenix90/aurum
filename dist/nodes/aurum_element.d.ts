@@ -21,6 +21,13 @@ export interface AurumElementProps {
     onMousewheel?: DataDrain<WheelEvent>;
     onBlur?: DataDrain<FocusEvent>;
     onFocus?: DataDrain<FocusEvent>;
+    onDrag?: DataDrain<DragEvent>;
+    onDragend?: DataDrain<DragEvent>;
+    onDragenter?: DataDrain<DragEvent>;
+    onDragexit?: DataDrain<DragEvent>;
+    onDragleave?: DataDrain<DragEvent>;
+    onDragover?: DataDrain<DragEvent>;
+    onDragstart?: DataDrain<DragEvent>;
     onAttach?: (node: AurumElement) => void;
     template?: Template<any>;
 }
@@ -41,6 +48,13 @@ export declare abstract class AurumElement {
     onMouseleave: DataSource<KeyboardEvent>;
     onFocus: DataSource<FocusEvent>;
     onBlur: DataSource<FocusEvent>;
+    onDrag: DataSource<DragEvent>;
+    onDragend: DataSource<DragEvent>;
+    onDragenter: DataSource<DragEvent>;
+    onDragexit: DataSource<DragEvent>;
+    onDragleave: DataSource<DragEvent>;
+    onDragover: DataSource<DragEvent>;
+    onDragstart: DataSource<DragEvent>;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any): void;

@@ -27,6 +27,28 @@ export class ArrayDataSource {
         this.data[index] = item;
         this.onChange.fire({ operation: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
     }
+    swap(indexA, indexB) {
+        if (indexA === indexB) {
+            return;
+        }
+        const itemA = this.data[indexA];
+        const itemB = this.data[indexB];
+        this.data[indexB] = itemA;
+        this.data[indexA] = itemB;
+        this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+    }
+    swapItems(itemA, itemB) {
+        if (itemA === itemB) {
+            return;
+        }
+        const indexA = this.data.indexOf(itemA);
+        const indexB = this.data.indexOf(itemB);
+        if (indexA !== -1 && indexB !== -1) {
+            this.data[indexB] = itemA;
+            this.data[indexA] = itemB;
+        }
+        this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+    }
     push(...items) {
         this.data.push(...items);
         this.onChange.fire({
@@ -44,7 +66,7 @@ export class ArrayDataSource {
     pop() {
         const item = this.data.pop();
         this.onChange.fire({
-            operation: 'removeRight',
+            operation: 'remove',
             count: 1,
             index: this.data.length,
             items: [item],
@@ -69,11 +91,11 @@ export class ArrayDataSource {
     }
     removeRight(count) {
         const result = this.data.splice(this.length - count, count);
-        this.onChange.fire({ operation: 'removeRight', count, index: this.length, items: result, newState: this.data });
+        this.onChange.fire({ operation: 'remove', count, index: this.length - count, items: result, newState: this.data });
     }
     removeLeft(count) {
         const result = this.data.splice(0, count);
-        this.onChange.fire({ operation: 'removeLeft', count, index: 0, items: result, newState: this.data });
+        this.onChange.fire({ operation: 'remove', count, index: 0, items: result, newState: this.data });
     }
     remove(item) {
         const index = this.data.indexOf(item);
@@ -95,7 +117,7 @@ export class ArrayDataSource {
     }
     shift() {
         const item = this.data.shift();
-        this.onChange.fire({ operation: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+        this.onChange.fire({ operation: 'remove', items: [item], count: 1, index: 0, newState: this.data });
         return item;
     }
     toArray() {
@@ -125,8 +147,6 @@ export class FilteredArrayView extends ArrayDataSource {
             let filteredItems;
             switch (change.operation) {
                 case 'remove':
-                case 'removeLeft':
-                case 'removeRight':
                     for (const item of change.items) {
                         this.remove(item);
                     }
@@ -139,6 +159,13 @@ export class FilteredArrayView extends ArrayDataSource {
                     filteredItems = change.items.filter(this.viewFilter);
                     this.push(...filteredItems);
                     break;
+                case 'swap':
+                    const indexA = this.data.indexOf(change.items[0]);
+                    const indexB = this.data.indexOf(change.items[1]);
+                    if (indexA !== -1 && indexB !== -1) {
+                        this.swap(indexA, indexB);
+                    }
+                    break;
                 case 'replace':
                     const index = this.data.indexOf(change.target);
                     if (index !== -1) {
@@ -149,8 +176,8 @@ export class FilteredArrayView extends ArrayDataSource {
                         else {
                             this.remove(change.target);
                         }
-                        break;
                     }
+                    break;
             }
         }, cancellationToken);
     }

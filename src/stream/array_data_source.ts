@@ -4,9 +4,10 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { Predicate } from '../utilities/common';
 
 export interface CollectionChange<T> {
-	operation: 'replace' | 'append' | 'prepend' | 'removeLeft' | 'removeRight' | 'remove';
-	count: number;
+	operation: 'replace' | 'append' | 'prepend' | 'remove' | 'swap';
+	count?: number;
 	index: number;
+	index2?: number;
 	target?: T;
 	items: T[];
 	newState: T[];
@@ -45,6 +46,34 @@ export class ArrayDataSource<T> {
 		this.onChange.fire({ operation: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
 	}
 
+	public swap(indexA: number, indexB: number): void {
+		if (indexA === indexB) {
+			return;
+		}
+
+		const itemA = this.data[indexA];
+		const itemB = this.data[indexB];
+		this.data[indexB] = itemA;
+		this.data[indexA] = itemB;
+
+		this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+	}
+
+	public swapItems(itemA: T, itemB: T): void {
+		if (itemA === itemB) {
+			return;
+		}
+
+		const indexA = this.data.indexOf(itemA);
+		const indexB = this.data.indexOf(itemB);
+		if (indexA !== -1 && indexB !== -1) {
+			this.data[indexB] = itemA;
+			this.data[indexA] = itemB;
+		}
+
+		this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+	}
+
 	public push(...items: T[]) {
 		this.data.push(...items);
 		this.onChange.fire({
@@ -64,7 +93,7 @@ export class ArrayDataSource<T> {
 	public pop(): T {
 		const item = this.data.pop();
 		this.onChange.fire({
-			operation: 'removeRight',
+			operation: 'remove',
 			count: 1,
 			index: this.data.length,
 			items: [item],
@@ -91,12 +120,12 @@ export class ArrayDataSource<T> {
 
 	public removeRight(count: number): void {
 		const result = this.data.splice(this.length - count, count);
-		this.onChange.fire({ operation: 'removeRight', count, index: this.length, items: result, newState: this.data });
+		this.onChange.fire({ operation: 'remove', count, index: this.length - count, items: result, newState: this.data });
 	}
 
 	public removeLeft(count: number): void {
 		const result = this.data.splice(0, count);
-		this.onChange.fire({ operation: 'removeLeft', count, index: 0, items: result, newState: this.data });
+		this.onChange.fire({ operation: 'remove', count, index: 0, items: result, newState: this.data });
 	}
 
 	public remove(item: T): void {
@@ -121,7 +150,7 @@ export class ArrayDataSource<T> {
 
 	public shift(): T {
 		const item = this.data.shift();
-		this.onChange.fire({ operation: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+		this.onChange.fire({ operation: 'remove', items: [item], count: 1, index: 0, newState: this.data });
 
 		return item;
 	}
@@ -162,8 +191,6 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 			let filteredItems;
 			switch (change.operation) {
 				case 'remove':
-				case 'removeLeft':
-				case 'removeRight':
 					for (const item of change.items) {
 						this.remove(item);
 					}
@@ -176,6 +203,13 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 					filteredItems = change.items.filter(this.viewFilter);
 					this.push(...filteredItems);
 					break;
+				case 'swap':
+					const indexA = this.data.indexOf(change.items[0]);
+					const indexB = this.data.indexOf(change.items[1]);
+					if (indexA !== -1 && indexB !== -1) {
+						this.swap(indexA, indexB);
+					}
+					break;
 				case 'replace':
 					const index = this.data.indexOf(change.target);
 					if (index !== -1) {
@@ -185,8 +219,8 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 						} else {
 							this.remove(change.target);
 						}
-						break;
 					}
+					break;
 			}
 		}, cancellationToken);
 	}

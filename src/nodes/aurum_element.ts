@@ -25,6 +25,13 @@ export interface AurumElementProps {
 	onMousewheel?: DataDrain<WheelEvent>;
 	onBlur?: DataDrain<FocusEvent>;
 	onFocus?: DataDrain<FocusEvent>;
+	onDrag?: DataDrain<DragEvent>;
+	onDragend?: DataDrain<DragEvent>;
+	onDragenter?: DataDrain<DragEvent>;
+	onDragexit?: DataDrain<DragEvent>;
+	onDragleave?: DataDrain<DragEvent>;
+	onDragover?: DataDrain<DragEvent>;
+	onDragstart?: DataDrain<DragEvent>;
 
 	onAttach?: (node: AurumElement) => void;
 	template?: Template<any>;
@@ -49,6 +56,13 @@ export abstract class AurumElement {
 	public onMouseleave: DataSource<KeyboardEvent>;
 	public onFocus: DataSource<FocusEvent>;
 	public onBlur: DataSource<FocusEvent>;
+	public onDrag: DataSource<DragEvent>;
+	public onDragend: DataSource<DragEvent>;
+	public onDragenter: DataSource<DragEvent>;
+	public onDragexit: DataSource<DragEvent>;
+	public onDragleave: DataSource<DragEvent>;
+	public onDragover: DataSource<DragEvent>;
+	public onDragstart: DataSource<DragEvent>;
 
 	constructor(props: AurumElementProps, domNodeName: string) {
 		this.domNodeName = domNodeName;
@@ -56,7 +70,6 @@ export abstract class AurumElement {
 		this.cancellationToken = new CancellationToken();
 		this.node = this.create(props);
 		this.initialize(props);
-
 		if (props.onAttach) {
 			props.onAttach(this);
 		}
@@ -67,7 +80,26 @@ export abstract class AurumElement {
 		this.node.owner = this;
 
 		this.createEventHandlers(
-			['blur', 'focus', 'click', 'dblclick', 'keydown', 'keyhit', 'keyup', 'mousedown, mouseup', 'mouseenter', 'mouseleave', 'mousewheel'],
+			[
+				'drag',
+				'dragstart',
+				'dragend',
+				'dragexit',
+				'dragover',
+				'dragenter',
+				'dragleave',
+				'blur',
+				'focus',
+				'click',
+				'dblclick',
+				'keydown',
+				'keyhit',
+				'keyup',
+				'mousedown, mouseup',
+				'mouseenter',
+				'mouseleave',
+				'mousewheel'
+			],
 			props
 		);
 		this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
@@ -132,14 +164,14 @@ export abstract class AurumElement {
 
 		this.repeatData.onChange.subscribe((change) => {
 			switch (change.operation) {
+				case 'swap':
+					const itemA = this.cachedChildren[change.index];
+					const itemB = this.cachedChildren[change.index2];
+					this.cachedChildren[change.index2] = itemA;
+					this.cachedChildren[change.index] = itemB;
+					break;
 				case 'append':
 					this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
-					break;
-				case 'removeLeft':
-					this.cachedChildren.splice(0, change.count);
-					break;
-				case 'removeRight':
-					this.cachedChildren.splice(this.node.childElementCount - change.count, change.count);
 					break;
 				case 'remove':
 					this.cachedChildren.splice(change.index, change.count);
@@ -190,12 +222,12 @@ export abstract class AurumElement {
 
 	protected assignStringSourceToAttribute(data: StringSource, key: string) {
 		if (typeof data === 'string') {
-			this.node[key] = data;
+			this.node.setAttribute(key, data);
 		} else {
 			if (data.value) {
-				this.node[key] = data.value;
+				this.node.setAttribute(key, data.value);
 			}
-			data.unique(this.cancellationToken).listen((v) => (this.node.id = v), this.cancellationToken);
+			data.unique(this.cancellationToken).listen((v) => this.node.setAttribute(key, v), this.cancellationToken);
 		}
 	}
 

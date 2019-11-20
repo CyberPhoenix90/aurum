@@ -15,11 +15,11 @@ This makes it very fast to apply updates while keeping the code short.
 This project is and will always be dependency free for better security and performance
 This project is still a very early prototype not suited for any serious project yet but feel free to try it and make bug reports or suggestions.
 
-To get started simply run
-
-> npm install aurumjs
-
 ## Getting started
+
+Install:
+
+> \$ npm install aurumjs
 
 To use Aurum you need to compile JSX or TSX using babel or the typescript compiler.
 
@@ -61,6 +61,7 @@ import {Aurum, Div} from 'aurumjs'
 Aurum.attach((<Div>Hello Aurum</Div>), document.body)
 ```
 
-Simple TODO app in aurum: https://codepen.io/cyberphoenix90/pen/LYYMwVr
+TODO App with creation, deletion drag and drop, editing and marking as done of tasks all under 100 lines of code with aurum:
+https://codepen.io/cyberphoenix90/pen/LYYMwVr
 
 Better examples, proper documentation and benchmarks will be added in the near future.
