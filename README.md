@@ -3,6 +3,9 @@
 </p>
 
 # Fast and concise declarative DOM rendering library for javascript
+[![Build Status](https://travis-ci.com/CyberPhoenix90/aurum.svg?branch=master)](https://travis-ci.com/CyberPhoenix90/aurum)
+![npm](https://img.shields.io/npm/dw/aurumjs)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/aurumjs)
 
 Aurumjs is a DOM rendering library inspired by react and angular.
 In Aurum you define your DOM using JSX and each thing that can change, be it attributes or inner text can be assigned to a data source.
