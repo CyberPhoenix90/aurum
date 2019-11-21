@@ -425,8 +425,14 @@ export abstract class AurumElement {
 		}
 	}
 
-	public dispose() {
+	public dispose(): void {
 		this.cancellationToken.cancel();
+		for (const child of this.node.childNodes) {
+			if (child[ownerSymbol]) {
+				child[ownerSymbol].dispose();
+			}
+		}
+		this.remove();
 	}
 }
 

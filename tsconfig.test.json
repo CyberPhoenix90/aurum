@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "commonjs",
+		"newLine": "LF",
+		"target": "es2017",
+		"noUnusedLocals": true,
+		"declarationMap": true,
+		"declaration": true,
+		"inlineSources": true,
+		"jsx": "react",
+		"jsxFactory": "Aurum.factory",
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"removeComments": true,
+		"outDir": "dist_test",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node",
+		"inlineSourceMap": true,
+	},
+	"include": [
+		"src/**/*.ts",
+		"test/**/*.ts",
+		"test/**/*.tsx"
+	]
+}

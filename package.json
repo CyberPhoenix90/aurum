@@ -1,12 +1,13 @@
 {
 	"name": "aurumjs",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurumjs.js",
 	"typings": "dist/aurumjs.d.ts",
 	"scripts": {
 		"build": "tsc",
 		"watch": "tsc -w",
+		"test": "tsc -p tsconfig.test.json && jest",
 		"deploy": "npm run build && microbundle --entry dist/aurumjs.js --output prebuilt --name aurumjs"
 	},
 	"repository": {
@@ -22,9 +23,14 @@
 	"author": "Joao Santos (CyberPhoenix)",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/chai": "^4.2.5",
+		"chai": "^4.2.0",
+		"jest": "^24.9.0",
+		"microbundle": "^0.11.0",
 		"prettier": "^1.19.1",
-		"typescript": "^3.7.2",
-		"microbundle": "^0.11.0"
+		"typescript": "^3.7.2"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"@types/jest": "^24.0.23"
+	}
 }

@@ -1,6 +1,8 @@
 import { AurumElement, AurumElementProps } from './aurum_element';
 import { StringSource } from '../utilities/common';
 export interface CanvasProps extends AurumElementProps {
+    onAttach?: (node: Canvas) => void;
+    onDettach?: (node: Canvas) => void;
     width?: StringSource;
     height?: StringSource;
 }

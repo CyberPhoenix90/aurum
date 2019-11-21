@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"allowUnusedLabels": false,
 		"alwaysStrict": true,
-		"sourceRoot": "src",
 		"module": "esnext",
 		"newLine": "LF",
 		"target": "es2017",
@@ -20,5 +19,7 @@
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"
 	},
-	"include": ["src/**/*.ts"]
+	"include": [
+		"src/**/*.ts"
+	]
 }
