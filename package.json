@@ -7,7 +7,7 @@
 	"scripts": {
 		"build": "tsc",
 		"watch": "tsc -w",
-		"test": "tsc -p tsconfig.test.json && jest",
+		"test": "jest",
 		"deploy": "npm run build && microbundle --entry dist/aurumjs.js --output prebuilt --name aurumjs"
 	},
 	"repository": {
@@ -31,6 +31,7 @@
 		"typescript": "^3.7.2"
 	},
 	"dependencies": {
-		"@types/jest": "^24.0.23"
+		"@types/jest": "^24.0.23",
+		"ts-jest": "^24.1.0"
 	}
 }

@@ -7,6 +7,8 @@
 		"target": "es2017",
 		"noUnusedLocals": true,
 		"declarationMap": true,
+		"jsx": "react",
+		"jsxFactory": "Aurum.factory",
 		"declaration": true,
 		"inlineSources": true,
 		"sourceMap": true,

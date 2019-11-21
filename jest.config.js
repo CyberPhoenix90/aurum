@@ -2,6 +2,10 @@
 // https://jestjs.io/docs/en/configuration.html
 
 module.exports = {
+	transform: {
+		'^.+\\.tsx?$': 'ts-jest'
+	},
+	moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 	// All imported modules in your tests should be mocked automatically
 	// automock: false,
 
@@ -26,6 +30,7 @@ module.exports = {
 	// The directory where Jest should output its coverage files
 	coverageDirectory: 'coverage',
 
+	modulePathIgnorePatterns: ['/node_modules/'],
 	// An array of regexp pattern strings used to skip coverage collection
 	coveragePathIgnorePatterns: ['/node_modules/'],
 
@@ -68,11 +73,11 @@ module.exports = {
 
 	// An array of file extensions your modules use
 	moduleFileExtensions: [
-		'js'
+		'js',
 		//   "json",
 		//   "jsx",
-		//   "ts",
-		//   "tsx",
+		'ts',
+		'tsx'
 		//   "node"
 	]
 
@@ -80,7 +85,6 @@ module.exports = {
 	// moduleNameMapper: {},
 
 	// An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-	// modulePathIgnorePatterns: [],
 
 	// Activates notifications for test results
 	// notify: false,
@@ -137,12 +141,6 @@ module.exports = {
 
 	// Adds a location field to test results
 	// testLocationInResults: false,
-
-	// The glob patterns Jest uses to detect test files
-	// testMatch: [
-	//   "**/__tests__/**/*.[jt]s?(x)",
-	//   "**/?(*.)+(spec|test).[tj]s?(x)"
-	// ],
 
 	// An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
 	// testPathIgnorePatterns: [
