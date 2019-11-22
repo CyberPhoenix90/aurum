@@ -63,34 +63,39 @@ export class DataSource<T> {
 		return uniqueSource;
 	}
 
-	public reduce(reducer: (p: T, c: T) => T, cancellationToken?: CancellationToken): DataSource<T> {
-		const reduceSource = new DataSource<T>();
+	public reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): DataSource<T> {
+		const reduceSource = new DataSource<T>(initialValue);
 		this.listen((v) => reduceSource.update(reducer(reduceSource.value, v)), cancellationToken);
 
 		return reduceSource;
 	}
 
-	public combine<D, E>(
-		otherSource: DataSource<D>,
-		combinator: (self: T, other: D) => E,
-		cancellationToken?: CancellationToken
-	): DataSource<E> {
-		const combinedDataSource = new DataSource<E>();
+	public aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E> {
+		const aggregatedSource = new DataSource<E>(combinator(this.value, otherSource.value));
 
-		this.listen(() => combinedDataSource.update(combinator(this.value, otherSource.value)), cancellationToken);
-		otherSource.listen(
-			() => combinedDataSource.update(combinator(this.value, otherSource.value)),
-			cancellationToken
-		);
+		this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	public combine(otherSource: DataSource<T>, cancellationToken?: CancellationToken): DataSource<T> {
+		const combinedDataSource = new DataSource<T>();
+		this.pipe(combinedDataSource, cancellationToken);
+		otherSource.pipe(combinedDataSource, cancellationToken);
 
 		return combinedDataSource;
 	}
 
 	public pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]> {
-		const subDataSource: DataSource<T[typeof key]> = new DataSource();
+		const subDataSource: DataSource<T[typeof key]> = new DataSource(this.value?.[key]);
 
 		this.listen((v) => {
-			subDataSource.update(v[key]);
+			if (v !== undefined && v !== null) {
+				subDataSource.update(v[key]);
+			} else {
+				subDataSource.update(v as null | undefined);
+			}
 		}, cancellationToken);
 
 		return subDataSource;

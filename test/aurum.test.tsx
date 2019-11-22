@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { Aurum, Div, P, DataSource } from '../src/aurumjs';
+import { Aurum, DataSource, Div, P, Template } from '../src/aurumjs';
+import { ownerSymbol } from '../src/utilities/owner_symbol';
 
 describe('Aurum', () => {
 	afterEach(() => {
@@ -50,5 +51,25 @@ describe('Aurum', () => {
 		const FuncComp = () => <Div>Functional</Div>;
 		Aurum.attach(<FuncComp></FuncComp>, document.body);
 		assert((document.body.firstChild as HTMLDivElement).innerText === 'Functional');
+	});
+
+	it('Should assign default template', () => {
+		Aurum.attach(
+			<Div>
+				<Template generator={() => void 0}></Template>
+			</Div>,
+			document.body
+		);
+		assert(document.body.firstChild[ownerSymbol].template !== undefined);
+	});
+
+	it('Should assign explicit default template', () => {
+		Aurum.attach(
+			<Div>
+				<Template ref="default" generator={() => void 0}></Template>
+			</Div>,
+			document.body
+		);
+		assert(document.body.firstChild[ownerSymbol].template !== undefined);
 	});
 });
