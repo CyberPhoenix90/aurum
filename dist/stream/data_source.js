@@ -51,21 +51,33 @@ export class DataSource {
         }, cancellationToken);
         return uniqueSource;
     }
-    reduce(reducer, cancellationToken) {
-        const reduceSource = new DataSource();
+    reduce(reducer, initialValue, cancellationToken) {
+        const reduceSource = new DataSource(initialValue);
         this.listen((v) => reduceSource.update(reducer(reduceSource.value, v)), cancellationToken);
         return reduceSource;
     }
-    combine(otherSource, combinator, cancellationToken) {
+    aggregate(otherSource, combinator, cancellationToken) {
+        const aggregatedSource = new DataSource(combinator(this.value, otherSource.value));
+        this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+        otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+        return aggregatedSource;
+    }
+    combine(otherSource, cancellationToken) {
         const combinedDataSource = new DataSource();
-        this.listen(() => combinedDataSource.update(combinator(this.value, otherSource.value)), cancellationToken);
-        otherSource.listen(() => combinedDataSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+        this.pipe(combinedDataSource, cancellationToken);
+        otherSource.pipe(combinedDataSource, cancellationToken);
         return combinedDataSource;
     }
     pick(key, cancellationToken) {
-        const subDataSource = new DataSource();
+        var _a;
+        const subDataSource = new DataSource((_a = this.value) === null || _a === void 0 ? void 0 : _a[key]);
         this.listen((v) => {
-            subDataSource.update(v[key]);
+            if (v !== undefined && v !== null) {
+                subDataSource.update(v[key]);
+            }
+            else {
+                subDataSource.update(v);
+            }
         }, cancellationToken);
         return subDataSource;
     }

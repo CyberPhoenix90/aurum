@@ -173,6 +173,9 @@ export abstract class AurumElement {
 				case 'append':
 					this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
 					break;
+				case 'prepend':
+					this.cachedChildren.unshift(...change.items.map((i) => this.template.generate(i)));
+					break;
 				case 'remove':
 					this.cachedChildren.splice(change.index, change.count);
 					break;
