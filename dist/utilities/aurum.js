@@ -10,6 +10,7 @@ export class Aurum {
     }
     static detach(domNode) {
         if (domNode[ownerSymbol]) {
+            domNode[ownerSymbol].node.remove();
             domNode[ownerSymbol].dispose();
             domNode[ownerSymbol] = undefined;
         }

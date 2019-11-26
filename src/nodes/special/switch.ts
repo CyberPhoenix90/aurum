@@ -18,13 +18,13 @@ export class Switch<T = boolean> extends AurumElement {
 		super(props, 'switch');
 
 		this.templateMap = props.templateMap;
-		this.render(props.state.value);
+		this.renderSwitch(props.state.value);
 		props.state.listen((data) => {
-			this.render(data);
+			this.renderSwitch(data);
 		}, this.cancellationToken);
 	}
 
-	protected render(data: T): void {
+	protected renderSwitch(data: T): void {
 		if (data !== this.lastValue || this.firstRender) {
 			this.lastValue = data;
 			this.firstRender = false;

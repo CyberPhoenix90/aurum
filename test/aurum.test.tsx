@@ -1,8 +1,11 @@
 import { assert } from 'chai';
 import { Aurum, DataSource, Div, P, Template } from '../src/aurumjs';
 import { ownerSymbol } from '../src/utilities/owner_symbol';
-
 describe('Aurum', () => {
+	beforeEach(() => {
+		jest.useFakeTimers();
+	});
+
 	afterEach(() => {
 		Aurum.detach(document.body);
 	});
@@ -22,7 +25,8 @@ describe('Aurum', () => {
 
 	it('Should set inner text', () => {
 		Aurum.attach(<Div>Hello World</Div>, document.body);
-		assert((document.body.firstChild as HTMLDivElement).innerText === 'Hello World');
+		jest.runAllTimers();
+		assert((document.body.firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
 
 	it('Should set child node', () => {
@@ -32,8 +36,9 @@ describe('Aurum', () => {
 			</Div>,
 			document.body
 		);
+		jest.runAllTimers();
 		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).innerText === 'Hello World');
+		assert((document.body.firstChild.firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
 
 	it('Should accept data sources', () => {
@@ -44,13 +49,15 @@ describe('Aurum', () => {
 			</Div>,
 			document.body
 		);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).innerText === '123');
+		jest.runAllTimers();
+		assert((document.body.firstChild.firstChild as HTMLDivElement).textContent === '123');
 	});
 
 	it('Should accept functional components', () => {
 		const FuncComp = () => <Div>Functional</Div>;
 		Aurum.attach(<FuncComp></FuncComp>, document.body);
-		assert((document.body.firstChild as HTMLDivElement).innerText === 'Functional');
+		jest.runAllTimers();
+		assert((document.body.firstChild as HTMLDivElement).textContent === 'Functional');
 	});
 
 	it('Should assign default template', () => {
@@ -60,6 +67,7 @@ describe('Aurum', () => {
 			</Div>,
 			document.body
 		);
+		jest.runAllTimers();
 		assert(document.body.firstChild[ownerSymbol].template !== undefined);
 	});
 
@@ -70,6 +78,7 @@ describe('Aurum', () => {
 			</Div>,
 			document.body
 		);
+		jest.runAllTimers();
 		assert(document.body.firstChild[ownerSymbol].template !== undefined);
 	});
 });

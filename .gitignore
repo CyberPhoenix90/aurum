@@ -2,3 +2,4 @@
 /node_modules
 dist_test
 coverage
+/.vscode/settings.json

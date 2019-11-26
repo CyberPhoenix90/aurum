@@ -9,12 +9,14 @@ export class AurumElement {
         this.cancellationToken = new CancellationToken();
         this.node = this.create(props);
         this.initialize(props);
+        if (!(this.node instanceof Text)) {
+            this.children = [];
+        }
         if (props.onAttach) {
             props.onAttach(this);
         }
     }
     initialize(props) {
-        this.node.owner = this;
         this.createEventHandlers([
             'drag',
             'dragstart',
@@ -40,7 +42,6 @@ export class AurumElement {
             this.handleClass(props.class);
         }
         if (props.repeatModel) {
-            this.cachedChildren = [];
             this.handleRepeat(props.repeatModel);
         }
     }
@@ -52,6 +53,9 @@ export class AurumElement {
         }
     }
     createEventHandlers(keys, props) {
+        if (this.node instanceof Text) {
+            return;
+        }
         for (const key of keys) {
             const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
             let eventEmitter;
@@ -85,67 +89,73 @@ export class AurumElement {
             this.repeatData = new ArrayDataSource(dataSource);
         }
         if (this.repeatData.length) {
-            this.cachedChildren.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
-            this.renderRepeat();
+            this.children.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
+            this.render();
         }
         this.repeatData.onChange.subscribe((change) => {
             switch (change.operation) {
                 case 'swap':
-                    const itemA = this.cachedChildren[change.index];
-                    const itemB = this.cachedChildren[change.index2];
-                    this.cachedChildren[change.index2] = itemA;
-                    this.cachedChildren[change.index] = itemB;
+                    const itemA = this.children[change.index];
+                    const itemB = this.children[change.index2];
+                    this.children[change.index2] = itemA;
+                    this.children[change.index] = itemB;
                     break;
                 case 'append':
-                    this.cachedChildren.push(...change.items.map((i) => this.template.generate(i)));
+                    this.children.push(...change.items.map((i) => this.template.generate(i)));
                     break;
                 case 'prepend':
-                    this.cachedChildren.unshift(...change.items.map((i) => this.template.generate(i)));
+                    this.children.unshift(...change.items.map((i) => this.template.generate(i)));
                     break;
                 case 'remove':
-                    this.cachedChildren.splice(change.index, change.count);
+                    this.children.splice(change.index, change.count);
                     break;
                 default:
-                    this.cachedChildren.length = 0;
-                    this.cachedChildren.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
+                    this.children.length = 0;
+                    this.children.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
                     break;
             }
-            this.renderRepeat();
+            this.render();
         });
     }
-    renderRepeat() {
+    render() {
         if (this.rerenderPending) {
             return;
         }
+        if (this.node instanceof Text) {
+            return;
+        }
         setTimeout(() => {
-            for (let i = 0; i < this.cachedChildren.length; i++) {
-                if (this.node.childElementCount <= i) {
-                    this.addChildren(this.cachedChildren.slice(i, this.cachedChildren.length));
+            for (let i = 0; i < this.children.length; i++) {
+                if (this.node.childNodes.length <= i) {
+                    this.addChildrenDom(this.children.slice(i, this.children.length));
                     break;
                 }
-                if (this.node.children[i].owner !== this.cachedChildren[i]) {
-                    if (!this.cachedChildren.includes(this.node.children[i].owner)) {
-                        this.node.children[i][ownerSymbol].remove();
+                if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
+                    if (!this.children.includes(this.node.childNodes[i][ownerSymbol])) {
+                        this.node.childNodes[i].remove();
                         i--;
                         continue;
                     }
-                    const index = this.getChildIndex(this.cachedChildren[i].node);
+                    const index = this.getChildIndex(this.children[i].node);
                     if (index !== -1) {
-                        this.swapChildren(i, index);
+                        this.swapChildrenDom(i, index);
                     }
                     else {
-                        this.addChildAt(this.cachedChildren[i], i);
+                        this.addDomNodeAt(this.children[i].node, i);
                     }
                 }
             }
-            while (this.node.childElementCount > this.cachedChildren.length) {
-                this.node[ownerSymbol].removeChild(this.node.lastChild[ownerSymbol]);
+            while (this.node.childNodes.length > this.children.length) {
+                this.node.removeChild(this.node.childNodes[this.node.childNodes.length - 1]);
             }
             this.rerenderPending = false;
         });
         this.rerenderPending = true;
     }
     assignStringSourceToAttribute(data, key) {
+        if (this.node instanceof Text) {
+            return;
+        }
         if (typeof data === 'string') {
             this.node.setAttribute(key, data);
         }
@@ -157,6 +167,9 @@ export class AurumElement {
         }
     }
     handleClass(data) {
+        if (this.node instanceof Text) {
+            return;
+        }
         if (typeof data === 'string') {
             this.node.className = data;
         }
@@ -214,6 +227,14 @@ export class AurumElement {
             }
         }
     }
+    resolveStringSource(source) {
+        if (typeof source === 'string') {
+            return source;
+        }
+        else {
+            return source.value;
+        }
+    }
     create(props) {
         const node = document.createElement(this.domNodeName);
         node[ownerSymbol] = this;
@@ -221,7 +242,7 @@ export class AurumElement {
     }
     getChildIndex(node) {
         let i = 0;
-        for (const child of node.children) {
+        for (const child of node.childNodes) {
             if (child === node) {
                 return i;
             }
@@ -230,6 +251,9 @@ export class AurumElement {
         return -1;
     }
     hasChild(node) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
         for (const child of node.children) {
             if (child === node) {
                 return true;
@@ -237,13 +261,18 @@ export class AurumElement {
         }
         return false;
     }
-    setInnerText(value) {
-        if (this.node.firstChild instanceof HTMLElement) {
-            throw new Error('Cannot combine text and child nodes into a single element');
+    addChildrenDom(children) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
         }
-        this.node.innerText = value;
+        for (const child of children) {
+            this.node.appendChild(child.node);
+        }
     }
-    swapChildren(indexA, indexB) {
+    swapChildrenDom(indexA, indexB) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
         if (indexA === indexB) {
             return;
         }
@@ -261,6 +290,9 @@ export class AurumElement {
         }
     }
     addDomNodeAt(node, index) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
         if (index >= this.node.childElementCount) {
             this.node.appendChild(node);
         }
@@ -270,8 +302,7 @@ export class AurumElement {
     }
     remove() {
         if (this.hasParent()) {
-            this.node.parentElement.removeChild(this.node);
-            this.dispose();
+            this.node.parentElement[ownerSymbol].removeChild(this.node);
         }
     }
     hasParent() {
@@ -281,73 +312,82 @@ export class AurumElement {
         return this.node.isConnected;
     }
     removeChild(child) {
-        child.dispose();
-        this.node.removeChild(child.node);
+        const index = this.children.indexOf(child);
+        if (index !== -1) {
+            this.children.splice(index, 1);
+        }
+        this.render();
     }
     removeChildAt(index) {
-        const childNode = this.node.childNodes[index];
-        if (childNode) {
-            const child = childNode[ownerSymbol];
-            child.dispose();
-            this.node.removeChild(child.node);
+        this.children.splice(index, 1);
+        this.render();
+    }
+    swapChildren(indexA, indexB) {
+        if (indexA === indexB) {
+            return;
         }
+        const nodeA = this.children[indexA];
+        const nodeB = this.children[indexB];
+        this.children[indexA] = nodeB;
+        this.children[indexB] = nodeA;
+        this.render();
     }
     clearChildren() {
-        while (this.node.firstChild) {
-            const owner = this.node.firstChild[ownerSymbol];
-            owner.dispose();
-            this.node.removeChild(this.node.firstChild);
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
         }
+        this.children.length = 0;
+        this.render();
     }
     addChild(child) {
-        if (child.node instanceof Template) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
+        if (child instanceof Template) {
             return;
         }
-        return this.node.appendChild(child.node);
+        child = this.childNodeToAurum(child);
+        this.children.push(child);
+        this.render();
+    }
+    childNodeToAurum(child) {
+        if (typeof child === 'string' || child instanceof DataSource) {
+            child = new TextNode({
+                text: child
+            });
+        }
+        return child;
     }
     addChildAt(child, index) {
-        if (child.node instanceof Template) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
+        if (child instanceof Template) {
             return;
         }
-        return this.addDomNodeAt(child.node, index);
+        child = this.childNodeToAurum(child);
+        this.children.splice(index, 0, child);
+        this.render();
     }
     addChildren(nodes) {
+        if (this.node instanceof Text) {
+            throw new Error("Text nodes don't have children");
+        }
         if (nodes.length === 0) {
             return;
         }
-        let dataSegments = [];
-        for (const c of nodes) {
-            if (c instanceof Template) {
-                continue;
-            }
-            if (typeof c === 'string') {
-                dataSegments.push(c);
-            }
-            else if (c instanceof DataSource) {
-                dataSegments.push(c);
-                this.setInnerText(c.value);
-                c.listen((v) => {
-                    const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
-                    this.setInnerText(value);
-                }, this.cancellationToken);
-            }
-            else {
-                this.node.appendChild(c.node);
-            }
-        }
-        if (dataSegments.length) {
-            const value = dataSegments.reduce((p, c) => { var _a; return p + (c instanceof DataSource ? (_a = c.value, (_a !== null && _a !== void 0 ? _a : '')).toString() : c); }, '');
-            this.setInnerText(value);
+        for (const child of nodes) {
+            this.addChild(child);
         }
     }
     dispose() {
         this.cancellationToken.cancel();
+        this.remove();
         for (const child of this.node.childNodes) {
             if (child[ownerSymbol]) {
                 child[ownerSymbol].dispose();
             }
         }
-        this.remove();
     }
 }
 export class Template extends AurumElement {
@@ -355,6 +395,19 @@ export class Template extends AurumElement {
         super(props, 'template');
         this.ref = props.ref;
         this.generate = props.generator;
+    }
+}
+export class TextNode extends AurumElement {
+    constructor(props) {
+        super(props, 'textNode');
+        if (props.text instanceof DataSource) {
+            props.text.listen((v) => (this.node.textContent = v), this.cancellationToken);
+        }
+    }
+    create(props) {
+        const node = document.createTextNode(this.resolveStringSource(props.text));
+        node[ownerSymbol] = this;
+        return node;
     }
 }
 //# sourceMappingURL=aurum_element.js.map

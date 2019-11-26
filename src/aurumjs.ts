@@ -35,5 +35,7 @@ export * from './nodes/h3';
 export * from './nodes/h4';
 export * from './nodes/h5';
 export * from './nodes/h6';
+export * from './nodes/header';
+export * from './nodes/footer';
 
 export * from './nodes/special/switch';

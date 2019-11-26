@@ -31,12 +31,12 @@ export interface AurumElementProps {
     onAttach?: (node: AurumElement) => void;
     template?: Template<any>;
 }
+export declare type ChildNode = AurumElement | string | DataSource<string>;
 export declare abstract class AurumElement {
     protected cancellationToken: CancellationToken;
-    private cachedChildren;
     protected repeatData: ArrayDataSource<any>;
     private rerenderPending;
-    readonly node: HTMLElement;
+    readonly node: HTMLElement | Text;
     readonly domNodeName: string;
     template: Template<any>;
     onClick: DataSource<MouseEvent>;
@@ -55,29 +55,33 @@ export declare abstract class AurumElement {
     onDragleave: DataSource<DragEvent>;
     onDragover: DataSource<DragEvent>;
     onDragstart: DataSource<DragEvent>;
+    private children;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any): void;
     protected createEventHandlers(keys: string[], props: any): void;
     private handleRepeat;
-    protected renderRepeat(): void;
+    protected render(): void;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;
     private handleClass;
-    create(props: AurumElementProps): HTMLElement;
-    protected getChildIndex(node: HTMLElement): number;
+    protected resolveStringSource(source: StringSource): string;
+    protected create(props: AurumElementProps): HTMLElement | Text;
+    protected getChildIndex(node: HTMLElement | Text): number;
     protected hasChild(node: HTMLElement): boolean;
-    setInnerText(value: string): void;
-    swapChildren(indexA: number, indexB: number): void;
-    protected addDomNodeAt(node: HTMLElement, index: number): void;
+    protected addChildrenDom(children: AurumElement[]): void;
+    protected swapChildrenDom(indexA: number, indexB: number): void;
+    protected addDomNodeAt(node: HTMLElement | Text, index: number): void;
     remove(): void;
     hasParent(): boolean;
     isConnected(): boolean;
     removeChild(child: AurumElement): void;
     removeChildAt(index: number): void;
+    swapChildren(indexA: number, indexB: number): void;
     clearChildren(): void;
-    addChild(child: AurumElement): HTMLElement;
-    addChildAt(child: AurumElement, index: number): void;
-    addChildren(nodes: AurumElement[]): void;
+    addChild(child: ChildNode): void;
+    private childNodeToAurum;
+    addChildAt(child: ChildNode, index: number): void;
+    addChildren(nodes: ChildNode[]): void;
     dispose(): void;
 }
 export interface TemplateProps<T> extends AurumElementProps {
@@ -90,5 +94,14 @@ export declare class Template<T> extends AurumElement {
     generate: (model: T) => AurumElement;
     ref: string;
     constructor(props: TemplateProps<T>);
+}
+export interface TextNodeProps extends AurumElementProps {
+    onAttach?: (node: TextNode) => void;
+    onDettach?: (node: TextNode) => void;
+    text?: StringSource;
+}
+export declare class TextNode extends AurumElement {
+    constructor(props: TextNodeProps);
+    protected create(props: TextNodeProps): HTMLElement | Text;
 }
 //# sourceMappingURL=aurum_element.d.ts.map

@@ -13,6 +13,7 @@ export class Aurum {
 
 	public static detach(domNode: HTMLElement): void {
 		if (domNode[ownerSymbol]) {
+			domNode[ownerSymbol].node.remove();
 			domNode[ownerSymbol].dispose();
 			domNode[ownerSymbol] = undefined;
 		}
@@ -26,6 +27,7 @@ export class Aurum {
 		if (typeof node === 'string') {
 			return;
 		}
+
 		const children = [].concat(...innerNodes).filter((e) => e);
 		const templateMap = {};
 		let defaultTemplate;

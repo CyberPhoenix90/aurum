@@ -4,12 +4,12 @@ export class Switch extends AurumElement {
         super(props, 'switch');
         this.firstRender = true;
         this.templateMap = props.templateMap;
-        this.render(props.state.value);
+        this.renderSwitch(props.state.value);
         props.state.listen((data) => {
-            this.render(data);
+            this.renderSwitch(data);
         }, this.cancellationToken);
     }
-    render(data) {
+    renderSwitch(data) {
         var _a;
         if (data !== this.lastValue || this.firstRender) {
             this.lastValue = data;
