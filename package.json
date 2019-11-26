@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurumjs.js",
 	"typings": "dist/aurumjs.d.ts",
@@ -24,14 +24,13 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/chai": "^4.2.5",
+		"@types/jest": "^24.0.23",
 		"chai": "^4.2.0",
 		"jest": "^24.9.0",
 		"microbundle": "^0.11.0",
 		"prettier": "^1.19.1",
-		"typescript": "^3.7.2"
-	},
-	"dependencies": {
-		"@types/jest": "^24.0.23",
+		"typescript": "^3.7.2",
 		"ts-jest": "^24.1.0"
-	}
+	},
+	"dependencies": {}
 }
