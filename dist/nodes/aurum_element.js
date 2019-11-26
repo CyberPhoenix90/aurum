@@ -37,7 +37,8 @@ export class AurumElement {
             'mouseleave',
             'mousewheel'
         ], props);
-        this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
+        const dataProps = Object.keys(props).filter((e) => e.startsWith('x-') || e.startsWith('data-'));
+        this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', ...dataProps], props);
         if (props.class) {
             this.handleClass(props.class);
         }

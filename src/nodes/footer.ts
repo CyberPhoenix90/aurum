@@ -8,6 +8,6 @@ export interface FooterProps extends AurumElementProps {
 
 export class Footer extends AurumElement {
 	constructor(props: FooterProps) {
-		super(props, 'header');
+		super(props, 'footer');
 	}
 }

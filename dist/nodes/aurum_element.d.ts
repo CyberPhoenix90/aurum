@@ -9,6 +9,7 @@ export interface AurumElementProps {
     tabindex?: ClassType;
     style?: StringSource;
     title?: StringSource;
+    role?: StringSource;
     repeatModel?: ArrayDataSource<any> | any[];
     onDblclick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;

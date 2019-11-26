@@ -11,6 +11,7 @@ export interface AurumElementProps {
 	tabindex?: ClassType;
 	style?: StringSource;
 	title?: StringSource;
+	role?: StringSource;
 
 	repeatModel?: ArrayDataSource<any> | any[];
 
@@ -104,7 +105,9 @@ export abstract class AurumElement {
 			],
 			props
 		);
-		this.bindProps(['id', 'draggable', 'tabindex', 'style'], props);
+
+		const dataProps = Object.keys(props).filter((e) => e.startsWith('x-') || e.startsWith('data-'));
+		this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', ...dataProps], props);
 
 		if (props.class) {
 			this.handleClass(props.class);

@@ -5,11 +5,12 @@ export interface AProps extends AurumElementProps {
 	onAttach?: (node: A) => void;
 	onDettach?: (node: A) => void;
 	href?: StringSource;
+	target?: StringSource;
 }
 
 export class A extends AurumElement {
 	constructor(props: AProps) {
 		super(props, 'a');
-		this.bindProps(['href'], props);
+		this.bindProps(['href', 'target'], props);
 	}
 }

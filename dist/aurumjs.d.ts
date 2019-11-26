@@ -36,5 +36,9 @@ export * from './nodes/h5';
 export * from './nodes/h6';
 export * from './nodes/header';
 export * from './nodes/footer';
+export * from './nodes/nav';
+export * from './nodes/b';
+export * from './nodes/i';
+export * from './nodes/script';
 export * from './nodes/special/switch';
 //# sourceMappingURL=aurumjs.d.ts.map
