@@ -139,7 +139,7 @@ describe('Datasource', () => {
 		return new Promise((resolve) => {
 			let i = 0;
 			let asserts = [4, 0, 100, 200];
-			let ds = new DataSource(4);
+			let ds = new DataSource(0);
 
 			ds.unique().listen((value) => {
 				assert(value === asserts[i++]);
@@ -147,6 +147,7 @@ describe('Datasource', () => {
 					resolve();
 				}
 			});
+			ds.update(0);
 			ds.update(4);
 			ds.update(4);
 			ds.update(0);

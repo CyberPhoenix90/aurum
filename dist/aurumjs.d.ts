@@ -1,4 +1,3 @@
-export * from './stream/array_data_source';
 export * from './stream/data_source';
 export * from './stream/event_emitter';
 export * from './utilities/cancellation_token';

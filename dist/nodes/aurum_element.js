@@ -1,6 +1,5 @@
-import { DataSource } from '../stream/data_source';
+import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { ArrayDataSource } from '../stream/array_data_source';
 import { ownerSymbol } from '../utilities/owner_symbol';
 export class AurumElement {
     constructor(props, domNodeName) {
@@ -9,16 +8,17 @@ export class AurumElement {
         this.cancellationToken = new CancellationToken();
         this.node = this.create(props);
         this.initialize(props);
-        if (!(this.node instanceof Text)) {
-            this.children = [];
-        }
         if (props.onAttach) {
             props.onAttach(this);
         }
     }
     initialize(props) {
+        if (!(this.node instanceof Text)) {
+            this.children = [];
+        }
         this.createEventHandlers([
             'drag',
+            'name',
             'dragstart',
             'dragend',
             'dragexit',
@@ -355,6 +355,11 @@ export class AurumElement {
         if (typeof child === 'string' || child instanceof DataSource) {
             child = new TextNode({
                 text: child
+            });
+        }
+        else if (!(child instanceof AurumElement)) {
+            child = new TextNode({
+                text: child.toString()
             });
         }
         return child;

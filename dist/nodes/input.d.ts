@@ -4,6 +4,8 @@ import { DataDrain, StringSource } from '../utilities/common';
 export interface InputProps extends AurumElementProps {
     onAttach?: (node: Input) => void;
     placeholder?: StringSource;
+    readonly?: StringSource;
+    disabled?: StringSource;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
     inputValueSource?: DataSource<string>;

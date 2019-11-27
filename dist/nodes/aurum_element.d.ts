@@ -1,9 +1,9 @@
-import { DataSource } from '../stream/data_source';
+import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DataDrain, StringSource, ClassType } from '../utilities/common';
-import { ArrayDataSource } from '../stream/array_data_source';
 export interface AurumElementProps {
     id?: StringSource;
+    name?: StringSource;
     draggable?: StringSource;
     class?: ClassType;
     tabindex?: ClassType;
