@@ -281,7 +281,9 @@ export abstract class AurumElement {
 		if (!this.node.isConnected) {
 			this.onDetach?.(this);
 			for (const child of this.node.childNodes) {
-				child[ownerSymbol].handleDetach();
+				if (child[ownerSymbol]) {
+					child[ownerSymbol].handleDetach();
+				}
 			}
 		}
 	}

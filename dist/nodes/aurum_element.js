@@ -188,7 +188,9 @@ export class AurumElement {
         if (!this.node.isConnected) {
             (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
             for (const child of this.node.childNodes) {
-                child[ownerSymbol].handleDetach();
+                if (child[ownerSymbol]) {
+                    child[ownerSymbol].handleDetach();
+                }
             }
         }
     }
