@@ -1,7 +1,10 @@
 import { AurumElement, AurumElementProps } from './aurum_element';
+import { Callback } from '../utilities/common';
 export interface H2Props extends AurumElementProps {
-    onAttach?: (node: H2) => void;
-    onDettach?: (node: H2) => void;
+    onAttach?: Callback<H2>;
+    onDetach?: Callback<H2>;
+    onCreate?: Callback<H2>;
+    onDispose?: Callback<H2>;
 }
 export declare class H2 extends AurumElement {
     constructor(props: H2Props);

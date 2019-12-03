@@ -1,4 +1,4 @@
-import { Callback } from '../utilities/common';
+import { Callback, StringSource } from '../utilities/common';
 import { AurumElement, AurumElementProps } from './aurum_element';
 
 export interface SvgProps extends AurumElementProps {

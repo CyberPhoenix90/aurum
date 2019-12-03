@@ -1,6 +1,6 @@
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain, StringSource, ClassType } from '../utilities/common';
+import { DataDrain, StringSource, ClassType, Callback } from '../utilities/common';
 export interface AurumElementProps {
     id?: StringSource;
     name?: StringSource;
@@ -10,6 +10,7 @@ export interface AurumElementProps {
     style?: StringSource;
     title?: StringSource;
     role?: StringSource;
+    contentEditable?: StringSource;
     repeatModel?: ArrayDataSource<any> | any[];
     onDblclick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
@@ -29,14 +30,21 @@ export interface AurumElementProps {
     onDragleave?: DataDrain<DragEvent>;
     onDragover?: DataDrain<DragEvent>;
     onDragstart?: DataDrain<DragEvent>;
-    onAttach?: (node: AurumElement) => void;
+    onAttach?: Callback<AurumElement>;
+    onDetach?: Callback<AurumElement>;
+    onCreate?: Callback<AurumElement>;
+    onDispose?: Callback<AurumElement>;
     template?: Template<any>;
 }
 export declare type ChildNode = AurumElement | string | DataSource<string>;
 export declare abstract class AurumElement {
+    private onAttach?;
+    private onDetach?;
+    private onDispose?;
+    private rerenderPending;
+    private children;
     protected cancellationToken: CancellationToken;
     protected repeatData: ArrayDataSource<any>;
-    private rerenderPending;
     readonly node: HTMLElement | Text;
     readonly domNodeName: string;
     template: Template<any>;
@@ -56,7 +64,6 @@ export declare abstract class AurumElement {
     onDragleave: DataSource<DragEvent>;
     onDragover: DataSource<DragEvent>;
     onDragstart: DataSource<DragEvent>;
-    private children;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any): void;
@@ -64,6 +71,8 @@ export declare abstract class AurumElement {
     private handleRepeat;
     protected render(): void;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;
+    private handleAttach;
+    private handleDetach;
     private handleClass;
     protected resolveStringSource(source: StringSource): string;
     protected create(props: AurumElementProps): HTMLElement | Text;
@@ -84,6 +93,7 @@ export declare abstract class AurumElement {
     addChildAt(child: ChildNode, index: number): void;
     addChildren(nodes: ChildNode[]): void;
     dispose(): void;
+    private internalDispose;
 }
 export interface TemplateProps<T> extends AurumElementProps {
     onAttach?(entity: Template<T>): void;
@@ -98,7 +108,7 @@ export declare class Template<T> extends AurumElement {
 }
 export interface TextNodeProps extends AurumElementProps {
     onAttach?: (node: TextNode) => void;
-    onDettach?: (node: TextNode) => void;
+    onDetach?: (node: TextNode) => void;
     text?: StringSource;
 }
 export declare class TextNode extends AurumElement {

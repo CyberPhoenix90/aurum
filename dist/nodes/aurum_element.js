@@ -3,14 +3,16 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { ownerSymbol } from '../utilities/owner_symbol';
 export class AurumElement {
     constructor(props, domNodeName) {
+        var _a, _b;
+        this.onDispose = props.onDispose;
+        this.onAttach = props.onAttach;
+        this.onDetach = props.onDetach;
         this.domNodeName = domNodeName;
         this.template = props.template;
         this.cancellationToken = new CancellationToken();
         this.node = this.create(props);
         this.initialize(props);
-        if (props.onAttach) {
-            props.onAttach(this);
-        }
+        (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
     }
     initialize(props) {
         if (!(this.node instanceof Text)) {
@@ -32,13 +34,14 @@ export class AurumElement {
             'keydown',
             'keyhit',
             'keyup',
-            'mousedown, mouseup',
+            'mousedown',
+            'mouseup',
             'mouseenter',
             'mouseleave',
             'mousewheel'
         ], props);
         const dataProps = Object.keys(props).filter((e) => e.startsWith('x-') || e.startsWith('data-'));
-        this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', ...dataProps], props);
+        this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', ...dataProps], props);
         if (props.class) {
             this.handleClass(props.class);
         }
@@ -133,7 +136,9 @@ export class AurumElement {
                 }
                 if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
                     if (!this.children.includes(this.node.childNodes[i][ownerSymbol])) {
-                        this.node.childNodes[i].remove();
+                        const child = this.node.childNodes[i];
+                        child.remove();
+                        child[ownerSymbol].handleDetach();
                         i--;
                         continue;
                     }
@@ -147,7 +152,9 @@ export class AurumElement {
                 }
             }
             while (this.node.childNodes.length > this.children.length) {
-                this.node.removeChild(this.node.childNodes[this.node.childNodes.length - 1]);
+                const child = this.node.childNodes[this.node.childNodes.length - 1];
+                this.node.removeChild(child);
+                child[ownerSymbol].handleDetach();
             }
             this.rerenderPending = false;
         });
@@ -165,6 +172,20 @@ export class AurumElement {
                 this.node.setAttribute(key, data.value);
             }
             data.unique(this.cancellationToken).listen((v) => this.node.setAttribute(key, v), this.cancellationToken);
+        }
+    }
+    handleAttach() {
+        var _a, _b;
+        (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+        for (const child of this.node.childNodes) {
+            child[ownerSymbol].handleAttach();
+        }
+    }
+    handleDetach() {
+        var _a, _b;
+        (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+        for (const child of this.node.childNodes) {
+            child[ownerSymbol].handleDetach();
         }
     }
     handleClass(data) {
@@ -268,6 +289,7 @@ export class AurumElement {
         }
         for (const child of children) {
             this.node.appendChild(child.node);
+            child.handleAttach();
         }
     }
     swapChildrenDom(indexA, indexB) {
@@ -296,9 +318,11 @@ export class AurumElement {
         }
         if (index >= this.node.childElementCount) {
             this.node.appendChild(node);
+            node[ownerSymbol].handleAttach();
         }
         else {
             this.node.insertBefore(node, this.node.children[index]);
+            node[ownerSymbol].handleAttach();
         }
     }
     remove() {
@@ -387,13 +411,20 @@ export class AurumElement {
         }
     }
     dispose() {
+        this.internalDispose(true);
+    }
+    internalDispose(detach) {
+        var _a, _b;
         this.cancellationToken.cancel();
-        this.remove();
+        if (detach) {
+            this.remove();
+        }
         for (const child of this.node.childNodes) {
             if (child[ownerSymbol]) {
-                child[ownerSymbol].dispose();
+                child[ownerSymbol].internalDispose(false);
             }
         }
+        (_b = (_a = this).onDispose) === null || _b === void 0 ? void 0 : _b.call(_a, this);
     }
 }
 export class Template extends AurumElement {

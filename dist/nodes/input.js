@@ -10,7 +10,30 @@ export class Input extends AurumElement {
         else {
             this.node.value = (_c = props.initialValue, (_c !== null && _c !== void 0 ? _c : ''));
         }
-        this.bindProps(['placeholder', 'readonly', 'disabled'], props);
+        this.bindProps([
+            'placeholder',
+            'readonly',
+            'disabled',
+            'accept',
+            'alt',
+            'autocomplete',
+            'autofocus',
+            'checked',
+            'defaultChecked',
+            'formAction',
+            'formEnctype',
+            'formMethod',
+            'formNoValidate',
+            'formTarget',
+            'max',
+            'maxLength',
+            'min',
+            'minLength',
+            'pattern',
+            'multiple',
+            'required',
+            'type'
+        ], props);
         this.createEventHandlers(['input', 'change'], props);
         if (props.inputValueSource) {
             this.onInput.map((p) => this.node.value).pipe(props.inputValueSource);

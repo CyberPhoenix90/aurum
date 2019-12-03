@@ -1,7 +1,10 @@
 import { AurumElement, AurumElementProps } from './aurum_element';
+import { Callback } from '../utilities/common';
 export interface H6Props extends AurumElementProps {
-    onAttach?: (node: H6) => void;
-    onDettach?: (node: H6) => void;
+    onAttach?: Callback<H6>;
+    onDetach?: Callback<H6>;
+    onCreate?: Callback<H6>;
+    onDispose?: Callback<H6>;
 }
 export declare class H6 extends AurumElement {
     constructor(props: H6Props);

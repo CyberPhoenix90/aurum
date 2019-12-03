@@ -1,16 +1,18 @@
 import { Template } from '../nodes/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 export class Aurum {
-    static attach(node, dom) {
+    static attach(aurumElement, dom) {
         if (dom[ownerSymbol]) {
             throw new Error('This node is already managed by aurum and cannot be used');
         }
-        dom.appendChild(node.node);
-        dom[ownerSymbol] = node;
+        dom.appendChild(aurumElement.node);
+        aurumElement['handleAttach']();
+        dom[ownerSymbol] = aurumElement;
     }
     static detach(domNode) {
         if (domNode[ownerSymbol]) {
             domNode[ownerSymbol].node.remove();
+            domNode[ownerSymbol].handleDetach();
             domNode[ownerSymbol].dispose();
             domNode[ownerSymbol] = undefined;
         }
