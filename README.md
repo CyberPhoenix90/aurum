@@ -3,6 +3,7 @@
 </p>
 
 # Fast and concise declarative DOM rendering library for javascript
+
 [![Build Status](https://travis-ci.com/CyberPhoenix90/aurum.svg?branch=master)](https://travis-ci.com/CyberPhoenix90/aurum)
 ![npm](https://img.shields.io/npm/dw/aurumjs)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/aurumjs)
@@ -16,7 +17,7 @@ observable and then applies the changes directly to the DOM bypassing any need f
 This makes it very fast to apply updates while keeping the code short.
 
 This project is and will always be dependency free for better security and performance
-This project is still a very early prototype not suited for any serious project yet but feel free to try it and make bug reports or suggestions.
+This project is still under development but feel free to try it and make bug reports or suggestions.
 
 ## Getting started
 

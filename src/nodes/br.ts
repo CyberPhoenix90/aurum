@@ -1,11 +1,16 @@
 import { AurumElement, AurumElementProps } from './aurum_element';
+import { Callback } from '../utilities/common';
 
 export interface BrProps extends AurumElementProps {
-	onAttach?: (node: Br) => void;
-	onDettach?: (node: Br) => void;
+	onAttach?: Callback<Br>;
+	onDetach?: Callback<Br>;
+	onCreate?: Callback<Br>;
+	onDispose?: Callback<Br>;
 }
 
 export class Br extends AurumElement {
+	public readonly node: HTMLBRElement;
+
 	constructor(props: BrProps) {
 		super(props, 'br');
 	}

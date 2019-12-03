@@ -1,16 +1,24 @@
 import { AurumElement, AurumElementProps } from './aurum_element';
-import { StringSource } from '../utilities/common';
+import { StringSource, Callback } from '../utilities/common';
 
 export interface LinkProps extends AurumElementProps {
-	onAttach?: (node: Link) => void;
-	onDettach?: (node: Link) => void;
+	onAttach?: Callback<Link>;
+	onDetach?: Callback<Link>;
+	onCreate?: Callback<Link>;
+	onDispose?: Callback<Link>;
 	href?: StringSource;
 	rel?: StringSource;
+	media?: StringSource;
+	as?: StringSource;
+	disabled?: StringSource;
+	type?: StringSource;
 }
 
 export class Link extends AurumElement {
+	public node: HTMLLinkElement;
+
 	constructor(props: LinkProps) {
 		super(props, 'link');
-		this.bindProps(['href', 'rel'], props);
+		this.bindProps(['href', 'rel', 'media', 'as', 'disabled', 'type'], props);
 	}
 }

@@ -3,7 +3,9 @@ import { Callback } from '../utilities/common';
 
 export interface HeaderProps extends AurumElementProps {
 	onAttach?: Callback<Header>;
-	onDettach?: Callback<Header>;
+	onDetach?: Callback<Header>;
+	onCreate?: Callback<Header>;
+	onDispose?: Callback<Header>;
 }
 
 export class Header extends AurumElement {

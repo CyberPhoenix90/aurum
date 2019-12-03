@@ -4,7 +4,7 @@ import { DataSource } from '../../stream/data_source';
 export interface SwitchProps<T = boolean> extends AurumElementProps {
     state: DataSource<T>;
     templateMap?: MapLike<Template<void>>;
-    templaet?: Template<void>;
+    template?: Template<void>;
 }
 export declare class Switch<T = boolean> extends AurumElement {
     private lastValue;

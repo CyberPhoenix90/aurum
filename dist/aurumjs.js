@@ -40,4 +40,5 @@ export * from './nodes/b';
 export * from './nodes/i';
 export * from './nodes/script';
 export * from './nodes/special/switch';
+export * from './nodes/special/router';
 //# sourceMappingURL=aurumjs.js.map

@@ -7,7 +7,9 @@ describe('Aurum', () => {
 	});
 
 	afterEach(() => {
-		Aurum.detach(document.body);
+		if (document.body[ownerSymbol]) {
+			Aurum.detach(document.body);
+		}
 	});
 
 	it('should attach dom node', () => {
@@ -27,6 +29,41 @@ describe('Aurum', () => {
 		Aurum.attach(<Div>Hello World</Div>, document.body);
 		jest.runAllTimers();
 		assert((document.body.firstChild as HTMLDivElement).textContent === 'Hello World');
+	});
+
+	it('Should fire onAttach when connected to dom', () => {
+		return new Promise((resolve) => {
+			Aurum.attach(
+				<Div
+					onAttach={(ele) => {
+						assert(ele.node.isConnected);
+						resolve();
+					}}
+				>
+					Hello World
+				</Div>,
+				document.body
+			);
+			jest.runAllTimers();
+		});
+	});
+
+	it('Should fire onDetach when disconnected from dom', () => {
+		return new Promise((resolve) => {
+			Aurum.attach(
+				<Div
+					onAttach={(e) => Aurum.detach(e.node)}
+					onDetach={(ele) => {
+						assert(!ele.node.isConnected);
+						resolve();
+					}}
+				>
+					Hello World
+				</Div>,
+				document.body
+			);
+			jest.runAllTimers();
+		});
 	});
 
 	it('Should set child node', () => {
