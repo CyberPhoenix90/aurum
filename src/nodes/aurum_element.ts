@@ -268,17 +268,21 @@ export abstract class AurumElement {
 	}
 
 	private handleAttach() {
-		this.onAttach?.(this);
-		for (const child of this.node.childNodes) {
-			child[ownerSymbol].handleAttach();
+		if (this.node.isConnected) {
+			this.onAttach?.(this);
+			for (const child of this.node.childNodes) {
+				child[ownerSymbol].handleAttach();
+			}
 		}
 	}
 
 	//@ts-ignore
 	private handleDetach() {
-		this.onDetach?.(this);
-		for (const child of this.node.childNodes) {
-			child[ownerSymbol].handleDetach();
+		if (!this.node.isConnected) {
+			this.onDetach?.(this);
+			for (const child of this.node.childNodes) {
+				child[ownerSymbol].handleDetach();
+			}
 		}
 	}
 
