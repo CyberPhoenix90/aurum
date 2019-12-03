@@ -562,7 +562,7 @@ export class Template<T> extends AurumElement {
 	}
 }
 
-export interface TextNodeProps extends AurumElementProps {
+interface TextNodeProps extends AurumElementProps {
 	onAttach?: (node: TextNode) => void;
 	onDetach?: (node: TextNode) => void;
 	text?: StringSource;

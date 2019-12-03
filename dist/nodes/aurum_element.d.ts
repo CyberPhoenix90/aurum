@@ -106,7 +106,7 @@ export declare class Template<T> extends AurumElement {
     ref: string;
     constructor(props: TemplateProps<T>);
 }
-export interface TextNodeProps extends AurumElementProps {
+interface TextNodeProps extends AurumElementProps {
     onAttach?: (node: TextNode) => void;
     onDetach?: (node: TextNode) => void;
     text?: StringSource;
@@ -115,4 +115,5 @@ export declare class TextNode extends AurumElement {
     constructor(props: TextNodeProps);
     protected create(props: TextNodeProps): HTMLElement | Text;
 }
+export {};
 //# sourceMappingURL=aurum_element.d.ts.map
