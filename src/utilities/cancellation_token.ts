@@ -51,8 +51,12 @@ export class CancellationToken {
 	}
 
 	public setTimeout(cb: Delegate, time: number = 0): void {
-		const id = setTimeout(cb, time);
-		this.addCancelable(() => clearTimeout(id));
+		const id = setTimeout(() => {
+			this.removeCancelable(cancelable);
+			cb();
+		}, time);
+		const cancelable = () => clearTimeout(id);
+		this.addCancelable(cancelable);
 	}
 
 	public setInterval(cb: Delegate, time: number): void {

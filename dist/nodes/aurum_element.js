@@ -138,7 +138,7 @@ export class AurumElement {
                     if (!this.children.includes(this.node.childNodes[i][ownerSymbol])) {
                         const child = this.node.childNodes[i];
                         child.remove();
-                        child[ownerSymbol].handleDetach();
+                        child[ownerSymbol].dispose();
                         i--;
                         continue;
                     }
@@ -154,7 +154,7 @@ export class AurumElement {
             while (this.node.childNodes.length > this.children.length) {
                 const child = this.node.childNodes[this.node.childNodes.length - 1];
                 this.node.removeChild(child);
-                child[ownerSymbol].handleDetach();
+                child[ownerSymbol].dispose();
             }
             this.rerenderPending = false;
         });
@@ -430,6 +430,8 @@ export class AurumElement {
                 child[ownerSymbol].internalDispose(false);
             }
         }
+        delete this.node[ownerSymbol];
+        delete this.node;
         (_b = (_a = this).onDispose) === null || _b === void 0 ? void 0 : _b.call(_a, this);
     }
 }

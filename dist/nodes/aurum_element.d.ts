@@ -45,7 +45,7 @@ export declare abstract class AurumElement {
     private children;
     protected cancellationToken: CancellationToken;
     protected repeatData: ArrayDataSource<any>;
-    readonly node: HTMLElement | Text;
+    node: HTMLElement | Text;
     readonly domNodeName: string;
     template: Template<any>;
     onClick: DataSource<MouseEvent>;

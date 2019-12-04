@@ -55,7 +55,7 @@ export abstract class AurumElement {
 	protected cancellationToken: CancellationToken;
 	protected repeatData: ArrayDataSource<any>;
 
-	public readonly node: HTMLElement | Text;
+	public node: HTMLElement | Text;
 	public readonly domNodeName: string;
 
 	public template: Template<any>;
@@ -219,7 +219,7 @@ export abstract class AurumElement {
 			return;
 		}
 
-		setTimeout(() => {
+		this.cancellationToken.setTimeout(() => {
 			for (let i = 0; i < this.children.length; i++) {
 				if (this.node.childNodes.length <= i) {
 					this.addChildrenDom(this.children.slice(i, this.children.length));
@@ -229,7 +229,7 @@ export abstract class AurumElement {
 					if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
 						const child = this.node.childNodes[i];
 						child.remove();
-						child[ownerSymbol].handleDetach();
+						child[ownerSymbol].dispose();
 						i--;
 						continue;
 					}
@@ -245,7 +245,7 @@ export abstract class AurumElement {
 			while (this.node.childNodes.length > this.children.length) {
 				const child = this.node.childNodes[this.node.childNodes.length - 1];
 				this.node.removeChild(child);
-				child[ownerSymbol].handleDetach();
+				child[ownerSymbol].dispose();
 			}
 			this.rerenderPending = false;
 		});
@@ -546,6 +546,8 @@ export abstract class AurumElement {
 				child[ownerSymbol].internalDispose(false);
 			}
 		}
+		delete this.node[ownerSymbol];
+		delete this.node;
 		this.onDispose?.(this);
 	}
 }

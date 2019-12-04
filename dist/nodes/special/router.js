@@ -5,7 +5,13 @@ export class AurumRouter extends Switch {
         const urlDataSource = new DataSource(location.hash.substring(1));
         super(Object.assign(Object.assign({}, props), { state: urlDataSource }));
         window.addEventListener('hashchange', () => {
-            urlDataSource.update(location.hash.substring(1));
+            const hash = location.hash.substring(1);
+            if (hash.includes('?')) {
+                urlDataSource.update(hash.substring(0, hash.indexOf('?')));
+            }
+            else {
+                urlDataSource.update(hash);
+            }
         });
     }
 }

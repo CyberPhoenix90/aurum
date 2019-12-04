@@ -13,7 +13,12 @@ export class AurumRouter extends Switch<string> {
 		});
 
 		window.addEventListener('hashchange', () => {
-			urlDataSource.update(location.hash.substring(1));
+			const hash = location.hash.substring(1);
+			if (hash.includes('?')) {
+				urlDataSource.update(hash.substring(0, hash.indexOf('?')));
+			} else {
+				urlDataSource.update(hash);
+			}
 		});
 	}
 }
