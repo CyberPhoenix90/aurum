@@ -45,8 +45,7 @@ export class Input extends AurumElement {
 	constructor(props: InputProps) {
 		super(props, 'input');
 		if (props.inputValueSource) {
-			this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';
-			props.inputValueSource.unique().listen((value) => (this.node.value = value), this.cancellationToken);
+			props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);
 		} else {
 			this.node.value = props.initialValue ?? '';
 		}
