@@ -1,7 +1,5 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
-import { EventEmitter } from './event_emitter';
-import { Predicate } from '../utilities/common';
+import { Callback, Predicate } from '../utilities/common';
 
 export class DataSource<T> {
 	public value: T;
@@ -19,7 +17,15 @@ export class DataSource<T> {
 		}
 	}
 
-	public listen(callback: (value: T) => void, cancellationToken?: CancellationToken): Callback<void> {
+	/**
+	 * Same as listen but will immediately call the callback with the current value first
+	 */
+	public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		callback(this.value);
+		return this.listen(callback, cancellationToken);
+	}
+
+	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		this.listeners.push(callback);
 		const cancel = () => {
 			const index = this.listeners.indexOf(callback);
@@ -95,7 +101,7 @@ export class DataSource<T> {
 
 		this.listen((v) => {
 			clearTimeout(timeout);
-			setTimeout(() => {
+			timeout = setTimeout(() => {
 				debouncedDataSource.update(v);
 			}, time);
 		}, cancellationToken);
@@ -111,7 +117,7 @@ export class DataSource<T> {
 		this.listen((v) => {
 			buffer.push(v);
 			if (!timeout) {
-				setTimeout(() => {
+				timeout = setTimeout(() => {
 					timeout = undefined;
 					bufferedDataSource.update(buffer);
 					buffer = [];
@@ -152,7 +158,8 @@ export class DataSource<T> {
 }
 
 export interface CollectionChange<T> {
-	operation: 'replace' | 'append' | 'prepend' | 'remove' | 'swap';
+	operation: 'replace' | 'swap' | 'add' | 'remove';
+	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear';
 	count?: number;
 	index: number;
 	index2?: number;
@@ -162,7 +169,7 @@ export interface CollectionChange<T> {
 }
 export class ArrayDataSource<T> {
 	protected data: T[];
-	public onChange: EventEmitter<CollectionChange<T>>;
+	public listeners: Callback<CollectionChange<T>>[];
 
 	constructor(initialData?: T[]) {
 		if (initialData) {
@@ -170,7 +177,36 @@ export class ArrayDataSource<T> {
 		} else {
 			this.data = [];
 		}
-		this.onChange = new EventEmitter();
+		this.listeners = [];
+	}
+
+	/**
+	 * Same as listen but will immediately call the callback with an append of all existing elements first
+	 */
+	public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		callback({
+			operation: 'add',
+			operationDetailed: 'append',
+			index: 0,
+			items: this.data,
+			newState: this.data,
+			count: this.data.length
+		});
+		return this.listen(callback, cancellationToken);
+	}
+
+	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		this.listeners.push(callback);
+		const cancel = () => {
+			const index = this.listeners.indexOf(callback);
+			if (index !== -1) {
+				this.listeners.splice(index, 1);
+			}
+		};
+		cancellationToken?.addCancelable(() => {
+			cancel();
+		});
+		return cancel;
 	}
 
 	public get length() {
@@ -191,7 +227,7 @@ export class ArrayDataSource<T> {
 			return;
 		}
 		this.data[index] = item;
-		this.onChange.fire({ operation: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
+		this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
 	}
 
 	public swap(indexA: number, indexB: number): void {
@@ -204,7 +240,7 @@ export class ArrayDataSource<T> {
 		this.data[indexB] = itemA;
 		this.data[indexA] = itemB;
 
-		this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
 	}
 
 	public swapItems(itemA: T, itemB: T): void {
@@ -219,13 +255,14 @@ export class ArrayDataSource<T> {
 			this.data[indexA] = itemB;
 		}
 
-		this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
 	}
 
 	public push(...items: T[]) {
 		this.data.push(...items);
-		this.onChange.fire({
-			operation: 'append',
+		this.update({
+			operation: 'add',
+			operationDetailed: 'append',
 			count: items.length,
 			index: this.data.length - items.length,
 			items,
@@ -235,13 +272,14 @@ export class ArrayDataSource<T> {
 
 	public unshift(...items: T[]) {
 		this.data.unshift(...items);
-		this.onChange.fire({ operation: 'prepend', count: items.length, items, index: 0, newState: this.data });
+		this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
 	}
 
 	public pop(): T {
 		const item = this.data.pop();
-		this.onChange.fire({
+		this.update({
 			operation: 'remove',
+			operationDetailed: 'removeRight',
 			count: 1,
 			index: this.data.length,
 			items: [item],
@@ -268,27 +306,27 @@ export class ArrayDataSource<T> {
 
 	public removeRight(count: number): void {
 		const result = this.data.splice(this.length - count, count);
-		this.onChange.fire({ operation: 'remove', count, index: this.length - count, items: result, newState: this.data });
+		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: this.length - count, items: result, newState: this.data });
 	}
 
 	public removeLeft(count: number): void {
 		const result = this.data.splice(0, count);
-		this.onChange.fire({ operation: 'remove', count, index: 0, items: result, newState: this.data });
+		this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: result, newState: this.data });
 	}
-
 	public remove(item: T): void {
 		const index = this.data.indexOf(item);
 		if (index !== -1) {
 			this.data.splice(index, 1);
-			this.onChange.fire({ operation: 'remove', count: 1, index, items: [item], newState: this.data });
+			this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
 		}
 	}
 
 	public clear(): void {
 		const items = this.data;
 		this.data = [];
-		this.onChange.fire({
+		this.update({
 			operation: 'remove',
+			operationDetailed: 'clear',
 			count: items.length,
 			index: 0,
 			items,
@@ -298,7 +336,7 @@ export class ArrayDataSource<T> {
 
 	public shift(): T {
 		const item = this.data.shift();
-		this.onChange.fire({ operation: 'remove', items: [item], count: 1, index: 0, newState: this.data });
+		this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
 
 		return item;
 	}
@@ -317,28 +355,35 @@ export class ArrayDataSource<T> {
 
 	public toDataSource(): DataSource<T[]> {
 		const stream = new DataSource(this.data);
-		this.onChange.subscribe((s) => {
+		this.listen((s) => {
 			stream.update(s.newState);
 		});
 		return stream;
+	}
+
+	private update(change: CollectionChange<T>) {
+		for (const l of this.listeners) {
+			l(change);
+		}
 	}
 }
 
 export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	private viewFilter: Predicate<T>;
 	private parent: ArrayDataSource<T>;
-
 	constructor(parent: ArrayDataSource<T>, filter: Predicate<T>, cancellationToken?: CancellationToken) {
 		const initial = (parent as FilteredArrayView<T>).data.filter(filter);
 		super(initial);
 
 		this.parent = parent;
 		this.viewFilter = filter;
-
-		parent.onChange.subscribe((change) => {
+		parent.listen((change) => {
 			let filteredItems;
-			switch (change.operation) {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+				case 'removeRight':
 				case 'remove':
+				case 'clear':
 					for (const item of change.items) {
 						this.remove(item);
 					}

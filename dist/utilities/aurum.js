@@ -43,7 +43,7 @@ import { Em } from '../nodes/em';
 import { Heading } from '../nodes/heading';
 import { IFrame } from '../nodes/iframe';
 import { NoScript } from '../nodes/noscript';
-import Q from 'q';
+import { Q } from '../nodes/q';
 import { Select } from '../nodes/select';
 import { Source } from '../nodes/source';
 import { Title } from '../nodes/title';
@@ -58,6 +58,7 @@ import { Sup } from '../nodes/sup';
 import { Svg } from '../nodes/svg';
 import { Data } from '../nodes/data';
 import { Time } from '../nodes/time';
+import { Option } from '../nodes/option';
 const nodeMap = {
     button: Button,
     div: Div,

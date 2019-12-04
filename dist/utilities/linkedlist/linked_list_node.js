@@ -8,14 +8,20 @@ export class LinkedListNode {
             this.next.next = undefined;
             this.next.previous = undefined;
             this.next = overNext;
-            this.next.previous = this;
+            if (this.next) {
+                this.next.previous = this;
+            }
         }
     }
     deletePrevious() {
         if (this.previous) {
-            this.previous = this.previous.previous;
+            const overPrevious = this.previous.previous;
             this.previous.next = undefined;
             this.previous.previous = undefined;
+            this.previous = overPrevious;
+            if (this.previous) {
+                this.previous.next = this;
+            }
         }
     }
 }

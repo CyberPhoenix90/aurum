@@ -184,8 +184,8 @@ export abstract class AurumElement {
 			this.render();
 		}
 
-		this.repeatData.onChange.subscribe((change) => {
-			switch (change.operation) {
+		this.repeatData.listen((change) => {
+			switch (change.operationDetailed) {
 				case 'swap':
 					const itemA = this.children[change.index];
 					const itemB = this.children[change.index2];
@@ -199,6 +199,9 @@ export abstract class AurumElement {
 					this.children.unshift(...change.items.map((i) => this.template.generate(i)));
 					break;
 				case 'remove':
+				case 'removeLeft':
+				case 'removeRight':
+				case 'clear':
 					this.children.splice(change.index, change.count);
 					break;
 				default:

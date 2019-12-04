@@ -1,4 +1,3 @@
-import { EventEmitter } from './event_emitter';
 export class DataSource {
     constructor(initialValue) {
         this.value = initialValue;
@@ -9,6 +8,10 @@ export class DataSource {
         for (const l of this.listeners) {
             l(newValue);
         }
+    }
+    listenAndRepeat(callback, cancellationToken) {
+        callback(this.value);
+        return this.listen(callback, cancellationToken);
     }
     listen(callback, cancellationToken) {
         var _a;
@@ -74,7 +77,7 @@ export class DataSource {
         let timeout;
         this.listen((v) => {
             clearTimeout(timeout);
-            setTimeout(() => {
+            timeout = setTimeout(() => {
                 debouncedDataSource.update(v);
             }, time);
         }, cancellationToken);
@@ -87,7 +90,7 @@ export class DataSource {
         this.listen((v) => {
             buffer.push(v);
             if (!timeout) {
-                setTimeout(() => {
+                timeout = setTimeout(() => {
                     timeout = undefined;
                     bufferedDataSource.update(buffer);
                     buffer = [];
@@ -128,7 +131,32 @@ export class ArrayDataSource {
         else {
             this.data = [];
         }
-        this.onChange = new EventEmitter();
+        this.listeners = [];
+    }
+    listenAndRepeat(callback, cancellationToken) {
+        callback({
+            operation: 'add',
+            operationDetailed: 'append',
+            index: 0,
+            items: this.data,
+            newState: this.data,
+            count: this.data.length
+        });
+        return this.listen(callback, cancellationToken);
+    }
+    listen(callback, cancellationToken) {
+        var _a;
+        this.listeners.push(callback);
+        const cancel = () => {
+            const index = this.listeners.indexOf(callback);
+            if (index !== -1) {
+                this.listeners.splice(index, 1);
+            }
+        };
+        (_a = cancellationToken) === null || _a === void 0 ? void 0 : _a.addCancelable(() => {
+            cancel();
+        });
+        return cancel;
     }
     get length() {
         return this.data.length;
@@ -145,7 +173,7 @@ export class ArrayDataSource {
             return;
         }
         this.data[index] = item;
-        this.onChange.fire({ operation: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
+        this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
     }
     swap(indexA, indexB) {
         if (indexA === indexB) {
@@ -155,7 +183,7 @@ export class ArrayDataSource {
         const itemB = this.data[indexB];
         this.data[indexB] = itemA;
         this.data[indexA] = itemB;
-        this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+        this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
     }
     swapItems(itemA, itemB) {
         if (itemA === itemB) {
@@ -167,12 +195,13 @@ export class ArrayDataSource {
             this.data[indexB] = itemA;
             this.data[indexA] = itemB;
         }
-        this.onChange.fire({ operation: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+        this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
     }
     push(...items) {
         this.data.push(...items);
-        this.onChange.fire({
-            operation: 'append',
+        this.update({
+            operation: 'add',
+            operationDetailed: 'append',
             count: items.length,
             index: this.data.length - items.length,
             items,
@@ -181,12 +210,13 @@ export class ArrayDataSource {
     }
     unshift(...items) {
         this.data.unshift(...items);
-        this.onChange.fire({ operation: 'prepend', count: items.length, items, index: 0, newState: this.data });
+        this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
     }
     pop() {
         const item = this.data.pop();
-        this.onChange.fire({
+        this.update({
             operation: 'remove',
+            operationDetailed: 'removeRight',
             count: 1,
             index: this.data.length,
             items: [item],
@@ -211,24 +241,25 @@ export class ArrayDataSource {
     }
     removeRight(count) {
         const result = this.data.splice(this.length - count, count);
-        this.onChange.fire({ operation: 'remove', count, index: this.length - count, items: result, newState: this.data });
+        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: this.length - count, items: result, newState: this.data });
     }
     removeLeft(count) {
         const result = this.data.splice(0, count);
-        this.onChange.fire({ operation: 'remove', count, index: 0, items: result, newState: this.data });
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: result, newState: this.data });
     }
     remove(item) {
         const index = this.data.indexOf(item);
         if (index !== -1) {
             this.data.splice(index, 1);
-            this.onChange.fire({ operation: 'remove', count: 1, index, items: [item], newState: this.data });
+            this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
         }
     }
     clear() {
         const items = this.data;
         this.data = [];
-        this.onChange.fire({
+        this.update({
             operation: 'remove',
+            operationDetailed: 'clear',
             count: items.length,
             index: 0,
             items,
@@ -237,7 +268,7 @@ export class ArrayDataSource {
     }
     shift() {
         const item = this.data.shift();
-        this.onChange.fire({ operation: 'remove', items: [item], count: 1, index: 0, newState: this.data });
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
         return item;
     }
     toArray() {
@@ -251,10 +282,15 @@ export class ArrayDataSource {
     }
     toDataSource() {
         const stream = new DataSource(this.data);
-        this.onChange.subscribe((s) => {
+        this.listen((s) => {
             stream.update(s.newState);
         });
         return stream;
+    }
+    update(change) {
+        for (const l of this.listeners) {
+            l(change);
+        }
     }
 }
 export class FilteredArrayView extends ArrayDataSource {
@@ -263,10 +299,13 @@ export class FilteredArrayView extends ArrayDataSource {
         super(initial);
         this.parent = parent;
         this.viewFilter = filter;
-        parent.onChange.subscribe((change) => {
+        parent.listen((change) => {
             let filteredItems;
-            switch (change.operation) {
+            switch (change.operationDetailed) {
+                case 'removeLeft':
+                case 'removeRight':
                 case 'remove':
+                case 'clear':
                     for (const item of change.items) {
                         this.remove(item);
                     }

@@ -96,8 +96,8 @@ export class AurumElement {
             this.children.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
             this.render();
         }
-        this.repeatData.onChange.subscribe((change) => {
-            switch (change.operation) {
+        this.repeatData.listen((change) => {
+            switch (change.operationDetailed) {
                 case 'swap':
                     const itemA = this.children[change.index];
                     const itemB = this.children[change.index2];
@@ -111,6 +111,9 @@ export class AurumElement {
                     this.children.unshift(...change.items.map((i) => this.template.generate(i)));
                     break;
                 case 'remove':
+                case 'removeLeft':
+                case 'removeRight':
+                case 'clear':
                     this.children.splice(change.index, change.count);
                     break;
                 default:
@@ -128,7 +131,7 @@ export class AurumElement {
         if (this.node instanceof Text) {
             return;
         }
-        setTimeout(() => {
+        this.cancellationToken.setTimeout(() => {
             for (let i = 0; i < this.children.length; i++) {
                 if (this.node.childNodes.length <= i) {
                     this.addChildrenDom(this.children.slice(i, this.children.length));
