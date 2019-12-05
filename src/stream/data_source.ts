@@ -454,16 +454,13 @@ export class ArrayDataSource<T> {
 
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
-	private parent: ArrayDataSource<T>;
 
 	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken) {
 		const initial = (parent as SortedArrayView<T>).data.slice().sort(comparator);
 		super(initial);
-		this.parent = parent;
 		this.comparator = comparator;
 
 		parent.listen((change) => {
-			let filteredItems;
 			switch (change.operationDetailed) {
 				case 'removeLeft':
 					this.removeLeft(change.count);

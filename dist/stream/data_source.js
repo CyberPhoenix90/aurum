@@ -308,6 +308,9 @@ export class ArrayDataSource {
     toArray() {
         return this.data.slice();
     }
+    sort(comparator, cancellationToken) {
+        return new SortedArrayView(this, comparator, cancellationToken);
+    }
     filter(callback, cancellationToken) {
         return new FilteredArrayView(this, callback, cancellationToken);
     }
@@ -323,6 +326,43 @@ export class ArrayDataSource {
     }
     update(change) {
         this.updateEvent.fire(change);
+    }
+}
+export class SortedArrayView extends ArrayDataSource {
+    constructor(parent, comparator, cancellationToken) {
+        const initial = parent.data.slice().sort(comparator);
+        super(initial);
+        this.comparator = comparator;
+        parent.listen((change) => {
+            switch (change.operationDetailed) {
+                case 'removeLeft':
+                    this.removeLeft(change.count);
+                    break;
+                case 'removeRight':
+                    this.removeRight(change.count);
+                    break;
+                case 'remove':
+                    this.remove(change.items[0]);
+                    break;
+                case 'clear':
+                    this.data.length = 0;
+                    break;
+                case 'prepend':
+                    this.unshift(...change.items);
+                    this.data.sort(this.comparator);
+                    break;
+                case 'append':
+                    this.push(...change.items);
+                    this.data.sort(this.comparator);
+                    break;
+                case 'swap':
+                    break;
+                case 'replace':
+                    this.set(change.index, change.items[0]);
+                    this.data.sort(this.comparator);
+                    break;
+            }
+        }, cancellationToken);
     }
 }
 export class FilteredArrayView extends ArrayDataSource {
