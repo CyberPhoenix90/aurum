@@ -54,4 +54,13 @@ describe('linked list', () => {
 		assert(list.rootNode === list.lastNode.previous);
 		assert(list.rootNode.next === list.lastNode);
 	});
+
+	it('remove all', () => {
+		const list = new LinkedList([1, 2, 3]);
+		list.remove(1);
+		list.remove(2);
+		list.remove(3);
+		assert(list.rootNode === undefined);
+		assert(list.lastNode === undefined);
+	});
 });

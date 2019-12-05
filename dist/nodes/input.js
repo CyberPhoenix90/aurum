@@ -35,7 +35,9 @@ export class Input extends AurumElement {
         ], props);
         this.createEventHandlers(['input', 'change'], props);
         if (props.inputValueSource) {
-            this.onInput.map((p) => this.node.value).pipe(props.inputValueSource);
+            this.node.addEventListener('input', () => {
+                props.inputValueSource.update(this.node.value);
+            });
         }
     }
 }

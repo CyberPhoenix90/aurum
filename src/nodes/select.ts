@@ -29,7 +29,9 @@ export class Select extends AurumElement {
 		}
 
 		if (props.selectedIndexSource) {
-			this.onChange.map((p) => this.node.selectedIndex).pipe(props.selectedIndexSource);
+			this.node.addEventListener('change', () => {
+				props.selectedIndexSource.update(this.node.selectedIndex);
+			});
 		}
 	}
 
