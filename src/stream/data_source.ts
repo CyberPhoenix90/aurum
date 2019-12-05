@@ -427,6 +427,10 @@ export class ArrayDataSource<T> {
 		return this.data.slice();
 	}
 
+	public sort(comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken): SortedArrayView<T> {
+		return new SortedArrayView(this, comparator, cancellationToken);
+	}
+
 	public filter(callback: Predicate<T>, cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		return new FilteredArrayView(this, callback, cancellationToken);
 	}
@@ -445,6 +449,50 @@ export class ArrayDataSource<T> {
 
 	private update(change: CollectionChange<T>) {
 		this.updateEvent.fire(change);
+	}
+}
+
+export class SortedArrayView<T> extends ArrayDataSource<T> {
+	private comparator: (a: T, b: T) => number;
+	private parent: ArrayDataSource<T>;
+
+	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken) {
+		const initial = (parent as SortedArrayView<T>).data.slice().sort(comparator);
+		super(initial);
+		this.parent = parent;
+		this.comparator = comparator;
+
+		parent.listen((change) => {
+			let filteredItems;
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+					this.removeLeft(change.count);
+					break;
+				case 'removeRight':
+					this.removeRight(change.count);
+					break;
+				case 'remove':
+					this.remove(change.items[0]);
+					break;
+				case 'clear':
+					this.data.length = 0;
+					break;
+				case 'prepend':
+					this.unshift(...change.items);
+					this.data.sort(this.comparator);
+					break;
+				case 'append':
+					this.push(...change.items);
+					this.data.sort(this.comparator);
+					break;
+				case 'swap':
+					break;
+				case 'replace':
+					this.set(change.index, change.items[0]);
+					this.data.sort(this.comparator);
+					break;
+			}
+		}, cancellationToken);
 	}
 }
 
