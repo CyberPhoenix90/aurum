@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { CancellationToken } from '../src/aurumjs';
+import { CancellationToken } from '../src/aurum';
 
 describe('cancellation token', () => {
 	beforeEach(() => {

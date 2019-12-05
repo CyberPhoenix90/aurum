@@ -59,7 +59,8 @@ import { TrProps } from './nodes/tr';
 import { UlProps } from './nodes/ul';
 import { VideoProps } from './nodes/video';
 import { StyleProps } from './nodes/style';
-
+import { BodyProps } from './nodes/body';
+import { HeadProps } from './nodes/head';
 export * from './nodes/a';
 export * from './nodes/abbr';
 export * from './nodes/area';
@@ -124,77 +125,79 @@ export * from './nodes/title';
 export * from './nodes/tr';
 export * from './nodes/ul';
 export * from './nodes/video';
-
+export * from './nodes/body';
+export * from './nodes/head';
 export * from './stream/data_source';
 export * from './stream/object_data_source';
-
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
-
 declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			button: ButtonProps;
-			div: DivProps;
-			input: InputProps;
-			li: LiProps;
-			span: SpanProps;
-			style: StyleProps;
-			ul: UlProps;
-			p: PProps;
-			img: ImgProps;
-			link: LinkProps;
-			canvas: CanvasProps;
-			a: AProps;
-			article: ArticleProps;
-			br: BrProps;
-			form: FormProps;
-			label: LabelProps;
-			ol: OlProps;
-			pre: PreProps;
-			progress: ProgressProps;
-			table: TableProps;
-			td: TdProps;
-			tr: TrProps;
-			th: ThProps;
-			textarea: TextAreaProps;
-			h1: H1Props;
-			h2: H2Props;
-			h3: H3Props;
-			h4: H4Props;
-			h5: H5Props;
-			h6: H6Props;
-			header: HeaderProps;
-			footer: FooterProps;
-			nav: NavProps;
-			b: BProps;
-			i: IProps;
-			script: ScriptProps;
-			abbr: AbbrProps;
-			area: AreaProps;
-			aside: AsideProps;
-			audio: AudioProps;
-			em: EmProps;
-			heading: HeadingProps;
-			iframe: IFrameProps;
-			noscript: NoScriptProps;
-			option: OptionProps;
-			q: QProps;
-			select: SelectProps;
-			source: SourceProps;
-			title: TitleProps;
-			video: VideoProps;
-			tbody: TbodyProps;
-			tfoot: TfootProps;
-			thead: TheadProps;
-			summary: SummaryProps;
-			details: DetailsProps;
-			sub: SubProps;
-			sup: SupProps;
-			svg: SvgProps;
-			data: DataProps;
-			time: TimeProps;
-			template: TemplateProps<any>;
-		}
-	}
+    namespace JSX {
+        interface IntrinsicElements {
+            button: ButtonProps;
+            div: DivProps;
+            input: InputProps;
+            li: LiProps;
+            span: SpanProps;
+            style: StyleProps;
+            ul: UlProps;
+            p: PProps;
+            img: ImgProps;
+            link: LinkProps;
+            canvas: CanvasProps;
+            a: AProps;
+            article: ArticleProps;
+            br: BrProps;
+            form: FormProps;
+            label: LabelProps;
+            ol: OlProps;
+            pre: PreProps;
+            progress: ProgressProps;
+            table: TableProps;
+            td: TdProps;
+            tr: TrProps;
+            th: ThProps;
+            textarea: TextAreaProps;
+            h1: H1Props;
+            h2: H2Props;
+            h3: H3Props;
+            h4: H4Props;
+            h5: H5Props;
+            h6: H6Props;
+            header: HeaderProps;
+            footer: FooterProps;
+            nav: NavProps;
+            b: BProps;
+            i: IProps;
+            script: ScriptProps;
+            abbr: AbbrProps;
+            area: AreaProps;
+            aside: AsideProps;
+            audio: AudioProps;
+            em: EmProps;
+            heading: HeadingProps;
+            iframe: IFrameProps;
+            noscript: NoScriptProps;
+            option: OptionProps;
+            q: QProps;
+            select: SelectProps;
+            source: SourceProps;
+            title: TitleProps;
+            video: VideoProps;
+            tbody: TbodyProps;
+            tfoot: TfootProps;
+            thead: TheadProps;
+            summary: SummaryProps;
+            details: DetailsProps;
+            sub: SubProps;
+            sup: SupProps;
+            svg: SvgProps;
+            data: DataProps;
+            time: TimeProps;
+            body: BodyProps;
+            head: HeadProps;
+            template: TemplateProps<any>;
+        }
+    }
 }
+//# sourceMappingURL=aurum.d.ts.map

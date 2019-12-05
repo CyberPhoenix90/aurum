@@ -1,5 +1,5 @@
-import { AurumElement, AurumElementProps } from '../../aurumjs';
 import { Callback, MapLike, StringSource } from '../../utilities/common';
+import { AurumElement, AurumElementProps } from '../aurum_element';
 export interface CustomProps<T extends HTMLElement> extends AurumElementProps {
     onAttach?: Callback<Custom<T>>;
     onDetach?: Callback<Custom<T>>;

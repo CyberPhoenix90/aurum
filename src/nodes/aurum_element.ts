@@ -121,7 +121,7 @@ export abstract class AurumElement {
 			props
 		);
 
-		const dataProps = Object.keys(props).filter((e) => e.startsWith('x-') || e.startsWith('data-'));
+		const dataProps = Object.keys(props).filter((e) => e.includes('-'));
 		this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', ...dataProps], props);
 
 		if (props.class) {

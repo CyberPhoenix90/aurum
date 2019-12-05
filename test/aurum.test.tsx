@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum, DataSource, Div, P, Template } from '../src/aurumjs';
+import { Aurum, DataSource, Div, P, Template } from '../src/aurum';
 import { ownerSymbol } from '../src/utilities/owner_symbol';
 describe('Aurum', () => {
 	beforeEach(() => {

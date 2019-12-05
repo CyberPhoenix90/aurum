@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.2.5",
+	"version": "0.2.6",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurumjs.js",
 	"typings": "dist/aurumjs.d.ts",
@@ -8,7 +8,7 @@
 		"build": "tsc",
 		"watch": "tsc -w",
 		"test": "jest",
-		"deploy": "npm run build && microbundle --entry dist/aurumjs.js --output prebuilt --name aurumjs"
+		"deploy": "npm run build && microbundle --entry dist/aurumjs.js --output prebuilt --name aurum"
 	},
 	"repository": {
 		"type": "git",

@@ -1,4 +1,4 @@
-import { AurumElement } from '../../aurumjs';
+import { AurumElement } from '../aurum_element';
 export class Custom extends AurumElement {
     constructor(props) {
         super(props, props.tag);

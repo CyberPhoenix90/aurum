@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { DataSource, CancellationToken } from '../src/aurumjs';
+import { DataSource, CancellationToken } from '../src/aurum';
 
 describe('Datasource', () => {
 	it('should allow omitting initial value', () => {
