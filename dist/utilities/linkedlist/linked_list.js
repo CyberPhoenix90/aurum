@@ -43,7 +43,12 @@ export class LinkedList {
     }
     remove(element) {
         if (element === this.rootNode.data) {
-            this.rootNode = this.rootNode.next;
+            if (this.rootNode === this.lastNode) {
+                this.rootNode = this.lastNode = undefined;
+            }
+            else {
+                this.rootNode = this.rootNode.next;
+            }
             this.length--;
         }
         else {

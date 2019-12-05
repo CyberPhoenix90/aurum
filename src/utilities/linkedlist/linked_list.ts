@@ -54,7 +54,11 @@ export class LinkedList<T> {
 
 	public remove(element: T) {
 		if (element === this.rootNode.data) {
-			this.rootNode = this.rootNode.next;
+			if (this.rootNode === this.lastNode) {
+				this.rootNode = this.lastNode = undefined;
+			} else {
+				this.rootNode = this.rootNode.next;
+			}
 			this.length--;
 		} else {
 			const result = this.find((e) => e.next && e.next.data === element);
