@@ -5,13 +5,20 @@ export class Select extends AurumElement {
         super(props, 'select');
         this.createEventHandlers(['change'], props);
         if (props.selectedIndexSource) {
+            this.selectedIndexSource = props.selectedIndexSource;
             props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
         }
         else {
-            this.node.selectedIndex = (_a = props.initialSelection, (_a !== null && _a !== void 0 ? _a : 0));
+            this.node.selectedIndex = (_a = props.initialSelection, (_a !== null && _a !== void 0 ? _a : -1));
         }
         if (props.selectedIndexSource) {
             this.onChange.map((p) => this.node.selectedIndex).pipe(props.selectedIndexSource);
+        }
+    }
+    handleAttach() {
+        super.handleAttach();
+        if (this.selectedIndexSource) {
+            this.node.selectedIndex = this.selectedIndexSource.value;
         }
     }
 }

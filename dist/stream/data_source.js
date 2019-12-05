@@ -4,10 +4,25 @@ export class DataSource {
         this.listeners = [];
     }
     update(newValue) {
+        if (this.updating) {
+            throw new Error('Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed');
+        }
+        this.updating = true;
         this.value = newValue;
         for (const l of this.listeners) {
             l(newValue);
         }
+        this.updating = false;
+    }
+    backPropagate(sender, newValue) {
+        this.value = newValue;
+        this.updating = true;
+        for (const l of this.listeners) {
+            if (l !== sender) {
+                l(newValue);
+            }
+        }
+        this.updating = false;
     }
     listenAndRepeat(callback, cancellationToken) {
         callback(this.value);
@@ -36,14 +51,44 @@ export class DataSource {
         }, cancellationToken);
         return filteredSource;
     }
+    filterDuplex(callback, cancellationToken) {
+        const filteredSource = new DataSource();
+        const cb = (value) => {
+            if (callback(value)) {
+                filteredSource.backPropagate(cb2, value);
+            }
+        };
+        const cb2 = (value) => {
+            if (callback(value)) {
+                this.backPropagate(cb, value);
+            }
+        };
+        this.listen(cb, cancellationToken);
+        filteredSource.listen(cb2, cancellationToken);
+        return filteredSource;
+    }
     pipe(targetDataSource, cancellationToken) {
         this.listen((v) => targetDataSource.update(v), cancellationToken);
+    }
+    pipeDuplex(targetDataSource, cancellationToken) {
+        const cb = (v) => targetDataSource.backPropagate(cb2, v);
+        const cb2 = (v) => this.backPropagate(cb, v);
+        this.listen(cb, cancellationToken);
+        targetDataSource.listen(cb2, cancellationToken);
     }
     map(callback, cancellationToken) {
         const mappedSource = new DataSource(callback(this.value));
         this.listen((value) => {
             mappedSource.update(callback(value));
         }, cancellationToken);
+        return mappedSource;
+    }
+    mapDuplex(callback, reverseMap, cancellationToken) {
+        const mappedSource = new DataSource(callback(this.value));
+        const cb = (value) => mappedSource.backPropagate(cb2, callback(value));
+        const cb2 = (value) => this.backPropagate(cb, reverseMap(value));
+        this.listen(cb, cancellationToken);
+        mappedSource.listen(cb2, cancellationToken);
         return mappedSource;
     }
     unique(cancellationToken) {
@@ -53,6 +98,22 @@ export class DataSource {
                 uniqueSource.update(value);
             }
         }, cancellationToken);
+        return uniqueSource;
+    }
+    uniqueDuplex(cancellationToken) {
+        const uniqueSource = new DataSource(this.value);
+        const cb = (value) => {
+            if (value !== uniqueSource.value) {
+                uniqueSource.backPropagate(cb2, value);
+            }
+        };
+        const cb2 = (value) => {
+            if (value !== uniqueSource.value) {
+                uniqueSource.backPropagate(cb, value);
+            }
+        };
+        this.listen(cb, cancellationToken);
+        uniqueSource.listen(cb2, cancellationToken);
         return uniqueSource;
     }
     reduce(reducer, initialValue, cancellationToken) {

@@ -270,7 +270,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	private handleAttach() {
+	protected handleAttach() {
 		if (this.node.isConnected) {
 			this.onAttach?.(this);
 			for (const child of this.node.childNodes) {

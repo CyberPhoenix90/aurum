@@ -13,6 +13,8 @@ export interface SelectProps extends AurumElementProps {
 export declare class Select extends AurumElement {
     readonly node: HTMLSelectElement;
     onChange: DataSource<InputEvent>;
+    private selectedIndexSource;
     constructor(props: SelectProps);
+    protected handleAttach(): void;
 }
 //# sourceMappingURL=select.d.ts.map

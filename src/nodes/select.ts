@@ -15,19 +15,28 @@ export interface SelectProps extends AurumElementProps {
 export class Select extends AurumElement {
 	public readonly node: HTMLSelectElement;
 	public onChange: DataSource<InputEvent>;
+	private selectedIndexSource: DataSource<number>;
 
 	constructor(props: SelectProps) {
 		super(props, 'select');
 		this.createEventHandlers(['change'], props);
 
 		if (props.selectedIndexSource) {
+			this.selectedIndexSource = props.selectedIndexSource;
 			props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
 		} else {
-			this.node.selectedIndex = props.initialSelection ?? 0;
+			this.node.selectedIndex = props.initialSelection ?? -1;
 		}
 
 		if (props.selectedIndexSource) {
 			this.onChange.map((p) => this.node.selectedIndex).pipe(props.selectedIndexSource);
+		}
+	}
+
+	protected handleAttach() {
+		super.handleAttach();
+		if (this.selectedIndexSource) {
+			this.node.selectedIndex = this.selectedIndexSource.value;
 		}
 	}
 }

@@ -4,27 +4,64 @@ import { Callback, Predicate } from '../utilities/common';
 export class DataSource<T> {
 	public value: T;
 	private listeners: Array<(value: T) => void>;
+	private updating: boolean;
 
 	constructor(initialValue?: T) {
 		this.value = initialValue;
 		this.listeners = [];
 	}
 
-	public update(newValue: T) {
+	/**
+	 * Updates the value in the data source and calls the listen callback for all listeners
+	 * @param newValue new value for the data source
+	 */
+	public update(newValue: T): void {
+		if (this.updating) {
+			throw new Error(
+				'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
+			);
+		}
+		this.updating = true;
 		this.value = newValue;
 		for (const l of this.listeners) {
 			l(newValue);
 		}
+		this.updating = false;
+	}
+
+	/**
+	 * Similar to update but does not update the the sender to avoid infinite mutual updates
+	 * @param sender Source of the backpropagation
+	 * @param newValue
+	 */
+	protected backPropagate(sender: Callback<T>, newValue: T): void {
+		this.value = newValue;
+		this.updating = true;
+		for (const l of this.listeners) {
+			if (l !== sender) {
+				l(newValue);
+			}
+		}
+		this.updating = false;
 	}
 
 	/**
 	 * Same as listen but will immediately call the callback with the current value first
+	 * @param callback Callback to call when value is updated
+	 * @param cancellationToken Optional token to control the cancellation of the subscription
+	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		callback(this.value);
 		return this.listen(callback, cancellationToken);
 	}
 
+	/**
+	 * Subscribes to the updates of the data stream
+	 * @param callback Callback to call when value is updated
+	 * @param cancellationToken Optional token to control the cancellation of the subscription
+	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
+	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		this.listeners.push(callback);
 		const cancel = () => {
@@ -49,8 +86,44 @@ export class DataSource<T> {
 		return filteredSource;
 	}
 
+	/**
+	 *
+	 * @param callback
+	 * @param cancellationToken
+	 */
+	public filterDuplex(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
+		const filteredSource = new DataSource<T>();
+		const cb = (value) => {
+			if (callback(value)) {
+				filteredSource.backPropagate(cb2, value);
+			}
+		};
+		const cb2 = (value) => {
+			if (callback(value)) {
+				this.backPropagate(cb, value);
+			}
+		};
+
+		this.listen(cb, cancellationToken);
+		filteredSource.listen(cb2, cancellationToken);
+		return filteredSource;
+	}
+
 	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void {
 		this.listen((v) => targetDataSource.update(v), cancellationToken);
+	}
+
+	/**
+	 * Duplex pipe is like pipe except that it binds both ways
+	 * @param targetDataSource
+	 * @param cancellationToken
+	 */
+	public pipeDuplex(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void {
+		const cb = (v) => targetDataSource.backPropagate(cb2, v);
+		const cb2 = (v) => this.backPropagate(cb, v);
+
+		this.listen(cb, cancellationToken);
+		targetDataSource.listen(cb2, cancellationToken);
 	}
 
 	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D> {
@@ -61,6 +134,22 @@ export class DataSource<T> {
 		return mappedSource;
 	}
 
+	/**
+	 * Duplex map is like map except that changes to the mapped stream will be backpropagated. This is useful for making duplex (both ways) data streams
+	 * @param callback
+	 * @param reverseMap
+	 * @param cancellationToken
+	 */
+	public mapDuplex<D>(callback: (value: T) => D, reverseMap: (value: D) => T, cancellationToken?: CancellationToken): DataSource<D> {
+		const mappedSource = new DataSource<D>(callback(this.value));
+		const cb = (value) => mappedSource.backPropagate(cb2, callback(value));
+		const cb2 = (value) => this.backPropagate(cb, reverseMap(value));
+
+		this.listen(cb, cancellationToken);
+		mappedSource.listen(cb2, cancellationToken);
+		return mappedSource;
+	}
+
 	public unique(cancellationToken?: CancellationToken): DataSource<T> {
 		const uniqueSource = new DataSource<T>(this.value);
 		this.listen((value) => {
@@ -68,6 +157,24 @@ export class DataSource<T> {
 				uniqueSource.update(value);
 			}
 		}, cancellationToken);
+		return uniqueSource;
+	}
+
+	public uniqueDuplex(cancellationToken?: CancellationToken): DataSource<T> {
+		const uniqueSource = new DataSource<T>(this.value);
+		const cb = (value) => {
+			if (value !== uniqueSource.value) {
+				uniqueSource.backPropagate(cb2, value);
+			}
+		};
+		const cb2 = (value) => {
+			if (value !== this.value) {
+				this.backPropagate(cb, value);
+			}
+		};
+
+		this.listen(cb, cancellationToken);
+		uniqueSource.listen(cb2, cancellationToken);
 		return uniqueSource;
 	}
 

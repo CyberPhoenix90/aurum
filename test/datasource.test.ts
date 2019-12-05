@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { DataSource } from '../src/aurumjs';
+import { DataSource, CancellationToken } from '../src/aurumjs';
 
 describe('Datasource', () => {
 	it('should allow omitting initial value', () => {
@@ -143,7 +143,7 @@ describe('Datasource', () => {
 
 			ds.unique().listen((value) => {
 				assert(value === asserts[i++]);
-				if ((i = asserts.length - 1)) {
+				if (i === asserts.length) {
 					resolve();
 				}
 			});
@@ -156,5 +156,91 @@ describe('Datasource', () => {
 			ds.update(100);
 			ds.update(200);
 		});
+	});
+
+	it('should fire unique events both ways', () => {
+		return new Promise((resolve) => {
+			let i = 0;
+			let asserts = [4, 0, 100, 200];
+			let ds = new DataSource(0);
+			let validated = true;
+
+			const ud = ds.uniqueDuplex();
+			const token = new CancellationToken();
+			ud.listen((value) => {
+				assert(value === asserts[i++]);
+				if (i === asserts.length) {
+					validated = true;
+				}
+			}, token);
+			token.cancel();
+			ds.update(0);
+			ds.update(4);
+			ds.update(4);
+			ds.update(0);
+			ds.update(0);
+			ds.update(100);
+			ds.update(100);
+			ds.update(200);
+
+			assert(validated);
+			i = 0;
+			ds.listen((value) => {
+				assert(value === asserts[i++]);
+				if (i === asserts.length) {
+					resolve();
+				}
+			});
+			ud.update(200);
+			ud.update(4);
+			ud.update(4);
+			ud.update(0);
+			ud.update(0);
+			ud.update(100);
+			ud.update(100);
+			ud.update(200);
+		});
+	});
+
+	it('should map updates both ways', () => {
+		let ds = new DataSource(123);
+		let mapped = ds.mapDuplex(
+			(v) => v + 10,
+			(v) => v - 10
+		);
+		assert(mapped.value === 133);
+		ds.update(100);
+		assert(mapped.value === 110);
+		ds.update(200);
+		assert(mapped.value === 210);
+		ds.update(300);
+		assert(mapped.value === 310);
+
+		mapped.update(100);
+		assert(ds.value === 90);
+		mapped.update(200);
+		assert(ds.value === 190);
+		mapped.update(300);
+		assert(ds.value === 290);
+	});
+
+	it('should filter updates both ways', () => {
+		let ds = new DataSource(123);
+		let filtered = ds.filterDuplex((v) => v > 200);
+
+		assert(filtered.value === undefined);
+		ds.update(100);
+		assert(filtered.value === undefined);
+		ds.update(200);
+		assert(filtered.value === undefined);
+		ds.update(300);
+		assert(filtered.value === 300);
+
+		filtered.update(100);
+		assert(ds.value === 300);
+		filtered.update(200);
+		assert(ds.value === 300);
+		filtered.update(350);
+		assert(ds.value === 350);
 	});
 });

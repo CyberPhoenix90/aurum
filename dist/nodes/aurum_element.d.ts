@@ -71,7 +71,7 @@ export declare abstract class AurumElement {
     private handleRepeat;
     protected render(): void;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;
-    private handleAttach;
+    protected handleAttach(): void;
     private handleDetach;
     private handleClass;
     protected resolveStringSource(source: StringSource): string;
