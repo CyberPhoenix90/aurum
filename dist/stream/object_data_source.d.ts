@@ -8,8 +8,8 @@ export interface ObjectChange<T, K extends keyof T> {
 }
 export declare class ObjectDataSource<T> {
     protected data: T;
-    private listeners;
-    private listenersOnKey;
+    private updateEvent;
+    private updateEventOnKey;
     constructor(initialData: T);
     pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]>;
     listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;

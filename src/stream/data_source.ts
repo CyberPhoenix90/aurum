@@ -1,14 +1,15 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
+import { EventEmitter } from '../utilities/event_emitter';
 
 export class DataSource<T> {
 	public value: T;
-	private listeners: Array<(value: T) => void>;
 	private updating: boolean;
+	private updateEvent: EventEmitter<T>;
 
 	constructor(initialValue?: T) {
 		this.value = initialValue;
-		this.listeners = [];
+		this.updateEvent = new EventEmitter();
 	}
 
 	/**
@@ -23,9 +24,7 @@ export class DataSource<T> {
 		}
 		this.updating = true;
 		this.value = newValue;
-		for (const l of this.listeners) {
-			l(newValue);
-		}
+		this.updateEvent.fire(newValue);
 		this.updating = false;
 	}
 
@@ -37,11 +36,7 @@ export class DataSource<T> {
 	protected backPropagate(sender: Callback<T>, newValue: T): void {
 		this.value = newValue;
 		this.updating = true;
-		for (const l of this.listeners) {
-			if (l !== sender) {
-				l(newValue);
-			}
-		}
+		this.updateEvent.fireFiltered(newValue, sender);
 		this.updating = false;
 	}
 
@@ -63,17 +58,7 @@ export class DataSource<T> {
 	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		this.listeners.push(callback);
-		const cancel = () => {
-			const index = this.listeners.indexOf(callback);
-			if (index !== -1) {
-				this.listeners.splice(index, 1);
-			}
-		};
-		cancellationToken?.addCancelable(() => {
-			cancel();
-		});
-		return cancel;
+		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
 	public filter(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
@@ -260,7 +245,7 @@ export class DataSource<T> {
 	}
 
 	public cancelAll(): void {
-		this.listeners.length = 0;
+		this.updateEvent.cancelAll();
 	}
 }
 
@@ -276,7 +261,7 @@ export interface CollectionChange<T> {
 }
 export class ArrayDataSource<T> {
 	protected data: T[];
-	public listeners: Callback<CollectionChange<T>>[];
+	private updateEvent: EventEmitter<CollectionChange<T>>;
 
 	constructor(initialData?: T[]) {
 		if (initialData) {
@@ -284,7 +269,7 @@ export class ArrayDataSource<T> {
 		} else {
 			this.data = [];
 		}
-		this.listeners = [];
+		this.updateEvent = new EventEmitter();
 	}
 
 	/**
@@ -303,17 +288,7 @@ export class ArrayDataSource<T> {
 	}
 
 	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-		this.listeners.push(callback);
-		const cancel = () => {
-			const index = this.listeners.indexOf(callback);
-			if (index !== -1) {
-				this.listeners.splice(index, 1);
-			}
-		};
-		cancellationToken?.addCancelable(() => {
-			cancel();
-		});
-		return cancel;
+		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
 	public get length() {
@@ -469,9 +444,7 @@ export class ArrayDataSource<T> {
 	}
 
 	private update(change: CollectionChange<T>) {
-		for (const l of this.listeners) {
-			l(change);
-		}
+		this.updateEvent.fire(change);
 	}
 }
 

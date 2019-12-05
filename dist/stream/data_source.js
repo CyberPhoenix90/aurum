@@ -1,7 +1,8 @@
+import { EventEmitter } from '../utilities/event_emitter';
 export class DataSource {
     constructor(initialValue) {
         this.value = initialValue;
-        this.listeners = [];
+        this.updateEvent = new EventEmitter();
     }
     update(newValue) {
         if (this.updating) {
@@ -9,19 +10,13 @@ export class DataSource {
         }
         this.updating = true;
         this.value = newValue;
-        for (const l of this.listeners) {
-            l(newValue);
-        }
+        this.updateEvent.fire(newValue);
         this.updating = false;
     }
     backPropagate(sender, newValue) {
         this.value = newValue;
         this.updating = true;
-        for (const l of this.listeners) {
-            if (l !== sender) {
-                l(newValue);
-            }
-        }
+        this.updateEvent.fireFiltered(newValue, sender);
         this.updating = false;
     }
     listenAndRepeat(callback, cancellationToken) {
@@ -29,18 +24,7 @@ export class DataSource {
         return this.listen(callback, cancellationToken);
     }
     listen(callback, cancellationToken) {
-        var _a;
-        this.listeners.push(callback);
-        const cancel = () => {
-            const index = this.listeners.indexOf(callback);
-            if (index !== -1) {
-                this.listeners.splice(index, 1);
-            }
-        };
-        (_a = cancellationToken) === null || _a === void 0 ? void 0 : _a.addCancelable(() => {
-            cancel();
-        });
-        return cancel;
+        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
     }
     filter(callback, cancellationToken) {
         const filteredSource = new DataSource();
@@ -181,7 +165,7 @@ export class DataSource {
         return subDataSource;
     }
     cancelAll() {
-        this.listeners.length = 0;
+        this.updateEvent.cancelAll();
     }
 }
 export class ArrayDataSource {
@@ -192,7 +176,7 @@ export class ArrayDataSource {
         else {
             this.data = [];
         }
-        this.listeners = [];
+        this.updateEvent = new EventEmitter();
     }
     listenAndRepeat(callback, cancellationToken) {
         callback({
@@ -206,18 +190,7 @@ export class ArrayDataSource {
         return this.listen(callback, cancellationToken);
     }
     listen(callback, cancellationToken) {
-        var _a;
-        this.listeners.push(callback);
-        const cancel = () => {
-            const index = this.listeners.indexOf(callback);
-            if (index !== -1) {
-                this.listeners.splice(index, 1);
-            }
-        };
-        (_a = cancellationToken) === null || _a === void 0 ? void 0 : _a.addCancelable(() => {
-            cancel();
-        });
-        return cancel;
+        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
     }
     get length() {
         return this.data.length;
@@ -349,9 +322,7 @@ export class ArrayDataSource {
         return stream;
     }
     update(change) {
-        for (const l of this.listeners) {
-            l(change);
-        }
+        this.updateEvent.fire(change);
     }
 }
 export class FilteredArrayView extends ArrayDataSource {

@@ -1,11 +1,12 @@
 import { DataSource } from './data_source';
+import { EventEmitter } from '../utilities/event_emitter';
 export class ObjectDataSource {
     constructor(initialData) {
         if (initialData) {
             this.data = initialData;
         }
-        this.listeners = [];
-        this.listenersOnKey = new Map();
+        this.updateEvent = new EventEmitter();
+        this.updateEventOnKey = new Map();
     }
     pick(key, cancellationToken) {
         var _a;
@@ -16,18 +17,7 @@ export class ObjectDataSource {
         return subDataSource;
     }
     listen(callback, cancellationToken) {
-        var _a;
-        this.listeners.push(callback);
-        const cancel = () => {
-            const index = this.listeners.indexOf(callback);
-            if (index !== -1) {
-                this.listeners.splice(index, 1);
-            }
-        };
-        (_a = cancellationToken) === null || _a === void 0 ? void 0 : _a.addCancelable(() => {
-            cancel();
-        });
-        return cancel;
+        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
     }
     listenOnKeyAndRepeat(key, callback, cancellationToken) {
         callback({
@@ -38,22 +28,11 @@ export class ObjectDataSource {
         return this.listenOnKey(key, callback, cancellationToken);
     }
     listenOnKey(key, callback, cancellationToken) {
-        var _a;
-        if (!this.listenersOnKey.has(key)) {
-            this.listenersOnKey.set(key, []);
+        if (!this.updateEventOnKey.has(key)) {
+            this.updateEventOnKey.set(key, new EventEmitter());
         }
-        const listeners = this.listenersOnKey.get(key);
-        listeners.push(callback);
-        const cancel = () => {
-            const index = listeners.indexOf(callback);
-            if (index !== -1) {
-                listeners.splice(index, 1);
-            }
-        };
-        (_a = cancellationToken) === null || _a === void 0 ? void 0 : _a.addCancelable(() => {
-            cancel();
-        });
-        return cancel;
+        const event = this.updateEventOnKey.get(key);
+        return event.subscribe(callback, cancellationToken).cancel;
     }
     get(key) {
         return this.data[key];
@@ -64,13 +43,9 @@ export class ObjectDataSource {
         }
         const old = this.data[key];
         this.data[key] = value;
-        for (const l of this.listeners) {
-            l({ oldValue: old, key, newValue: this.data[key] });
-        }
-        if (this.listenersOnKey.has(key)) {
-            for (const l of this.listenersOnKey.get(key)) {
-                l({ oldValue: old, key, newValue: this.data[key] });
-            }
+        this.updateEvent.fire({ oldValue: old, key, newValue: this.data[key] });
+        if (this.updateEventOnKey.has(key)) {
+            this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: this.data[key] });
         }
     }
     assign(newData) {

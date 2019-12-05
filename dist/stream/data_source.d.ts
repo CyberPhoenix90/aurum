@@ -2,8 +2,8 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
 export declare class DataSource<T> {
     value: T;
-    private listeners;
     private updating;
+    private updateEvent;
     constructor(initialValue?: T);
     update(newValue: T): void;
     protected backPropagate(sender: Callback<T>, newValue: T): void;
@@ -38,7 +38,7 @@ export interface CollectionChange<T> {
 }
 export declare class ArrayDataSource<T> {
     protected data: T[];
-    listeners: Callback<CollectionChange<T>>[];
+    private updateEvent;
     constructor(initialData?: T[]);
     listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
     listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;

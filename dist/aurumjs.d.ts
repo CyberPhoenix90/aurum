@@ -124,6 +124,7 @@ export * from './nodes/tr';
 export * from './nodes/ul';
 export * from './nodes/video';
 export * from './stream/data_source';
+export * from './stream/object_data_source';
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
 declare global {

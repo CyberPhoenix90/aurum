@@ -36,6 +36,7 @@ export class AurumElement {
             'keyup',
             'mousedown',
             'mouseup',
+            'mousemouse',
             'mouseenter',
             'mouseleave',
             'mousewheel'
@@ -81,8 +82,8 @@ export class AurumElement {
                 else if (typeof props[computedEventName] === 'function') {
                     this[computedEventName].listen(props[computedEventName], this.cancellationToken);
                 }
+                this.cancellationToken.registerDomEvent(this.node, key, (e) => this[computedEventName].update(e));
             }
-            this.cancellationToken.registerDomEvent(this.node, key, (e) => this[computedEventName].update(e));
         }
     }
     handleRepeat(dataSource) {

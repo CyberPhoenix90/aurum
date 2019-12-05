@@ -1,6 +1,7 @@
 import { DataSource } from './data_source';
 import { Callback } from '../utilities/common';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { EventEmitter } from '../utilities/event_emitter';
 
 export interface ObjectChange<T, K extends keyof T> {
 	key: K;
@@ -10,16 +11,16 @@ export interface ObjectChange<T, K extends keyof T> {
 
 export class ObjectDataSource<T> {
 	protected data: T;
-	private listeners: Callback<ObjectChange<T, keyof T>>[];
-	private listenersOnKey: Map<keyof T, Callback<ObjectChange<T, keyof T>>[]>;
+	private updateEvent: EventEmitter<ObjectChange<T, keyof T>>;
+	private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
 
 	constructor(initialData: T) {
 		if (initialData) {
 			this.data = initialData;
 		}
 
-		this.listeners = [];
-		this.listenersOnKey = new Map();
+		this.updateEvent = new EventEmitter();
+		this.updateEventOnKey = new Map();
 	}
 
 	public pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]> {
@@ -37,17 +38,7 @@ export class ObjectDataSource<T> {
 	}
 
 	public listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
-		this.listeners.push(callback);
-		const cancel = () => {
-			const index = this.listeners.indexOf(callback);
-			if (index !== -1) {
-				this.listeners.splice(index, 1);
-			}
-		};
-		cancellationToken?.addCancelable(() => {
-			cancel();
-		});
-		return cancel;
+		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
 	/**
@@ -64,21 +55,11 @@ export class ObjectDataSource<T> {
 	}
 
 	public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void> {
-		if (!this.listenersOnKey.has(key)) {
-			this.listenersOnKey.set(key, []);
+		if (!this.updateEventOnKey.has(key)) {
+			this.updateEventOnKey.set(key, new EventEmitter());
 		}
-		const listeners = this.listenersOnKey.get(key);
-		listeners.push(callback);
-		const cancel = () => {
-			const index = listeners.indexOf(callback);
-			if (index !== -1) {
-				listeners.splice(index, 1);
-			}
-		};
-		cancellationToken?.addCancelable(() => {
-			cancel();
-		});
-		return cancel;
+		const event = this.updateEventOnKey.get(key);
+		return event.subscribe(callback, cancellationToken).cancel;
 	}
 
 	public get<K extends keyof T>(key: K): T[K] {
@@ -92,13 +73,9 @@ export class ObjectDataSource<T> {
 
 		const old = this.data[key];
 		this.data[key] = value;
-		for (const l of this.listeners) {
-			l({ oldValue: old, key, newValue: this.data[key] });
-		}
-		if (this.listenersOnKey.has(key)) {
-			for (const l of this.listenersOnKey.get(key)) {
-				l({ oldValue: old, key, newValue: this.data[key] });
-			}
+		this.updateEvent.fire({ oldValue: old, key, newValue: this.data[key] });
+		if (this.updateEventOnKey.has(key)) {
+			this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: this.data[key] });
 		}
 	}
 
