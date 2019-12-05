@@ -108,8 +108,8 @@ export class DataSource {
             }
         };
         const cb2 = (value) => {
-            if (value !== uniqueSource.value) {
-                uniqueSource.backPropagate(cb, value);
+            if (value !== this.value) {
+                this.backPropagate(cb, value);
             }
         };
         this.listen(cb, cancellationToken);
