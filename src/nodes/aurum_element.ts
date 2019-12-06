@@ -180,7 +180,15 @@ export abstract class AurumElement {
 		}
 
 		if (this.repeatData.length) {
-			this.children.push(...(this.repeatData as ArrayDataSource<any>).toArray().map((i) => this.template.generate(i)));
+			const old = this.children;
+			this.children = new Array(this.children.length);
+			let i = 0;
+			for (i = 0; i < this.children.length; i++) {
+				this.children[i] = old[i];
+			}
+			this.repeatData.forEach((e, index) => {
+				this.children[i + index] = this.template.generate(e);
+			});
 			this.render();
 		}
 

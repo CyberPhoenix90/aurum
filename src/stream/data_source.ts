@@ -544,6 +544,10 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 		}, cancellationToken);
 	}
 
+	/**
+	 * Replaces the filter function
+	 * @param filter
+	 */
 	public updateFilter(filter: Predicate<T>): void {
 		if (this.viewFilter === filter) {
 			return;
@@ -552,7 +556,10 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 		this.refresh();
 	}
 
-	protected refresh() {
+	/**
+	 * Recalculates the filter. Only needed if your filter function isn't pure and you know the result would be different if run again compared to before
+	 */
+	public refresh() {
 		this.clear();
 		const data = (this.parent as FilteredArrayView<T>).data.filter(this.viewFilter);
 		this.push(...data);

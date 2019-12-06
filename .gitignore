@@ -3,3 +3,4 @@
 dist_test
 coverage
 /.vscode/settings.json
+.history

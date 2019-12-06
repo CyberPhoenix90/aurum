@@ -73,6 +73,6 @@ export declare class FilteredArrayView<T> extends ArrayDataSource<T> {
     private parent;
     constructor(parent: ArrayDataSource<T>, filter: Predicate<T>, cancellationToken?: CancellationToken);
     updateFilter(filter: Predicate<T>): void;
-    protected refresh(): void;
+    refresh(): void;
 }
 //# sourceMappingURL=data_source.d.ts.map
