@@ -7,6 +7,7 @@ import { Input } from '../nodes/input';
 import { Li } from '../nodes/li';
 import { Span } from '../nodes/span';
 import { Style } from '../nodes/style';
+import { Audio } from '../nodes/audio';
 import { Ul } from '../nodes/ul';
 import { P } from '../nodes/p';
 import { Img } from '../nodes/img';
@@ -145,7 +146,7 @@ export class Aurum {
 	}
 
 	public static factory(
-		node: Constructor<AurumElement> | ((...args: any[]) => AurumElement),
+		node: string | Constructor<AurumElement> | ((...args: any[]) => AurumElement),
 		args: MapLike<any>,
 		...innerNodes: AurumElement[]
 	): AurumElement {
@@ -184,7 +185,7 @@ export class Aurum {
 		}
 
 		let instance: AurumElement;
-		if (node.prototype) {
+		if ((node as Constructor<AurumElement>).prototype) {
 			//@ts-ignore
 			instance = new node(args || {});
 		} else {

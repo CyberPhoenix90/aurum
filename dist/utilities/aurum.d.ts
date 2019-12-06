@@ -3,6 +3,6 @@ import { Constructor, MapLike } from './common';
 export declare class Aurum {
     static attach(aurumElement: AurumElement, dom: HTMLElement): void;
     static detach(domNode: HTMLElement): void;
-    static factory(node: Constructor<AurumElement> | ((...args: any[]) => AurumElement), args: MapLike<any>, ...innerNodes: AurumElement[]): AurumElement;
+    static factory(node: string | Constructor<AurumElement> | ((...args: any[]) => AurumElement), args: MapLike<any>, ...innerNodes: AurumElement[]): AurumElement;
 }
 //# sourceMappingURL=aurum.d.ts.map
