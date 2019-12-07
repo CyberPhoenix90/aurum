@@ -45,7 +45,6 @@ export declare abstract class AurumElement {
     protected cancellationToken: CancellationToken;
     protected repeatData: ArrayDataSource<any>;
     node: HTMLElement | Text;
-    readonly domNodeName: string;
     template: Template<any>;
     onClick: DataSource<MouseEvent>;
     onKeydown: DataSource<KeyboardEvent>;
@@ -65,7 +64,7 @@ export declare abstract class AurumElement {
     onDragstart: DataSource<DragEvent>;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
-    protected bindProps(keys: string[], props: any): void;
+    protected bindProps(keys: string[], props: any, dynamicProps?: string[]): void;
     protected createEventHandlers(keys: string[], props: any): void;
     private handleRepeat;
     protected render(): void;
@@ -74,7 +73,7 @@ export declare abstract class AurumElement {
     private handleDetach;
     private handleClass;
     protected resolveStringSource(source: StringSource): string;
-    protected create(props: AurumElementProps): HTMLElement | Text;
+    protected create(props: AurumElementProps, domNodeName: string): HTMLElement | Text;
     protected getChildIndex(node: HTMLElement | Text): number;
     protected hasChild(node: HTMLElement): boolean;
     protected addChildrenDom(children: AurumElement[]): void;
@@ -105,14 +104,4 @@ export declare class Template<T> extends AurumElement {
     ref: string;
     constructor(props: TemplateProps<T>);
 }
-interface TextNodeProps extends AurumElementProps {
-    onAttach?: (node: TextNode) => void;
-    onDetach?: (node: TextNode) => void;
-    text?: StringSource;
-}
-export declare class TextNode extends AurumElement {
-    constructor(props: TextNodeProps);
-    protected create(props: TextNodeProps): HTMLElement | Text;
-}
-export {};
 //# sourceMappingURL=aurum_element.d.ts.map

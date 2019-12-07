@@ -1,16 +1,40 @@
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { ownerSymbol } from '../utilities/owner_symbol';
+import { AurumTextElement } from './aurum_text';
+const defaultEvents = [
+    'drag',
+    'name',
+    'dragstart',
+    'dragend',
+    'dragexit',
+    'dragover',
+    'dragenter',
+    'dragleave',
+    'blur',
+    'focus',
+    'click',
+    'dblclick',
+    'keydown',
+    'keyhit',
+    'keyup',
+    'mousedown',
+    'mouseup',
+    'mousemouse',
+    'mouseenter',
+    'mouseleave',
+    'mousewheel'
+];
+const defaultProps = ['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export class AurumElement {
     constructor(props, domNodeName) {
         var _a, _b;
         this.onDispose = props.onDispose;
         this.onAttach = props.onAttach;
         this.onDetach = props.onDetach;
-        this.domNodeName = domNodeName;
         this.template = props.template;
         this.cancellationToken = new CancellationToken();
-        this.node = this.create(props);
+        this.node = this.create(props, domNodeName);
         this.initialize(props);
         (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
     }
@@ -18,31 +42,9 @@ export class AurumElement {
         if (!(this.node instanceof Text)) {
             this.children = [];
         }
-        this.createEventHandlers([
-            'drag',
-            'name',
-            'dragstart',
-            'dragend',
-            'dragexit',
-            'dragover',
-            'dragenter',
-            'dragleave',
-            'blur',
-            'focus',
-            'click',
-            'dblclick',
-            'keydown',
-            'keyhit',
-            'keyup',
-            'mousedown',
-            'mouseup',
-            'mousemouse',
-            'mouseenter',
-            'mouseleave',
-            'mousewheel'
-        ], props);
+        this.createEventHandlers(defaultEvents, props);
         const dataProps = Object.keys(props).filter((e) => e.includes('-'));
-        this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', ...dataProps], props);
+        this.bindProps(defaultProps, props, dataProps);
         if (props.class) {
             this.handleClass(props.class);
         }
@@ -50,10 +52,17 @@ export class AurumElement {
             this.handleRepeat(props.repeatModel);
         }
     }
-    bindProps(keys, props) {
+    bindProps(keys, props, dynamicProps) {
         for (const key of keys) {
             if (props[key]) {
                 this.assignStringSourceToAttribute(props[key], key);
+            }
+        }
+        if (dynamicProps) {
+            for (const key of dynamicProps) {
+                if (props[key]) {
+                    this.assignStringSourceToAttribute(props[key], key);
+                }
             }
         }
     }
@@ -122,13 +131,13 @@ export class AurumElement {
                 case 'remove':
                 case 'removeLeft':
                 case 'removeRight':
-                case 'clear':
                     this.children.splice(change.index, change.count);
                     break;
-                default:
-                    this.children.length = 0;
-                    this.children.push(...this.repeatData.toArray().map((i) => this.template.generate(i)));
+                case 'clear':
+                    this.children = [];
                     break;
+                default:
+                    throw new Error('unhandled operation');
             }
             this.render();
         });
@@ -180,21 +189,21 @@ export class AurumElement {
         }
     }
     handleAttach() {
-        var _a, _b;
+        var _a, _b, _c, _d;
         if (this.node.isConnected) {
             (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
             for (const child of this.node.childNodes) {
-                child[ownerSymbol].handleAttach();
+                (_d = (_c = child[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c);
             }
         }
     }
     handleDetach() {
-        var _a, _b;
+        var _a, _b, _c, _d;
         if (!this.node.isConnected) {
             (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
             for (const child of this.node.childNodes) {
                 if (child[ownerSymbol]) {
-                    child[ownerSymbol].handleDetach();
+                    (_d = (_c = child[ownerSymbol]).handleDetach) === null || _d === void 0 ? void 0 : _d.call(_c);
                 }
             }
         }
@@ -268,8 +277,8 @@ export class AurumElement {
             return source.value;
         }
     }
-    create(props) {
-        const node = document.createElement(this.domNodeName);
+    create(props, domNodeName) {
+        const node = document.createElement(domNodeName);
         node[ownerSymbol] = this;
         return node;
     }
@@ -295,12 +304,13 @@ export class AurumElement {
         return false;
     }
     addChildrenDom(children) {
+        var _a, _b;
         if (this.node instanceof Text) {
             throw new Error("Text nodes don't have children");
         }
         for (const child of children) {
             this.node.appendChild(child.node);
-            child.handleAttach();
+            (_b = (_a = child).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a);
         }
     }
     swapChildrenDom(indexA, indexB) {
@@ -324,16 +334,17 @@ export class AurumElement {
         }
     }
     addDomNodeAt(node, index) {
+        var _a, _b, _c, _d;
         if (this.node instanceof Text) {
             throw new Error("Text nodes don't have children");
         }
         if (index >= this.node.childElementCount) {
             this.node.appendChild(node);
-            node[ownerSymbol].handleAttach();
+            (_b = (_a = node[ownerSymbol]).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a);
         }
         else {
             this.node.insertBefore(node, this.node.children[index]);
-            node[ownerSymbol].handleAttach();
+            (_d = (_c = node[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c);
         }
     }
     remove() {
@@ -388,14 +399,10 @@ export class AurumElement {
     }
     childNodeToAurum(child) {
         if (typeof child === 'string' || child instanceof DataSource) {
-            child = new TextNode({
-                text: child
-            });
+            child = new AurumTextElement(child);
         }
         else if (!(child instanceof AurumElement)) {
-            child = new TextNode({
-                text: child.toString()
-            });
+            child = new AurumTextElement(child.toString());
         }
         return child;
     }
@@ -445,19 +452,6 @@ export class Template extends AurumElement {
         super(props, 'template');
         this.ref = props.ref;
         this.generate = props.generator;
-    }
-}
-export class TextNode extends AurumElement {
-    constructor(props) {
-        super(props, 'textNode');
-        if (props.text instanceof DataSource) {
-            props.text.listen((v) => (this.node.textContent = v), this.cancellationToken);
-        }
-    }
-    create(props) {
-        const node = document.createTextNode(this.resolveStringSource(props.text));
-        node[ownerSymbol] = this;
-        return node;
     }
 }
 //# sourceMappingURL=aurum_element.js.map

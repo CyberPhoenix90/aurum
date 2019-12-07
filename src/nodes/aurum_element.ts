@@ -2,6 +2,7 @@ import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DataDrain, StringSource, ClassType, Callback } from '../utilities/common';
 import { ownerSymbol } from '../utilities/owner_symbol';
+import { AurumTextElement } from './aurum_text';
 
 export interface AurumElementProps {
 	id?: StringSource;
@@ -42,6 +43,32 @@ export interface AurumElementProps {
 	template?: Template<any>;
 }
 
+const defaultEvents: string[] = [
+	'drag',
+	'name',
+	'dragstart',
+	'dragend',
+	'dragexit',
+	'dragover',
+	'dragenter',
+	'dragleave',
+	'blur',
+	'focus',
+	'click',
+	'dblclick',
+	'keydown',
+	'keyhit',
+	'keyup',
+	'mousedown',
+	'mouseup',
+	'mousemouse',
+	'mouseenter',
+	'mouseleave',
+	'mousewheel'
+];
+
+const defaultProps: string[] = ['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
+
 export type ChildNode = AurumElement | string | DataSource<string>;
 
 export abstract class AurumElement {
@@ -55,7 +82,6 @@ export abstract class AurumElement {
 	protected repeatData: ArrayDataSource<any>;
 
 	public node: HTMLElement | Text;
-	public readonly domNodeName: string;
 
 	public template: Template<any>;
 	public onClick: DataSource<MouseEvent>;
@@ -80,10 +106,9 @@ export abstract class AurumElement {
 		this.onAttach = props.onAttach;
 		this.onDetach = props.onDetach;
 
-		this.domNodeName = domNodeName;
 		this.template = props.template;
 		this.cancellationToken = new CancellationToken();
-		this.node = this.create(props);
+		this.node = this.create(props, domNodeName);
 		this.initialize(props);
 		props.onCreate?.(this);
 	}
@@ -93,35 +118,10 @@ export abstract class AurumElement {
 			this.children = [];
 		}
 
-		this.createEventHandlers(
-			[
-				'drag',
-				'name',
-				'dragstart',
-				'dragend',
-				'dragexit',
-				'dragover',
-				'dragenter',
-				'dragleave',
-				'blur',
-				'focus',
-				'click',
-				'dblclick',
-				'keydown',
-				'keyhit',
-				'keyup',
-				'mousedown',
-				'mouseup',
-				'mousemouse',
-				'mouseenter',
-				'mouseleave',
-				'mousewheel'
-			],
-			props
-		);
+		this.createEventHandlers(defaultEvents, props);
 
 		const dataProps = Object.keys(props).filter((e) => e.includes('-'));
-		this.bindProps(['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', ...dataProps], props);
+		this.bindProps(defaultProps, props, dataProps);
 
 		if (props.class) {
 			this.handleClass(props.class);
@@ -132,10 +132,17 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected bindProps(keys: string[], props: any) {
+	protected bindProps(keys: string[], props: any, dynamicProps?: string[]) {
 		for (const key of keys) {
 			if (props[key]) {
 				this.assignStringSourceToAttribute(props[key], key);
+			}
+		}
+		if (dynamicProps) {
+			for (const key of dynamicProps) {
+				if (props[key]) {
+					this.assignStringSourceToAttribute(props[key], key);
+				}
 			}
 		}
 	}
@@ -209,13 +216,13 @@ export abstract class AurumElement {
 				case 'remove':
 				case 'removeLeft':
 				case 'removeRight':
-				case 'clear':
 					this.children.splice(change.index, change.count);
 					break;
-				default:
-					this.children.length = 0;
-					this.children.push(...(this.repeatData as ArrayDataSource<any>).toArray().map((i) => this.template.generate(i)));
+				case 'clear':
+					this.children = [];
 					break;
+				default:
+					throw new Error('unhandled operation');
 			}
 			this.render();
 		});
@@ -274,7 +281,7 @@ export abstract class AurumElement {
 		if (this.node.isConnected) {
 			this.onAttach?.(this);
 			for (const child of this.node.childNodes) {
-				child[ownerSymbol].handleAttach();
+				child[ownerSymbol].handleAttach?.();
 			}
 		}
 	}
@@ -285,7 +292,7 @@ export abstract class AurumElement {
 			this.onDetach?.(this);
 			for (const child of this.node.childNodes) {
 				if (child[ownerSymbol]) {
-					child[ownerSymbol].handleDetach();
+					child[ownerSymbol].handleDetach?.();
 				}
 			}
 		}
@@ -355,8 +362,8 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected create(props: AurumElementProps): HTMLElement | Text {
-		const node = document.createElement(this.domNodeName);
+	protected create(props: AurumElementProps, domNodeName: string): HTMLElement | Text {
+		const node = document.createElement(domNodeName);
 		node[ownerSymbol] = this;
 		return node;
 	}
@@ -392,7 +399,7 @@ export abstract class AurumElement {
 
 		for (const child of children) {
 			this.node.appendChild(child.node);
-			child.handleAttach();
+			child.handleAttach?.();
 		}
 	}
 
@@ -425,10 +432,10 @@ export abstract class AurumElement {
 
 		if (index >= this.node.childElementCount) {
 			this.node.appendChild(node);
-			node[ownerSymbol].handleAttach();
+			node[ownerSymbol].handleAttach?.();
 		} else {
 			this.node.insertBefore(node, this.node.children[index]);
-			node[ownerSymbol].handleAttach();
+			node[ownerSymbol].handleAttach?.();
 		}
 	}
 
@@ -496,15 +503,11 @@ export abstract class AurumElement {
 
 	private childNodeToAurum(child: ChildNode): AurumElement {
 		if (typeof child === 'string' || child instanceof DataSource) {
-			child = new TextNode({
-				text: child
-			});
+			child = new AurumTextElement(child) as any;
 		} else if (!(child instanceof AurumElement)) {
-			child = new TextNode({
-				text: (child as any).toString()
-			});
+			child = new AurumTextElement((child as any).toString()) as any;
 		}
-		return child;
+		return child as any;
 	}
 
 	public addChildAt(child: ChildNode, index: number) {
@@ -570,26 +573,5 @@ export class Template<T> extends AurumElement {
 		super(props, 'template');
 		this.ref = props.ref;
 		this.generate = props.generator;
-	}
-}
-
-interface TextNodeProps extends AurumElementProps {
-	onAttach?: (node: TextNode) => void;
-	onDetach?: (node: TextNode) => void;
-	text?: StringSource;
-}
-
-export class TextNode extends AurumElement {
-	constructor(props: TextNodeProps) {
-		super(props, 'textNode');
-		if (props.text instanceof DataSource) {
-			props.text.listen((v) => (this.node.textContent = v), this.cancellationToken);
-		}
-	}
-
-	protected create(props: TextNodeProps): HTMLElement | Text {
-		const node = document.createTextNode(this.resolveStringSource(props.text));
-		node[ownerSymbol] = this;
-		return node;
 	}
 }
