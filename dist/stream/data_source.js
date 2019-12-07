@@ -231,8 +231,16 @@ export class ArrayDataSource {
         }
         this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
     }
-    push(...items) {
-        this.data.push(...items);
+    appendArray(items) {
+        const old = this.data;
+        this.data = new Array(old.length);
+        let i = 0;
+        for (i = 0; i < old.length; i++) {
+            this.data[i] = old[i];
+        }
+        for (let n = 0; n < items.length; n++) {
+            this.data[i + n] = items[n];
+        }
         this.update({
             operation: 'add',
             operationDetailed: 'append',
@@ -241,6 +249,9 @@ export class ArrayDataSource {
             items,
             newState: this.data
         });
+    }
+    push(...items) {
+        this.appendArray(items);
     }
     unshift(...items) {
         this.data.unshift(...items);

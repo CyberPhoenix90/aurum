@@ -48,6 +48,7 @@ export declare class ArrayDataSource<T> {
     set(index: number, item: T): void;
     swap(indexA: number, indexB: number): void;
     swapItems(itemA: T, itemB: T): void;
+    appendArray(items: T[]): void;
     push(...items: T[]): void;
     unshift(...items: T[]): void;
     pop(): T;
