@@ -12,26 +12,30 @@ export interface SelectProps extends AurumElementProps {
 	selectedIndexSource?: DataSource<number>;
 }
 
+const selectEvents = { change: 'onChange' };
 export class Select extends AurumElement {
 	public readonly node: HTMLSelectElement;
-	public onChange: DataSource<InputEvent>;
 	private selectedIndexSource: DataSource<number>;
 	private initialSelection: number;
 
 	constructor(props: SelectProps) {
 		super(props, 'select');
-		this.createEventHandlers(['change'], props);
-		this.initialSelection = props.initialSelection;
+		if (props !== null) {
+			this.createEventHandlers(selectEvents, props);
+			this.initialSelection = props.initialSelection;
 
-		if (props.selectedIndexSource) {
-			this.selectedIndexSource = props.selectedIndexSource;
-			props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
-		}
+			if (props.selectedIndexSource) {
+				this.selectedIndexSource = props.selectedIndexSource;
+				props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
+			} else {
+				this.node.selectedIndex = props.initialSelection ?? -1;
+			}
 
-		if (props.selectedIndexSource) {
-			this.node.addEventListener('change', () => {
-				props.selectedIndexSource.update(this.node.selectedIndex);
-			});
+			if (props.selectedIndexSource) {
+				this.node.addEventListener('change', () => {
+					props.selectedIndexSource.update(this.node.selectedIndex);
+				});
+			}
 		}
 	}
 

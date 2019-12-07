@@ -14,6 +14,8 @@ export class Label extends AurumElement {
 
 	constructor(props: LabelProps) {
 		super(props, 'label');
-		this.bindProps(['for'], props);
+		if (props !== null) {
+			this.bindProps(['for'], props);
+		}
 	}
 }

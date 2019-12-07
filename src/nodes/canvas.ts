@@ -15,6 +15,8 @@ export class Canvas extends AurumElement {
 
 	constructor(props: CanvasProps) {
 		super(props, 'canvas');
-		this.bindProps(['width', 'height'], props);
+		if (props !== null) {
+			this.bindProps(['width', 'height'], props);
+		}
 	}
 }

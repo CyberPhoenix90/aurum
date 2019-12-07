@@ -1,6 +1,6 @@
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain, StringSource, ClassType, Callback } from '../utilities/common';
+import { DataDrain, StringSource, ClassType, Callback, MapLike } from '../utilities/common';
 import { ownerSymbol } from '../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 
@@ -43,31 +43,31 @@ export interface AurumElementProps {
 	template?: Template<any>;
 }
 
-const defaultEvents: string[] = [
-	'drag',
-	'name',
-	'dragstart',
-	'dragend',
-	'dragexit',
-	'dragover',
-	'dragenter',
-	'dragleave',
-	'blur',
-	'focus',
-	'click',
-	'dblclick',
-	'keydown',
-	'keyhit',
-	'keyup',
-	'mousedown',
-	'mouseup',
-	'mousemouse',
-	'mouseenter',
-	'mouseleave',
-	'mousewheel'
-];
+//@ts-ignore
+const defaultEvents: MapLike<string> = {
+	drag: 'onDrag',
+	dragstart: 'onDragStart',
+	dragend: 'onDragEnd',
+	dragexit: 'onDragExit',
+	dragover: 'onDragOver',
+	dragenter: 'onDragEnter',
+	dragleave: 'onDragLeave',
+	blur: 'onBlur',
+	focus: 'onFocus',
+	click: 'onClick',
+	dblclick: 'onDblClick',
+	keydown: 'onKeyDown',
+	keyhit: 'onKeyHit',
+	keyup: 'onKeyUp',
+	mousedown: 'onMouseDown',
+	mouseup: 'onMouseUp',
+	mousemove: 'onMouseMove',
+	mouseenter: 'onMouseEnter',
+	mouseleave: 'onMouseLeave',
+	mousewheel: 'onMouseWheel'
+};
 
-const defaultProps: string[] = ['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
+const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
 export type ChildNode = AurumElement | string | DataSource<string>;
 
@@ -84,40 +84,26 @@ export abstract class AurumElement {
 	public node: HTMLElement | Text;
 
 	public template: Template<any>;
-	public onClick: DataSource<MouseEvent>;
-	public onKeydown: DataSource<KeyboardEvent>;
-	public onKeyup: DataSource<KeyboardEvent>;
-	public onMousedown: DataSource<KeyboardEvent>;
-	public onMouseup: DataSource<KeyboardEvent>;
-	public onMouseenter: DataSource<KeyboardEvent>;
-	public onMouseleave: DataSource<KeyboardEvent>;
-	public onFocus: DataSource<FocusEvent>;
-	public onBlur: DataSource<FocusEvent>;
-	public onDrag: DataSource<DragEvent>;
-	public onDragend: DataSource<DragEvent>;
-	public onDragenter: DataSource<DragEvent>;
-	public onDragexit: DataSource<DragEvent>;
-	public onDragleave: DataSource<DragEvent>;
-	public onDragover: DataSource<DragEvent>;
-	public onDragstart: DataSource<DragEvent>;
 
 	constructor(props: AurumElementProps, domNodeName: string) {
-		this.onDispose = props.onDispose;
-		this.onAttach = props.onAttach;
-		this.onDetach = props.onDetach;
-
-		this.template = props.template;
 		this.cancellationToken = new CancellationToken();
-		this.node = this.create(props, domNodeName);
-		this.initialize(props);
-		props.onCreate?.(this);
-	}
-
-	private initialize(props: AurumElementProps) {
+		this.node = this.create(domNodeName);
 		if (!(this.node instanceof Text)) {
 			this.children = [];
 		}
 
+		if (props !== null) {
+			this.onDispose = props.onDispose;
+			this.onAttach = props.onAttach;
+			this.onDetach = props.onDetach;
+
+			this.template = props.template;
+			this.initialize(props);
+			props.onCreate?.(this);
+		}
+	}
+
+	private initialize(props: AurumElementProps) {
 		this.createEventHandlers(defaultEvents, props);
 
 		const dataProps = Object.keys(props).filter((e) => e.includes('-'));
@@ -147,34 +133,19 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected createEventHandlers(keys: string[], props: any) {
+	protected createEventHandlers(events: MapLike<string>, props: any) {
 		if (this.node instanceof Text) {
 			return;
 		}
 
-		for (const key of keys) {
-			const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
-
-			let eventEmitter;
-			Object.defineProperty(this, computedEventName, {
-				get() {
-					if (!eventEmitter) {
-						eventEmitter = new DataSource();
-					}
-					return eventEmitter;
-				},
-				set() {
-					throw new Error(computedEventName + ' is read only');
+		for (const key in events) {
+			if (props[events[key]]) {
+				const eventName = props[events[key]];
+				if (props[eventName] instanceof DataSource) {
+					this.node.addEventListener(key, (e: MouseEvent) => props[eventName].update(e));
+				} else if (typeof props[eventName] === 'function') {
+					this.node.addEventListener(key, (e: MouseEvent) => props[eventName](e));
 				}
-			});
-
-			if (props[computedEventName]) {
-				if (props[computedEventName] instanceof DataSource) {
-					this[computedEventName].listen(props[computedEventName].update.bind(props.onClick), this.cancellationToken);
-				} else if (typeof props[computedEventName] === 'function') {
-					this[computedEventName].listen(props[computedEventName], this.cancellationToken);
-				}
-				this.cancellationToken.registerDomEvent(this.node, key, (e: MouseEvent) => this[computedEventName].update(e));
 			}
 		}
 	}
@@ -229,7 +200,7 @@ export abstract class AurumElement {
 	}
 
 	protected render(): void {
-		if (this.node instanceof Text) {
+		if (this.cancellationToken.isCanceled) {
 			return;
 		}
 
@@ -362,7 +333,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected create(props: AurumElementProps, domNodeName: string): HTMLElement | Text {
+	protected create(domNodeName: string): HTMLElement | Text {
 		const node = document.createElement(domNodeName);
 		node[ownerSymbol] = this;
 		return node;
@@ -543,13 +514,16 @@ export abstract class AurumElement {
 	}
 
 	private internalDispose(detach: boolean) {
+		if (this.cancellationToken.isCanceled) {
+			return;
+		}
 		this.cancellationToken.cancel();
 		if (detach) {
 			this.remove();
 		}
 		for (const child of this.node.childNodes) {
 			if (child[ownerSymbol]) {
-				child[ownerSymbol].internalDispose(false);
+				child[ownerSymbol].dispose(false);
 			}
 		}
 		delete this.node[ownerSymbol];

@@ -14,6 +14,8 @@ export class Style extends AurumElement {
 
 	constructor(props: StyleProps) {
 		super(props, 'style');
-		this.bindProps(['media'], props);
+		if (props !== null) {
+			this.bindProps(['media'], props);
+		}
 	}
 }

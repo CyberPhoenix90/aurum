@@ -1,17 +1,24 @@
 import { AurumElement } from './aurum_element';
+const selectEvents = { change: 'onChange' };
 export class Select extends AurumElement {
     constructor(props) {
+        var _a;
         super(props, 'select');
-        this.createEventHandlers(['change'], props);
-        this.initialSelection = props.initialSelection;
-        if (props.selectedIndexSource) {
-            this.selectedIndexSource = props.selectedIndexSource;
-            props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
-        }
-        if (props.selectedIndexSource) {
-            this.node.addEventListener('change', () => {
-                props.selectedIndexSource.update(this.node.selectedIndex);
-            });
+        if (props !== null) {
+            this.createEventHandlers(selectEvents, props);
+            this.initialSelection = props.initialSelection;
+            if (props.selectedIndexSource) {
+                this.selectedIndexSource = props.selectedIndexSource;
+                props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
+            }
+            else {
+                this.node.selectedIndex = (_a = props.initialSelection, (_a !== null && _a !== void 0 ? _a : -1));
+            }
+            if (props.selectedIndexSource) {
+                this.node.addEventListener('change', () => {
+                    props.selectedIndexSource.update(this.node.selectedIndex);
+                });
+            }
         }
     }
     handleAttach() {

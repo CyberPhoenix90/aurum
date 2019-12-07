@@ -1,6 +1,6 @@
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain, StringSource, ClassType, Callback } from '../utilities/common';
+import { DataDrain, StringSource, ClassType, Callback, MapLike } from '../utilities/common';
 export interface AurumElementProps {
     id?: StringSource;
     name?: StringSource;
@@ -46,26 +46,10 @@ export declare abstract class AurumElement {
     protected repeatData: ArrayDataSource<any>;
     node: HTMLElement | Text;
     template: Template<any>;
-    onClick: DataSource<MouseEvent>;
-    onKeydown: DataSource<KeyboardEvent>;
-    onKeyup: DataSource<KeyboardEvent>;
-    onMousedown: DataSource<KeyboardEvent>;
-    onMouseup: DataSource<KeyboardEvent>;
-    onMouseenter: DataSource<KeyboardEvent>;
-    onMouseleave: DataSource<KeyboardEvent>;
-    onFocus: DataSource<FocusEvent>;
-    onBlur: DataSource<FocusEvent>;
-    onDrag: DataSource<DragEvent>;
-    onDragend: DataSource<DragEvent>;
-    onDragenter: DataSource<DragEvent>;
-    onDragexit: DataSource<DragEvent>;
-    onDragleave: DataSource<DragEvent>;
-    onDragover: DataSource<DragEvent>;
-    onDragstart: DataSource<DragEvent>;
     constructor(props: AurumElementProps, domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any, dynamicProps?: string[]): void;
-    protected createEventHandlers(keys: string[], props: any): void;
+    protected createEventHandlers(events: MapLike<string>, props: any): void;
     private handleRepeat;
     protected render(): void;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;
@@ -73,7 +57,7 @@ export declare abstract class AurumElement {
     private handleDetach;
     private handleClass;
     protected resolveStringSource(source: StringSource): string;
-    protected create(props: AurumElementProps, domNodeName: string): HTMLElement | Text;
+    protected create(domNodeName: string): HTMLElement | Text;
     protected getChildIndex(node: HTMLElement | Text): number;
     protected hasChild(node: HTMLElement): boolean;
     protected addChildrenDom(children: AurumElement[]): void;

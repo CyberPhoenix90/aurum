@@ -22,6 +22,8 @@ export class Video extends AurumElement {
 
 	constructor(props: VideoProps) {
 		super(props, 'video');
-		this.bindProps(['controls', 'autoplay', 'loop', 'muted', 'preload', 'src', 'poster', 'width', 'height'], props);
+		if (props !== null) {
+			this.bindProps(['controls', 'autoplay', 'loop', 'muted', 'preload', 'src', 'poster', 'width', 'height'], props);
+		}
 	}
 }

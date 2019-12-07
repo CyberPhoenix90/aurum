@@ -14,6 +14,8 @@ export class Button extends AurumElement {
 
 	constructor(props: ButtonProps) {
 		super(props, 'button');
-		this.bindProps(['disabled'], props);
+		if (props !== null) {
+			this.bindProps(['disabled'], props);
+		}
 	}
 }

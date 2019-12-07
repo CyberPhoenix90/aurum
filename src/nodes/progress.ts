@@ -16,6 +16,8 @@ export class Progress extends AurumElement {
 
 	constructor(props: ProgressProps) {
 		super(props, 'progress');
-		this.bindProps(['max', 'value'], props);
+		if (props !== null) {
+			this.bindProps(['max', 'value'], props);
+		}
 	}
 }

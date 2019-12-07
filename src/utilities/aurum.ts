@@ -176,21 +176,22 @@ export class Aurum {
 			}
 		}
 
-		args = args ?? {};
 		if (defaultTemplate) {
+			args = args ?? {};
 			args.template = defaultTemplate;
 		}
 		if (hasRef) {
+			args = args ?? {};
 			args.templateMap = templateMap;
 		}
 
 		let instance: AurumElement;
 		if ((node as Constructor<AurumElement>).prototype) {
 			//@ts-ignore
-			instance = new node(args || {});
+			instance = new node(args);
 		} else {
 			//@ts-ignore
-			instance = node(args || {});
+			instance = node(args);
 		}
 		instance.addChildren(children);
 

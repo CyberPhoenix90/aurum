@@ -36,52 +36,51 @@ export interface InputProps extends AurumElementProps {
 	type?: StringSource;
 }
 
+const inputEvents = { input: 'onInput', change: 'onChange' };
+const inputProps = [
+	'placeholder',
+	'readonly',
+	'disabled',
+	'accept',
+	'alt',
+	'autocomplete',
+	'autofocus',
+	'checked',
+	'defaultChecked',
+	'formAction',
+	'formEnctype',
+	'formMethod',
+	'formNoValidate',
+	'formTarget',
+	'max',
+	'maxLength',
+	'min',
+	'minLength',
+	'pattern',
+	'multiple',
+	'required',
+	'type'
+];
+
 export class Input extends AurumElement {
 	public node: HTMLInputElement;
 
-	public onChange: DataSource<InputEvent>;
-	public onInput: DataSource<InputEvent>;
-
 	constructor(props: InputProps) {
 		super(props, 'input');
-		if (props.inputValueSource) {
-			props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);
-		} else {
-			this.node.value = props.initialValue ?? '';
-		}
-		this.bindProps(
-			[
-				'placeholder',
-				'readonly',
-				'disabled',
-				'accept',
-				'alt',
-				'autocomplete',
-				'autofocus',
-				'checked',
-				'defaultChecked',
-				'formAction',
-				'formEnctype',
-				'formMethod',
-				'formNoValidate',
-				'formTarget',
-				'max',
-				'maxLength',
-				'min',
-				'minLength',
-				'pattern',
-				'multiple',
-				'required',
-				'type'
-			],
-			props
-		);
-		this.createEventHandlers(['input', 'change'], props);
+		if (props !== null) {
+			if (props.inputValueSource) {
+				props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);
+			} else {
+				this.node.value = props.initialValue ?? '';
+			}
+			this.bindProps(inputProps, props);
+			this.createEventHandlers(inputEvents, props);
 
-		if (props.inputValueSource) {
-			this.node.addEventListener('input', () => {
-				props.inputValueSource.update(this.node.value);
-			});
+			if (props.inputValueSource) {
+				this.node.addEventListener('input', () => {
+					props.inputValueSource.update(this.node.value);
+				});
+			}
 		}
 	}
 }

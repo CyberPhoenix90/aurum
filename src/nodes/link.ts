@@ -19,6 +19,8 @@ export class Link extends AurumElement {
 
 	constructor(props: LinkProps) {
 		super(props, 'link');
-		this.bindProps(['href', 'rel', 'media', 'as', 'disabled', 'type'], props);
+		if (props !== null) {
+			this.bindProps(['href', 'rel', 'media', 'as', 'disabled', 'type'], props);
+		}
 	}
 }

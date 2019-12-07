@@ -20,6 +20,8 @@ export class IFrame extends AurumElement {
 
 	constructor(props: IFrameProps) {
 		super(props, 'iframe');
-		this.bindProps(['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest'], props);
+		if (props !== null) {
+			this.bindProps(['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest'], props);
+		}
 	}
 }

@@ -14,6 +14,8 @@ export class Data extends AurumElement {
 
 	constructor(props: DataProps) {
 		super(props, 'data');
-		this.bindProps(['datalue'], props);
+		if (props !== null) {
+			this.bindProps(['datalue'], props);
+		}
 	}
 }

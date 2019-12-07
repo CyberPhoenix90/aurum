@@ -19,6 +19,8 @@ export class Script extends AurumElement {
 
 	constructor(props: ScriptProps) {
 		super(props, 'script');
-		this.bindProps(['src', 'async', 'defer', 'integrity', 'noModule', 'type'], props);
+		if (props !== null) {
+			this.bindProps(['src', 'async', 'defer', 'integrity', 'noModule', 'type'], props);
+		}
 	}
 }

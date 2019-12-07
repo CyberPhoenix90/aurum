@@ -17,7 +17,9 @@ export class Custom<T extends HTMLElement> extends AurumElement {
 	constructor(props: CustomProps<T>) {
 		super(props, props.tag);
 		if (props.attributes) {
-			this.bindProps(Object.keys(props.attributes), props.attributes);
+			if (props !== null) {
+				this.bindProps(Object.keys(props.attributes), props.attributes);
+			}
 		}
 	}
 }

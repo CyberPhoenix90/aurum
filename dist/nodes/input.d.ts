@@ -35,8 +35,6 @@ export interface InputProps extends AurumElementProps {
 }
 export declare class Input extends AurumElement {
     node: HTMLInputElement;
-    onChange: DataSource<InputEvent>;
-    onInput: DataSource<InputEvent>;
     constructor(props: InputProps);
 }
 //# sourceMappingURL=input.d.ts.map

@@ -164,19 +164,20 @@ export class Aurum {
                 hasRef = true;
             }
         }
-        args = (args !== null && args !== void 0 ? args : {});
         if (defaultTemplate) {
+            args = (args !== null && args !== void 0 ? args : {});
             args.template = defaultTemplate;
         }
         if (hasRef) {
+            args = (args !== null && args !== void 0 ? args : {});
             args.templateMap = templateMap;
         }
         let instance;
         if (node.prototype) {
-            instance = new node(args || {});
+            instance = new node(args);
         }
         else {
-            instance = node(args || {});
+            instance = node(args);
         }
         instance.addChildren(children);
         return instance;

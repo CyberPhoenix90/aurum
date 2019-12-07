@@ -15,6 +15,8 @@ export class A extends AurumElement {
 
 	constructor(props: AProps) {
 		super(props, 'a');
-		this.bindProps(['href', 'target'], props);
+		if (props !== null) {
+			this.bindProps(['href', 'target'], props);
+		}
 	}
 }

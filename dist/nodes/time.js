@@ -2,7 +2,9 @@ import { AurumElement } from './aurum_element';
 export class Time extends AurumElement {
     constructor(props) {
         super(props, 'time');
-        this.bindProps(['datetime'], props);
+        if (props !== null) {
+            this.bindProps(['datetime'], props);
+        }
     }
 }
 //# sourceMappingURL=time.js.map

@@ -13,6 +13,8 @@ export interface SvgProps extends AurumElementProps {
 export class Svg extends AurumElement {
 	constructor(props: SvgProps) {
 		super(props, 'svg');
-		this.bindProps(['width', 'height'], props);
+		if (props !== null) {
+			this.bindProps(['width', 'height'], props);
+		}
 	}
 }

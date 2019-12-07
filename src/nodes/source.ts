@@ -18,6 +18,8 @@ export class Source extends AurumElement {
 
 	constructor(props: SourceProps) {
 		super(props, 'source');
-		this.bindProps(['src', 'srcSet', 'media', 'sizes', 'type'], props);
+		if (props !== null) {
+			this.bindProps(['src', 'srcSet', 'media', 'sizes', 'type'], props);
+		}
 	}
 }

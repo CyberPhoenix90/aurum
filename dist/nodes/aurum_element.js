@@ -2,46 +2,47 @@ import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { ownerSymbol } from '../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
-const defaultEvents = [
-    'drag',
-    'name',
-    'dragstart',
-    'dragend',
-    'dragexit',
-    'dragover',
-    'dragenter',
-    'dragleave',
-    'blur',
-    'focus',
-    'click',
-    'dblclick',
-    'keydown',
-    'keyhit',
-    'keyup',
-    'mousedown',
-    'mouseup',
-    'mousemouse',
-    'mouseenter',
-    'mouseleave',
-    'mousewheel'
-];
-const defaultProps = ['id', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
+const defaultEvents = {
+    drag: 'onDrag',
+    dragstart: 'onDragStart',
+    dragend: 'onDragEnd',
+    dragexit: 'onDragExit',
+    dragover: 'onDragOver',
+    dragenter: 'onDragEnter',
+    dragleave: 'onDragLeave',
+    blur: 'onBlur',
+    focus: 'onFocus',
+    click: 'onClick',
+    dblclick: 'onDblClick',
+    keydown: 'onKeyDown',
+    keyhit: 'onKeyHit',
+    keyup: 'onKeyUp',
+    mousedown: 'onMouseDown',
+    mouseup: 'onMouseUp',
+    mousemove: 'onMouseMove',
+    mouseenter: 'onMouseEnter',
+    mouseleave: 'onMouseLeave',
+    mousewheel: 'onMouseWheel'
+};
+const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export class AurumElement {
     constructor(props, domNodeName) {
         var _a, _b;
-        this.onDispose = props.onDispose;
-        this.onAttach = props.onAttach;
-        this.onDetach = props.onDetach;
-        this.template = props.template;
         this.cancellationToken = new CancellationToken();
-        this.node = this.create(props, domNodeName);
-        this.initialize(props);
-        (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
-    }
-    initialize(props) {
+        this.node = this.create(domNodeName);
         if (!(this.node instanceof Text)) {
             this.children = [];
         }
+        if (props !== null) {
+            this.onDispose = props.onDispose;
+            this.onAttach = props.onAttach;
+            this.onDetach = props.onDetach;
+            this.template = props.template;
+            this.initialize(props);
+            (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+        }
+    }
+    initialize(props) {
         this.createEventHandlers(defaultEvents, props);
         const dataProps = Object.keys(props).filter((e) => e.includes('-'));
         this.bindProps(defaultProps, props, dataProps);
@@ -66,32 +67,19 @@ export class AurumElement {
             }
         }
     }
-    createEventHandlers(keys, props) {
+    createEventHandlers(events, props) {
         if (this.node instanceof Text) {
             return;
         }
-        for (const key of keys) {
-            const computedEventName = 'on' + key[0].toUpperCase() + key.slice(1);
-            let eventEmitter;
-            Object.defineProperty(this, computedEventName, {
-                get() {
-                    if (!eventEmitter) {
-                        eventEmitter = new DataSource();
-                    }
-                    return eventEmitter;
-                },
-                set() {
-                    throw new Error(computedEventName + ' is read only');
+        for (const key in events) {
+            if (props[events[key]]) {
+                const eventName = props[events[key]];
+                if (props[eventName] instanceof DataSource) {
+                    this.node.addEventListener(key, (e) => props[eventName].update(e));
                 }
-            });
-            if (props[computedEventName]) {
-                if (props[computedEventName] instanceof DataSource) {
-                    this[computedEventName].listen(props[computedEventName].update.bind(props.onClick), this.cancellationToken);
+                else if (typeof props[eventName] === 'function') {
+                    this.node.addEventListener(key, (e) => props[eventName](e));
                 }
-                else if (typeof props[computedEventName] === 'function') {
-                    this[computedEventName].listen(props[computedEventName], this.cancellationToken);
-                }
-                this.cancellationToken.registerDomEvent(this.node, key, (e) => this[computedEventName].update(e));
             }
         }
     }
@@ -143,7 +131,7 @@ export class AurumElement {
         });
     }
     render() {
-        if (this.node instanceof Text) {
+        if (this.cancellationToken.isCanceled) {
             return;
         }
         for (let i = 0; i < this.children.length; i++) {
@@ -277,7 +265,7 @@ export class AurumElement {
             return source.value;
         }
     }
-    create(props, domNodeName) {
+    create(domNodeName) {
         const node = document.createElement(domNodeName);
         node[ownerSymbol] = this;
         return node;
@@ -433,13 +421,16 @@ export class AurumElement {
     }
     internalDispose(detach) {
         var _a, _b;
+        if (this.cancellationToken.isCanceled) {
+            return;
+        }
         this.cancellationToken.cancel();
         if (detach) {
             this.remove();
         }
         for (const child of this.node.childNodes) {
             if (child[ownerSymbol]) {
-                child[ownerSymbol].internalDispose(false);
+                child[ownerSymbol].dispose(false);
             }
         }
         delete this.node[ownerSymbol];

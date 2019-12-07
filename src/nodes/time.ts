@@ -14,6 +14,8 @@ export class Time extends AurumElement {
 
 	constructor(props: TimeProps) {
 		super(props, 'time');
-		this.bindProps(['datetime'], props);
+		if (props !== null) {
+			this.bindProps(['datetime'], props);
+		}
 	}
 }

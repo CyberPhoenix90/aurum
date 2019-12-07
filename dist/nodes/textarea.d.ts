@@ -26,8 +26,6 @@ export interface TextAreaProps extends AurumElementProps {
 }
 export declare class TextArea extends AurumElement {
     node: HTMLTextAreaElement;
-    onChange: DataSource<InputEvent>;
-    onInput: DataSource<InputEvent>;
     constructor(props: TextAreaProps);
 }
 //# sourceMappingURL=textarea.d.ts.map

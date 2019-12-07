@@ -21,6 +21,8 @@ export class Img extends AurumElement {
 
 	constructor(props: ImgProps) {
 		super(props, 'img');
-		this.bindProps(['src', 'alt', 'width', 'height', 'referrerPolicy', 'sizes', 'srcset', 'useMap'], props);
+		if (props !== null) {
+			this.bindProps(['src', 'alt', 'width', 'height', 'referrerPolicy', 'sizes', 'srcset', 'useMap'], props);
+		}
 	}
 }
