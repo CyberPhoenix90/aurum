@@ -15,19 +15,22 @@ export class Select extends AurumElement {
                 this.node.selectedIndex = (_a = props.initialSelection, (_a !== null && _a !== void 0 ? _a : -1));
             }
             if (props.selectedIndexSource) {
+                this.needAttach = true;
                 this.node.addEventListener('change', () => {
                     props.selectedIndexSource.update(this.node.selectedIndex);
                 });
             }
         }
     }
-    handleAttach() {
-        super.handleAttach();
-        if (this.selectedIndexSource) {
-            this.node.selectedIndex = this.selectedIndexSource.value;
-        }
-        else if (this.initialSelection !== undefined) {
-            this.node.selectedIndex = this.initialSelection;
+    handleAttach(parent) {
+        super.handleAttach(parent);
+        if (this.node.isConnected) {
+            if (this.selectedIndexSource) {
+                this.node.selectedIndex = this.selectedIndexSource.value;
+            }
+            else if (this.initialSelection !== undefined) {
+                this.node.selectedIndex = this.initialSelection;
+            }
         }
     }
 }

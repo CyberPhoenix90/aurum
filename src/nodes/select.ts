@@ -1,6 +1,6 @@
+import { DataSource } from '../stream/data_source';
 import { Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps } from './aurum_element';
-import { DataSource } from '../stream/data_source';
 
 export interface SelectProps extends AurumElementProps {
 	onAttach?: Callback<Select>;
@@ -32,6 +32,7 @@ export class Select extends AurumElement {
 			}
 
 			if (props.selectedIndexSource) {
+				this.needAttach = true;
 				this.node.addEventListener('change', () => {
 					props.selectedIndexSource.update(this.node.selectedIndex);
 				});
@@ -39,12 +40,14 @@ export class Select extends AurumElement {
 		}
 	}
 
-	protected handleAttach() {
-		super.handleAttach();
-		if (this.selectedIndexSource) {
-			this.node.selectedIndex = this.selectedIndexSource.value;
-		} else if (this.initialSelection !== undefined) {
-			this.node.selectedIndex = this.initialSelection;
+	protected handleAttach(parent: AurumElement) {
+		super.handleAttach(parent);
+		if (this.node.isConnected) {
+			if (this.selectedIndexSource) {
+				this.node.selectedIndex = this.selectedIndexSource.value;
+			} else if (this.initialSelection !== undefined) {
+				this.node.selectedIndex = this.initialSelection;
+			}
 		}
 	}
 }

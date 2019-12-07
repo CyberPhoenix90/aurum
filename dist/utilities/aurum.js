@@ -129,7 +129,7 @@ export class Aurum {
             throw new Error('This node is already managed by aurum and cannot be used');
         }
         dom.appendChild(aurumElement.node);
-        aurumElement['handleAttach']();
+        aurumElement['handleAttach'](aurumElement);
         dom[ownerSymbol] = aurumElement;
     }
     static detach(domNode) {

@@ -23,7 +23,7 @@ export class AurumTextElement {
 		}
 	}
 
-	protected create(text?: StringSource): HTMLElement | Text {
+	protected create(text?: StringSource): Text {
 		const node = document.createTextNode(this.resolveStringSource(text));
 		node[ownerSymbol] = this;
 		return node;

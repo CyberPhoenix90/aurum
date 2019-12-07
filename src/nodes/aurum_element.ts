@@ -77,24 +77,26 @@ export abstract class AurumElement {
 	private onDispose?: Callback<AurumElement>;
 
 	private children: AurumElement[];
+	protected needAttach: boolean;
 
 	protected cancellationToken: CancellationToken;
 	protected repeatData: ArrayDataSource<any>;
 
-	public node: HTMLElement | Text;
+	public node: HTMLElement;
 
 	public template: Template<any>;
 
 	constructor(props: AurumElementProps, domNodeName: string) {
 		this.cancellationToken = new CancellationToken();
 		this.node = this.create(domNodeName);
-		if (!(this.node instanceof Text)) {
-			this.children = [];
-		}
+		this.children = [];
 
 		if (props !== null) {
 			this.onDispose = props.onDispose;
-			this.onAttach = props.onAttach;
+			if (props.onAttach) {
+				this.onAttach = props.onAttach;
+				this.needAttach = true;
+			}
 			this.onDetach = props.onDetach;
 
 			this.template = props.template;
@@ -134,10 +136,6 @@ export abstract class AurumElement {
 	}
 
 	protected createEventHandlers(events: MapLike<string>, props: any) {
-		if (this.node instanceof Text) {
-			return;
-		}
-
 		for (const key in events) {
 			if (props[events[key]]) {
 				const eventName = props[events[key]];
@@ -157,20 +155,7 @@ export abstract class AurumElement {
 			this.repeatData = new ArrayDataSource<any>(dataSource);
 		}
 
-		if (this.repeatData.length) {
-			const old = this.children;
-			this.children = new Array(this.children.length);
-			let i = 0;
-			for (i = 0; i < this.children.length; i++) {
-				this.children[i] = old[i];
-			}
-			this.repeatData.forEach((e, index) => {
-				this.children[i + index] = this.template.generate(e);
-			});
-			this.render();
-		}
-
-		this.repeatData.listen((change) => {
+		this.repeatData.listenAndRepeat((change) => {
 			switch (change.operationDetailed) {
 				case 'swap':
 					const itemA = this.children[change.index];
@@ -179,7 +164,15 @@ export abstract class AurumElement {
 					this.children[change.index] = itemB;
 					break;
 				case 'append':
-					this.children.push(...change.items.map((i) => this.template.generate(i)));
+					const old = this.children;
+					this.children = new Array(old.length);
+					let i = 0;
+					for (i = 0; i < old.length; i++) {
+						this.children[i] = old[i];
+					}
+					for (let index = 0; index < change.items.length; index++) {
+						this.children[i + index] = this.template.generate(change.items[index]);
+					}
 					break;
 				case 'prepend':
 					this.children.unshift(...change.items.map((i) => this.template.generate(i)));
@@ -206,8 +199,10 @@ export abstract class AurumElement {
 
 		for (let i = 0; i < this.children.length; i++) {
 			if (this.node.childNodes.length <= i) {
-				this.addChildrenDom(this.children.slice(i, this.children.length));
-				break;
+				for (let n = i; n < this.children.length; n++) {
+					this.addChildDom(this.children[n]);
+				}
+				return;
 			}
 			if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
 				if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
@@ -234,10 +229,6 @@ export abstract class AurumElement {
 	}
 
 	protected assignStringSourceToAttribute(data: StringSource, key: string) {
-		if (this.node instanceof Text) {
-			return;
-		}
-
 		if (typeof data === 'string') {
 			this.node.setAttribute(key, data);
 		} else {
@@ -248,11 +239,15 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected handleAttach() {
-		if (this.node.isConnected) {
-			this.onAttach?.(this);
-			for (const child of this.node.childNodes) {
-				child[ownerSymbol].handleAttach?.();
+	protected handleAttach(parent: AurumElement) {
+		if (this.needAttach) {
+			if (parent.isConnected) {
+				this.onAttach?.(this);
+				for (const child of this.node.childNodes) {
+					child[ownerSymbol].handleAttach?.(this);
+				}
+			} else {
+				parent.needAttach = true;
 			}
 		}
 	}
@@ -270,10 +265,6 @@ export abstract class AurumElement {
 	}
 
 	private handleClass(data: ClassType) {
-		if (this.node instanceof Text) {
-			return;
-		}
-
 		if (typeof data === 'string') {
 			this.node.className = data;
 		} else if (data instanceof DataSource) {
@@ -333,7 +324,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected create(domNodeName: string): HTMLElement | Text {
+	protected create(domNodeName: string): HTMLElement {
 		const node = document.createElement(domNodeName);
 		node[ownerSymbol] = this;
 		return node;
@@ -351,10 +342,6 @@ export abstract class AurumElement {
 	}
 
 	protected hasChild(node: HTMLElement): boolean {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		for (const child of node.children) {
 			if (child === node) {
 				return true;
@@ -363,22 +350,12 @@ export abstract class AurumElement {
 		return false;
 	}
 
-	protected addChildrenDom(children: AurumElement[]): void {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
-		for (const child of children) {
-			this.node.appendChild(child.node);
-			child.handleAttach?.();
-		}
+	protected addChildDom(child: AurumElement): void {
+		this.node.appendChild(child.node);
+		child.handleAttach?.(this);
 	}
 
 	protected swapChildrenDom(indexA: number, indexB: number) {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		if (indexA === indexB) {
 			return;
 		}
@@ -397,16 +374,12 @@ export abstract class AurumElement {
 	}
 
 	protected addDomNodeAt(node: HTMLElement | Text, index: number): void {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		if (index >= this.node.childElementCount) {
 			this.node.appendChild(node);
-			node[ownerSymbol].handleAttach?.();
+			node[ownerSymbol].handleAttach?.(this);
 		} else {
 			this.node.insertBefore(node, this.node.children[index]);
-			node[ownerSymbol].handleAttach?.();
+			node[ownerSymbol].handleAttach?.(this);
 		}
 	}
 
@@ -450,19 +423,11 @@ export abstract class AurumElement {
 	}
 
 	public clearChildren(): void {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		this.children.length = 0;
 		this.render();
 	}
 
 	public addChild(child: ChildNode) {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		if (child instanceof Template) {
 			return;
 		}
@@ -482,10 +447,6 @@ export abstract class AurumElement {
 	}
 
 	public addChildAt(child: ChildNode, index: number) {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		if (child instanceof Template) {
 			return;
 		}
@@ -496,10 +457,6 @@ export abstract class AurumElement {
 	}
 
 	public addChildren(nodes: ChildNode[]) {
-		if (this.node instanceof Text) {
-			throw new Error("Text nodes don't have children");
-		}
-
 		if (nodes.length === 0) {
 			return;
 		}

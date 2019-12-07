@@ -4,7 +4,7 @@ export declare class AurumTextElement {
     private source;
     constructor(text?: StringSource);
     protected resolveStringSource(source: StringSource): string;
-    protected create(text?: StringSource): HTMLElement | Text;
+    protected create(text?: StringSource): Text;
     remove(): void;
     hasParent(): boolean;
     dispose(): void;

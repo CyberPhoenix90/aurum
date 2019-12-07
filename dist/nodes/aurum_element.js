@@ -30,12 +30,13 @@ export class AurumElement {
         var _a, _b;
         this.cancellationToken = new CancellationToken();
         this.node = this.create(domNodeName);
-        if (!(this.node instanceof Text)) {
-            this.children = [];
-        }
+        this.children = [];
         if (props !== null) {
             this.onDispose = props.onDispose;
-            this.onAttach = props.onAttach;
+            if (props.onAttach) {
+                this.onAttach = props.onAttach;
+                this.needAttach = true;
+            }
             this.onDetach = props.onDetach;
             this.template = props.template;
             this.initialize(props);
@@ -68,9 +69,6 @@ export class AurumElement {
         }
     }
     createEventHandlers(events, props) {
-        if (this.node instanceof Text) {
-            return;
-        }
         for (const key in events) {
             if (props[events[key]]) {
                 const eventName = props[events[key]];
@@ -90,19 +88,7 @@ export class AurumElement {
         else {
             this.repeatData = new ArrayDataSource(dataSource);
         }
-        if (this.repeatData.length) {
-            const old = this.children;
-            this.children = new Array(this.children.length);
-            let i = 0;
-            for (i = 0; i < this.children.length; i++) {
-                this.children[i] = old[i];
-            }
-            this.repeatData.forEach((e, index) => {
-                this.children[i + index] = this.template.generate(e);
-            });
-            this.render();
-        }
-        this.repeatData.listen((change) => {
+        this.repeatData.listenAndRepeat((change) => {
             switch (change.operationDetailed) {
                 case 'swap':
                     const itemA = this.children[change.index];
@@ -111,7 +97,15 @@ export class AurumElement {
                     this.children[change.index] = itemB;
                     break;
                 case 'append':
-                    this.children.push(...change.items.map((i) => this.template.generate(i)));
+                    const old = this.children;
+                    this.children = new Array(old.length);
+                    let i = 0;
+                    for (i = 0; i < old.length; i++) {
+                        this.children[i] = old[i];
+                    }
+                    for (let index = 0; index < change.items.length; index++) {
+                        this.children[i + index] = this.template.generate(change.items[index]);
+                    }
                     break;
                 case 'prepend':
                     this.children.unshift(...change.items.map((i) => this.template.generate(i)));
@@ -136,8 +130,10 @@ export class AurumElement {
         }
         for (let i = 0; i < this.children.length; i++) {
             if (this.node.childNodes.length <= i) {
-                this.addChildrenDom(this.children.slice(i, this.children.length));
-                break;
+                for (let n = i; n < this.children.length; n++) {
+                    this.addChildDom(this.children[n]);
+                }
+                return;
             }
             if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
                 if (!this.children.includes(this.node.childNodes[i][ownerSymbol])) {
@@ -163,9 +159,6 @@ export class AurumElement {
         }
     }
     assignStringSourceToAttribute(data, key) {
-        if (this.node instanceof Text) {
-            return;
-        }
         if (typeof data === 'string') {
             this.node.setAttribute(key, data);
         }
@@ -176,12 +169,17 @@ export class AurumElement {
             data.unique(this.cancellationToken).listen((v) => this.node.setAttribute(key, v), this.cancellationToken);
         }
     }
-    handleAttach() {
+    handleAttach(parent) {
         var _a, _b, _c, _d;
-        if (this.node.isConnected) {
-            (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
-            for (const child of this.node.childNodes) {
-                (_d = (_c = child[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c);
+        if (this.needAttach) {
+            if (parent.isConnected) {
+                (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+                for (const child of this.node.childNodes) {
+                    (_d = (_c = child[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c, this);
+                }
+            }
+            else {
+                parent.needAttach = true;
             }
         }
     }
@@ -197,9 +195,6 @@ export class AurumElement {
         }
     }
     handleClass(data) {
-        if (this.node instanceof Text) {
-            return;
-        }
         if (typeof data === 'string') {
             this.node.className = data;
         }
@@ -281,9 +276,6 @@ export class AurumElement {
         return -1;
     }
     hasChild(node) {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         for (const child of node.children) {
             if (child === node) {
                 return true;
@@ -291,20 +283,12 @@ export class AurumElement {
         }
         return false;
     }
-    addChildrenDom(children) {
+    addChildDom(child) {
         var _a, _b;
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
-        for (const child of children) {
-            this.node.appendChild(child.node);
-            (_b = (_a = child).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a);
-        }
+        this.node.appendChild(child.node);
+        (_b = (_a = child).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
     }
     swapChildrenDom(indexA, indexB) {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         if (indexA === indexB) {
             return;
         }
@@ -323,16 +307,13 @@ export class AurumElement {
     }
     addDomNodeAt(node, index) {
         var _a, _b, _c, _d;
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         if (index >= this.node.childElementCount) {
             this.node.appendChild(node);
-            (_b = (_a = node[ownerSymbol]).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a);
+            (_b = (_a = node[ownerSymbol]).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
         }
         else {
             this.node.insertBefore(node, this.node.children[index]);
-            (_d = (_c = node[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c);
+            (_d = (_c = node[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c, this);
         }
     }
     remove() {
@@ -368,16 +349,10 @@ export class AurumElement {
         this.render();
     }
     clearChildren() {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         this.children.length = 0;
         this.render();
     }
     addChild(child) {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         if (child instanceof Template) {
             return;
         }
@@ -395,9 +370,6 @@ export class AurumElement {
         return child;
     }
     addChildAt(child, index) {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         if (child instanceof Template) {
             return;
         }
@@ -406,9 +378,6 @@ export class AurumElement {
         this.render();
     }
     addChildren(nodes) {
-        if (this.node instanceof Text) {
-            throw new Error("Text nodes don't have children");
-        }
         if (nodes.length === 0) {
             return;
         }
