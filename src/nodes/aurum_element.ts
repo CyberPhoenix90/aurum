@@ -241,7 +241,7 @@ export abstract class AurumElement {
 
 	protected handleAttach(parent: AurumElement) {
 		if (this.needAttach) {
-			if (parent.isConnected) {
+			if (parent.isConnected()) {
 				this.onAttach?.(this);
 				for (const child of this.node.childNodes) {
 					child[ownerSymbol].handleAttach?.(this);
