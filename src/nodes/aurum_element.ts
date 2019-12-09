@@ -138,11 +138,10 @@ export abstract class AurumElement {
 	protected createEventHandlers(events: MapLike<string>, props: any) {
 		for (const key in events) {
 			if (props[events[key]]) {
-				const eventName = props[events[key]];
-				if (props[eventName] instanceof DataSource) {
-					this.node.addEventListener(key, (e: MouseEvent) => props[eventName].update(e));
-				} else if (typeof props[eventName] === 'function') {
-					this.node.addEventListener(key, (e: MouseEvent) => props[eventName](e));
+				if (props[events[key]] instanceof DataSource) {
+					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]].update(e));
+				} else if (typeof props[events[key]] === 'function') {
+					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]](e));
 				}
 			}
 		}

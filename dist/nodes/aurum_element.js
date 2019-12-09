@@ -71,12 +71,11 @@ export class AurumElement {
     createEventHandlers(events, props) {
         for (const key in events) {
             if (props[events[key]]) {
-                const eventName = props[events[key]];
-                if (props[eventName] instanceof DataSource) {
-                    this.node.addEventListener(key, (e) => props[eventName].update(e));
+                if (props[events[key]] instanceof DataSource) {
+                    this.node.addEventListener(key, (e) => props[events[key]].update(e));
                 }
-                else if (typeof props[eventName] === 'function') {
-                    this.node.addEventListener(key, (e) => props[eventName](e));
+                else if (typeof props[events[key]] === 'function') {
+                    this.node.addEventListener(key, (e) => props[events[key]](e));
                 }
             }
         }
@@ -172,7 +171,7 @@ export class AurumElement {
     handleAttach(parent) {
         var _a, _b, _c, _d;
         if (this.needAttach) {
-            if (parent.isConnected) {
+            if (parent.isConnected()) {
                 (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
                 for (const child of this.node.childNodes) {
                     (_d = (_c = child[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c, this);
