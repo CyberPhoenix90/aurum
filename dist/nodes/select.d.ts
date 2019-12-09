@@ -14,6 +14,7 @@ export declare class Select extends AurumElement {
     readonly node: HTMLSelectElement;
     onChange: DataSource<InputEvent>;
     private selectedIndexSource;
+    private initialSelection;
     constructor(props: SelectProps);
     protected handleAttach(): void;
 }

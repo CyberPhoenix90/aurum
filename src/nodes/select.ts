@@ -16,16 +16,16 @@ export class Select extends AurumElement {
 	public readonly node: HTMLSelectElement;
 	public onChange: DataSource<InputEvent>;
 	private selectedIndexSource: DataSource<number>;
+	private initialSelection: number;
 
 	constructor(props: SelectProps) {
 		super(props, 'select');
 		this.createEventHandlers(['change'], props);
+		this.initialSelection = props.initialSelection;
 
 		if (props.selectedIndexSource) {
 			this.selectedIndexSource = props.selectedIndexSource;
 			props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
-		} else {
-			this.node.selectedIndex = props.initialSelection ?? -1;
 		}
 
 		if (props.selectedIndexSource) {
@@ -39,6 +39,8 @@ export class Select extends AurumElement {
 		super.handleAttach();
 		if (this.selectedIndexSource) {
 			this.node.selectedIndex = this.selectedIndexSource.value;
+		} else if (this.initialSelection !== undefined) {
+			this.node.selectedIndex = this.initialSelection;
 		}
 	}
 }

@@ -49,7 +49,6 @@ export abstract class AurumElement {
 	private onDetach?: Callback<AurumElement>;
 	private onDispose?: Callback<AurumElement>;
 
-	private rerenderPending: boolean;
 	private children: AurumElement[];
 
 	protected cancellationToken: CancellationToken;
@@ -215,45 +214,37 @@ export abstract class AurumElement {
 	}
 
 	protected render(): void {
-		if (this.rerenderPending) {
-			return;
-		}
-
 		if (this.node instanceof Text) {
 			return;
 		}
 
-		this.cancellationToken.setTimeout(() => {
-			for (let i = 0; i < this.children.length; i++) {
-				if (this.node.childNodes.length <= i) {
-					this.addChildrenDom(this.children.slice(i, this.children.length));
-					break;
+		for (let i = 0; i < this.children.length; i++) {
+			if (this.node.childNodes.length <= i) {
+				this.addChildrenDom(this.children.slice(i, this.children.length));
+				break;
+			}
+			if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
+				if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
+					const child = this.node.childNodes[i];
+					child.remove();
+					child[ownerSymbol].dispose();
+					i--;
+					continue;
 				}
-				if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
-					if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
-						const child = this.node.childNodes[i];
-						child.remove();
-						child[ownerSymbol].dispose();
-						i--;
-						continue;
-					}
 
-					const index = this.getChildIndex(this.children[i].node);
-					if (index !== -1) {
-						this.swapChildrenDom(i, index);
-					} else {
-						this.addDomNodeAt(this.children[i].node, i);
-					}
+				const index = this.getChildIndex(this.children[i].node);
+				if (index !== -1) {
+					this.swapChildrenDom(i, index);
+				} else {
+					this.addDomNodeAt(this.children[i].node, i);
 				}
 			}
-			while (this.node.childNodes.length > this.children.length) {
-				const child = this.node.childNodes[this.node.childNodes.length - 1];
-				this.node.removeChild(child);
-				child[ownerSymbol].dispose();
-			}
-			this.rerenderPending = false;
-		});
-		this.rerenderPending = true;
+		}
+		while (this.node.childNodes.length > this.children.length) {
+			const child = this.node.childNodes[this.node.childNodes.length - 1];
+			this.node.removeChild(child);
+			child[ownerSymbol].dispose();
+		}
 	}
 
 	protected assignStringSourceToAttribute(data: StringSource, key: string) {

@@ -274,8 +274,9 @@ export class ArrayDataSource {
         }
     }
     removeRight(count) {
-        const result = this.data.splice(this.length - count, count);
-        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: this.length - count, items: result, newState: this.data });
+        const length = this.length;
+        const result = this.data.splice(length - count, count);
+        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
     }
     removeLeft(count) {
         const result = this.data.splice(0, count);

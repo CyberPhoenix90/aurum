@@ -41,7 +41,6 @@ export declare abstract class AurumElement {
     private onAttach?;
     private onDetach?;
     private onDispose?;
-    private rerenderPending;
     private children;
     protected cancellationToken: CancellationToken;
     protected repeatData: ArrayDataSource<any>;

@@ -387,8 +387,9 @@ export class ArrayDataSource<T> {
 	}
 
 	public removeRight(count: number): void {
-		const result = this.data.splice(this.length - count, count);
-		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: this.length - count, items: result, newState: this.data });
+		const length = this.length;
+		const result = this.data.splice(length - count, count);
+		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
 	}
 
 	public removeLeft(count: number): void {
