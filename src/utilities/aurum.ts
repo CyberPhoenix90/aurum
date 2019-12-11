@@ -166,11 +166,11 @@ export class Aurum {
 			if (typeof c === 'string') {
 				continue;
 			}
-			if (c instanceof Template && (!c.ref || c.ref === 'default')) {
+			if (c instanceof Template && (c.ref === undefined || c.ref === 'default')) {
 				defaultTemplate = c;
 			}
 
-			if (c.ref) {
+			if (c.ref !== undefined) {
 				templateMap[c.ref] = c;
 				hasRef = true;
 			}

@@ -106,9 +106,6 @@ export * from './nodes/script';
 export * from './nodes/select';
 export * from './nodes/source';
 export * from './nodes/span';
-export * from './nodes/special/router';
-export * from './nodes/special/suspense';
-export * from './nodes/special/switch';
 export * from './nodes/style';
 export * from './nodes/sub';
 export * from './nodes/summary';
@@ -134,6 +131,11 @@ export * from './stream/object_data_source';
 
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
+
+export * from './nodes/special/custom';
+export * from './nodes/special/router';
+export * from './nodes/special/suspense';
+export * from './nodes/special/switch';
 
 declare global {
 	namespace JSX {

@@ -4,8 +4,11 @@ export class AurumTextElement {
     constructor(text) {
         this.node = this.create(text);
         if (text instanceof DataSource) {
-            text.listen((v) => (this.node.textContent = v));
-            this.source = text;
+            this.subscription = text.listen((v) => {
+                if (this.node) {
+                    this.node.textContent = v;
+                }
+            });
         }
     }
     resolveStringSource(source) {
@@ -30,8 +33,8 @@ export class AurumTextElement {
         return !!this.node.parentElement;
     }
     dispose() {
-        var _a;
-        (_a = this.source) === null || _a === void 0 ? void 0 : _a.cancelAll();
+        var _a, _b;
+        (_b = (_a = this).subscription) === null || _b === void 0 ? void 0 : _b.call(_a);
         delete this.node[ownerSymbol];
         delete this.node;
     }

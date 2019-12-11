@@ -9,21 +9,24 @@ export class Switch extends AurumElement {
             this.renderSwitch(data);
         }, this.cancellationToken);
     }
+    selectTemplate(ref) {
+        var _a;
+        if (ref === undefined || ref === null) {
+            return this.template;
+        }
+        else {
+            return _a = this.templateMap[ref], (_a !== null && _a !== void 0 ? _a : this.template);
+        }
+    }
     renderSwitch(data) {
         var _a;
         if (data !== this.lastValue || this.firstRender) {
             this.lastValue = data;
             this.firstRender = false;
             this.clearChildren();
-            if (data !== undefined && data !== null) {
-                const template = (_a = this.templateMap[data.toString()], (_a !== null && _a !== void 0 ? _a : this.template));
-                if (template) {
-                    const result = template.generate();
-                    this.addChild(result);
-                }
-            }
-            else if (this.template) {
-                const result = this.template.generate();
+            const template = this.selectTemplate((_a = data) === null || _a === void 0 ? void 0 : _a.toString());
+            if (template) {
+                const result = template.generate();
                 this.addChild(result);
             }
         }

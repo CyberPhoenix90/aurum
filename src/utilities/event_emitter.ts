@@ -37,7 +37,11 @@ export class EventEmitter<T> {
 	}
 
 	public cancelAll(): void {
-		this.subscribeChannel.length = 0;
+		if (!this.isFiring) {
+			this.subscribeChannel.length = 0;
+		} else {
+			this.onAfterFire.push(() => (this.subscribeChannel.length = 0));
+		}
 	}
 
 	public fireFiltered(data: T, filter: Callback<T>): void {

@@ -492,12 +492,12 @@ export interface TemplateProps<T> extends AurumElementProps {
 	onAttach?(entity: Template<T>): void;
 	onDetach?(entity: Template<T>): void;
 	generator(model: T): AurumElement;
-	ref?: string;
+	ref?: string | number;
 }
 
 export class Template<T> extends AurumElement {
 	public generate: (model: T) => AurumElement;
-	ref: string;
+	ref: string | number;
 
 	constructor(props: TemplateProps<T>) {
 		super(props, 'template');

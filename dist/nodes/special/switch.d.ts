@@ -12,6 +12,7 @@ export declare class Switch<T = boolean> extends AurumElement {
     templateMap: MapLike<Template<void>>;
     template: Template<void>;
     constructor(props: SwitchProps<T>);
+    protected selectTemplate(ref: string): Template<void>;
     protected renderSwitch(data: T): void;
 }
 //# sourceMappingURL=switch.d.ts.map

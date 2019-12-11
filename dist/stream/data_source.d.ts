@@ -39,10 +39,11 @@ export interface CollectionChange<T> {
 export declare class ArrayDataSource<T> {
     protected data: T[];
     private updateEvent;
+    private lengthSource;
     constructor(initialData?: T[]);
     listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
     listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
-    get length(): number;
+    get length(): DataSource<number>;
     getData(): T[];
     get(index: number): T;
     set(index: number, item: T): void;
@@ -72,8 +73,8 @@ export declare class SortedArrayView<T> extends ArrayDataSource<T> {
 export declare class FilteredArrayView<T> extends ArrayDataSource<T> {
     private viewFilter;
     private parent;
-    constructor(parent: ArrayDataSource<T>, filter: Predicate<T>, cancellationToken?: CancellationToken);
-    updateFilter(filter: Predicate<T>): void;
+    constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken?: CancellationToken);
+    updateFilter(filter: Predicate<T>): number;
     refresh(): void;
 }
 //# sourceMappingURL=data_source.d.ts.map

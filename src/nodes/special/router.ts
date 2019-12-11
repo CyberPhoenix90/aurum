@@ -1,6 +1,6 @@
 import { Switch } from './switch';
 import { DataSource } from '../../stream/data_source';
-import { AurumElementProps } from '../aurum_element';
+import { AurumElementProps, Template } from '../aurum_element';
 
 export interface AurumRouterProps extends AurumElementProps {}
 
@@ -20,5 +20,26 @@ export class AurumRouter extends Switch<string> {
 				urlDataSource.update(hash);
 			}
 		});
+	}
+
+	protected selectTemplate(ref: string): Template<void> {
+		if (ref === undefined || ref === null) {
+			return this.template;
+		} else {
+			if (this.templateMap[ref]) {
+				return this.templateMap[ref];
+			} else {
+				const segments = ref.split('/');
+				segments.pop();
+				while (segments.length) {
+					const path = segments.join('/');
+					if (this.templateMap[path]) {
+						return this.templateMap[path];
+					}
+					segments.pop();
+				}
+				return this.template;
+			}
+		}
 	}
 }

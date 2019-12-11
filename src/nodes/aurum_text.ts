@@ -4,14 +4,17 @@ import { ownerSymbol } from '../utilities/owner_symbol';
 
 export class AurumTextElement {
 	public node: HTMLElement | Text;
-	private source: DataSource<string>;
+	private subscription: () => void;
 
 	constructor(text?: StringSource) {
 		this.node = this.create(text);
 
 		if (text instanceof DataSource) {
-			text.listen((v) => (this.node.textContent = v));
-			this.source = text;
+			this.subscription = text.listen((v) => {
+				if (this.node) {
+					this.node.textContent = v;
+				}
+			});
 		}
 	}
 
@@ -40,7 +43,7 @@ export class AurumTextElement {
 	}
 
 	public dispose(): void {
-		this.source?.cancelAll();
+		this.subscription?.();
 		delete this.node[ownerSymbol];
 		delete this.node;
 	}

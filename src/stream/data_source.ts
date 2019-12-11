@@ -262,6 +262,7 @@ export interface CollectionChange<T> {
 export class ArrayDataSource<T> {
 	protected data: T[];
 	private updateEvent: EventEmitter<CollectionChange<T>>;
+	private lengthSource: DataSource<number>;
 
 	constructor(initialData?: T[]) {
 		if (initialData) {
@@ -269,6 +270,7 @@ export class ArrayDataSource<T> {
 		} else {
 			this.data = [];
 		}
+		this.lengthSource = new DataSource(this.data.length).unique();
 		this.updateEvent = new EventEmitter();
 	}
 
@@ -291,8 +293,8 @@ export class ArrayDataSource<T> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
-	public get length() {
-		return this.data.length;
+	public get length(): DataSource<number> {
+		return this.lengthSource;
 	}
 
 	public getData(): T[] {
@@ -310,6 +312,7 @@ export class ArrayDataSource<T> {
 		}
 		this.data[index] = item;
 		this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 
 	public swap(indexA: number, indexB: number): void {
@@ -323,6 +326,7 @@ export class ArrayDataSource<T> {
 		this.data[indexA] = itemB;
 
 		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 
 	public swapItems(itemA: T, itemB: T): void {
@@ -338,6 +342,7 @@ export class ArrayDataSource<T> {
 		}
 
 		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 
 	public appendArray(items: T[]) {
@@ -360,15 +365,18 @@ export class ArrayDataSource<T> {
 			items,
 			newState: this.data
 		});
+		this.lengthSource.update(this.data.length);
 	}
 
 	public push(...items: T[]) {
 		this.appendArray(items);
+		this.lengthSource.update(this.data.length);
 	}
 
 	public unshift(...items: T[]) {
 		this.data.unshift(...items);
 		this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 
 	public pop(): T {
@@ -382,39 +390,44 @@ export class ArrayDataSource<T> {
 			newState: this.data
 		});
 
+		this.lengthSource.update(this.data.length);
 		return item;
 	}
 
 	public merge(newData: T[]): void {
 		for (let i = 0; i < newData.length; i++) {
 			if (this.data[i] !== newData[i]) {
-				if (this.length > i) {
+				if (this.data.length > i) {
 					this.set(i, newData[i]);
 				} else {
 					this.push(newData[i]);
 				}
 			}
 		}
-		if (this.length > newData.length) {
-			this.removeRight(this.length - newData.length);
+		if (this.data.length > newData.length) {
+			this.removeRight(this.data.length - newData.length);
 		}
+		this.lengthSource.update(this.data.length);
 	}
 
 	public removeRight(count: number): void {
-		const length = this.length;
+		const length = this.data.length;
 		const result = this.data.splice(length - count, count);
 		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 
 	public removeLeft(count: number): void {
 		const result = this.data.splice(0, count);
 		this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: result, newState: this.data });
+		this.lengthSource.update(this.data.length);
 	}
 	public remove(item: T): void {
 		const index = this.data.indexOf(item);
 		if (index !== -1) {
 			this.data.splice(index, 1);
 			this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
+			this.lengthSource.update(this.data.length);
 		}
 	}
 
@@ -429,11 +442,13 @@ export class ArrayDataSource<T> {
 			items,
 			newState: this.data
 		});
+		this.lengthSource.update(this.data.length);
 	}
 
 	public shift(): T {
 		const item = this.data.shift();
 		this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+		this.lengthSource.update(this.data.length);
 
 		return item;
 	}
@@ -511,7 +526,11 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	private viewFilter: Predicate<T>;
 	private parent: ArrayDataSource<T>;
-	constructor(parent: ArrayDataSource<T>, filter: Predicate<T>, cancellationToken?: CancellationToken) {
+	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken?: CancellationToken) {
+		if (Array.isArray(parent)) {
+			parent = new ArrayDataSource(parent);
+		}
+		filter = filter ?? (() => true);
 		const initial = (parent as FilteredArrayView<T>).data.filter(filter);
 		super(initial);
 
@@ -561,13 +580,15 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	/**
 	 * Replaces the filter function
 	 * @param filter
+	 * @returns returns new size of array view after applying filter
 	 */
-	public updateFilter(filter: Predicate<T>): void {
+	public updateFilter(filter: Predicate<T>): number {
 		if (this.viewFilter === filter) {
 			return;
 		}
 		this.viewFilter = filter;
 		this.refresh();
+		return this.data.length;
 	}
 
 	/**

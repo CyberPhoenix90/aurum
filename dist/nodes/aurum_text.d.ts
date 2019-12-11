@@ -1,7 +1,7 @@
 import { StringSource } from '../utilities/common';
 export declare class AurumTextElement {
     node: HTMLElement | Text;
-    private source;
+    private subscription;
     constructor(text?: StringSource);
     protected resolveStringSource(source: StringSource): string;
     protected create(text?: StringSource): Text;

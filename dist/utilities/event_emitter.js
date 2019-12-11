@@ -14,7 +14,12 @@ export class EventEmitter {
         return this.subscriptions > 0;
     }
     cancelAll() {
-        this.subscribeChannel.length = 0;
+        if (!this.isFiring) {
+            this.subscribeChannel.length = 0;
+        }
+        else {
+            this.onAfterFire.push(() => (this.subscribeChannel.length = 0));
+        }
     }
     fireFiltered(data, filter) {
         this.isFiring = true;

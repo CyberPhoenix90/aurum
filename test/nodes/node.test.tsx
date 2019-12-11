@@ -85,7 +85,7 @@ describe('Nodes', () => {
 			document.body
 		);
 		try {
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length);
+			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
 			assert((document.body.firstChild as HTMLDivElement).textContent === '1234');
 		} finally {
 			Aurum.detach(document.body);
@@ -102,9 +102,9 @@ describe('Nodes', () => {
 			document.body
 		);
 		try {
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length);
+			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
 			repeatModel.push(5);
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length);
+			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
 			assert((document.body.firstChild as HTMLDivElement).textContent === '12345');
 			repeatModel.swap(0, 2);
 			assert((document.body.firstChild as HTMLDivElement).textContent === '32145');

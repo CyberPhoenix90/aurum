@@ -24,19 +24,22 @@ export class Switch<T = boolean> extends AurumElement {
 		}, this.cancellationToken);
 	}
 
+	protected selectTemplate(ref: string): Template<void> {
+		if (ref === undefined || ref === null) {
+			return this.template;
+		} else {
+			return this.templateMap[ref] ?? this.template;
+		}
+	}
+
 	protected renderSwitch(data: T): void {
 		if (data !== this.lastValue || this.firstRender) {
 			this.lastValue = data;
 			this.firstRender = false;
 			this.clearChildren();
-			if (data !== undefined && data !== null) {
-				const template = this.templateMap[data.toString()] ?? this.template;
-				if (template) {
-					const result = template.generate();
-					this.addChild(result);
-				}
-			} else if (this.template) {
-				const result = this.template.generate();
+			const template = this.selectTemplate(data?.toString());
+			if (template) {
+				const result = template.generate();
 				this.addChild(result);
 			}
 		}

@@ -176,6 +176,7 @@ export class ArrayDataSource {
         else {
             this.data = [];
         }
+        this.lengthSource = new DataSource(this.data.length).unique();
         this.updateEvent = new EventEmitter();
     }
     listenAndRepeat(callback, cancellationToken) {
@@ -193,7 +194,7 @@ export class ArrayDataSource {
         return this.updateEvent.subscribe(callback, cancellationToken).cancel;
     }
     get length() {
-        return this.data.length;
+        return this.lengthSource;
     }
     getData() {
         return this.data.slice();
@@ -208,6 +209,7 @@ export class ArrayDataSource {
         }
         this.data[index] = item;
         this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     swap(indexA, indexB) {
         if (indexA === indexB) {
@@ -218,6 +220,7 @@ export class ArrayDataSource {
         this.data[indexB] = itemA;
         this.data[indexA] = itemB;
         this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     swapItems(itemA, itemB) {
         if (itemA === itemB) {
@@ -230,6 +233,7 @@ export class ArrayDataSource {
             this.data[indexA] = itemB;
         }
         this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     appendArray(items) {
         const old = this.data;
@@ -249,13 +253,16 @@ export class ArrayDataSource {
             items,
             newState: this.data
         });
+        this.lengthSource.update(this.data.length);
     }
     push(...items) {
         this.appendArray(items);
+        this.lengthSource.update(this.data.length);
     }
     unshift(...items) {
         this.data.unshift(...items);
         this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     pop() {
         const item = this.data.pop();
@@ -267,12 +274,13 @@ export class ArrayDataSource {
             items: [item],
             newState: this.data
         });
+        this.lengthSource.update(this.data.length);
         return item;
     }
     merge(newData) {
         for (let i = 0; i < newData.length; i++) {
             if (this.data[i] !== newData[i]) {
-                if (this.length > i) {
+                if (this.data.length > i) {
                     this.set(i, newData[i]);
                 }
                 else {
@@ -280,24 +288,28 @@ export class ArrayDataSource {
                 }
             }
         }
-        if (this.length > newData.length) {
-            this.removeRight(this.length - newData.length);
+        if (this.data.length > newData.length) {
+            this.removeRight(this.data.length - newData.length);
         }
+        this.lengthSource.update(this.data.length);
     }
     removeRight(count) {
-        const length = this.length;
+        const length = this.data.length;
         const result = this.data.splice(length - count, count);
         this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     removeLeft(count) {
         const result = this.data.splice(0, count);
         this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: result, newState: this.data });
+        this.lengthSource.update(this.data.length);
     }
     remove(item) {
         const index = this.data.indexOf(item);
         if (index !== -1) {
             this.data.splice(index, 1);
             this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
+            this.lengthSource.update(this.data.length);
         }
     }
     clear() {
@@ -311,10 +323,12 @@ export class ArrayDataSource {
             items,
             newState: this.data
         });
+        this.lengthSource.update(this.data.length);
     }
     shift() {
         const item = this.data.shift();
         this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+        this.lengthSource.update(this.data.length);
         return item;
     }
     toArray() {
@@ -379,6 +393,10 @@ export class SortedArrayView extends ArrayDataSource {
 }
 export class FilteredArrayView extends ArrayDataSource {
     constructor(parent, filter, cancellationToken) {
+        if (Array.isArray(parent)) {
+            parent = new ArrayDataSource(parent);
+        }
+        filter = (filter !== null && filter !== void 0 ? filter : (() => true));
         const initial = parent.data.filter(filter);
         super(initial);
         this.parent = parent;
@@ -430,6 +448,7 @@ export class FilteredArrayView extends ArrayDataSource {
         }
         this.viewFilter = filter;
         this.refresh();
+        return this.data.length;
     }
     refresh() {
         this.clear();
