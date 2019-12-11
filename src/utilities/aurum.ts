@@ -136,6 +136,10 @@ export class Aurum {
 		dom[ownerSymbol] = aurumElement;
 	}
 
+	public static isAttached(dom: HTMLElement) {
+		return dom[ownerSymbol] !== undefined;
+	}
+
 	public static detach(domNode: HTMLElement): void {
 		if (domNode[ownerSymbol]) {
 			domNode[ownerSymbol].node.remove();
