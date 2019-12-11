@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Data extends AurumElement {
-    constructor(props) {
-        super(props, 'data');
+    constructor(props, children) {
+        super(props, children, 'data');
         if (props !== null) {
             this.bindProps(['datalue'], props);
         }

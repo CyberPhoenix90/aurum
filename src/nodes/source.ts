@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
 export interface SourceProps extends AurumElementProps {
 	onAttach?: Callback<Source>;
@@ -16,8 +16,8 @@ export interface SourceProps extends AurumElementProps {
 export class Source extends AurumElement {
 	public readonly node: HTMLSourceElement;
 
-	constructor(props: SourceProps) {
-		super(props, 'source');
+	constructor(props: SourceProps, children: ChildNode[]) {
+		super(props, children, 'source');
 		if (props !== null) {
 			this.bindProps(['src', 'srcSet', 'media', 'sizes', 'type'], props);
 		}

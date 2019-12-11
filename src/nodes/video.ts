@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
 export interface VideoProps extends AurumElementProps {
 	onAttach?: Callback<Video>;
@@ -20,8 +20,8 @@ export interface VideoProps extends AurumElementProps {
 export class Video extends AurumElement {
 	public readonly node: HTMLVideoElement;
 
-	constructor(props: VideoProps) {
-		super(props, 'video');
+	constructor(props: VideoProps, children: ChildNode[]) {
+		super(props, children, 'video');
 		if (props !== null) {
 			this.bindProps(['controls', 'autoplay', 'loop', 'muted', 'preload', 'src', 'poster', 'width', 'height'], props);
 		}

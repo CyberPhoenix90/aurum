@@ -1,5 +1,5 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 
 export interface AProps extends AurumElementProps {
 	onAttach?: Callback<A>;
@@ -13,8 +13,8 @@ export interface AProps extends AurumElementProps {
 export class A extends AurumElement {
 	public readonly node: HTMLAnchorElement;
 
-	constructor(props: AProps) {
-		super(props, 'a');
+	constructor(props: AProps, children: ChildNode[]) {
+		super(props, children, 'a');
 		if (props !== null) {
 			this.bindProps(['href', 'target'], props);
 		}

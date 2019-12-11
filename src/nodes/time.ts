@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback, StringSource } from '../utilities/common';
 
 export interface TimeProps extends AurumElementProps {
@@ -12,8 +12,8 @@ export interface TimeProps extends AurumElementProps {
 export class Time extends AurumElement {
 	public node: HTMLTimeElement;
 
-	constructor(props: TimeProps) {
-		super(props, 'time');
+	constructor(props: TimeProps, children: ChildNode[]) {
+		super(props, children, 'time');
 		if (props !== null) {
 			this.bindProps(['datetime'], props);
 		}

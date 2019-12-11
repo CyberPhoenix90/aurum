@@ -1,7 +1,7 @@
 import { AurumElement } from '../aurum_element';
 export class Switch extends AurumElement {
-    constructor(props) {
-        super(props, 'switch');
+    constructor(props, children) {
+        super(props, children, 'switch');
         this.firstRender = true;
         this.templateMap = props.templateMap;
         this.renderSwitch(props.state.value);

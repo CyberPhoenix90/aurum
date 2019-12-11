@@ -26,7 +26,7 @@ const defaultEvents = {
 };
 const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export class AurumElement {
-    constructor(props, domNodeName) {
+    constructor(props, children, domNodeName) {
         var _a, _b;
         this.cancellationToken = new CancellationToken();
         this.node = this.create(domNodeName);
@@ -41,6 +41,9 @@ export class AurumElement {
             this.template = props.template;
             this.initialize(props);
             (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+        }
+        if (children) {
+            this.addChildren(children);
         }
     }
     initialize(props) {
@@ -169,12 +172,12 @@ export class AurumElement {
         }
     }
     handleAttach(parent) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         if (this.needAttach) {
             if (parent.isConnected()) {
                 (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
                 for (const child of this.node.childNodes) {
-                    (_d = (_c = child[ownerSymbol]).handleAttach) === null || _d === void 0 ? void 0 : _d.call(_c, this);
+                    (_e = (_c = child[ownerSymbol]) === null || _c === void 0 ? void 0 : (_d = _c).handleAttach) === null || _e === void 0 ? void 0 : _e.call(_d, this);
                 }
             }
             else {
@@ -407,8 +410,8 @@ export class AurumElement {
     }
 }
 export class Template extends AurumElement {
-    constructor(props) {
-        super(props, 'template');
+    constructor(props, children) {
+        super(props, children, 'template');
         this.ref = props.ref;
         this.generate = props.generator;
     }

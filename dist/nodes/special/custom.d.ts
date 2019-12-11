@@ -1,5 +1,5 @@
 import { Callback, MapLike, StringSource } from '../../utilities/common';
-import { AurumElement, AurumElementProps } from '../aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from '../aurum_element';
 export interface CustomProps<T extends HTMLElement> extends AurumElementProps {
     onAttach?: Callback<Custom<T>>;
     onDetach?: Callback<Custom<T>>;
@@ -10,6 +10,6 @@ export interface CustomProps<T extends HTMLElement> extends AurumElementProps {
 }
 export declare class Custom<T extends HTMLElement> extends AurumElement {
     readonly node: T;
-    constructor(props: CustomProps<T>);
+    constructor(props: CustomProps<T>, children: ChildNode[]);
 }
 //# sourceMappingURL=custom.d.ts.map

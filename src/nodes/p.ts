@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface PProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface PProps extends AurumElementProps {
 export class P extends AurumElement {
 	public node: HTMLParagraphElement;
 
-	constructor(props: PProps) {
-		super(props, 'p');
+	constructor(props: PProps, children: ChildNode[]) {
+		super(props, children, 'p');
 	}
 }

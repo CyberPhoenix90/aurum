@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Source extends AurumElement {
-    constructor(props) {
-        super(props, 'source');
+    constructor(props, children) {
+        super(props, children, 'source');
         if (props !== null) {
             this.bindProps(['src', 'srcSet', 'media', 'sizes', 'type'], props);
         }

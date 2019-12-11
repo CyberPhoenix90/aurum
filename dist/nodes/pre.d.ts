@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface PreProps extends AurumElementProps {
     onAttach?: Callback<Pre>;
@@ -8,6 +8,6 @@ export interface PreProps extends AurumElementProps {
 }
 export declare class Pre extends AurumElement {
     node: HTMLPreElement;
-    constructor(props: PreProps);
+    constructor(props: PreProps, children: ChildNode[]);
 }
 //# sourceMappingURL=pre.d.ts.map

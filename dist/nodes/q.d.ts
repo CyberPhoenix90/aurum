@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface QProps extends AurumElementProps {
     onAttach?: Callback<Q>;
@@ -8,6 +8,6 @@ export interface QProps extends AurumElementProps {
 }
 export declare class Q extends AurumElement {
     node: HTMLQuoteElement;
-    constructor(props: QProps);
+    constructor(props: QProps, children: ChildNode[]);
 }
 //# sourceMappingURL=q.d.ts.map

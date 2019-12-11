@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface IFrameProps extends AurumElementProps {
     onAttach?: Callback<IFrame>;
@@ -15,6 +15,6 @@ export interface IFrameProps extends AurumElementProps {
 }
 export declare class IFrame extends AurumElement {
     readonly node: HTMLIFrameElement;
-    constructor(props: IFrameProps);
+    constructor(props: IFrameProps, children: ChildNode[]);
 }
 //# sourceMappingURL=iframe.d.ts.map

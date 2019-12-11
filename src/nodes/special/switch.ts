@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, Template } from '../aurum_element';
+import { AurumElement, AurumElementProps, Template, ChildNode } from '../aurum_element';
 import { MapLike } from '../../utilities/common';
 import { DataSource } from '../../stream/data_source';
 
@@ -14,8 +14,8 @@ export class Switch<T = boolean> extends AurumElement {
 	public templateMap: MapLike<Template<void>>;
 	public template: Template<void>;
 
-	constructor(props: SwitchProps<T>) {
-		super(props, 'switch');
+	constructor(props: SwitchProps<T>, children: ChildNode[]) {
+		super(props, children, 'switch');
 
 		this.templateMap = props.templateMap;
 		this.renderSwitch(props.state.value);

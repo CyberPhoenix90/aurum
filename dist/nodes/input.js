@@ -25,9 +25,9 @@ const inputProps = [
     'type'
 ];
 export class Input extends AurumElement {
-    constructor(props) {
+    constructor(props, children) {
         var _a;
-        super(props, 'input');
+        super(props, children, 'input');
         if (props !== null) {
             if (props.inputValueSource) {
                 props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);

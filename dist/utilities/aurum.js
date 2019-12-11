@@ -148,7 +148,13 @@ export class Aurum {
                 throw new Error(`Node ${type} does not exist or is not supported`);
             }
         }
-        const children = [].concat(...innerNodes).filter((e) => e);
+        let children;
+        if (innerNodes.length && Array.isArray(innerNodes[0])) {
+            children = [].concat(...innerNodes).filter((e) => e);
+        }
+        else {
+            children = innerNodes.filter((e) => e);
+        }
         const templateMap = {};
         let defaultTemplate;
         let hasRef = false;
@@ -174,12 +180,11 @@ export class Aurum {
         }
         let instance;
         if (node.prototype) {
-            instance = new node(args);
+            instance = new node(args, children);
         }
         else {
-            instance = node(args);
+            instance = node(args, children);
         }
-        instance.addChildren(children);
         return instance;
     }
 }

@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface SvgProps extends AurumElementProps {
     onAttach?: Callback<Svg>;
     onDetach?: Callback<Svg>;
@@ -9,6 +9,6 @@ export interface SvgProps extends AurumElementProps {
     height?: StringSource;
 }
 export declare class Svg extends AurumElement {
-    constructor(props: SvgProps);
+    constructor(props: SvgProps, children: ChildNode[]);
 }
 //# sourceMappingURL=svg.d.ts.map

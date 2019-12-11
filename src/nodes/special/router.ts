@@ -1,16 +1,19 @@
 import { Switch } from './switch';
 import { DataSource } from '../../stream/data_source';
-import { AurumElementProps, Template } from '../aurum_element';
+import { AurumElementProps, Template, ChildNode } from '../aurum_element';
 
 export interface AurumRouterProps extends AurumElementProps {}
 
 export class AurumRouter extends Switch<string> {
-	constructor(props: AurumRouterProps) {
+	constructor(props: AurumRouterProps, children: ChildNode[]) {
 		const urlDataSource = new DataSource(location.hash.substring(1));
-		super({
-			...props,
-			state: urlDataSource
-		});
+		super(
+			{
+				...props,
+				state: urlDataSource
+			},
+			children
+		);
 
 		window.addEventListener('hashchange', () => {
 			const hash = location.hash.substring(1);

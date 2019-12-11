@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface FooterProps extends AurumElementProps {
     onAttach?: Callback<Footer>;
@@ -7,6 +7,6 @@ export interface FooterProps extends AurumElementProps {
     onDispose?: Callback<Footer>;
 }
 export declare class Footer extends AurumElement {
-    constructor(props: FooterProps);
+    constructor(props: FooterProps, children: ChildNode[]);
 }
 //# sourceMappingURL=footer.d.ts.map

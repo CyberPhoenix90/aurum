@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface LinkProps extends AurumElementProps {
@@ -17,8 +17,8 @@ export interface LinkProps extends AurumElementProps {
 export class Link extends AurumElement {
 	public node: HTMLLinkElement;
 
-	constructor(props: LinkProps) {
-		super(props, 'link');
+	constructor(props: LinkProps, children: ChildNode[]) {
+		super(props, children, 'link');
 		if (props !== null) {
 			this.bindProps(['href', 'rel', 'media', 'as', 'disabled', 'type'], props);
 		}

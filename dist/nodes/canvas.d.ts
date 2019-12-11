@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface CanvasProps extends AurumElementProps {
     onAttach?: Callback<Canvas>;
@@ -10,6 +10,6 @@ export interface CanvasProps extends AurumElementProps {
 }
 export declare class Canvas extends AurumElement {
     readonly node: HTMLCanvasElement;
-    constructor(props: CanvasProps);
+    constructor(props: CanvasProps, children: ChildNode[]);
 }
 //# sourceMappingURL=canvas.d.ts.map

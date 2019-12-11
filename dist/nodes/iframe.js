@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class IFrame extends AurumElement {
-    constructor(props) {
-        super(props, 'iframe');
+    constructor(props, children) {
+        super(props, children, 'iframe');
         if (props !== null) {
             this.bindProps(['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest'], props);
         }

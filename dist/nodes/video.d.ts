@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface VideoProps extends AurumElementProps {
     onAttach?: Callback<Video>;
     onDetach?: Callback<Video>;
@@ -17,6 +17,6 @@ export interface VideoProps extends AurumElementProps {
 }
 export declare class Video extends AurumElement {
     readonly node: HTMLVideoElement;
-    constructor(props: VideoProps);
+    constructor(props: VideoProps, children: ChildNode[]);
 }
 //# sourceMappingURL=video.d.ts.map

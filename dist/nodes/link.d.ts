@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface LinkProps extends AurumElementProps {
     onAttach?: Callback<Link>;
@@ -14,6 +14,6 @@ export interface LinkProps extends AurumElementProps {
 }
 export declare class Link extends AurumElement {
     node: HTMLLinkElement;
-    constructor(props: LinkProps);
+    constructor(props: LinkProps, children: ChildNode[]);
 }
 //# sourceMappingURL=link.d.ts.map

@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface AreaProps extends AurumElementProps {
     onAttach?: Callback<Area>;
     onDetach?: Callback<Area>;
@@ -8,6 +8,6 @@ export interface AreaProps extends AurumElementProps {
 }
 export declare class Area extends AurumElement {
     readonly node: HTMLAreaElement;
-    constructor(props: AreaProps);
+    constructor(props: AreaProps, children: ChildNode[]);
 }
 //# sourceMappingURL=area.d.ts.map

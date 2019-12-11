@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface SourceProps extends AurumElementProps {
     onAttach?: Callback<Source>;
     onDetach?: Callback<Source>;
@@ -13,6 +13,6 @@ export interface SourceProps extends AurumElementProps {
 }
 export declare class Source extends AurumElement {
     readonly node: HTMLSourceElement;
-    constructor(props: SourceProps);
+    constructor(props: SourceProps, children: ChildNode[]);
 }
 //# sourceMappingURL=source.d.ts.map

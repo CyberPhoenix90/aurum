@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Svg extends AurumElement {
-    constructor(props) {
-        super(props, 'svg');
+    constructor(props, children) {
+        super(props, children, 'svg');
         if (props !== null) {
             this.bindProps(['width', 'height'], props);
         }

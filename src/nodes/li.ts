@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface LiProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface LiProps extends AurumElementProps {
 export class Li extends AurumElement {
 	public node: HTMLLIElement;
 
-	constructor(props: LiProps) {
-		super(props, 'li');
+	constructor(props: LiProps, children: ChildNode[]) {
+		super(props, children, 'li');
 	}
 }

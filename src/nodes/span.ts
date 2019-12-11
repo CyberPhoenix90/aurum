@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface SpanProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface SpanProps extends AurumElementProps {
 export class Span extends AurumElement {
 	public node: HTMLSpanElement;
 
-	constructor(props: SpanProps) {
-		super(props, 'span');
+	constructor(props: SpanProps, children: ChildNode[]) {
+		super(props, children, 'span');
 	}
 }

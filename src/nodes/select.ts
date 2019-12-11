@@ -1,6 +1,6 @@
 import { DataSource } from '../stream/data_source';
 import { Callback, DataDrain } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
 export interface SelectProps extends AurumElementProps {
 	onAttach?: Callback<Select>;
@@ -18,8 +18,8 @@ export class Select extends AurumElement {
 	private selectedIndexSource: DataSource<number>;
 	private initialSelection: number;
 
-	constructor(props: SelectProps) {
-		super(props, 'select');
+	constructor(props: SelectProps, children: ChildNode[]) {
+		super(props, children, 'select');
 		if (props !== null) {
 			this.createEventHandlers(selectEvents, props);
 			this.initialSelection = props.initialSelection;

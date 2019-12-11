@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface FormProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface FormProps extends AurumElementProps {
 export class Form extends AurumElement {
 	public readonly node: HTMLFormElement;
 
-	constructor(props: FormProps) {
-		super(props, 'form');
+	constructor(props: FormProps, children: ChildNode[]) {
+		super(props, children, 'form');
 	}
 }

@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface DataProps extends AurumElementProps {
@@ -12,8 +12,8 @@ export interface DataProps extends AurumElementProps {
 export class Data extends AurumElement {
 	public node: HTMLDataElement;
 
-	constructor(props: DataProps) {
-		super(props, 'data');
+	constructor(props: DataProps, children: ChildNode[]) {
+		super(props, children, 'data');
 		if (props !== null) {
 			this.bindProps(['datalue'], props);
 		}

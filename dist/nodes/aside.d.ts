@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface AsideProps extends AurumElementProps {
     onAttach?: Callback<Aside>;
     onDetach?: Callback<Aside>;
@@ -7,6 +7,6 @@ export interface AsideProps extends AurumElementProps {
     onDispose?: Callback<Aside>;
 }
 export declare class Aside extends AurumElement {
-    constructor(props: AsideProps);
+    constructor(props: AsideProps, children: ChildNode[]);
 }
 //# sourceMappingURL=aside.d.ts.map

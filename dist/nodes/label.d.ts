@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface LabelProps extends AurumElementProps {
     onAttach?: Callback<Label>;
@@ -9,6 +9,6 @@ export interface LabelProps extends AurumElementProps {
 }
 export declare class Label extends AurumElement {
     node: HTMLLabelElement;
-    constructor(props: LabelProps);
+    constructor(props: LabelProps, children: ChildNode[]);
 }
 //# sourceMappingURL=label.d.ts.map

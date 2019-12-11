@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface OlProps extends AurumElementProps {
     onAttach?: Callback<Ol>;
@@ -8,6 +8,6 @@ export interface OlProps extends AurumElementProps {
 }
 export declare class Ol extends AurumElement {
     node: HTMLOListElement;
-    constructor(props: OlProps);
+    constructor(props: OlProps, children: ChildNode[]);
 }
 //# sourceMappingURL=ol.d.ts.map

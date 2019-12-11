@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface DataProps extends AurumElementProps {
     onAttach?: Callback<Data>;
@@ -9,6 +9,6 @@ export interface DataProps extends AurumElementProps {
 }
 export declare class Data extends AurumElement {
     node: HTMLDataElement;
-    constructor(props: DataProps);
+    constructor(props: DataProps, children: ChildNode[]);
 }
 //# sourceMappingURL=data.d.ts.map

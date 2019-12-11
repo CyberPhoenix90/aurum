@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 
@@ -65,8 +65,8 @@ const inputProps = [
 export class Input extends AurumElement {
 	public node: HTMLInputElement;
 
-	constructor(props: InputProps) {
-		super(props, 'input');
+	constructor(props: InputProps, children: ChildNode[]) {
+		super(props, children, 'input');
 		if (props !== null) {
 			if (props.inputValueSource) {
 				props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);

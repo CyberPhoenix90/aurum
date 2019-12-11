@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 export interface TextAreaProps extends AurumElementProps {
@@ -26,6 +26,6 @@ export interface TextAreaProps extends AurumElementProps {
 }
 export declare class TextArea extends AurumElement {
     node: HTMLTextAreaElement;
-    constructor(props: TextAreaProps);
+    constructor(props: TextAreaProps, children: ChildNode[]);
 }
 //# sourceMappingURL=textarea.d.ts.map

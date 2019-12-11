@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
 export interface NoScriptProps extends AurumElementProps {
 	onAttach?: Callback<NoScript>;
@@ -9,7 +9,7 @@ export interface NoScriptProps extends AurumElementProps {
 }
 
 export class NoScript extends AurumElement {
-	constructor(props: NoScriptProps) {
-		super(props, 'noscript');
+	constructor(props: NoScriptProps, children: ChildNode[]) {
+		super(props, children, 'noscript');
 	}
 }

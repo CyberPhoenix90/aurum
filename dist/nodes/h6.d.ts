@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface H6Props extends AurumElementProps {
     onAttach?: Callback<H6>;
@@ -7,6 +7,6 @@ export interface H6Props extends AurumElementProps {
     onDispose?: Callback<H6>;
 }
 export declare class H6 extends AurumElement {
-    constructor(props: H6Props);
+    constructor(props: H6Props, children: ChildNode[]);
 }
 //# sourceMappingURL=h6.d.ts.map

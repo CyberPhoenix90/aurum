@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 export interface InputProps extends AurumElementProps {
@@ -35,6 +35,6 @@ export interface InputProps extends AurumElementProps {
 }
 export declare class Input extends AurumElement {
     node: HTMLInputElement;
-    constructor(props: InputProps);
+    constructor(props: InputProps, children: ChildNode[]);
 }
 //# sourceMappingURL=input.d.ts.map

@@ -194,12 +194,11 @@ export class Aurum {
 		let instance: AurumElement;
 		if ((node as Constructor<AurumElement>).prototype) {
 			//@ts-ignore
-			instance = new node(args);
+			instance = new node(args, children);
 		} else {
 			//@ts-ignore
-			instance = node(args);
+			instance = node(args, children);
 		}
-		instance.addChildren(children);
 
 		return instance;
 	}

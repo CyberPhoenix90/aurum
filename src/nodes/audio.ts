@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
 export interface AudioProps extends AurumElementProps {
 	onAttach?: Callback<Audio>;
@@ -17,8 +17,8 @@ export interface AudioProps extends AurumElementProps {
 export class Audio extends AurumElement {
 	public readonly node: HTMLAudioElement;
 
-	constructor(props: AudioProps) {
-		super(props, 'audio');
+	constructor(props: AudioProps, children: ChildNode[]) {
+		super(props, children, 'audio');
 		if (props !== null) {
 			this.bindProps(['controls', 'autoplay', 'loop', 'muted', 'preload', 'src'], props);
 		}

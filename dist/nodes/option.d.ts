@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface OptionProps extends AurumElementProps {
     onAttach?: Callback<Option>;
     onDetach?: Callback<Option>;
@@ -8,6 +8,6 @@ export interface OptionProps extends AurumElementProps {
 }
 export declare class Option extends AurumElement {
     readonly node: HTMLOptionElement;
-    constructor(props: OptionProps);
+    constructor(props: OptionProps, children: ChildNode[]);
 }
 //# sourceMappingURL=option.d.ts.map

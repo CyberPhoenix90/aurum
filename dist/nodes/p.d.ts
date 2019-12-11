@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface PProps extends AurumElementProps {
     onAttach?: Callback<P>;
@@ -8,6 +8,6 @@ export interface PProps extends AurumElementProps {
 }
 export declare class P extends AurumElement {
     node: HTMLParagraphElement;
-    constructor(props: PProps);
+    constructor(props: PProps, children: ChildNode[]);
 }
 //# sourceMappingURL=p.d.ts.map

@@ -47,7 +47,7 @@ export declare abstract class AurumElement {
     protected repeatData: ArrayDataSource<any>;
     node: HTMLElement;
     template: Template<any>;
-    constructor(props: AurumElementProps, domNodeName: string);
+    constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any, dynamicProps?: string[]): void;
     protected createEventHandlers(events: MapLike<string>, props: any): void;
@@ -87,6 +87,6 @@ export interface TemplateProps<T> extends AurumElementProps {
 export declare class Template<T> extends AurumElement {
     generate: (model: T) => AurumElement;
     ref: string | number;
-    constructor(props: TemplateProps<T>);
+    constructor(props: TemplateProps<T>, children: ChildNode[]);
 }
 //# sourceMappingURL=aurum_element.d.ts.map

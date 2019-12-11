@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface NavProps extends AurumElementProps {
@@ -9,7 +9,7 @@ export interface NavProps extends AurumElementProps {
 }
 
 export class Nav extends AurumElement {
-	constructor(props: NavProps) {
-		super(props, 'nav');
+	constructor(props: NavProps, children: ChildNode[]) {
+		super(props, children, 'nav');
 	}
 }

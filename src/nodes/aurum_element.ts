@@ -86,7 +86,7 @@ export abstract class AurumElement {
 
 	public template: Template<any>;
 
-	constructor(props: AurumElementProps, domNodeName: string) {
+	constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string) {
 		this.cancellationToken = new CancellationToken();
 		this.node = this.create(domNodeName);
 		this.children = [];
@@ -102,6 +102,9 @@ export abstract class AurumElement {
 			this.template = props.template;
 			this.initialize(props);
 			props.onCreate?.(this);
+		}
+		if (children) {
+			this.addChildren(children);
 		}
 	}
 
@@ -243,7 +246,7 @@ export abstract class AurumElement {
 			if (parent.isConnected()) {
 				this.onAttach?.(this);
 				for (const child of this.node.childNodes) {
-					child[ownerSymbol].handleAttach?.(this);
+					child[ownerSymbol]?.handleAttach?.(this);
 				}
 			} else {
 				parent.needAttach = true;
@@ -499,8 +502,8 @@ export class Template<T> extends AurumElement {
 	public generate: (model: T) => AurumElement;
 	ref: string | number;
 
-	constructor(props: TemplateProps<T>) {
-		super(props, 'template');
+	constructor(props: TemplateProps<T>, children: ChildNode[]) {
+		super(props, children, 'template');
 		this.ref = props.ref;
 		this.generate = props.generator;
 	}

@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface ProgressProps extends AurumElementProps {
@@ -14,8 +14,8 @@ export interface ProgressProps extends AurumElementProps {
 export class Progress extends AurumElement {
 	public node: HTMLProgressElement;
 
-	constructor(props: ProgressProps) {
-		super(props, 'progress');
+	constructor(props: ProgressProps, children: ChildNode[]) {
+		super(props, children, 'progress');
 		if (props !== null) {
 			this.bindProps(['max', 'value'], props);
 		}

@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface BrProps extends AurumElementProps {
     onAttach?: Callback<Br>;
@@ -8,6 +8,6 @@ export interface BrProps extends AurumElementProps {
 }
 export declare class Br extends AurumElement {
     readonly node: HTMLBRElement;
-    constructor(props: BrProps);
+    constructor(props: BrProps, children: ChildNode[]);
 }
 //# sourceMappingURL=br.d.ts.map

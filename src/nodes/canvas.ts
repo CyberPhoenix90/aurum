@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface CanvasProps extends AurumElementProps {
@@ -13,8 +13,8 @@ export interface CanvasProps extends AurumElementProps {
 export class Canvas extends AurumElement {
 	public readonly node: HTMLCanvasElement;
 
-	constructor(props: CanvasProps) {
-		super(props, 'canvas');
+	constructor(props: CanvasProps, children: ChildNode[]) {
+		super(props, children, 'canvas');
 		if (props !== null) {
 			this.bindProps(['width', 'height'], props);
 		}

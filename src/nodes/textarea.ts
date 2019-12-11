@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 
@@ -48,8 +48,8 @@ const textAreaProps = [
 export class TextArea extends AurumElement {
 	public node: HTMLTextAreaElement;
 
-	constructor(props: TextAreaProps) {
-		super(props, 'textArea');
+	constructor(props: TextAreaProps, children: ChildNode[]) {
+		super(props, children, 'textArea');
 		if (props !== null) {
 			if (props.inputValueSource) {
 				this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';

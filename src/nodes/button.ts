@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface ButtonProps extends AurumElementProps {
@@ -12,8 +12,8 @@ export interface ButtonProps extends AurumElementProps {
 export class Button extends AurumElement {
 	public readonly node: HTMLButtonElement;
 
-	constructor(props: ButtonProps) {
-		super(props, 'button');
+	constructor(props: ButtonProps, children: ChildNode[]) {
+		super(props, children, 'button');
 		if (props !== null) {
 			this.bindProps(['disabled'], props);
 		}

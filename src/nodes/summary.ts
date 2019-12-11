@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface SummaryProps extends AurumElementProps {
@@ -9,7 +9,7 @@ export interface SummaryProps extends AurumElementProps {
 }
 
 export class Summary extends AurumElement {
-	constructor(props: SummaryProps) {
-		super(props, 'summary');
+	constructor(props: SummaryProps, children: ChildNode[]) {
+		super(props, children, 'summary');
 	}
 }

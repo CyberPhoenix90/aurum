@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface DetailsProps extends AurumElementProps {
     onAttach?: Callback<Details>;
@@ -8,6 +8,6 @@ export interface DetailsProps extends AurumElementProps {
 }
 export declare class Details extends AurumElement {
     readonly node: HTMLDetailsElement;
-    constructor(props: DetailsProps);
+    constructor(props: DetailsProps, children: ChildNode[]);
 }
 //# sourceMappingURL=details.d.ts.map

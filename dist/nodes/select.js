@@ -1,9 +1,9 @@
 import { AurumElement } from './aurum_element';
 const selectEvents = { change: 'onChange' };
 export class Select extends AurumElement {
-    constructor(props) {
+    constructor(props, children) {
         var _a;
-        super(props, 'select');
+        super(props, children, 'select');
         if (props !== null) {
             this.createEventHandlers(selectEvents, props);
             this.initialSelection = props.initialSelection;

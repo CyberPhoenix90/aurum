@@ -16,9 +16,9 @@ const textAreaProps = [
     'type'
 ];
 export class TextArea extends AurumElement {
-    constructor(props) {
+    constructor(props, children) {
         var _a, _b, _c;
-        super(props, 'textArea');
+        super(props, children, 'textArea');
         if (props !== null) {
             if (props.inputValueSource) {
                 this.node.value = (_b = (_a = props.initialValue, (_a !== null && _a !== void 0 ? _a : props.inputValueSource.value)), (_b !== null && _b !== void 0 ? _b : ''));

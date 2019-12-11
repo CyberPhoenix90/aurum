@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface TableProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface TableProps extends AurumElementProps {
 export class Table extends AurumElement {
 	public node: HTMLTableElement;
 
-	constructor(props: TableProps) {
-		super(props, 'table');
+	constructor(props: TableProps, children: ChildNode[]) {
+		super(props, children, 'table');
 	}
 }

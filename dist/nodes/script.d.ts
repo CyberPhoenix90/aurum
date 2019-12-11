@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface ScriptProps extends AurumElementProps {
     onAttach?: Callback<Script>;
@@ -14,6 +14,6 @@ export interface ScriptProps extends AurumElementProps {
 }
 export declare class Script extends AurumElement {
     node: HTMLScriptElement;
-    constructor(props: ScriptProps);
+    constructor(props: ScriptProps, children: ChildNode[]);
 }
 //# sourceMappingURL=script.d.ts.map

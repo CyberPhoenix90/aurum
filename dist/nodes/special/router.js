@@ -1,9 +1,9 @@
 import { Switch } from './switch';
 import { DataSource } from '../../stream/data_source';
 export class AurumRouter extends Switch {
-    constructor(props) {
+    constructor(props, children) {
         const urlDataSource = new DataSource(location.hash.substring(1));
-        super(Object.assign(Object.assign({}, props), { state: urlDataSource }));
+        super(Object.assign(Object.assign({}, props), { state: urlDataSource }), children);
         window.addEventListener('hashchange', () => {
             const hash = location.hash.substring(1);
             if (hash.includes('?')) {

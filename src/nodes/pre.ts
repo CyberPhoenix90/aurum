@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface PreProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface PreProps extends AurumElementProps {
 export class Pre extends AurumElement {
 	public node: HTMLPreElement;
 
-	constructor(props: PreProps) {
-		super(props, 'pre');
+	constructor(props: PreProps, children: ChildNode[]) {
+		super(props, children, 'pre');
 	}
 }

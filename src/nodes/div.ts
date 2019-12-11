@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface DivProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface DivProps extends AurumElementProps {
 export class Div extends AurumElement {
 	public readonly node: HTMLDivElement;
 
-	constructor(props: DivProps) {
-		super(props, 'div');
+	constructor(props: DivProps, children: ChildNode[]) {
+		super(props, children, 'div');
 	}
 }

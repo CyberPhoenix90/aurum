@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface QProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface QProps extends AurumElementProps {
 export class Q extends AurumElement {
 	public node: HTMLQuoteElement;
 
-	constructor(props: QProps) {
-		super(props, 'q');
+	constructor(props: QProps, children: ChildNode[]) {
+		super(props, children, 'q');
 	}
 }

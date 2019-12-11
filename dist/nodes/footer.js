@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Footer extends AurumElement {
-    constructor(props) {
-        super(props, 'footer');
+    constructor(props, children) {
+        super(props, children, 'footer');
     }
 }
 //# sourceMappingURL=footer.js.map

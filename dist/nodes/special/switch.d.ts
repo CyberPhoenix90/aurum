@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, Template } from '../aurum_element';
+import { AurumElement, AurumElementProps, Template, ChildNode } from '../aurum_element';
 import { MapLike } from '../../utilities/common';
 import { DataSource } from '../../stream/data_source';
 export interface SwitchProps<T = boolean> extends AurumElementProps {
@@ -11,7 +11,7 @@ export declare class Switch<T = boolean> extends AurumElement {
     private firstRender;
     templateMap: MapLike<Template<void>>;
     template: Template<void>;
-    constructor(props: SwitchProps<T>);
+    constructor(props: SwitchProps<T>, children: ChildNode[]);
     protected selectTemplate(ref: string): Template<void>;
     protected renderSwitch(data: T): void;
 }

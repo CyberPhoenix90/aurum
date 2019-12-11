@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface AudioProps extends AurumElementProps {
     onAttach?: Callback<Audio>;
     onDetach?: Callback<Audio>;
@@ -14,6 +14,6 @@ export interface AudioProps extends AurumElementProps {
 }
 export declare class Audio extends AurumElement {
     readonly node: HTMLAudioElement;
-    constructor(props: AudioProps);
+    constructor(props: AudioProps, children: ChildNode[]);
 }
 //# sourceMappingURL=audio.d.ts.map

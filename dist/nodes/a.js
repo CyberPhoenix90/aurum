@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class A extends AurumElement {
-    constructor(props) {
-        super(props, 'a');
+    constructor(props, children) {
+        super(props, children, 'a');
         if (props !== null) {
             this.bindProps(['href', 'target'], props);
         }

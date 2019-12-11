@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface ButtonProps extends AurumElementProps {
     disabled?: StringSource;
@@ -9,6 +9,6 @@ export interface ButtonProps extends AurumElementProps {
 }
 export declare class Button extends AurumElement {
     readonly node: HTMLButtonElement;
-    constructor(props: ButtonProps);
+    constructor(props: ButtonProps, children: ChildNode[]);
 }
 //# sourceMappingURL=button.d.ts.map

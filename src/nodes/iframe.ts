@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface IFrameProps extends AurumElementProps {
@@ -18,8 +18,8 @@ export interface IFrameProps extends AurumElementProps {
 export class IFrame extends AurumElement {
 	public readonly node: HTMLIFrameElement;
 
-	constructor(props: IFrameProps) {
-		super(props, 'iframe');
+	constructor(props: IFrameProps, children: ChildNode[]) {
+		super(props, children, 'iframe');
 		if (props !== null) {
 			this.bindProps(['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest'], props);
 		}

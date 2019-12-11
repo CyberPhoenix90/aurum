@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface FormProps extends AurumElementProps {
     onAttach?: Callback<Form>;
@@ -8,6 +8,6 @@ export interface FormProps extends AurumElementProps {
 }
 export declare class Form extends AurumElement {
     readonly node: HTMLFormElement;
-    constructor(props: FormProps);
+    constructor(props: FormProps, children: ChildNode[]);
 }
 //# sourceMappingURL=form.d.ts.map

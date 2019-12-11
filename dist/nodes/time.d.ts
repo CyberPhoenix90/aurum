@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback, StringSource } from '../utilities/common';
 export interface TimeProps extends AurumElementProps {
     onAttach?: Callback<Time>;
@@ -9,6 +9,6 @@ export interface TimeProps extends AurumElementProps {
 }
 export declare class Time extends AurumElement {
     node: HTMLTimeElement;
-    constructor(props: TimeProps);
+    constructor(props: TimeProps, children: ChildNode[]);
 }
 //# sourceMappingURL=time.d.ts.map

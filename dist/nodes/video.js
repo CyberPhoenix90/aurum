@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Video extends AurumElement {
-    constructor(props) {
-        super(props, 'video');
+    constructor(props, children) {
+        super(props, children, 'video');
         if (props !== null) {
             this.bindProps(['controls', 'autoplay', 'loop', 'muted', 'preload', 'src', 'poster', 'width', 'height'], props);
         }

@@ -1,6 +1,6 @@
 import { DataSource } from '../stream/data_source';
 import { Callback, DataDrain } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface SelectProps extends AurumElementProps {
     onAttach?: Callback<Select>;
     onDetach?: Callback<Select>;
@@ -14,7 +14,7 @@ export declare class Select extends AurumElement {
     readonly node: HTMLSelectElement;
     private selectedIndexSource;
     private initialSelection;
-    constructor(props: SelectProps);
+    constructor(props: SelectProps, children: ChildNode[]);
     protected handleAttach(parent: AurumElement): void;
 }
 //# sourceMappingURL=select.d.ts.map

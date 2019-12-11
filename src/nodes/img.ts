@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface ImgProps extends AurumElementProps {
@@ -19,8 +19,8 @@ export interface ImgProps extends AurumElementProps {
 export class Img extends AurumElement {
 	public readonly node: HTMLImageElement;
 
-	constructor(props: ImgProps) {
-		super(props, 'img');
+	constructor(props: ImgProps, children: ChildNode[]) {
+		super(props, children, 'img');
 		if (props !== null) {
 			this.bindProps(['src', 'alt', 'width', 'height', 'referrerPolicy', 'sizes', 'srcset', 'useMap'], props);
 		}

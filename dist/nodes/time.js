@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Time extends AurumElement {
-    constructor(props) {
-        super(props, 'time');
+    constructor(props, children) {
+        super(props, children, 'time');
         if (props !== null) {
             this.bindProps(['datetime'], props);
         }

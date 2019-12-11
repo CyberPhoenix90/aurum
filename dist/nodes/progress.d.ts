@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface ProgressProps extends AurumElementProps {
     onAttach?: Callback<Progress>;
@@ -10,6 +10,6 @@ export interface ProgressProps extends AurumElementProps {
 }
 export declare class Progress extends AurumElement {
     node: HTMLProgressElement;
-    constructor(props: ProgressProps);
+    constructor(props: ProgressProps, children: ChildNode[]);
 }
 //# sourceMappingURL=progress.d.ts.map

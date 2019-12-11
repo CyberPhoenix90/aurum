@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface ImgProps extends AurumElementProps {
     onAttach?: Callback<Img>;
@@ -16,6 +16,6 @@ export interface ImgProps extends AurumElementProps {
 }
 export declare class Img extends AurumElement {
     readonly node: HTMLImageElement;
-    constructor(props: ImgProps);
+    constructor(props: ImgProps, children: ChildNode[]);
 }
 //# sourceMappingURL=img.d.ts.map

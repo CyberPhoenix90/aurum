@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface TitleProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface TitleProps extends AurumElementProps {
 export class Title extends AurumElement {
 	public node: HTMLTitleElement;
 
-	constructor(props: TitleProps) {
-		super(props, 'title');
+	constructor(props: TitleProps, children: ChildNode[]) {
+		super(props, children, 'title');
 	}
 }

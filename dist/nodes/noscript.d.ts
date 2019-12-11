@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface NoScriptProps extends AurumElementProps {
     onAttach?: Callback<NoScript>;
     onDetach?: Callback<NoScript>;
@@ -7,6 +7,6 @@ export interface NoScriptProps extends AurumElementProps {
     onDispose?: Callback<NoScript>;
 }
 export declare class NoScript extends AurumElement {
-    constructor(props: NoScriptProps);
+    constructor(props: NoScriptProps, children: ChildNode[]);
 }
 //# sourceMappingURL=noscript.d.ts.map

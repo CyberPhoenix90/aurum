@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface OlProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface OlProps extends AurumElementProps {
 export class Ol extends AurumElement {
 	public node: HTMLOListElement;
 
-	constructor(props: OlProps) {
-		super(props, 'ol');
+	constructor(props: OlProps, children: ChildNode[]) {
+		super(props, children, 'ol');
 	}
 }

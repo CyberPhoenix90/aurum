@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface TitleProps extends AurumElementProps {
     onAttach?: Callback<Title>;
@@ -8,6 +8,6 @@ export interface TitleProps extends AurumElementProps {
 }
 export declare class Title extends AurumElement {
     node: HTMLTitleElement;
-    constructor(props: TitleProps);
+    constructor(props: TitleProps, children: ChildNode[]);
 }
 //# sourceMappingURL=title.d.ts.map

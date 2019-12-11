@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback, StringSource } from '../utilities/common';
 
 export interface StyleProps extends AurumElementProps {
@@ -12,8 +12,8 @@ export interface StyleProps extends AurumElementProps {
 export class Style extends AurumElement {
 	public node: HTMLStyleElement;
 
-	constructor(props: StyleProps) {
-		super(props, 'style');
+	constructor(props: StyleProps, children: ChildNode[]) {
+		super(props, children, 'style');
 		if (props !== null) {
 			this.bindProps(['media'], props);
 		}

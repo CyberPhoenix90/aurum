@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface HeadProps extends AurumElementProps {
     onAttach?: Callback<Head>;
@@ -7,6 +7,6 @@ export interface HeadProps extends AurumElementProps {
     onDispose?: Callback<Head>;
 }
 export declare class Head extends AurumElement {
-    constructor(props: HeadProps);
+    constructor(props: HeadProps, children: ChildNode[]);
 }
 //# sourceMappingURL=head.d.ts.map

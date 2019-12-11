@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface DivProps extends AurumElementProps {
     onAttach?: Callback<Div>;
@@ -8,6 +8,6 @@ export interface DivProps extends AurumElementProps {
 }
 export declare class Div extends AurumElement {
     readonly node: HTMLDivElement;
-    constructor(props: DivProps);
+    constructor(props: DivProps, children: ChildNode[]);
 }
 //# sourceMappingURL=div.d.ts.map

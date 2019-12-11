@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface BrProps extends AurumElementProps {
@@ -11,7 +11,7 @@ export interface BrProps extends AurumElementProps {
 export class Br extends AurumElement {
 	public readonly node: HTMLBRElement;
 
-	constructor(props: BrProps) {
-		super(props, 'br');
+	constructor(props: BrProps, children: ChildNode[]) {
+		super(props, children, 'br');
 	}
 }

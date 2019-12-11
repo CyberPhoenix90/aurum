@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Ol extends AurumElement {
-    constructor(props) {
-        super(props, 'ol');
+    constructor(props, children) {
+        super(props, children, 'ol');
     }
 }
 //# sourceMappingURL=ol.js.map

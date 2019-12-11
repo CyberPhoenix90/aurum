@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface ScriptProps extends AurumElementProps {
@@ -17,8 +17,8 @@ export interface ScriptProps extends AurumElementProps {
 export class Script extends AurumElement {
 	public node: HTMLScriptElement;
 
-	constructor(props: ScriptProps) {
-		super(props, 'script');
+	constructor(props: ScriptProps, children: ChildNode[]) {
+		super(props, children, 'script');
 		if (props !== null) {
 			this.bindProps(['src', 'async', 'defer', 'integrity', 'noModule', 'type'], props);
 		}

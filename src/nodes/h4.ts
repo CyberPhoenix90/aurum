@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface H4Props extends AurumElementProps {
@@ -9,7 +9,7 @@ export interface H4Props extends AurumElementProps {
 }
 
 export class H4 extends AurumElement {
-	constructor(props: H4Props) {
-		super(props, 'h4');
+	constructor(props: H4Props, children: ChildNode[]) {
+		super(props, children, 'h4');
 	}
 }

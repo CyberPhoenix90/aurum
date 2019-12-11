@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 import { Callback } from '../utilities/common';
 export interface TheadProps extends AurumElementProps {
     onAttach?: Callback<Thead>;
@@ -7,6 +7,6 @@ export interface TheadProps extends AurumElementProps {
     onDispose?: Callback<Thead>;
 }
 export declare class Thead extends AurumElement {
-    constructor(props: TheadProps);
+    constructor(props: TheadProps, children: ChildNode[]);
 }
 //# sourceMappingURL=thead.d.ts.map

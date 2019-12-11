@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 
 export interface LabelProps extends AurumElementProps {
@@ -12,8 +12,8 @@ export interface LabelProps extends AurumElementProps {
 export class Label extends AurumElement {
 	public node: HTMLLabelElement;
 
-	constructor(props: LabelProps) {
-		super(props, 'label');
+	constructor(props: LabelProps, children: ChildNode[]) {
+		super(props, children, 'label');
 		if (props !== null) {
 			this.bindProps(['for'], props);
 		}

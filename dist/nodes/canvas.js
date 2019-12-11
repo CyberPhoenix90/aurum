@@ -1,7 +1,7 @@
 import { AurumElement } from './aurum_element';
 export class Canvas extends AurumElement {
-    constructor(props) {
-        super(props, 'canvas');
+    constructor(props, children) {
+        super(props, children, 'canvas');
         if (props !== null) {
             this.bindProps(['width', 'height'], props);
         }
