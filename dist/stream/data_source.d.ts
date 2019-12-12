@@ -61,10 +61,15 @@ export declare class ArrayDataSource<T> {
     shift(): T;
     toArray(): T[];
     sort(comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken): SortedArrayView<T>;
+    map<D>(mapper: (data: T) => D, cancellationToken?: CancellationToken): MappedArrayView<T, D>;
     filter(callback: Predicate<T>, cancellationToken?: CancellationToken): FilteredArrayView<T>;
     forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void;
     toDataSource(): DataSource<T[]>;
     private update;
+}
+export declare class MappedArrayView<D, T> extends ArrayDataSource<T> {
+    private mapper;
+    constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken?: CancellationToken);
 }
 export declare class SortedArrayView<T> extends ArrayDataSource<T> {
     private comparator;

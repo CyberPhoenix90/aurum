@@ -1,4 +1,4 @@
-import { AurumElement } from '../aurum_element';
+import { AurumElement } from './aurum_element';
 export class Switch extends AurumElement {
     constructor(props, children) {
         super(props, children, 'switch');
@@ -23,11 +23,14 @@ export class Switch extends AurumElement {
         if (data !== this.lastValue || this.firstRender) {
             this.lastValue = data;
             this.firstRender = false;
-            this.clearChildren();
             const template = this.selectTemplate((_a = data) === null || _a === void 0 ? void 0 : _a.toString());
-            if (template) {
-                const result = template.generate();
-                this.addChild(result);
+            if (template !== this.lastTemplate) {
+                this.lastTemplate = template;
+                this.clearChildren();
+                if (template) {
+                    const result = template.generate();
+                    this.addChild(result);
+                }
             }
         }
     }

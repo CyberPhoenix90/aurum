@@ -1,6 +1,6 @@
-import { DataSource, ArrayDataSource } from '../../stream/data_source';
+import { ArrayDataSource, DataSource } from '../../stream/data_source';
 import { CancellationToken } from '../../utilities/cancellation_token';
-import { DataDrain, StringSource, ClassType, Callback, MapLike } from '../../utilities/common';
+import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 
@@ -69,7 +69,7 @@ const defaultEvents: MapLike<string> = {
 
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement> | ArrayDataSource<string>;
+export type ChildNode = AurumElement | string | DataSource<string> | ArrayDataSource<AurumElement>;
 
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;
@@ -440,7 +440,9 @@ export abstract class AurumElement {
 	}
 
 	private childNodeToAurum(child: ChildNode): AurumElement {
-		if (typeof child === 'string' || child instanceof DataSource) {
+		if (child instanceof ArrayDataSource) {
+			return new AurumFragment({ repeatModel: child }) as any;
+		} else if (typeof child === 'string' || child instanceof DataSource) {
 			child = new AurumTextElement(child) as any;
 		} else if (!(child instanceof AurumElement)) {
 			child = new AurumTextElement((child as any).toString()) as any;
@@ -506,5 +508,137 @@ export class Template<T> extends AurumElement {
 		super(props, children, 'template');
 		this.ref = props.ref;
 		this.generate = props.generator;
+	}
+}
+
+export interface AurumFragmentProps {
+	repeatModel?: ArrayDataSource<AurumElement>;
+}
+
+export class AurumFragment {
+	private children: AurumElement[];
+	public node: DocumentFragment;
+
+	constructor(props: AurumFragmentProps) {
+		this.children = [];
+		this.node = document.createDocumentFragment();
+		if (props.repeatModel) {
+			this.handleRepeat(props.repeatModel);
+		}
+	}
+
+	private handleRepeat(dataSource: ArrayDataSource<AurumElement>): void {
+		dataSource.listenAndRepeat((change) => {
+			switch (change.operationDetailed) {
+				case 'swap':
+					const itemA = this.children[change.index];
+					const itemB = this.children[change.index2];
+					this.children[change.index2] = itemA;
+					this.children[change.index] = itemB;
+					break;
+				case 'append':
+					const old = this.children;
+					this.children = new Array(old.length);
+					let i = 0;
+					for (i = 0; i < old.length; i++) {
+						this.children[i] = old[i];
+					}
+					for (let index = 0; index < change.items.length; index++) {
+						this.children[i + index] = change.items[index];
+					}
+					break;
+				case 'prepend':
+					this.children.unshift(...change.items);
+					break;
+				case 'remove':
+				case 'removeLeft':
+				case 'removeRight':
+					this.children.splice(change.index, change.count);
+					break;
+				case 'clear':
+					this.children = [];
+					break;
+				default:
+					throw new Error('unhandled operation');
+			}
+			this.render();
+		});
+	}
+
+	protected render(): void {
+		for (let i = 0; i < this.children.length; i++) {
+			if (this.node.childNodes.length <= i) {
+				for (let n = i; n < this.children.length; n++) {
+					this.addChildDom(this.children[n]);
+				}
+				return;
+			}
+			if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
+				if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
+					const child = this.node.childNodes[i];
+					child.remove();
+					child[ownerSymbol].dispose();
+					i--;
+					continue;
+				}
+
+				const index = this.getChildIndex(this.children[i].node);
+				if (index !== -1) {
+					this.swapChildrenDom(i, index);
+				} else {
+					this.addDomNodeAt(this.children[i].node, i);
+				}
+			}
+		}
+		while (this.node.childNodes.length > this.children.length) {
+			const child = this.node.childNodes[this.node.childNodes.length - 1];
+			this.node.removeChild(child);
+			child[ownerSymbol].dispose();
+		}
+	}
+
+	protected addChildDom(child: AurumElement): void {
+		this.node.appendChild(child.node);
+		//@ts-ignore
+		child.handleAttach?.(this);
+	}
+
+	protected swapChildrenDom(indexA: number, indexB: number) {
+		if (indexA === indexB) {
+			return;
+		}
+
+		const nodeA = this.node.children[indexA];
+		const nodeB = this.node.children[indexB];
+		nodeA.remove();
+		nodeB.remove();
+		if (indexA < indexB) {
+			this.addDomNodeAt(nodeB as HTMLElement, indexA);
+			this.addDomNodeAt(nodeA as HTMLElement, indexB);
+		} else {
+			this.addDomNodeAt(nodeA as HTMLElement, indexB);
+			this.addDomNodeAt(nodeB as HTMLElement, indexA);
+		}
+	}
+
+	protected getChildIndex(node: HTMLElement | Text): number {
+		let i = 0;
+		for (const child of node.childNodes) {
+			if (child === node) {
+				return i;
+			}
+			i++;
+		}
+		return -1;
+	}
+
+	protected addDomNodeAt(node: HTMLElement | Text, index: number): void {
+		if (index >= this.node.childElementCount) {
+			this.node.appendChild(node);
+			node[ownerSymbol].handleAttach?.(this);
+		} else {
+			this.node.insertBefore(node, this.node.children[index]);
+			node[ownerSymbol].handleAttach?.(this);
+		}
 	}
 }

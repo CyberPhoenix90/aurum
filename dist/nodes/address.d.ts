@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 export interface AddressProps extends AurumElementProps {
     onAttach?: Callback<Address>;
     onDetach?: Callback<Address>;

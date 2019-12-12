@@ -1,4 +1,4 @@
-import { AurumElement } from './aurum_element';
+import { AurumElement } from './special/aurum_element';
 const selectEvents = { change: 'onChange' };
 export class Select extends AurumElement {
     constructor(props, children) {

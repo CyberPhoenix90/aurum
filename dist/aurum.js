@@ -4,7 +4,7 @@ export * from './nodes/area';
 export * from './nodes/article';
 export * from './nodes/aside';
 export * from './nodes/audio';
-export * from './nodes/aurum_element';
+export * from './nodes/special/aurum_element';
 export * from './nodes/b';
 export * from './nodes/br';
 export * from './nodes/button';

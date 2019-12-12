@@ -1,4 +1,4 @@
-import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface LabelProps extends AurumElementProps {
     onAttach?: Callback<Label>;

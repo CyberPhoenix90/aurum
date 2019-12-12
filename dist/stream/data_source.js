@@ -337,6 +337,9 @@ export class ArrayDataSource {
     sort(comparator, cancellationToken) {
         return new SortedArrayView(this, comparator, cancellationToken);
     }
+    map(mapper, cancellationToken) {
+        return new MappedArrayView(this, mapper, cancellationToken);
+    }
     filter(callback, cancellationToken) {
         return new FilteredArrayView(this, callback, cancellationToken);
     }
@@ -354,9 +357,43 @@ export class ArrayDataSource {
         this.updateEvent.fire(change);
     }
 }
+export class MappedArrayView extends ArrayDataSource {
+    constructor(parent, mapper, cancellationToken) {
+        const initial = parent.getData().map(mapper);
+        super(initial);
+        this.mapper = mapper;
+        parent.listen((change) => {
+            switch (change.operationDetailed) {
+                case 'removeLeft':
+                    this.removeLeft(change.count);
+                    break;
+                case 'removeRight':
+                    this.removeRight(change.count);
+                    break;
+                case 'remove':
+                    this.remove(this.data[change.index]);
+                    break;
+                case 'clear':
+                    this.data.length = 0;
+                    break;
+                case 'prepend':
+                    this.unshift(...change.items.map(this.mapper));
+                    break;
+                case 'append':
+                    this.appendArray(change.items.map(this.mapper));
+                    break;
+                case 'swap':
+                    break;
+                case 'replace':
+                    this.set(change.index, this.mapper(change.items[0]));
+                    break;
+            }
+        }, cancellationToken);
+    }
+}
 export class SortedArrayView extends ArrayDataSource {
     constructor(parent, comparator, cancellationToken) {
-        const initial = parent.data.slice().sort(comparator);
+        const initial = parent.getData().sort(comparator);
         super(initial);
         this.comparator = comparator;
         parent.listen((change) => {

@@ -1,4 +1,4 @@
-import { AurumElement, ChildNode, AurumElementProps } from './aurum_element';
+import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 export interface H6Props extends AurumElementProps {
     onAttach?: Callback<H6>;

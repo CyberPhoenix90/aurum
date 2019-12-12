@@ -1,4 +1,4 @@
-import { AurumElement } from './aurum_element';
+import { AurumElement } from './special/aurum_element';
 export class Option extends AurumElement {
     constructor(props, children) {
         super(props, children, 'option');

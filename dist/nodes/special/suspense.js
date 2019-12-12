@@ -1,4 +1,4 @@
-import { AurumElement } from '../aurum_element';
+import { AurumElement } from './aurum_element';
 export class Suspense extends AurumElement {
     constructor(props, children) {
         super(props, children, 'suspense');

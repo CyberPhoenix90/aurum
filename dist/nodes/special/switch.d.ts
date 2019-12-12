@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from '../aurum_element';
+import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
 import { MapLike } from '../../utilities/common';
 import { DataSource } from '../../stream/data_source';
 export interface SwitchProps<T = boolean> extends AurumElementProps {
@@ -8,6 +8,7 @@ export interface SwitchProps<T = boolean> extends AurumElementProps {
 }
 export declare class Switch<T = boolean> extends AurumElement {
     private lastValue;
+    private lastTemplate;
     private firstRender;
     templateMap: MapLike<Template<void>>;
     template: Template<void>;

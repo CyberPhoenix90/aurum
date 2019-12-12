@@ -461,6 +461,10 @@ export class ArrayDataSource<T> {
 		return new SortedArrayView(this, comparator, cancellationToken);
 	}
 
+	public map<D>(mapper: (data: T) => D, cancellationToken?: CancellationToken): MappedArrayView<T, D> {
+		return new MappedArrayView<T, D>(this, mapper, cancellationToken);
+	}
+
 	public filter(callback: Predicate<T>, cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		return new FilteredArrayView(this, callback, cancellationToken);
 	}
@@ -482,11 +486,49 @@ export class ArrayDataSource<T> {
 	}
 }
 
+export class MappedArrayView<D, T> extends ArrayDataSource<T> {
+	private mapper: (a: D) => T;
+
+	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken?: CancellationToken) {
+		const initial = parent.getData().map(mapper);
+		super(initial);
+		this.mapper = mapper;
+
+		parent.listen((change) => {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+					this.removeLeft(change.count);
+					break;
+				case 'removeRight':
+					this.removeRight(change.count);
+					break;
+				case 'remove':
+					this.remove(this.data[change.index]);
+					break;
+				case 'clear':
+					this.data.length = 0;
+					break;
+				case 'prepend':
+					this.unshift(...change.items.map(this.mapper));
+					break;
+				case 'append':
+					this.appendArray(change.items.map(this.mapper));
+					break;
+				case 'swap':
+					break;
+				case 'replace':
+					this.set(change.index, this.mapper(change.items[0]));
+					break;
+			}
+		}, cancellationToken);
+	}
+}
+
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 
 	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken) {
-		const initial = (parent as SortedArrayView<T>).data.slice().sort(comparator);
+		const initial = parent.getData().sort(comparator);
 		super(initial);
 		this.comparator = comparator;
 

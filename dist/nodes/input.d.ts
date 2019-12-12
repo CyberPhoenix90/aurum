@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 export interface InputProps extends AurumElementProps {

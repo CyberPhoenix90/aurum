@@ -1,4 +1,4 @@
-import { Template } from '../nodes/aurum_element';
+import { Template } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Div } from '../nodes/div';
 import { Button } from '../nodes/button';
@@ -131,6 +131,9 @@ export class Aurum {
         dom.appendChild(aurumElement.node);
         aurumElement['handleAttach'](aurumElement);
         dom[ownerSymbol] = aurumElement;
+    }
+    static isAttached(dom) {
+        return dom[ownerSymbol] !== undefined;
     }
     static detach(domNode) {
         if (domNode[ownerSymbol]) {

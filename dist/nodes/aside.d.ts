@@ -1,5 +1,5 @@
 import { Callback } from '../utilities/common';
-import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 export interface AsideProps extends AurumElementProps {
     onAttach?: Callback<Aside>;
     onDetach?: Callback<Aside>;

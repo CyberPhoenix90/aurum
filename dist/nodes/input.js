@@ -1,4 +1,4 @@
-import { AurumElement } from './aurum_element';
+import { AurumElement } from './special/aurum_element';
 const inputEvents = { input: 'onInput', change: 'onChange' };
 const inputProps = [
     'placeholder',
