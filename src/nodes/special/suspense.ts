@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from '../aurum_element';
+import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
 import { MapLike, Provider } from '../../utilities/common';
 
 export interface SuspenseProps<T = boolean> extends AurumElementProps {

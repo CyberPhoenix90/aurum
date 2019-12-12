@@ -1,6 +1,6 @@
 import { Switch } from './switch';
 import { DataSource } from '../../stream/data_source';
-import { AurumElementProps, Template, ChildNode } from '../aurum_element';
+import { AurumElementProps, Template, ChildNode } from './aurum_element';
 
 export interface AurumRouterProps extends AurumElementProps {}
 

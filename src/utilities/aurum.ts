@@ -1,4 +1,4 @@
-import { AurumElement, Template } from '../nodes/aurum_element';
+import { AurumElement, Template } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Constructor, MapLike } from './common';
 import { Div } from '../nodes/div';

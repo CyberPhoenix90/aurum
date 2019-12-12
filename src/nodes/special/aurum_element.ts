@@ -1,7 +1,7 @@
-import { DataSource, ArrayDataSource } from '../stream/data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { DataDrain, StringSource, ClassType, Callback, MapLike } from '../utilities/common';
-import { ownerSymbol } from '../utilities/owner_symbol';
+import { DataSource, ArrayDataSource } from '../../stream/data_source';
+import { CancellationToken } from '../../utilities/cancellation_token';
+import { DataDrain, StringSource, ClassType, Callback, MapLike } from '../../utilities/common';
+import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 
 export interface AurumElementProps {
@@ -69,7 +69,7 @@ const defaultEvents: MapLike<string> = {
 
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode = AurumElement | string | DataSource<string>;
+export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement> | ArrayDataSource<string>;
 
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;

@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
 export interface DetailsProps extends AurumElementProps {

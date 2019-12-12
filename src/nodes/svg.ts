@@ -1,5 +1,5 @@
 import { Callback, StringSource } from '../utilities/common';
-import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
 export interface SvgProps extends AurumElementProps {
 	onAttach?: Callback<Svg>;

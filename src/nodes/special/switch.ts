@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from '../aurum_element';
+import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
 import { MapLike } from '../../utilities/common';
 import { DataSource } from '../../stream/data_source';
 
@@ -10,6 +10,7 @@ export interface SwitchProps<T = boolean> extends AurumElementProps {
 
 export class Switch<T = boolean> extends AurumElement {
 	private lastValue: T;
+	private lastTemplate: Template<void>;
 	private firstRender = true;
 	public templateMap: MapLike<Template<void>>;
 	public template: Template<void>;
@@ -36,11 +37,14 @@ export class Switch<T = boolean> extends AurumElement {
 		if (data !== this.lastValue || this.firstRender) {
 			this.lastValue = data;
 			this.firstRender = false;
-			this.clearChildren();
 			const template = this.selectTemplate(data?.toString());
-			if (template) {
-				const result = template.generate();
-				this.addChild(result);
+			if (template !== this.lastTemplate) {
+				this.lastTemplate = template;
+				this.clearChildren();
+				if (template) {
+					const result = template.generate();
+					this.addChild(result);
+				}
 			}
 		}
 	}

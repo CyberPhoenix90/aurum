@@ -1,9 +1,9 @@
-import { DataSource } from '../stream/data_source';
-import { StringSource } from '../utilities/common';
-import { ownerSymbol } from '../utilities/owner_symbol';
+import { DataSource } from '../../stream/data_source';
+import { StringSource } from '../../utilities/common';
+import { ownerSymbol } from '../../utilities/owner_symbol';
 
 export class AurumTextElement {
-	public node: HTMLElement | Text;
+	public node: Text;
 	private subscription: () => void;
 
 	constructor(text?: StringSource) {
