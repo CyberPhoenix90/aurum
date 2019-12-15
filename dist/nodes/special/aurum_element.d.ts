@@ -1,6 +1,7 @@
 import { ArrayDataSource, DataSource } from '../../stream/data_source';
 import { CancellationToken } from '../../utilities/cancellation_token';
 import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
+import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
 export interface AurumElementProps {
     id?: StringSource;
@@ -36,7 +37,7 @@ export interface AurumElementProps {
     onDispose?: Callback<AurumElement>;
     template?: Template<any>;
 }
-export declare type ChildNode = AurumElement | string | DataSource<string> | ArrayDataSource<AurumElement>;
+export declare type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement>;
 export declare abstract class AurumElement {
     private onAttach?;
     private onDetach?;
@@ -92,9 +93,12 @@ export interface AurumFragmentProps {
     repeatModel?: ArrayDataSource<AurumElement>;
 }
 export declare class AurumFragment {
-    children: AurumElement[];
+    children: Array<AurumElement | AurumTextElement>;
     onChange: EventEmitter<void>;
-    constructor(props: AurumFragmentProps);
+    private cancellationToken;
+    constructor(props: AurumFragmentProps, children?: ChildNode[]);
+    private addChildren;
     private handleRepeat;
+    dispose(): void;
 }
 //# sourceMappingURL=aurum_element.d.ts.map

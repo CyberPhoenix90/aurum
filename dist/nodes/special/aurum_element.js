@@ -320,18 +320,25 @@ export class AurumElement {
         this.render();
     }
     childNodeToAurum(child) {
+        if (child instanceof AurumElement) {
+            return child;
+        }
         if (child instanceof ArrayDataSource) {
             const result = new AurumFragment({ repeatModel: child });
             result.onChange.subscribe(() => this.render(), this.cancellationToken);
             return result;
         }
-        else if (typeof child === 'string' || child instanceof DataSource) {
-            child = new AurumTextElement(child);
+        else if (typeof child === 'string' || typeof child === 'number' || typeof child === 'boolean' || typeof child === 'bigint') {
+            return new AurumTextElement(child.toString());
         }
-        else if (!(child instanceof AurumElement)) {
-            child = new AurumTextElement(child.toString());
+        else if (child instanceof DataSource) {
+            const result = new AurumFragment({}, [child]);
+            result.onChange.subscribe(() => this.render(), this.cancellationToken);
+            return result;
         }
-        return child;
+        else {
+            throw new Error('Unsupported child type');
+        }
     }
     addChildAt(child, index) {
         if (child instanceof Template) {
@@ -378,16 +385,68 @@ export class Template extends AurumElement {
     }
 }
 export class AurumFragment {
-    constructor(props) {
+    constructor(props, children) {
         this.onChange = new EventEmitter();
         this.children = [];
         if (props.repeatModel) {
             this.handleRepeat(props.repeatModel);
         }
+        else if (children) {
+            this.addChildren(children);
+        }
+    }
+    addChildren(children) {
+        for (const child of children) {
+            if (child instanceof AurumElement) {
+                this.children.push(child);
+            }
+            else if (child instanceof DataSource) {
+                let sourceChild = undefined;
+                child.unique(this.cancellationToken).listenAndRepeat((newValue) => {
+                    if ((newValue === undefined || newValue === null) && sourceChild) {
+                        this.children.splice(this.children.indexOf(sourceChild), 1);
+                        sourceChild = undefined;
+                        this.onChange.fire();
+                    }
+                    else if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
+                        if (!sourceChild) {
+                            const textNode = new AurumTextElement(child);
+                            this.children.push(textNode);
+                            sourceChild = textNode;
+                            this.onChange.fire();
+                        }
+                        else if (sourceChild instanceof AurumElement) {
+                            const textNode = new AurumTextElement(child);
+                            this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
+                            sourceChild = textNode;
+                            this.onChange.fire();
+                        }
+                    }
+                    else if (newValue instanceof AurumElement) {
+                        if (!sourceChild) {
+                            this.children.push(newValue);
+                            sourceChild = newValue;
+                            this.onChange.fire();
+                        }
+                        else if (sourceChild instanceof AurumTextElement || sourceChild !== newValue) {
+                            this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
+                            sourceChild = newValue;
+                            this.onChange.fire();
+                        }
+                    }
+                });
+            }
+            else {
+                throw new Error('case not yet implemented');
+            }
+        }
     }
     handleRepeat(dataSource) {
         dataSource.listenAndRepeat((change) => {
             switch (change.operationDetailed) {
+                case 'replace':
+                    this.children[change.index] = change.items[0];
+                    break;
                 case 'swap':
                     const itemA = this.children[change.index];
                     const itemB = this.children[change.index2];
@@ -413,6 +472,12 @@ export class AurumFragment {
             }
             this.onChange.fire();
         });
+    }
+    dispose() {
+        if (this.cancellationToken.isCanceled) {
+            return;
+        }
+        this.cancellationToken.cancel();
     }
 }
 //# sourceMappingURL=aurum_element.js.map

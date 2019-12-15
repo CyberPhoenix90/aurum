@@ -67,14 +67,14 @@ const defaultEvents: MapLike<string> = {
 
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode = AurumElement | string | DataSource<string> | ArrayDataSource<AurumElement>;
+export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement>;
 
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;
 	private onDetach?: Callback<AurumElement>;
 	private onDispose?: Callback<AurumElement>;
 
-	private children: Array<AurumElement | AurumFragment>;
+	private children: Array<AurumElement | AurumFragment | AurumTextElement>;
 	protected needAttach: boolean;
 
 	protected cancellationToken: CancellationToken;
@@ -167,12 +167,12 @@ export abstract class AurumElement {
 		}
 	}
 
-	private renderChild(child: AurumElement, index: number) {
+	private renderChild(child: AurumElement | AurumTextElement, index: number) {
 		if (this.node.childNodes.length <= index) {
 			return this.addChildDom(child as AurumElement);
 		}
 		if (this.node.childNodes[index][ownerSymbol] !== child) {
-			const childIndex = this.getChildIndex(child.node);
+			const childIndex = this.getChildIndex(child.node as any);
 			if (childIndex !== -1) {
 				this.swapChildrenDom(index, childIndex);
 			} else {
@@ -388,17 +388,24 @@ export abstract class AurumElement {
 		this.render();
 	}
 
-	private childNodeToAurum(child: ChildNode): AurumElement | AurumFragment {
+	private childNodeToAurum(child: ChildNode): AurumElement | AurumFragment | AurumTextElement {
+		if (child instanceof AurumElement) {
+			return child;
+		}
+
 		if (child instanceof ArrayDataSource) {
 			const result = new AurumFragment({ repeatModel: child });
 			result.onChange.subscribe(() => this.render(), this.cancellationToken);
 			return result;
-		} else if (typeof child === 'string' || child instanceof DataSource) {
-			child = new AurumTextElement(child) as any;
-		} else if (!(child instanceof AurumElement)) {
-			child = new AurumTextElement((child as any).toString()) as any;
+		} else if (typeof child === 'string' || typeof child === 'number' || typeof child === 'boolean' || typeof child === 'bigint') {
+			return new AurumTextElement(child.toString());
+		} else if (child instanceof DataSource) {
+			const result = new AurumFragment({}, [child]);
+			result.onChange.subscribe(() => this.render(), this.cancellationToken);
+			return result;
+		} else {
+			throw new Error('Unsupported child type');
 		}
-		return child as any;
 	}
 
 	public addChildAt(child: ChildNode, index: number) {
@@ -466,20 +473,67 @@ export interface AurumFragmentProps {
 }
 
 export class AurumFragment {
-	public children: AurumElement[];
+	public children: Array<AurumElement | AurumTextElement>;
 	public onChange: EventEmitter<void>;
+	private cancellationToken: CancellationToken;
 
-	constructor(props: AurumFragmentProps) {
+	constructor(props: AurumFragmentProps, children?: ChildNode[]) {
 		this.onChange = new EventEmitter();
 		this.children = [];
 		if (props.repeatModel) {
 			this.handleRepeat(props.repeatModel);
+		} else if (children) {
+			this.addChildren(children);
+		}
+	}
+
+	private addChildren(children: ChildNode[]) {
+		for (const child of children) {
+			if (child instanceof AurumElement) {
+				this.children.push(child);
+			} else if (child instanceof DataSource) {
+				let sourceChild = undefined;
+				child.unique(this.cancellationToken).listenAndRepeat((newValue) => {
+					if ((newValue === undefined || newValue === null) && sourceChild) {
+						this.children.splice(this.children.indexOf(sourceChild), 1);
+						sourceChild = undefined;
+						this.onChange.fire();
+					} else if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
+						if (!sourceChild) {
+							const textNode = new AurumTextElement(child as any);
+							this.children.push(textNode);
+							sourceChild = textNode;
+							this.onChange.fire();
+						} else if (sourceChild instanceof AurumElement) {
+							const textNode = new AurumTextElement(child as any);
+							this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
+							sourceChild = textNode;
+							this.onChange.fire();
+						}
+					} else if (newValue instanceof AurumElement) {
+						if (!sourceChild) {
+							this.children.push(newValue);
+							sourceChild = newValue;
+							this.onChange.fire();
+						} else if (sourceChild instanceof AurumTextElement || sourceChild !== newValue) {
+							this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
+							sourceChild = newValue;
+							this.onChange.fire();
+						}
+					}
+				});
+			} else {
+				throw new Error('case not yet implemented');
+			}
 		}
 	}
 
 	private handleRepeat(dataSource: ArrayDataSource<AurumElement>): void {
 		dataSource.listenAndRepeat((change) => {
 			switch (change.operationDetailed) {
+				case 'replace':
+					this.children[change.index] = change.items[0];
+					break;
 				case 'swap':
 					const itemA = this.children[change.index];
 					const itemB = this.children[change.index2];
@@ -505,5 +559,12 @@ export class AurumFragment {
 			}
 			this.onChange.fire();
 		});
+	}
+
+	public dispose() {
+		if (this.cancellationToken.isCanceled) {
+			return;
+		}
+		this.cancellationToken.cancel();
 	}
 }
