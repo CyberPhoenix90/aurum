@@ -3,6 +3,7 @@ import { CancellationToken } from '../../utilities/cancellation_token';
 import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
+import { EventEmitter } from '../../utilities/event_emitter';
 
 export interface AurumElementProps {
 	id?: StringSource;
@@ -14,9 +15,6 @@ export interface AurumElementProps {
 	title?: StringSource;
 	role?: StringSource;
 	contentEditable?: StringSource;
-
-	repeatModel?: ArrayDataSource<any> | any[];
-
 	onDblclick?: DataDrain<MouseEvent>;
 	onClick?: DataDrain<MouseEvent>;
 	onKeydown?: DataDrain<KeyboardEvent>;
@@ -76,11 +74,10 @@ export abstract class AurumElement {
 	private onDetach?: Callback<AurumElement>;
 	private onDispose?: Callback<AurumElement>;
 
-	private children: AurumElement[];
+	private children: Array<AurumElement | AurumFragment>;
 	protected needAttach: boolean;
 
 	protected cancellationToken: CancellationToken;
-	protected repeatData: ArrayDataSource<any>;
 
 	public node: HTMLElement;
 
@@ -117,10 +114,6 @@ export abstract class AurumElement {
 		if (props.class) {
 			this.handleClass(props.class);
 		}
-
-		if (props.repeatModel) {
-			this.handleRepeat(props.repeatModel);
-		}
 	}
 
 	protected bindProps(keys: string[], props: any, dynamicProps?: string[]) {
@@ -150,83 +143,41 @@ export abstract class AurumElement {
 		}
 	}
 
-	private handleRepeat(dataSource: ArrayDataSource<any> | any[]): void {
-		if (dataSource instanceof ArrayDataSource) {
-			this.repeatData = dataSource;
-		} else {
-			this.repeatData = new ArrayDataSource<any>(dataSource);
-		}
-
-		this.repeatData.listenAndRepeat((change) => {
-			switch (change.operationDetailed) {
-				case 'swap':
-					const itemA = this.children[change.index];
-					const itemB = this.children[change.index2];
-					this.children[change.index2] = itemA;
-					this.children[change.index] = itemB;
-					break;
-				case 'append':
-					const old = this.children;
-					this.children = new Array(old.length);
-					let i = 0;
-					for (i = 0; i < old.length; i++) {
-						this.children[i] = old[i];
-					}
-					for (let index = 0; index < change.items.length; index++) {
-						this.children[i + index] = this.template.generate(change.items[index]);
-					}
-					break;
-				case 'prepend':
-					this.children.unshift(...change.items.map((i) => this.template.generate(i)));
-					break;
-				case 'remove':
-				case 'removeLeft':
-				case 'removeRight':
-					this.children.splice(change.index, change.count);
-					break;
-				case 'clear':
-					this.children = [];
-					break;
-				default:
-					throw new Error('unhandled operation');
-			}
-			this.render();
-		});
-	}
-
 	protected render(): void {
 		if (this.cancellationToken.isCanceled) {
 			return;
 		}
 
-		for (let i = 0; i < this.children.length; i++) {
-			if (this.node.childNodes.length <= i) {
-				for (let n = i; n < this.children.length; n++) {
-					this.addChildDom(this.children[n]);
+		let absoluteIndex: number = 0;
+		for (let i = 0; i < this.children.length; i++, absoluteIndex++) {
+			if (this.children[i] instanceof AurumFragment) {
+				const fragment: AurumFragment = this.children[i] as AurumFragment;
+				for (let j = 0; j < fragment.children.length; j++, absoluteIndex++) {
+					this.renderChild(fragment.children[j], absoluteIndex);
 				}
-				return;
-			}
-			if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
-				if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
-					const child = this.node.childNodes[i];
-					child.remove();
-					child[ownerSymbol].dispose();
-					i--;
-					continue;
-				}
-
-				const index = this.getChildIndex(this.children[i].node);
-				if (index !== -1) {
-					this.swapChildrenDom(i, index);
-				} else {
-					this.addDomNodeAt(this.children[i].node, i);
-				}
+				absoluteIndex--;
+			} else {
+				this.renderChild(this.children[i] as AurumElement, absoluteIndex);
 			}
 		}
-		while (this.node.childNodes.length > this.children.length) {
+		while (this.node.childNodes.length > absoluteIndex) {
 			const child = this.node.childNodes[this.node.childNodes.length - 1];
 			this.node.removeChild(child);
 			child[ownerSymbol].dispose();
+		}
+	}
+
+	private renderChild(child: AurumElement, index: number) {
+		if (this.node.childNodes.length <= index) {
+			return this.addChildDom(child as AurumElement);
+		}
+		if (this.node.childNodes[index][ownerSymbol] !== child) {
+			const childIndex = this.getChildIndex(child.node);
+			if (childIndex !== -1) {
+				this.swapChildrenDom(index, childIndex);
+			} else {
+				this.addDomNodeAt(child.node, index);
+			}
 		}
 	}
 
@@ -332,9 +283,9 @@ export abstract class AurumElement {
 		return node;
 	}
 
-	protected getChildIndex(node: HTMLElement | Text): number {
+	protected getChildIndex(node: HTMLElement): number {
 		let i = 0;
-		for (const child of node.childNodes) {
+		for (const child of this.node.childNodes) {
 			if (child === node) {
 				return i;
 			}
@@ -433,15 +384,15 @@ export abstract class AurumElement {
 		if (child instanceof Template) {
 			return;
 		}
-		child = this.childNodeToAurum(child);
-
-		this.children.push(child);
+		this.children.push(this.childNodeToAurum(child));
 		this.render();
 	}
 
-	private childNodeToAurum(child: ChildNode): AurumElement {
+	private childNodeToAurum(child: ChildNode): AurumElement | AurumFragment {
 		if (child instanceof ArrayDataSource) {
-			return new AurumFragment({ repeatModel: child }) as any;
+			const result = new AurumFragment({ repeatModel: child });
+			result.onChange.subscribe(() => this.render(), this.cancellationToken);
+			return result;
 		} else if (typeof child === 'string' || child instanceof DataSource) {
 			child = new AurumTextElement(child) as any;
 		} else if (!(child instanceof AurumElement)) {
@@ -455,8 +406,7 @@ export abstract class AurumElement {
 			return;
 		}
 
-		child = this.childNodeToAurum(child);
-		this.children.splice(index, 0, child);
+		this.children.splice(index, 0, this.childNodeToAurum(child));
 		this.render();
 	}
 
@@ -516,12 +466,12 @@ export interface AurumFragmentProps {
 }
 
 export class AurumFragment {
-	private children: AurumElement[];
-	public node: DocumentFragment;
+	public children: AurumElement[];
+	public onChange: EventEmitter<void>;
 
 	constructor(props: AurumFragmentProps) {
+		this.onChange = new EventEmitter();
 		this.children = [];
-		this.node = document.createDocumentFragment();
 		if (props.repeatModel) {
 			this.handleRepeat(props.repeatModel);
 		}
@@ -537,15 +487,7 @@ export class AurumFragment {
 					this.children[change.index] = itemB;
 					break;
 				case 'append':
-					const old = this.children;
-					this.children = new Array(old.length);
-					let i = 0;
-					for (i = 0; i < old.length; i++) {
-						this.children[i] = old[i];
-					}
-					for (let index = 0; index < change.items.length; index++) {
-						this.children[i + index] = change.items[index];
-					}
+					this.children = this.children.concat(change.items);
 					break;
 				case 'prepend':
 					this.children.unshift(...change.items);
@@ -561,84 +503,7 @@ export class AurumFragment {
 				default:
 					throw new Error('unhandled operation');
 			}
-			this.render();
+			this.onChange.fire();
 		});
-	}
-
-	protected render(): void {
-		for (let i = 0; i < this.children.length; i++) {
-			if (this.node.childNodes.length <= i) {
-				for (let n = i; n < this.children.length; n++) {
-					this.addChildDom(this.children[n]);
-				}
-				return;
-			}
-			if (this.node.childNodes[i][ownerSymbol] !== this.children[i]) {
-				if (!this.children.includes(this.node.childNodes[i][ownerSymbol] as AurumElement)) {
-					const child = this.node.childNodes[i];
-					child.remove();
-					child[ownerSymbol].dispose();
-					i--;
-					continue;
-				}
-
-				const index = this.getChildIndex(this.children[i].node);
-				if (index !== -1) {
-					this.swapChildrenDom(i, index);
-				} else {
-					this.addDomNodeAt(this.children[i].node, i);
-				}
-			}
-		}
-		while (this.node.childNodes.length > this.children.length) {
-			const child = this.node.childNodes[this.node.childNodes.length - 1];
-			this.node.removeChild(child);
-			child[ownerSymbol].dispose();
-		}
-	}
-
-	protected addChildDom(child: AurumElement): void {
-		this.node.appendChild(child.node);
-		//@ts-ignore
-		child.handleAttach?.(this);
-	}
-
-	protected swapChildrenDom(indexA: number, indexB: number) {
-		if (indexA === indexB) {
-			return;
-		}
-
-		const nodeA = this.node.children[indexA];
-		const nodeB = this.node.children[indexB];
-		nodeA.remove();
-		nodeB.remove();
-		if (indexA < indexB) {
-			this.addDomNodeAt(nodeB as HTMLElement, indexA);
-			this.addDomNodeAt(nodeA as HTMLElement, indexB);
-		} else {
-			this.addDomNodeAt(nodeA as HTMLElement, indexB);
-			this.addDomNodeAt(nodeB as HTMLElement, indexA);
-		}
-	}
-
-	protected getChildIndex(node: HTMLElement | Text): number {
-		let i = 0;
-		for (const child of node.childNodes) {
-			if (child === node) {
-				return i;
-			}
-			i++;
-		}
-		return -1;
-	}
-
-	protected addDomNodeAt(node: HTMLElement | Text, index: number): void {
-		if (index >= this.node.childElementCount) {
-			this.node.appendChild(node);
-			node[ownerSymbol].handleAttach?.(this);
-		} else {
-			this.node.insertBefore(node, this.node.children[index]);
-			node[ownerSymbol].handleAttach?.(this);
-		}
 	}
 }

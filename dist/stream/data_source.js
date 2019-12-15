@@ -144,7 +144,7 @@ export class DataSource {
         }, cancellationToken);
         return bufferedDataSource;
     }
-    queue(time, cancellationToken) {
+    queue(cancellationToken) {
         const queueDataSource = new ArrayDataSource();
         this.listen((v) => {
             queueDataSource.push(v);
@@ -374,7 +374,7 @@ export class MappedArrayView extends ArrayDataSource {
                     this.remove(this.data[change.index]);
                     break;
                 case 'clear':
-                    this.data.length = 0;
+                    this.clear();
                     break;
                 case 'prepend':
                     this.unshift(...change.items.map(this.mapper));
@@ -383,6 +383,7 @@ export class MappedArrayView extends ArrayDataSource {
                     this.appendArray(change.items.map(this.mapper));
                     break;
                 case 'swap':
+                    this.swap(change.index, change.index2);
                     break;
                 case 'replace':
                     this.set(change.index, this.mapper(change.items[0]));
@@ -441,10 +442,12 @@ export class FilteredArrayView extends ArrayDataSource {
         parent.listen((change) => {
             let filteredItems;
             switch (change.operationDetailed) {
+                case 'clear':
+                    this.clear();
+                    break;
                 case 'removeLeft':
                 case 'removeRight':
                 case 'remove':
-                case 'clear':
                     for (const item of change.items) {
                         this.remove(item);
                     }

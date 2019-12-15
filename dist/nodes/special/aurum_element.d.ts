@@ -1,6 +1,7 @@
 import { ArrayDataSource, DataSource } from '../../stream/data_source';
 import { CancellationToken } from '../../utilities/cancellation_token';
 import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
+import { EventEmitter } from '../../utilities/event_emitter';
 export interface AurumElementProps {
     id?: StringSource;
     name?: StringSource;
@@ -11,7 +12,6 @@ export interface AurumElementProps {
     title?: StringSource;
     role?: StringSource;
     contentEditable?: StringSource;
-    repeatModel?: ArrayDataSource<any> | any[];
     onDblclick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
     onKeydown?: DataDrain<KeyboardEvent>;
@@ -44,22 +44,21 @@ export declare abstract class AurumElement {
     private children;
     protected needAttach: boolean;
     protected cancellationToken: CancellationToken;
-    protected repeatData: ArrayDataSource<any>;
     node: HTMLElement;
     template: Template<any>;
     constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string);
     private initialize;
     protected bindProps(keys: string[], props: any, dynamicProps?: string[]): void;
     protected createEventHandlers(events: MapLike<string>, props: any): void;
-    private handleRepeat;
     protected render(): void;
+    private renderChild;
     protected assignStringSourceToAttribute(data: StringSource, key: string): void;
     protected handleAttach(parent: AurumElement): void;
     private handleDetach;
     private handleClass;
     protected resolveStringSource(source: StringSource): string;
     protected create(domNodeName: string): HTMLElement;
-    protected getChildIndex(node: HTMLElement | Text): number;
+    protected getChildIndex(node: HTMLElement): number;
     protected hasChild(node: HTMLElement): boolean;
     protected addChildDom(child: AurumElement): void;
     protected swapChildrenDom(indexA: number, indexB: number): void;
@@ -93,14 +92,9 @@ export interface AurumFragmentProps {
     repeatModel?: ArrayDataSource<AurumElement>;
 }
 export declare class AurumFragment {
-    private children;
-    node: DocumentFragment;
+    children: AurumElement[];
+    onChange: EventEmitter<void>;
     constructor(props: AurumFragmentProps);
     private handleRepeat;
-    protected render(): void;
-    protected addChildDom(child: AurumElement): void;
-    protected swapChildrenDom(indexA: number, indexB: number): void;
-    protected getChildIndex(node: HTMLElement | Text): number;
-    protected addDomNodeAt(node: HTMLElement | Text, index: number): void;
 }
 //# sourceMappingURL=aurum_element.d.ts.map

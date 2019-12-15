@@ -22,7 +22,7 @@ export declare class DataSource<T> {
     combine(otherSource: DataSource<T>, cancellationToken?: CancellationToken): DataSource<T>;
     debounce(time: number, cancellationToken?: CancellationToken): DataSource<T>;
     buffer(time: number, cancellationToken?: CancellationToken): DataSource<T[]>;
-    queue(time: number, cancellationToken?: CancellationToken): ArrayDataSource<T>;
+    queue(cancellationToken?: CancellationToken): ArrayDataSource<T>;
     pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]>;
     cancelAll(): void;
 }

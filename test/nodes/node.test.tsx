@@ -1,4 +1,4 @@
-import { Aurum, Template, ArrayDataSource } from '../../src/aurum';
+import { Aurum, ArrayDataSource } from '../../src/aurum';
 import { assert } from 'chai';
 
 describe('Nodes', () => {
@@ -75,12 +75,14 @@ describe('Nodes', () => {
 		});
 	});
 
-	it('should repeat template ', () => {
+	it('should bind array data source ', () => {
 		const repeatModel = new ArrayDataSource([1, 2, 3, 4]);
 
 		Aurum.attach(
-			<div repeatModel={repeatModel}>
-				<Template generator={(i) => <div>{i}</div>}></Template>
+			<div>
+				{repeatModel.map((i) => (
+					<div>{i}</div>
+				))}
 			</div>,
 			document.body
 		);
@@ -96,8 +98,10 @@ describe('Nodes', () => {
 		const repeatModel = new ArrayDataSource([1, 2, 3, 4]);
 
 		Aurum.attach(
-			<div repeatModel={repeatModel}>
-				<Template generator={(i) => <div>{i}</div>}></Template>
+			<div>
+				{repeatModel.map((i) => (
+					<div>{i}</div>
+				))}
 			</div>,
 			document.body
 		);
