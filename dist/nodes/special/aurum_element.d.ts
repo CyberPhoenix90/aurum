@@ -37,7 +37,7 @@ export interface AurumElementProps {
     onDispose?: Callback<AurumElement>;
     template?: Template<any>;
 }
-export declare type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement> | ChildNode[];
+export declare type ChildNode = AurumElement | string | Promise<ChildNode> | DataSource<string> | DataSource<AurumElement> | DataSource<AurumElement[]> | ArrayDataSource<AurumElement> | ChildNode[];
 export declare abstract class AurumElement {
     private onAttach?;
     private onDetach?;

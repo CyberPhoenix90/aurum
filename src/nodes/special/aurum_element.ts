@@ -67,7 +67,15 @@ const defaultEvents: MapLike<string> = {
 
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement> | ChildNode[];
+export type ChildNode =
+	| AurumElement
+	| string
+	| Promise<ChildNode>
+	| DataSource<string>
+	| DataSource<AurumElement>
+	| DataSource<AurumElement[]>
+	| ArrayDataSource<AurumElement>
+	| ChildNode[];
 
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;
@@ -530,13 +538,7 @@ export class AurumFragment {
 		}
 	}
 
-	private handleSourceChild(
-		newValue: any,
-		sourceChild: any,
-		child: DataSource<string> | DataSource<AurumElement>,
-		freshnessToken: { ts: number },
-		timestamp: number
-	) {
+	private handleSourceChild(newValue: any, sourceChild: any, child: ChildNode, freshnessToken: { ts: number }, timestamp: number) {
 		if ((newValue === undefined || newValue === null) && sourceChild) {
 			this.children.splice(this.children.indexOf(sourceChild), 1);
 			sourceChild = undefined;

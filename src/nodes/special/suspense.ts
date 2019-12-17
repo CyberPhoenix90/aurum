@@ -1,20 +1,15 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
-import { MapLike, Provider } from '../../utilities/common';
+import { DataSource } from '../../stream/data_source';
+import { ChildNode } from './aurum_element';
 
-export interface SuspenseProps<T = boolean> extends AurumElementProps {
-	loader: Provider<Promise<AurumElement>>;
+export interface SuspenseProps {
+	fallback?: ChildNode;
 }
 
-export class Suspense<T = boolean> extends AurumElement {
-	public templateMap: MapLike<Template<void>>;
-	public template: Template<void>;
+export function Suspense(props: SuspenseProps, children: ChildNode[]) {
+	const data = new DataSource<ChildNode>(props.fallback);
+	Promise.all(children).then(() => {
+		data.update(children);
+	});
 
-	constructor(props: SuspenseProps<T>, children: ChildNode[]) {
-		super(props, children, 'suspense');
-
-		props.loader().then((newElement) => {
-			this.clearChildren();
-			this.addChild(newElement);
-		});
-	}
+	return data;
 }

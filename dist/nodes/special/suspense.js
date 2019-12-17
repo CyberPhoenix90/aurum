@@ -1,11 +1,9 @@
-import { AurumElement } from './aurum_element';
-export class Suspense extends AurumElement {
-    constructor(props, children) {
-        super(props, children, 'suspense');
-        props.loader().then((newElement) => {
-            this.clearChildren();
-            this.addChild(newElement);
-        });
-    }
+import { DataSource } from '../../stream/data_source';
+export function Suspense(props, children) {
+    const data = new DataSource(props.fallback);
+    Promise.all(children).then(() => {
+        data.update(children);
+    });
+    return data;
 }
 //# sourceMappingURL=suspense.js.map
