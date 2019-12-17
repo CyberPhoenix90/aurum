@@ -163,11 +163,7 @@ export class Aurum {
 		}
 
 		let children;
-		if (innerNodes.length && Array.isArray(innerNodes[0])) {
-			children = [].concat(...innerNodes).filter((e) => e);
-		} else {
-			children = innerNodes.filter((e) => e);
-		}
+		children = innerNodes.filter((e) => e);
 
 		const templateMap = {};
 		let defaultTemplate;

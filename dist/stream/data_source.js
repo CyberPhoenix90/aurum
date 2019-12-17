@@ -118,7 +118,7 @@ export class DataSource {
         return combinedDataSource;
     }
     debounce(time, cancellationToken) {
-        const debouncedDataSource = new DataSource();
+        const debouncedDataSource = new DataSource(this.value);
         let timeout;
         this.listen((v) => {
             clearTimeout(timeout);
@@ -343,8 +343,8 @@ export class ArrayDataSource {
     filter(callback, cancellationToken) {
         return new FilteredArrayView(this, callback, cancellationToken);
     }
-    forEach(callbackfn, thisArg) {
-        return this.data.forEach(callbackfn, thisArg);
+    forEach(callbackfn) {
+        return this.data.forEach(callbackfn);
     }
     toDataSource() {
         const stream = new DataSource(this.data);

@@ -26,6 +26,10 @@ export class AurumRouter extends Switch<string> {
 	}
 
 	protected selectTemplate(ref: string): Template<void> {
+		if (this.templateMap === undefined) {
+			return this.template;
+		}
+
 		if (ref === undefined || ref === null) {
 			return this.template;
 		} else {

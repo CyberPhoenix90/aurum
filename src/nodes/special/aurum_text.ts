@@ -2,6 +2,9 @@ import { DataSource } from '../../stream/data_source';
 import { StringSource } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 
+/**
+ * @internal
+ */
 export class AurumTextElement {
 	public node: Text;
 	private subscription: () => void;

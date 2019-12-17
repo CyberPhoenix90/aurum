@@ -15,6 +15,9 @@ export class AurumRouter extends Switch {
         });
     }
     selectTemplate(ref) {
+        if (this.templateMap === undefined) {
+            return this.template;
+        }
         if (ref === undefined || ref === null) {
             return this.template;
         }

@@ -10,15 +10,5 @@ export declare type Constructor<T> = new (...args: any[]) => T;
 export declare type MapLike<T> = {
     [key: string]: T;
 };
-export declare type Primitive = number | string | boolean | null | undefined;
-export declare type JSONObject<T> = {
-    [key: string]: T | JSONObject<T>;
-};
-export declare type ValueOrProvider<T> = T | Provider<T>;
-export declare type ValueOrArray<T> = T | T[];
-export interface PointLike {
-    x: number;
-    y: number;
-}
 export declare type DataDrain<T> = Callback<T> | DataSource<T>;
 //# sourceMappingURL=common.d.ts.map

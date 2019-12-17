@@ -67,7 +67,7 @@ const defaultEvents: MapLike<string> = {
 
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement>;
+export type ChildNode = AurumElement | string | DataSource<string> | DataSource<AurumElement> | ArrayDataSource<AurumElement> | ChildNode[];
 
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;
@@ -380,7 +380,13 @@ export abstract class AurumElement {
 		this.render();
 	}
 
-	public addChild(child: ChildNode) {
+	public addChild(child: ChildNode): void {
+		if (Array.isArray(child)) {
+			for (const subChild of child) {
+				this.addChild(subChild);
+			}
+			return;
+		}
 		if (child instanceof Template) {
 			return;
 		}
@@ -408,7 +414,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	public addChildAt(child: ChildNode, index: number) {
+	public addChildAt(child: ChildNode, index: number): void {
 		if (child instanceof Template) {
 			return;
 		}
@@ -417,7 +423,7 @@ export abstract class AurumElement {
 		this.render();
 	}
 
-	public addChildren(nodes: ChildNode[]) {
+	public addChildren(nodes: ChildNode[]): void {
 		if (nodes.length === 0) {
 			return;
 		}
@@ -468,10 +474,16 @@ export class Template<T> extends AurumElement {
 	}
 }
 
+/**
+ * @internal
+ */
 export interface AurumFragmentProps {
 	repeatModel?: ArrayDataSource<AurumElement>;
 }
 
+/**
+ * @internal
+ */
 export class AurumFragment {
 	public children: Array<AurumElement | AurumTextElement>;
 	public onChange: EventEmitter<void>;

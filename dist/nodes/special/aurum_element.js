@@ -313,6 +313,12 @@ export class AurumElement {
         this.render();
     }
     addChild(child) {
+        if (Array.isArray(child)) {
+            for (const subChild of child) {
+                this.addChild(subChild);
+            }
+            return;
+        }
         if (child instanceof Template) {
             return;
         }
