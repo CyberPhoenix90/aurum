@@ -36,7 +36,14 @@ export interface InputProps extends AurumElementProps {
 	type?: StringSource;
 }
 
+/**
+ * @internal
+ */
 const inputEvents = { input: 'onInput', change: 'onChange' };
+
+/**
+ * @internal
+ */
 const inputProps = [
 	'placeholder',
 	'readonly',

@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.3.4",
+	"version": "0.3.5",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "dist/aurum.js",
 	"typings": "dist/aurum.d.ts",
@@ -11,6 +11,7 @@
 		"generateDocs": "typedoc --json docs/docs.json --mode modules --excludePrivate --excludeProtected",
 		"deploy": "npm run build && npm run generateDocs && microbundle --entry dist/aurum.js --output prebuilt --name aurum"
 	},
+	"homepage": "https://aurumjs.org/",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/CyberPhoenix90/aurum"

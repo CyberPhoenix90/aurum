@@ -1,16 +1,25 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from './common';
 
+/**
+ * @internal
+ */
 export interface EventSubscriptionFacade {
 	cancel(): void;
 }
 
+/**
+ * @internal
+ */
 export type EventCallback<T> = (data: T) => void;
 
 interface EventSubscription<T> {
 	callback: EventCallback<T>;
 }
 
+/**
+ * @internal
+ */
 export class EventEmitter<T> {
 	private isFiring: boolean;
 	private onAfterFire: Array<() => void>;

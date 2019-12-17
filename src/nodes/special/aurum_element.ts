@@ -41,7 +41,9 @@ export interface AurumElementProps {
 	template?: Template<any>;
 }
 
-//@ts-ignore
+/**
+ * @internal
+ */
 const defaultEvents: MapLike<string> = {
 	drag: 'onDrag',
 	dragstart: 'onDragStart',
@@ -65,6 +67,9 @@ const defaultEvents: MapLike<string> = {
 	mousewheel: 'onMouseWheel'
 };
 
+/**
+ * @internal
+ */
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
 export type ChildNode =

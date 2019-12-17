@@ -68,4 +68,5 @@ Aurum.attach((<div>Hello Aurum</div>), document.body)
 TODO App with creation, deletion drag and drop, editing and marking as done of tasks all under 100 lines of code with aurum:
 https://codepen.io/cyberphoenix90/pen/LYYMwVr
 
-Better examples, proper documentation and benchmarks will be added in the near future.
+For documentation and quickstart guides check out the Aurums homepage:
+https://aurumjs.org/
