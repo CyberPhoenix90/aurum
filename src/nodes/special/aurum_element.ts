@@ -398,8 +398,20 @@ export abstract class AurumElement {
 		if (child instanceof AurumElement) {
 			return child;
 		}
-
-		if (child instanceof ArrayDataSource) {
+		if (child instanceof Promise) {
+			const result = new AurumFragment({});
+			child.then(
+				(value) => {
+					result.addChildren([value]);
+					this.render();
+				},
+				(value) => {
+					result.addChildren([value]);
+					this.render();
+				}
+			);
+			return result;
+		} else if (child instanceof ArrayDataSource) {
 			const result = new AurumFragment({ repeatModel: child });
 			result.onChange.subscribe(() => this.render(), this.cancellationToken);
 			return result;
@@ -499,45 +511,81 @@ export class AurumFragment {
 		}
 	}
 
-	private addChildren(children: ChildNode[]) {
+	public addChildren(children: ChildNode[]) {
 		for (const child of children) {
 			if (child instanceof AurumElement) {
 				this.children.push(child);
 			} else if (child instanceof DataSource) {
 				let sourceChild = undefined;
+				const freshnessToken = { ts: undefined };
 				child.unique(this.cancellationToken).listenAndRepeat((newValue) => {
-					if ((newValue === undefined || newValue === null) && sourceChild) {
-						this.children.splice(this.children.indexOf(sourceChild), 1);
-						sourceChild = undefined;
+					freshnessToken.ts = Date.now();
+					if (Array.isArray(newValue)) {
+						this.children.length = 0;
 						this.onChange.fire();
-					} else if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
-						if (!sourceChild) {
-							const textNode = new AurumTextElement(child as any);
-							this.children.push(textNode);
-							sourceChild = textNode;
-							this.onChange.fire();
-						} else if (sourceChild instanceof AurumElement) {
-							const textNode = new AurumTextElement(child as any);
-							this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
-							sourceChild = textNode;
-							this.onChange.fire();
+						for (const newSubValue of newValue) {
+							this.handleSourceChild(newSubValue, undefined, child, freshnessToken, freshnessToken.ts);
 						}
-					} else if (newValue instanceof AurumElement) {
-						if (!sourceChild) {
-							this.children.push(newValue);
-							sourceChild = newValue;
-							this.onChange.fire();
-						} else if (sourceChild instanceof AurumTextElement || sourceChild !== newValue) {
-							this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
-							sourceChild = newValue;
-							this.onChange.fire();
-						}
+					} else {
+						sourceChild = this.handleSourceChild(newValue, sourceChild, child, freshnessToken, freshnessToken.ts);
 					}
 				});
 			} else {
 				throw new Error('case not yet implemented');
 			}
 		}
+	}
+
+	private handleSourceChild(
+		newValue: any,
+		sourceChild: any,
+		child: DataSource<string> | DataSource<AurumElement>,
+		freshnessToken: { ts: number },
+		timestamp: number
+	) {
+		if ((newValue === undefined || newValue === null) && sourceChild) {
+			this.children.splice(this.children.indexOf(sourceChild), 1);
+			sourceChild = undefined;
+			this.onChange.fire();
+		} else if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
+			if (!sourceChild) {
+				const textNode = new AurumTextElement(child as any);
+				this.children.push(textNode);
+				sourceChild = textNode;
+				this.onChange.fire();
+			} else if (sourceChild instanceof AurumElement) {
+				const textNode = new AurumTextElement(child as any);
+				this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
+				sourceChild = textNode;
+				this.onChange.fire();
+			}
+		} else if (newValue instanceof AurumElement) {
+			if (!sourceChild) {
+				this.children.push(newValue);
+				sourceChild = newValue;
+				this.onChange.fire();
+			} else if (sourceChild instanceof AurumTextElement || sourceChild !== newValue) {
+				this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
+				sourceChild = newValue;
+				this.onChange.fire();
+			}
+		} else if (newValue instanceof Promise) {
+			newValue.then(
+				(value) => {
+					if (freshnessToken.ts === timestamp) {
+						this.addChildren([value]);
+						this.onChange.fire();
+					}
+				},
+				(value) => {
+					if (freshnessToken.ts === timestamp) {
+						this.addChildren([value]);
+						this.onChange.fire();
+					}
+				}
+			);
+		}
+		return sourceChild;
 	}
 
 	private handleRepeat(dataSource: ArrayDataSource<AurumElement>): void {

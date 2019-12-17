@@ -97,7 +97,8 @@ export declare class AurumFragment {
     onChange: EventEmitter<void>;
     private cancellationToken;
     constructor(props: AurumFragmentProps, children?: ChildNode[]);
-    private addChildren;
+    addChildren(children: ChildNode[]): void;
+    private handleSourceChild;
     private handleRepeat;
     dispose(): void;
 }
