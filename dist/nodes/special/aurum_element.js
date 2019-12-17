@@ -334,9 +334,6 @@ export class AurumElement {
             child.then((value) => {
                 result.addChildren([value]);
                 this.render();
-            }, (value) => {
-                result.addChildren([value]);
-                this.render();
             });
             return result;
         }
@@ -473,11 +470,6 @@ export class AurumFragment {
         }
         else if (newValue instanceof Promise) {
             newValue.then((value) => {
-                if (freshnessToken.ts === timestamp) {
-                    this.addChildren([value]);
-                    this.onChange.fire();
-                }
-            }, (value) => {
                 if (freshnessToken.ts === timestamp) {
                     this.addChildren([value]);
                     this.onChange.fire();

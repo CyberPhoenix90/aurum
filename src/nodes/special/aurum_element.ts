@@ -400,16 +400,10 @@ export abstract class AurumElement {
 		}
 		if (child instanceof Promise) {
 			const result = new AurumFragment({});
-			child.then(
-				(value) => {
-					result.addChildren([value]);
-					this.render();
-				},
-				(value) => {
-					result.addChildren([value]);
-					this.render();
-				}
-			);
+			child.then((value) => {
+				result.addChildren([value]);
+				this.render();
+			});
 			return result;
 		} else if (child instanceof ArrayDataSource) {
 			const result = new AurumFragment({ repeatModel: child });
@@ -570,20 +564,12 @@ export class AurumFragment {
 				this.onChange.fire();
 			}
 		} else if (newValue instanceof Promise) {
-			newValue.then(
-				(value) => {
-					if (freshnessToken.ts === timestamp) {
-						this.addChildren([value]);
-						this.onChange.fire();
-					}
-				},
-				(value) => {
-					if (freshnessToken.ts === timestamp) {
-						this.addChildren([value]);
-						this.onChange.fire();
-					}
+			newValue.then((value) => {
+				if (freshnessToken.ts === timestamp) {
+					this.addChildren([value]);
+					this.onChange.fire();
 				}
-			);
+			});
 		}
 		return sourceChild;
 	}
