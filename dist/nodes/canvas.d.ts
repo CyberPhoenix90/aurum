@@ -1,10 +1,9 @@
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface CanvasProps extends AurumElementProps {
-    onAttach?: Callback<Canvas>;
-    onDetach?: Callback<Canvas>;
-    onCreate?: Callback<Canvas>;
-    onDispose?: Callback<Canvas>;
+    onAttach?: Callback<HTMLCanvasElement>;
+    onDetach?: Callback<HTMLCanvasElement>;
+    onCreate?: Callback<HTMLCanvasElement>;
     width?: StringSource;
     height?: StringSource;
 }

@@ -1,10 +1,9 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 export interface DivProps extends AurumElementProps {
-    onAttach?: Callback<Div>;
-    onDetach?: Callback<Div>;
-    onCreate?: Callback<Div>;
-    onDispose?: Callback<Div>;
+    onAttach?: Callback<HTMLDivElement>;
+    onDetach?: Callback<HTMLDivElement>;
+    onCreate?: Callback<HTMLDivElement>;
 }
 export declare class Div extends AurumElement {
     readonly node: HTMLDivElement;

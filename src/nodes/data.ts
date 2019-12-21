@@ -2,13 +2,15 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { StringSource, Callback } from '../utilities/common';
 
 export interface DataProps extends AurumElementProps {
-	onAttach?: Callback<Data>;
-	onDetach?: Callback<Data>;
-	onCreate?: Callback<Data>;
-	onDispose?: Callback<Data>;
+	onAttach?: Callback<HTMLDataElement>;
+	onDetach?: Callback<HTMLDataElement>;
+	onCreate?: Callback<HTMLDataElement>;
 	value?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class Data extends AurumElement {
 	public node: HTMLDataElement;
 

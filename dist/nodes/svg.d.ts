@@ -1,10 +1,9 @@
 import { Callback, StringSource } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 export interface SvgProps extends AurumElementProps {
-    onAttach?: Callback<Svg>;
-    onDetach?: Callback<Svg>;
-    onCreate?: Callback<Svg>;
-    onDispose?: Callback<Svg>;
+    onAttach?: Callback<HTMLOrSVGElement>;
+    onDetach?: Callback<HTMLOrSVGElement>;
+    onCreate?: Callback<HTMLOrSVGElement>;
     width?: StringSource;
     height?: StringSource;
 }

@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface OlProps extends AurumElementProps {
-	onAttach?: Callback<Ol>;
-	onDetach?: Callback<Ol>;
-	onCreate?: Callback<Ol>;
-	onDispose?: Callback<Ol>;
+	onAttach?: Callback<HTMLOListElement>;
+	onDetach?: Callback<HTMLOListElement>;
+	onCreate?: Callback<HTMLOListElement>;
 }
 
+/**
+ * @internal
+ */
 export class Ol extends AurumElement {
 	public node: HTMLOListElement;
 

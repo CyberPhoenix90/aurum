@@ -1,10 +1,9 @@
 import { StringSource, Callback } from '../utilities/common';
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 export interface AProps extends AurumElementProps {
-    onAttach?: Callback<A>;
-    onDetach?: Callback<A>;
-    onCreate?: Callback<A>;
-    onDispose?: Callback<A>;
+    onAttach?: Callback<HTMLAnchorElement>;
+    onDetach?: Callback<HTMLAnchorElement>;
+    onCreate?: Callback<HTMLAnchorElement>;
     href?: StringSource;
     target?: StringSource;
 }

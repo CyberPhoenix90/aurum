@@ -3,10 +3,9 @@ import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 
 export interface InputProps extends AurumElementProps {
-	onAttach?: Callback<Input>;
-	onDetach?: Callback<Input>;
-	onCreate?: Callback<Input>;
-	onDispose?: Callback<Input>;
+	onAttach?: Callback<HTMLInputElement>;
+	onDetach?: Callback<HTMLInputElement>;
+	onCreate?: Callback<HTMLInputElement>;
 
 	placeholder?: StringSource;
 	readonly?: StringSource;
@@ -69,6 +68,9 @@ const inputProps = [
 	'type'
 ];
 
+/**
+ * @internal
+ */
 export class Input extends AurumElement {
 	public node: HTMLInputElement;
 

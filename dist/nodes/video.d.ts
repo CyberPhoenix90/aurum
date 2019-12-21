@@ -1,10 +1,9 @@
 import { Callback, StringSource } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 export interface VideoProps extends AurumElementProps {
-    onAttach?: Callback<Video>;
-    onDetach?: Callback<Video>;
-    onCreate?: Callback<Video>;
-    onDispose?: Callback<Video>;
+    onAttach?: Callback<HTMLVideoElement>;
+    onDetach?: Callback<HTMLVideoElement>;
+    onCreate?: Callback<HTMLVideoElement>;
     controls?: StringSource;
     autoplay?: StringSource;
     loop?: StringSource;

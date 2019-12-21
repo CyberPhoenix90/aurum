@@ -14,7 +14,7 @@ describe('Aurum Element', () => {
 			Aurum.attach(
 				<div
 					onAttach={(div) => {
-						assert(div.node.isConnected);
+						assert(div.isConnected);
 						resolve();
 					}}
 				></div>,
@@ -29,7 +29,7 @@ describe('Aurum Element', () => {
 				<div>
 					<div
 						onAttach={(div) => {
-							assert(div.node.isConnected);
+							assert(div.isConnected);
 							resolve();
 						}}
 					></div>
@@ -44,7 +44,7 @@ describe('Aurum Element', () => {
 			Aurum.attach(
 				<div
 					onDetach={(div) => {
-						assert(!div.node.isConnected);
+						assert(!div.isConnected);
 						resolve();
 					}}
 				></div>,

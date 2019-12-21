@@ -3,10 +3,9 @@ import { DataSource } from '../stream/data_source';
 import { DataDrain, StringSource, Callback } from '../utilities/common';
 
 export interface TextAreaProps extends AurumElementProps {
-	onAttach?: Callback<TextArea>;
-	onDetach?: Callback<TextArea>;
-	onCreate?: Callback<TextArea>;
-	onDispose?: Callback<TextArea>;
+	onAttach?: Callback<HTMLTextAreaElement>;
+	onDetach?: Callback<HTMLTextAreaElement>;
+	onCreate?: Callback<HTMLTextAreaElement>;
 
 	placeholder?: StringSource;
 	readonly?: StringSource;
@@ -28,7 +27,14 @@ export interface TextAreaProps extends AurumElementProps {
 	type?: StringSource;
 }
 
+/**
+ * @internal
+ */
 const textAreaEvents = { input: 'onInput', change: 'onChange' };
+
+/**
+ * @internal
+ */
 const textAreaProps = [
 	'placeholder',
 	'readonly',
@@ -45,6 +51,9 @@ const textAreaProps = [
 	'type'
 ];
 
+/**
+ * @internal
+ */
 export class TextArea extends AurumElement {
 	public node: HTMLTextAreaElement;
 

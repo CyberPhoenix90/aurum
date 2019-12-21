@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface TableProps extends AurumElementProps {
-	onAttach?: Callback<Table>;
-	onDetach?: Callback<Table>;
-	onCreate?: Callback<Table>;
-	onDispose?: Callback<Table>;
+	onAttach?: Callback<HTMLTableElement>;
+	onDetach?: Callback<HTMLTableElement>;
+	onCreate?: Callback<HTMLTableElement>;
 }
 
+/**
+ * @internal
+ */
 export class Table extends AurumElement {
 	public node: HTMLTableElement;
 

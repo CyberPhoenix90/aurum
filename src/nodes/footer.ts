@@ -1,15 +1,10 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-import { Callback } from '../utilities/common';
 
-export interface FooterProps extends AurumElementProps {
-	onAttach?: Callback<Footer>;
-	onDetach?: Callback<Footer>;
-	onCreate?: Callback<Footer>;
-	onDispose?: Callback<Footer>;
-}
-
+/**
+ * @internal
+ */
 export class Footer extends AurumElement {
-	constructor(props: FooterProps, children: ChildNode[]) {
+	constructor(props: AurumElementProps, children: ChildNode[]) {
 		super(props, children, 'footer');
 	}
 }

@@ -1,15 +1,10 @@
-import { AurumElement, AurumElementProps,ChildNode } from './special/aurum_element';
-import { Callback } from '../utilities/common';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface TheadProps extends AurumElementProps {
-	onAttach?: Callback<Thead>;
-	onDetach?: Callback<Thead>;
-	onCreate?: Callback<Thead>;
-	onDispose?: Callback<Thead>;
-}
-
+/**
+ * @internal
+ */
 export class Thead extends AurumElement {
-	constructor(props: TheadProps, children: ChildNode[]) {
+	constructor(props: AurumElementProps, children: ChildNode[]) {
 		super(props, children, 'thead');
 	}
 }

@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface DetailsProps extends AurumElementProps {
-	onAttach?: Callback<Details>;
-	onDetach?: Callback<Details>;
-	onCreate?: Callback<Details>;
-	onDispose?: Callback<Details>;
+	onAttach?: Callback<HTMLDetailsElement>;
+	onDetach?: Callback<HTMLDetailsElement>;
+	onCreate?: Callback<HTMLDetailsElement>;
 }
 
+/**
+ * @internal
+ */
 export class Details extends AurumElement {
 	public readonly node: HTMLDetailsElement;
 

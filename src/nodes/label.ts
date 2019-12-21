@@ -2,13 +2,15 @@ import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_elem
 import { StringSource, Callback } from '../utilities/common';
 
 export interface LabelProps extends AurumElementProps {
-	onAttach?: Callback<Label>;
-	onDetach?: Callback<Label>;
-	onCreate?: Callback<Label>;
-	onDispose?: Callback<Label>;
+	onAttach?: Callback<HTMLLabelElement>;
+	onDetach?: Callback<HTMLLabelElement>;
+	onCreate?: Callback<HTMLLabelElement>;
 	for?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class Label extends AurumElement {
 	public node: HTMLLabelElement;
 

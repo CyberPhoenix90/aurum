@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface SpanProps extends AurumElementProps {
-	onAttach?: Callback<Span>;
-	onDetach?: Callback<Span>;
-	onCreate?: Callback<Span>;
-	onDispose?: Callback<Span>;
+	onAttach?: Callback<HTMLSpanElement>;
+	onDetach?: Callback<HTMLSpanElement>;
+	onCreate?: Callback<HTMLSpanElement>;
 }
 
+/**
+ * @internal
+ */
 export class Span extends AurumElement {
 	public node: HTMLSpanElement;
 

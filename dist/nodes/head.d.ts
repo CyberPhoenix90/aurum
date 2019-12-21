@@ -1,12 +1,12 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 export interface HeadProps extends AurumElementProps {
-    onAttach?: Callback<Head>;
-    onDetach?: Callback<Head>;
-    onCreate?: Callback<Head>;
-    onDispose?: Callback<Head>;
+    onAttach?: Callback<HTMLHeadElement>;
+    onDetach?: Callback<HTMLHeadElement>;
+    onCreate?: Callback<HTMLHeadElement>;
 }
 export declare class Head extends AurumElement {
+    readonly node: HTMLHeadElement;
     constructor(props: HeadProps, children: ChildNode[]);
 }
 //# sourceMappingURL=head.d.ts.map

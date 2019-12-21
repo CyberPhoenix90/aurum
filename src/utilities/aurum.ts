@@ -133,9 +133,14 @@ export class Aurum {
 		if (dom[ownerSymbol]) {
 			throw new Error('This node is already managed by aurum and cannot be used');
 		}
-		dom.appendChild(aurumElement.node);
-		aurumElement['handleAttach'](aurumElement);
-		dom[ownerSymbol] = aurumElement;
+
+		if (aurumElement instanceof AurumElement) {
+			dom.appendChild(aurumElement.node);
+			aurumElement['handleAttach'](aurumElement);
+			dom[ownerSymbol] = aurumElement;
+		} else {
+			throw new Error('Root node of aurum application must be a single dom node');
+		}
 	}
 
 	public static isAttached(dom: HTMLElement) {

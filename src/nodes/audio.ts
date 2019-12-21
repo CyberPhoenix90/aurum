@@ -2,10 +2,9 @@ import { Callback, StringSource } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
 export interface AudioProps extends AurumElementProps {
-	onAttach?: Callback<Audio>;
-	onDetach?: Callback<Audio>;
-	onCreate?: Callback<Audio>;
-	onDispose?: Callback<Audio>;
+	onAttach?: Callback<HTMLAudioElement>;
+	onDetach?: Callback<HTMLAudioElement>;
+	onCreate?: Callback<HTMLAudioElement>;
 	controls?: StringSource;
 	autoplay?: StringSource;
 	loop?: StringSource;
@@ -14,6 +13,9 @@ export interface AudioProps extends AurumElementProps {
 	src?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class Audio extends AurumElement {
 	public readonly node: HTMLAudioElement;
 

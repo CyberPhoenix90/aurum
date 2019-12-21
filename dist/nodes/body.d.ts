@@ -1,12 +1,12 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 export interface BodyProps extends AurumElementProps {
-    onAttach?: Callback<Body>;
-    onDetach?: Callback<Body>;
-    onCreate?: Callback<Body>;
-    onDispose?: Callback<Body>;
+    onAttach?: Callback<HTMLBodyElement>;
+    onDetach?: Callback<HTMLBodyElement>;
+    onCreate?: Callback<HTMLBodyElement>;
 }
 export declare class Body extends AurumElement {
+    readonly node: HTMLBodyElement;
     constructor(props: BodyProps, children: ChildNode[]);
 }
 //# sourceMappingURL=body.d.ts.map

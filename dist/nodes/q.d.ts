@@ -1,10 +1,9 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 export interface QProps extends AurumElementProps {
-    onAttach?: Callback<Q>;
-    onDetach?: Callback<Q>;
-    onCreate?: Callback<Q>;
-    onDispose?: Callback<Q>;
+    onAttach?: Callback<HTMLQuoteElement>;
+    onDetach?: Callback<HTMLQuoteElement>;
+    onCreate?: Callback<HTMLQuoteElement>;
 }
 export declare class Q extends AurumElement {
     node: HTMLQuoteElement;

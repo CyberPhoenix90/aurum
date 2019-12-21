@@ -1,10 +1,9 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface LinkProps extends AurumElementProps {
-    onAttach?: Callback<Link>;
-    onDetach?: Callback<Link>;
-    onCreate?: Callback<Link>;
-    onDispose?: Callback<Link>;
+    onAttach?: Callback<HTMLLinkElement>;
+    onDetach?: Callback<HTMLLinkElement>;
+    onCreate?: Callback<HTMLLinkElement>;
     href?: StringSource;
     rel?: StringSource;
     media?: StringSource;

@@ -1,10 +1,9 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { StringSource, Callback } from '../utilities/common';
 export interface ImgProps extends AurumElementProps {
-    onAttach?: Callback<Img>;
-    onDetach?: Callback<Img>;
-    onCreate?: Callback<Img>;
-    onDispose?: Callback<Img>;
+    onAttach?: Callback<HTMLImageElement>;
+    onDetach?: Callback<HTMLImageElement>;
+    onCreate?: Callback<HTMLImageElement>;
     src?: StringSource;
     alt?: StringSource;
     width?: StringSource;

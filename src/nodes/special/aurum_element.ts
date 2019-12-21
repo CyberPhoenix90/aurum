@@ -4,6 +4,9 @@ import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
 
+/**
+ * @inernal
+ */
 export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
 
 export interface AurumElementModel {
@@ -41,10 +44,12 @@ export interface AurumElementProps {
 	onDragleave?: DataDrain<DragEvent>;
 	onDragover?: DataDrain<DragEvent>;
 	onDragstart?: DataDrain<DragEvent>;
+	onLoad?: DataDrain<Event>;
+	onError?: DataDrain<ErrorEvent>;
 
-	onAttach?: Callback<AurumElement>;
-	onDetach?: Callback<AurumElement>;
-	onCreate?: Callback<AurumElement>;
+	onAttach?: Callback<HTMLElement>;
+	onDetach?: Callback<HTMLElement>;
+	onCreate?: Callback<HTMLElement>;
 }
 
 /**
@@ -70,7 +75,9 @@ const defaultEvents: MapLike<string> = {
 	mousemove: 'onMouseMove',
 	mouseenter: 'onMouseEnter',
 	mouseleave: 'onMouseLeave',
-	mousewheel: 'onMouseWheel'
+	mousewheel: 'onMouseWheel',
+	load: 'onLoad',
+	error: 'onError'
 };
 
 /**
@@ -78,7 +85,7 @@ const defaultEvents: MapLike<string> = {
  */
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export function buildRenderableFromModel(model: AurumElementModel): AurumElement {
+export function buildRenderableFromModel(model: AurumElementModel): Renderable {
 	const result = model.constructor(model.props, model.innerNodes);
 	if (result[aurumElementModelIdentitiy]) {
 		return buildRenderableFromModel(result as any);
@@ -108,8 +115,8 @@ export type ChildNode =
 	| ChildNode[];
 
 export abstract class AurumElement {
-	private onAttach?: Callback<AurumElement>;
-	private onDetach?: Callback<AurumElement>;
+	private onAttach?: Callback<HTMLElement>;
+	private onDetach?: Callback<HTMLElement>;
 
 	private children: Array<AurumElement | AurumFragment | AurumTextElement>;
 	protected needAttach: boolean;
@@ -128,7 +135,7 @@ export abstract class AurumElement {
 			this.onDetach = props.onDetach;
 
 			this.initialize(props);
-			props.onCreate?.(this);
+			props.onCreate?.(this.node);
 		}
 		if (children) {
 			this.addChildren(children);
@@ -228,7 +235,7 @@ export abstract class AurumElement {
 	protected handleAttach(parent: AurumElement) {
 		if (this.needAttach) {
 			if (parent.isConnected()) {
-				this.onAttach?.(this);
+				this.onAttach?.(this.node);
 				for (const child of this.node.childNodes) {
 					child[ownerSymbol]?.handleAttach?.(this);
 				}
@@ -241,7 +248,7 @@ export abstract class AurumElement {
 	//@ts-ignore
 	private handleDetach() {
 		if (!this.node.isConnected) {
-			this.onDetach?.(this);
+			this.onDetach?.(this.node);
 			for (const child of this.node.childNodes) {
 				if (child[ownerSymbol]) {
 					child[ownerSymbol].handleDetach?.();
@@ -624,6 +631,8 @@ export class AurumFragment {
 		dataSource.listenAndRepeat((change) => {
 			switch (change.operationDetailed) {
 				case 'replace':
+					//TODO:FIX THIS
+					//@ts-ignore
 					this.children[change.index] = buildRenderableFromModel(change.items[0]);
 					break;
 				case 'swap':
@@ -633,9 +642,11 @@ export class AurumFragment {
 					this.children[change.index] = itemB;
 					break;
 				case 'append':
+					//@ts-ignore
 					this.children = this.children.concat(change.items.map(buildRenderableFromModel));
 					break;
 				case 'prepend':
+					//@ts-ignore
 					this.children.unshift(...change.items.map(buildRenderableFromModel));
 					break;
 				case 'remove':

@@ -23,7 +23,9 @@ const defaultEvents = {
     mousemove: 'onMouseMove',
     mouseenter: 'onMouseEnter',
     mouseleave: 'onMouseLeave',
-    mousewheel: 'onMouseWheel'
+    mousewheel: 'onMouseWheel',
+    load: 'onLoad',
+    error: 'onError'
 };
 const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export function buildRenderableFromModel(model) {
@@ -47,7 +49,7 @@ export class AurumElement {
             }
             this.onDetach = props.onDetach;
             this.initialize(props);
-            (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+            (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
         }
         if (children) {
             this.addChildren(children);
@@ -143,7 +145,7 @@ export class AurumElement {
         var _a, _b, _c, _d, _e;
         if (this.needAttach) {
             if (parent.isConnected()) {
-                (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+                (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
                 for (const child of this.node.childNodes) {
                     (_e = (_c = child[ownerSymbol]) === null || _c === void 0 ? void 0 : (_d = _c).handleAttach) === null || _e === void 0 ? void 0 : _e.call(_d, this);
                 }
@@ -156,7 +158,7 @@ export class AurumElement {
     handleDetach() {
         var _a, _b, _c, _d;
         if (!this.node.isConnected) {
-            (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+            (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
             for (const child of this.node.childNodes) {
                 if (child[ownerSymbol]) {
                     (_d = (_c = child[ownerSymbol]).handleDetach) === null || _d === void 0 ? void 0 : _d.call(_c);
@@ -425,11 +427,11 @@ export class AurumFragment {
                         this.children.length = 0;
                         this.onChange.fire();
                         for (const newSubValue of newValue) {
-                            this.handleSourceChild(newSubValue, undefined, renderable, freshnessToken, freshnessToken.ts);
+                            this.handleSourceChild(newSubValue, undefined, freshnessToken, freshnessToken.ts);
                         }
                     }
                     else {
-                        sourceChild = this.handleSourceChild(newValue, sourceChild, renderable, freshnessToken, freshnessToken.ts);
+                        sourceChild = this.handleSourceChild(newValue, sourceChild, freshnessToken, freshnessToken.ts);
                     }
                 });
             }
@@ -438,7 +440,7 @@ export class AurumFragment {
             }
         }
     }
-    handleSourceChild(newValue, sourceChild, child, freshnessToken, timestamp) {
+    handleSourceChild(newValue, sourceChild, freshnessToken, timestamp) {
         if (newValue === undefined || newValue === null) {
             if (sourceChild) {
                 this.children.splice(this.children.indexOf(sourceChild), 1);
@@ -452,13 +454,13 @@ export class AurumFragment {
         }
         if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
             if (!sourceChild) {
-                const textNode = new AurumTextElement(child);
+                const textNode = new AurumTextElement(newValue.toString());
                 this.children.push(textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
             }
             else if (sourceChild instanceof AurumElement) {
-                const textNode = new AurumTextElement(child);
+                const textNode = new AurumTextElement(newValue.toString());
                 this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
                 sourceChild = textNode;
                 this.onChange.fire();

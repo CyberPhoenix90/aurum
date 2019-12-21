@@ -37,11 +37,13 @@ export interface AurumElementProps {
     onDragleave?: DataDrain<DragEvent>;
     onDragover?: DataDrain<DragEvent>;
     onDragstart?: DataDrain<DragEvent>;
-    onAttach?: Callback<AurumElement>;
-    onDetach?: Callback<AurumElement>;
-    onCreate?: Callback<AurumElement>;
+    onLoad?: DataDrain<Event>;
+    onError?: DataDrain<ErrorEvent>;
+    onAttach?: Callback<HTMLElement>;
+    onDetach?: Callback<HTMLElement>;
+    onCreate?: Callback<HTMLElement>;
 }
-export declare function buildRenderableFromModel(model: AurumElementModel): AurumElement;
+export declare function buildRenderableFromModel(model: AurumElementModel): Renderable;
 export declare type Renderable = AurumElement | string | Promise<Renderable> | DataSource<string> | DataSource<AurumElement> | DataSource<AurumElement[]> | ArrayDataSource<AurumElement> | ChildNode[];
 export declare type ChildNode = AurumElementModel | string | Promise<ChildNode> | DataSource<string> | DataSource<AurumElementModel> | DataSource<AurumElementModel[]> | ArrayDataSource<AurumElementModel> | ChildNode[];
 export declare abstract class AurumElement {

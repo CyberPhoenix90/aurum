@@ -1,10 +1,9 @@
 import { Callback, MapLike, StringSource } from '../../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 export interface CustomProps<T extends HTMLElement> extends AurumElementProps {
-    onAttach?: Callback<Custom<T>>;
-    onDetach?: Callback<Custom<T>>;
-    onCreate?: Callback<Custom<T>>;
-    onDispose?: Callback<Custom<T>>;
+    onAttach?: Callback<T>;
+    onDetach?: Callback<T>;
+    onCreate?: Callback<T>;
     attributes?: MapLike<StringSource>;
     tag: string;
 }

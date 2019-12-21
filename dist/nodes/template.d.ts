@@ -1,13 +1,11 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-export interface TemplateProps<T> extends AurumElementProps {
-    onAttach?(entity: Template<T>): void;
-    onDetach?(entity: Template<T>): void;
-    generator(model: T): AurumElement;
-    ref?: string | number;
+import { Callback } from '../utilities/common';
+export interface TemplateProps extends AurumElementProps {
+    onAttach?: Callback<HTMLTemplateElement>;
+    onDetach?: Callback<HTMLTemplateElement>;
+    onCreate?: Callback<HTMLTemplateElement>;
 }
-export declare class Template<T> extends AurumElement {
-    generate: (model: T) => AurumElement;
-    ref: string | number;
-    constructor(props: TemplateProps<T>, children: ChildNode[]);
+export declare class Template extends AurumElement {
+    constructor(props: TemplateProps, children: ChildNode[]);
 }
 //# sourceMappingURL=template.d.ts.map

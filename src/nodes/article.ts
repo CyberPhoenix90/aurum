@@ -1,15 +1,10 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-import { Callback } from '../utilities/common';
 
-export interface ArticleProps extends AurumElementProps {
-	onAttach?: Callback<Article>;
-	onDetach?: Callback<Article>;
-	onCreate?: Callback<Article>;
-	onDispose?: Callback<Article>;
-}
-
+/**
+ * @internal
+ */
 export class Article extends AurumElement {
-	constructor(props: ArticleProps, children: ChildNode[]) {
+	constructor(props: AurumElementProps, children: ChildNode[]) {
 		super(props, children, 'article');
 	}
 }

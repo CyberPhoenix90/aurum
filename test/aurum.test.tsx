@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum, DataSource, Div, P } from '../src/aurum';
+import { Aurum, DataSource } from '../src/aurum';
 import { ownerSymbol } from '../src/utilities/owner_symbol';
 describe('Aurum', () => {
 	beforeEach(() => {
@@ -14,19 +14,19 @@ describe('Aurum', () => {
 
 	it('should attach dom node', () => {
 		assert(document.body.firstChild === null);
-		Aurum.attach(<Div></Div>, document.body);
+		Aurum.attach(<div></div>, document.body);
 		assert(document.body.firstChild !== null);
 	});
 
 	it("can't attach to node that already has aurum node", () => {
-		Aurum.attach(<Div></Div>, document.body);
+		Aurum.attach(<div></div>, document.body);
 		assert.throws(() => {
-			Aurum.attach(<Div></Div>, document.body);
+			Aurum.attach(<div></div>, document.body);
 		});
 	});
 
 	it('Should set inner text', () => {
-		Aurum.attach(<Div>Hello World</Div>, document.body);
+		Aurum.attach(<div>Hello World</div>, document.body);
 		jest.runAllTimers();
 		assert((document.body.firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
@@ -34,14 +34,14 @@ describe('Aurum', () => {
 	it('Should fire onAttach when connected to dom', () => {
 		return new Promise((resolve) => {
 			Aurum.attach(
-				<Div
+				<div
 					onAttach={(ele) => {
-						assert(ele.node.isConnected);
+						assert(ele.isConnected);
 						resolve();
 					}}
 				>
 					Hello World
-				</Div>,
+				</div>,
 				document.body
 			);
 			jest.runAllTimers();
@@ -51,15 +51,15 @@ describe('Aurum', () => {
 	it('Should fire onDetach when disconnected from dom', () => {
 		return new Promise((resolve) => {
 			Aurum.attach(
-				<Div
-					onAttach={(e) => Aurum.detach(e.node)}
+				<div
+					onAttach={(e) => Aurum.detach(e)}
 					onDetach={(ele) => {
-						assert(!ele.node.isConnected);
+						assert(!ele.isConnected);
 						resolve();
 					}}
 				>
 					Hello World
-				</Div>,
+				</div>,
 				document.body
 			);
 			jest.runAllTimers();
@@ -68,9 +68,9 @@ describe('Aurum', () => {
 
 	it('Should set child node', () => {
 		Aurum.attach(
-			<Div>
-				<P>Hello World</P>
-			</Div>,
+			<div>
+				<p>Hello World</p>
+			</div>,
 			document.body
 		);
 		jest.runAllTimers();
@@ -81,9 +81,9 @@ describe('Aurum', () => {
 	it('Should accept data sources', () => {
 		const ds = new DataSource('123');
 		Aurum.attach(
-			<Div>
-				<P>{ds}</P>
-			</Div>,
+			<div>
+				<p>{ds}</p>
+			</div>,
 			document.body
 		);
 		jest.runAllTimers();
@@ -91,7 +91,7 @@ describe('Aurum', () => {
 	});
 
 	it('Should accept functional components', () => {
-		const FuncComp = () => <Div>Functional</Div>;
+		const FuncComp = () => <div>Functional</div>;
 		Aurum.attach(<FuncComp></FuncComp>, document.body);
 		jest.runAllTimers();
 		assert((document.body.firstChild as HTMLDivElement).textContent === 'Functional');

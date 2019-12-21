@@ -1,15 +1,10 @@
-import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
-import { Callback } from '../utilities/common';
+import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface H5Props extends AurumElementProps {
-	onAttach?: Callback<H5>;
-	onDetach?: Callback<H5>;
-	onCreate?: Callback<H5>;
-	onDispose?: Callback<H5>;
-}
-
+/**
+ * @internal
+ */
 export class H5 extends AurumElement {
-	constructor(props: H5Props, children: ChildNode[]) {
+	constructor(props: AurumElementProps, children: ChildNode[]) {
 		super(props, children, 'h5');
 	}
 }

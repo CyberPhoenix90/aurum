@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface TitleProps extends AurumElementProps {
-	onAttach?: Callback<Title>;
-	onDetach?: Callback<Title>;
-	onCreate?: Callback<Title>;
-	onDispose?: Callback<Title>;
+	onAttach?: Callback<HTMLTitleElement>;
+	onDetach?: Callback<HTMLTitleElement>;
+	onCreate?: Callback<HTMLTitleElement>;
 }
 
+/**
+ * @internal
+ */
 export class Title extends AurumElement {
 	public node: HTMLTitleElement;
 

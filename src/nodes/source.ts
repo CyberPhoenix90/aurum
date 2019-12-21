@@ -2,10 +2,9 @@ import { Callback, StringSource } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
 export interface SourceProps extends AurumElementProps {
-	onAttach?: Callback<Source>;
-	onDetach?: Callback<Source>;
-	onCreate?: Callback<Source>;
-	onDispose?: Callback<Source>;
+	onAttach?: Callback<HTMLSourceElement>;
+	onDetach?: Callback<HTMLSourceElement>;
+	onCreate?: Callback<HTMLSourceElement>;
 	src?: StringSource;
 	srcSet?: StringSource;
 	media?: StringSource;
@@ -13,6 +12,9 @@ export interface SourceProps extends AurumElementProps {
 	type?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class Source extends AurumElement {
 	public readonly node: HTMLSourceElement;
 

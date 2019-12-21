@@ -2,10 +2,9 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { StringSource, Callback } from '../utilities/common';
 
 export interface IFrameProps extends AurumElementProps {
-	onAttach?: Callback<IFrame>;
-	onDetach?: Callback<IFrame>;
-	onCreate?: Callback<IFrame>;
-	onDispose?: Callback<IFrame>;
+	onAttach?: Callback<HTMLIFrameElement>;
+	onDetach?: Callback<HTMLIFrameElement>;
+	onCreate?: Callback<HTMLIFrameElement>;
 	src?: StringSource;
 	allow?: StringSource;
 	allowFullscreen?: StringSource;
@@ -15,6 +14,9 @@ export interface IFrameProps extends AurumElementProps {
 	srcdoc?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class IFrame extends AurumElement {
 	public readonly node: HTMLIFrameElement;
 

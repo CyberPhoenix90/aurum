@@ -2,12 +2,14 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { Callback } from '../utilities/common';
 
 export interface PProps extends AurumElementProps {
-	onAttach?: Callback<P>;
-	onDetach?: Callback<P>;
-	onCreate?: Callback<P>;
-	onDispose?: Callback<P>;
+	onAttach?: Callback<HTMLParagraphElement>;
+	onDetach?: Callback<HTMLParagraphElement>;
+	onCreate?: Callback<HTMLParagraphElement>;
 }
 
+/**
+ * @internal
+ */
 export class P extends AurumElement {
 	public node: HTMLParagraphElement;
 

@@ -2,15 +2,17 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { StringSource, Callback } from '../utilities/common';
 
 export interface ProgressProps extends AurumElementProps {
-	onAttach?: Callback<Progress>;
-	onDetach?: Callback<Progress>;
-	onCreate?: Callback<Progress>;
-	onDispose?: Callback<Progress>;
+	onAttach?: Callback<HTMLProgressElement>;
+	onDetach?: Callback<HTMLProgressElement>;
+	onCreate?: Callback<HTMLProgressElement>;
 
 	max?: StringSource;
 	value?: StringSource;
 }
 
+/**
+ * @internal
+ */
 export class Progress extends AurumElement {
 	public node: HTMLProgressElement;
 
