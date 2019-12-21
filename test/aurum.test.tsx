@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum, DataSource, Div, P, Template } from '../src/aurum';
+import { Aurum, DataSource, Div, P } from '../src/aurum';
 import { ownerSymbol } from '../src/utilities/owner_symbol';
 describe('Aurum', () => {
 	beforeEach(() => {
@@ -95,27 +95,5 @@ describe('Aurum', () => {
 		Aurum.attach(<FuncComp></FuncComp>, document.body);
 		jest.runAllTimers();
 		assert((document.body.firstChild as HTMLDivElement).textContent === 'Functional');
-	});
-
-	it('Should assign default template', () => {
-		Aurum.attach(
-			<Div>
-				<Template generator={() => void 0}></Template>
-			</Div>,
-			document.body
-		);
-		jest.runAllTimers();
-		assert(document.body.firstChild[ownerSymbol].template !== undefined);
-	});
-
-	it('Should assign explicit default template', () => {
-		Aurum.attach(
-			<Div>
-				<Template ref="default" generator={() => void 0}></Template>
-			</Div>,
-			document.body
-		);
-		jest.runAllTimers();
-		assert(document.body.firstChild[ownerSymbol].template !== undefined);
 	});
 });
