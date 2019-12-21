@@ -1,4 +1,4 @@
-import { AurumElement, Template } from '../nodes/special/aurum_element';
+import { AurumElement, AurumElementModel, buildRenderableFromModel, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Constructor, MapLike } from './common';
 import { Div } from '../nodes/div';
@@ -61,6 +61,7 @@ import { Svg } from '../nodes/svg';
 import { Data } from '../nodes/data';
 import { Time } from '../nodes/time';
 import { Option } from '../nodes/option';
+import { Template } from '../nodes/template';
 
 const nodeMap = {
 	button: Button,
@@ -127,7 +128,8 @@ const nodeMap = {
 };
 
 export class Aurum {
-	public static attach(aurumElement: AurumElement, dom: HTMLElement) {
+	public static attach(aurumElementModel: AurumElementModel, dom: HTMLElement) {
+		const aurumElement = buildRenderableFromModel(aurumElementModel);
 		if (dom[ownerSymbol]) {
 			throw new Error('This node is already managed by aurum and cannot be used');
 		}
@@ -144,7 +146,6 @@ export class Aurum {
 		if (domNode[ownerSymbol]) {
 			domNode[ownerSymbol].node.remove();
 			domNode[ownerSymbol].handleDetach();
-			domNode[ownerSymbol].dispose();
 			domNode[ownerSymbol] = undefined;
 		}
 	}
@@ -152,8 +153,8 @@ export class Aurum {
 	public static factory(
 		node: string | Constructor<AurumElement> | ((...args: any[]) => AurumElement),
 		args: MapLike<any>,
-		...innerNodes: AurumElement[]
-	): AurumElement {
+		...innerNodes: AurumElementModel[]
+	): AurumElementModel {
 		if (typeof node === 'string') {
 			const type = node;
 			node = nodeMap[node];
@@ -162,44 +163,22 @@ export class Aurum {
 			}
 		}
 
-		let children;
-		children = innerNodes.filter((e) => e);
-
-		const templateMap = {};
-		let defaultTemplate;
-		let hasRef: boolean = false;
-		for (const c of children) {
-			if (typeof c === 'string') {
-				continue;
-			}
-			if (c instanceof Template && (c.ref === undefined || c.ref === 'default')) {
-				defaultTemplate = c;
-			}
-
-			if (c.ref !== undefined) {
-				templateMap[c.ref] = c;
-				hasRef = true;
-			}
-		}
-
-		if (defaultTemplate) {
-			args = args ?? {};
-			args.template = defaultTemplate;
-		}
-		if (hasRef) {
-			args = args ?? {};
-			args.templateMap = templateMap;
-		}
-
-		let instance: AurumElement;
 		if ((node as Constructor<AurumElement>).prototype) {
-			//@ts-ignore
-			instance = new node(args, children);
+			return {
+				[aurumElementModelIdentitiy]: true,
+				//@ts-ignore
+				constructor: (args, innerNodes) => new node(args, innerNodes),
+				props: args,
+				innerNodes: innerNodes
+			};
 		} else {
-			//@ts-ignore
-			instance = node(args, children);
+			return {
+				[aurumElementModelIdentitiy]: true,
+				//@ts-ignore
+				constructor: node,
+				props: args,
+				innerNodes: innerNodes
+			};
 		}
-
-		return instance;
 	}
 }

@@ -1,19 +1,20 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
-import { MapLike } from '../../utilities/common';
+import { AurumElementProps, ChildNode } from './aurum_element';
 import { DataSource } from '../../stream/data_source';
 export interface SwitchProps<T = boolean> extends AurumElementProps {
     state: DataSource<T>;
-    templateMap?: MapLike<Template<void>>;
-    template?: Template<void>;
 }
-export declare class Switch<T = boolean> extends AurumElement {
-    private lastValue;
-    private lastTemplate;
-    private firstRender;
-    templateMap: MapLike<Template<void>>;
-    template: Template<void>;
-    constructor(props: SwitchProps<T>, children: ChildNode[]);
-    protected selectTemplate(ref: string): Template<void>;
-    protected renderSwitch(data: T): void;
+declare const switchCaseIdentity: unique symbol;
+export interface SwitchCaseInstance<T> {
+    [switchCaseIdentity]: boolean;
+    value: T;
+    default: boolean;
+    content: ChildNode[];
 }
+export declare function Switch<T = boolean>(props: SwitchProps<T>, children: any): DataSource<ChildNode[]>;
+export interface SwitchCaseProps<T> {
+    when: T;
+}
+export declare function SwitchCase<T>(props: SwitchCaseProps<T>, children: any): SwitchCaseInstance<T>;
+export declare function DefaultSwitchCase(props: {}, children: any): SwitchCaseInstance<any>;
+export {};
 //# sourceMappingURL=switch.d.ts.map

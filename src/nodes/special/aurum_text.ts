@@ -7,13 +7,12 @@ import { ownerSymbol } from '../../utilities/owner_symbol';
  */
 export class AurumTextElement {
 	public node: Text;
-	private subscription: () => void;
 
 	constructor(text?: StringSource) {
 		this.node = this.create(text);
 
 		if (text instanceof DataSource) {
-			this.subscription = text.listen((v) => {
+			text.listen((v) => {
 				if (this.node) {
 					this.node.textContent = v;
 				}
@@ -43,11 +42,5 @@ export class AurumTextElement {
 
 	public hasParent(): boolean {
 		return !!this.node.parentElement;
-	}
-
-	public dispose(): void {
-		this.subscription?.();
-		delete this.node[ownerSymbol];
-		delete this.node;
 	}
 }

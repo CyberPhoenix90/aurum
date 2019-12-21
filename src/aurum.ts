@@ -4,7 +4,6 @@ import { AreaProps } from './nodes/area';
 import { ArticleProps } from './nodes/article';
 import { AsideProps } from './nodes/aside';
 import { AudioProps } from './nodes/audio';
-import { TemplateProps } from './nodes/special/aurum_element';
 import { BProps } from './nodes/b';
 import { BrProps } from './nodes/br';
 import { ButtonProps } from './nodes/button';
@@ -61,6 +60,7 @@ import { VideoProps } from './nodes/video';
 import { StyleProps } from './nodes/style';
 import { BodyProps } from './nodes/body';
 import { HeadProps } from './nodes/head';
+import { TemplateProps } from './nodes/template';
 
 export * from './nodes/a';
 export * from './nodes/abbr';

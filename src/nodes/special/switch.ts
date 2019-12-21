@@ -1,51 +1,53 @@
-import { AurumElement, AurumElementProps, Template, ChildNode } from './aurum_element';
-import { MapLike } from '../../utilities/common';
+import { AurumElementProps, ChildNode, buildRenderableFromModel } from './aurum_element';
 import { DataSource } from '../../stream/data_source';
 
 export interface SwitchProps<T = boolean> extends AurumElementProps {
 	state: DataSource<T>;
-	templateMap?: MapLike<Template<void>>;
-	template?: Template<void>;
 }
 
-export class Switch<T = boolean> extends AurumElement {
-	private lastValue: T;
-	private lastTemplate: Template<void>;
-	private firstRender = true;
-	public templateMap: MapLike<Template<void>>;
-	public template: Template<void>;
+const switchCaseIdentity = Symbol('switchCase');
 
-	constructor(props: SwitchProps<T>, children: ChildNode[]) {
-		super(props, children, 'switch');
+export interface SwitchCaseInstance<T> {
+	[switchCaseIdentity]: boolean;
+	value: T;
+	default: boolean;
+	content: ChildNode[];
+}
 
-		this.templateMap = props.templateMap;
-		this.renderSwitch(props.state.value);
-		props.state.listen((data) => {
-			this.renderSwitch(data);
-		}, this.cancellationToken);
+export function Switch<T = boolean>(props: SwitchProps<T>, children) {
+	children = children.map(buildRenderableFromModel);
+	if (children.some((c) => !c[switchCaseIdentity])) {
+		throw new Error('Switch only accepts SwitchCase as children');
+	}
+	if (children.filter((c) => c.default).length > 1) {
+		throw new Error('Too many default switch cases only 0 or 1 allowed');
 	}
 
-	protected selectTemplate(ref: string): Template<void> {
-		if (ref === undefined || ref === null) {
-			return this.template;
-		} else {
-			return this.templateMap[ref] ?? this.template;
-		}
-	}
+	return props.state.unique().map((state) => selectCase(state, children));
+}
 
-	protected renderSwitch(data: T): void {
-		if (data !== this.lastValue || this.firstRender) {
-			this.lastValue = data;
-			this.firstRender = false;
-			const template = this.selectTemplate(data?.toString());
-			if (template !== this.lastTemplate) {
-				this.lastTemplate = template;
-				this.clearChildren();
-				if (template) {
-					const result = template.generate();
-					this.addChild(result);
-				}
-			}
-		}
-	}
+function selectCase<T>(state: T, children: SwitchCaseInstance<T>[]) {
+	return children.find((c) => c.value === state)?.content ?? children.find((p) => p.default)?.content;
+}
+
+export interface SwitchCaseProps<T> {
+	when: T;
+}
+
+export function SwitchCase<T>(props: SwitchCaseProps<T>, children): SwitchCaseInstance<T> {
+	return {
+		[switchCaseIdentity]: true,
+		content: children,
+		default: false,
+		value: props.when
+	};
+}
+
+export function DefaultSwitchCase(props: {}, children): SwitchCaseInstance<any> {
+	return {
+		[switchCaseIdentity]: true,
+		content: children,
+		default: true,
+		value: undefined
+	};
 }

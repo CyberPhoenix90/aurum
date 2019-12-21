@@ -26,7 +26,7 @@ export class Select extends AurumElement {
 
 			if (props.selectedIndexSource) {
 				this.selectedIndexSource = props.selectedIndexSource;
-				props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value), this.cancellationToken);
+				props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value));
 			} else {
 				this.node.selectedIndex = props.initialSelection ?? -1;
 			}

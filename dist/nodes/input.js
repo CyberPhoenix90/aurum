@@ -30,7 +30,7 @@ export class Input extends AurumElement {
         super(props, children, 'input');
         if (props !== null) {
             if (props.inputValueSource) {
-                props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value), this.cancellationToken);
+                props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value));
             }
             else {
                 this.node.value = (_a = props.initialValue, (_a !== null && _a !== void 0 ? _a : ''));

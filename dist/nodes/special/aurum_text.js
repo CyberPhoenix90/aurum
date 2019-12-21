@@ -4,7 +4,7 @@ export class AurumTextElement {
     constructor(text) {
         this.node = this.create(text);
         if (text instanceof DataSource) {
-            this.subscription = text.listen((v) => {
+            text.listen((v) => {
                 if (this.node) {
                     this.node.textContent = v;
                 }
@@ -31,12 +31,6 @@ export class AurumTextElement {
     }
     hasParent() {
         return !!this.node.parentElement;
-    }
-    dispose() {
-        var _a, _b;
-        (_b = (_a = this).subscription) === null || _b === void 0 ? void 0 : _b.call(_a);
-        delete this.node[ownerSymbol];
-        delete this.node;
     }
 }
 //# sourceMappingURL=aurum_text.js.map

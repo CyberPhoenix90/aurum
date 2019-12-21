@@ -22,7 +22,7 @@ export class TextArea extends AurumElement {
         if (props !== null) {
             if (props.inputValueSource) {
                 this.node.value = (_b = (_a = props.initialValue, (_a !== null && _a !== void 0 ? _a : props.inputValueSource.value)), (_b !== null && _b !== void 0 ? _b : ''));
-                props.inputValueSource.unique().listen((value) => (this.node.value = value), this.cancellationToken);
+                props.inputValueSource.unique().listen((value) => (this.node.value = value));
             }
             else {
                 this.node.value = (_c = props.initialValue, (_c !== null && _c !== void 0 ? _c : ''));

@@ -53,7 +53,7 @@ export class TextArea extends AurumElement {
 		if (props !== null) {
 			if (props.inputValueSource) {
 				this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';
-				props.inputValueSource.unique().listen((value) => (this.node.value = value), this.cancellationToken);
+				props.inputValueSource.unique().listen((value) => (this.node.value = value));
 			} else {
 				this.node.value = props.initialValue ?? '';
 			}

@@ -1,9 +1,17 @@
 import { ArrayDataSource, DataSource } from '../../stream/data_source';
-import { CancellationToken } from '../../utilities/cancellation_token';
 import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
+
+export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
+
+export interface AurumElementModel {
+	[aurumElementModelIdentitiy]: boolean;
+	constructor: (props: AurumElementProps, innerNodes: ChildNode[]) => AurumElement;
+	props: AurumElementProps;
+	innerNodes: ChildNode[];
+}
 
 export interface AurumElementProps {
 	id?: StringSource;
@@ -37,8 +45,6 @@ export interface AurumElementProps {
 	onAttach?: Callback<AurumElement>;
 	onDetach?: Callback<AurumElement>;
 	onCreate?: Callback<AurumElement>;
-	onDispose?: Callback<AurumElement>;
-	template?: Template<any>;
 }
 
 /**
@@ -72,44 +78,55 @@ const defaultEvents: MapLike<string> = {
  */
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export type ChildNode =
+export function buildRenderableFromModel(model: AurumElementModel): AurumElement {
+	const result = model.constructor(model.props, model.innerNodes);
+	if (result[aurumElementModelIdentitiy]) {
+		return buildRenderableFromModel(result as any);
+	} else {
+		return result;
+	}
+}
+
+export type Renderable =
 	| AurumElement
 	| string
-	| Promise<ChildNode>
+	| Promise<Renderable>
 	| DataSource<string>
 	| DataSource<AurumElement>
 	| DataSource<AurumElement[]>
 	| ArrayDataSource<AurumElement>
 	| ChildNode[];
 
+export type ChildNode =
+	| AurumElementModel
+	| string
+	| Promise<ChildNode>
+	| DataSource<string>
+	| DataSource<AurumElementModel>
+	| DataSource<AurumElementModel[]>
+	| ArrayDataSource<AurumElementModel>
+	| ChildNode[];
+
 export abstract class AurumElement {
 	private onAttach?: Callback<AurumElement>;
 	private onDetach?: Callback<AurumElement>;
-	private onDispose?: Callback<AurumElement>;
 
 	private children: Array<AurumElement | AurumFragment | AurumTextElement>;
 	protected needAttach: boolean;
 
-	protected cancellationToken: CancellationToken;
-
 	public node: HTMLElement;
 
-	public template: Template<any>;
-
 	constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string) {
-		this.cancellationToken = new CancellationToken();
 		this.node = this.create(domNodeName);
 		this.children = [];
 
-		if (props !== null) {
-			this.onDispose = props.onDispose;
+		if (props != null) {
 			if (props.onAttach) {
 				this.onAttach = props.onAttach;
 				this.needAttach = true;
 			}
 			this.onDetach = props.onDetach;
 
-			this.template = props.template;
 			this.initialize(props);
 			props.onCreate?.(this);
 		}
@@ -157,18 +174,10 @@ export abstract class AurumElement {
 	}
 
 	protected render(): void {
-		if (this.cancellationToken.isCanceled) {
-			return;
-		}
-
 		let absoluteIndex: number = 0;
 		for (let i = 0; i < this.children.length; i++, absoluteIndex++) {
 			if (this.children[i] instanceof AurumFragment) {
-				const fragment: AurumFragment = this.children[i] as AurumFragment;
-				for (let j = 0; j < fragment.children.length; j++, absoluteIndex++) {
-					this.renderChild(fragment.children[j], absoluteIndex);
-				}
-				absoluteIndex--;
+				absoluteIndex = this.renderFragment(this.children[i] as AurumFragment, absoluteIndex);
 			} else {
 				this.renderChild(this.children[i] as AurumElement, absoluteIndex);
 			}
@@ -176,8 +185,19 @@ export abstract class AurumElement {
 		while (this.node.childNodes.length > absoluteIndex) {
 			const child = this.node.childNodes[this.node.childNodes.length - 1];
 			this.node.removeChild(child);
-			child[ownerSymbol].dispose();
 		}
+	}
+
+	protected renderFragment(fragment: AurumFragment, absoluteIndex: number) {
+		for (let j = 0; j < fragment.children.length; j++, absoluteIndex++) {
+			if (fragment.children[j] instanceof AurumFragment) {
+				absoluteIndex = this.renderFragment(fragment.children[j] as AurumFragment, absoluteIndex);
+			} else {
+				this.renderChild(fragment.children[j] as AurumElement | AurumTextElement, absoluteIndex);
+			}
+		}
+		absoluteIndex--;
+		return absoluteIndex;
 	}
 
 	private renderChild(child: AurumElement | AurumTextElement, index: number) {
@@ -201,7 +221,7 @@ export abstract class AurumElement {
 			if (data.value) {
 				this.node.setAttribute(key, data.value);
 			}
-			data.unique(this.cancellationToken).listen((v) => (this.node as HTMLElement).setAttribute(key, v), this.cancellationToken);
+			data.unique().listen((v) => (this.node as HTMLElement).setAttribute(key, v));
 		}
 	}
 
@@ -237,17 +257,17 @@ export abstract class AurumElement {
 			if (data.value) {
 				if (Array.isArray(data.value)) {
 					this.node.className = data.value.join(' ');
-					data.unique(this.cancellationToken).listen(() => {
+					data.unique().listen(() => {
 						(this.node as HTMLElement).className = (data.value as string[]).join(' ');
-					}, this.cancellationToken);
+					});
 				} else {
 					this.node.className = data.value;
-					data.unique(this.cancellationToken).listen(() => {
+					data.unique().listen(() => {
 						(this.node as HTMLElement).className = data.value as string;
-					}, this.cancellationToken);
+					});
 				}
 			}
-			data.unique(this.cancellationToken).listen((v) => ((this.node as HTMLElement).className = v), this.cancellationToken);
+			data.unique().listen((v) => ((this.node as HTMLElement).className = v));
 		} else {
 			const value: string = data.reduce<string>((p, c) => {
 				if (typeof c === 'string') {
@@ -263,7 +283,7 @@ export abstract class AurumElement {
 			this.node.className = value;
 			for (const i of data) {
 				if (i instanceof DataSource) {
-					i.unique(this.cancellationToken).listen((v) => {
+					i.unique().listen((v) => {
 						const value: string = data.reduce<string>((p, c) => {
 							if (typeof c === 'string') {
 								return `${p} ${c}`;
@@ -276,7 +296,7 @@ export abstract class AurumElement {
 							}
 						}, '');
 						(this.node as HTMLElement).className = value;
-					}, this.cancellationToken);
+					});
 				}
 			}
 		}
@@ -400,33 +420,42 @@ export abstract class AurumElement {
 			}
 			return;
 		}
-		if (child instanceof Template) {
+		if (child === undefined || child === null) {
 			return;
 		}
+
 		this.children.push(this.childNodeToAurum(child));
 		this.render();
 	}
 
-	private childNodeToAurum(child: ChildNode): AurumElement | AurumFragment | AurumTextElement {
+	private childNodeToAurum(child: ChildNode | Renderable): AurumElement | AurumFragment | AurumTextElement {
+		if (child[aurumElementModelIdentitiy]) {
+			child = buildRenderableFromModel(child as AurumElementModel);
+		}
+
 		if (child instanceof AurumElement) {
 			return child;
 		}
+
 		if (child instanceof Promise) {
 			const result = new AurumFragment({});
+			//@ts-ignore
 			child.then((value) => {
 				result.addChildren([value]);
 				this.render();
 			});
 			return result;
 		} else if (child instanceof ArrayDataSource) {
+			//@ts-ignore
 			const result = new AurumFragment({ repeatModel: child });
-			result.onChange.subscribe(() => this.render(), this.cancellationToken);
+			result.onChange.subscribe(() => this.render());
 			return result;
 		} else if (typeof child === 'string' || typeof child === 'number' || typeof child === 'boolean' || typeof child === 'bigint') {
 			return new AurumTextElement(child.toString());
 		} else if (child instanceof DataSource) {
+			//@ts-ignore
 			const result = new AurumFragment({}, [child]);
-			result.onChange.subscribe(() => this.render(), this.cancellationToken);
+			result.onChange.subscribe(() => this.render());
 			return result;
 		} else {
 			throw new Error('Unsupported child type');
@@ -434,10 +463,6 @@ export abstract class AurumElement {
 	}
 
 	public addChildAt(child: ChildNode, index: number): void {
-		if (child instanceof Template) {
-			return;
-		}
-
 		this.children.splice(index, 0, this.childNodeToAurum(child));
 		this.render();
 	}
@@ -451,62 +476,21 @@ export abstract class AurumElement {
 			this.addChild(child);
 		}
 	}
-
-	public dispose(): void {
-		this.internalDispose(true);
-	}
-
-	private internalDispose(detach: boolean) {
-		if (this.cancellationToken.isCanceled) {
-			return;
-		}
-		this.cancellationToken.cancel();
-		if (detach) {
-			this.remove();
-		}
-		for (const child of this.node.childNodes) {
-			if (child[ownerSymbol]) {
-				child[ownerSymbol].dispose(false);
-			}
-		}
-		delete this.node[ownerSymbol];
-		delete this.node;
-		this.onDispose?.(this);
-	}
-}
-
-export interface TemplateProps<T> extends AurumElementProps {
-	onAttach?(entity: Template<T>): void;
-	onDetach?(entity: Template<T>): void;
-	generator(model: T): AurumElement;
-	ref?: string | number;
-}
-
-export class Template<T> extends AurumElement {
-	public generate: (model: T) => AurumElement;
-	ref: string | number;
-
-	constructor(props: TemplateProps<T>, children: ChildNode[]) {
-		super(props, children, 'template');
-		this.ref = props.ref;
-		this.generate = props.generator;
-	}
 }
 
 /**
  * @internal
  */
 export interface AurumFragmentProps {
-	repeatModel?: ArrayDataSource<AurumElement>;
+	repeatModel?: ArrayDataSource<AurumElementModel>;
 }
 
 /**
  * @internal
  */
 export class AurumFragment {
-	public children: Array<AurumElement | AurumTextElement>;
+	public children: Array<AurumElement | AurumTextElement | AurumFragment>;
 	public onChange: EventEmitter<void>;
-	private cancellationToken: CancellationToken;
 
 	constructor(props: AurumFragmentProps, children?: ChildNode[]) {
 		this.onChange = new EventEmitter();
@@ -520,21 +504,40 @@ export class AurumFragment {
 
 	public addChildren(children: ChildNode[]) {
 		for (const child of children) {
-			if (child instanceof AurumElement) {
-				this.children.push(child);
-			} else if (child instanceof DataSource) {
+			let renderable;
+			if (child[aurumElementModelIdentitiy]) {
+				renderable = buildRenderableFromModel(child as any);
+			} else {
+				renderable = child;
+			}
+			if (renderable instanceof AurumElement) {
+				this.children.push(renderable);
+			} else if (renderable instanceof DataSource) {
 				let sourceChild = undefined;
+				let wasArray: boolean;
 				const freshnessToken = { ts: undefined };
-				child.unique(this.cancellationToken).listenAndRepeat((newValue) => {
+				renderable.unique().listenAndRepeat((newValue) => {
 					freshnessToken.ts = Date.now();
+					if ((newValue === undefined || newValue === null) && wasArray) {
+						this.children.length = 0;
+						this.onChange.fire();
+						wasArray = false;
+						return;
+					} else if (!Array.isArray(newValue) && wasArray) {
+						this.children.length = 0;
+						this.onChange.fire();
+						wasArray = false;
+					}
+
 					if (Array.isArray(newValue)) {
+						wasArray = true;
 						this.children.length = 0;
 						this.onChange.fire();
 						for (const newSubValue of newValue) {
-							this.handleSourceChild(newSubValue, undefined, child, freshnessToken, freshnessToken.ts);
+							this.handleSourceChild(newSubValue, undefined, freshnessToken, freshnessToken.ts);
 						}
 					} else {
-						sourceChild = this.handleSourceChild(newValue, sourceChild, child, freshnessToken, freshnessToken.ts);
+						sourceChild = this.handleSourceChild(newValue, sourceChild, freshnessToken, freshnessToken.ts);
 					}
 				});
 			} else {
@@ -543,30 +546,38 @@ export class AurumFragment {
 		}
 	}
 
-	private handleSourceChild(newValue: any, sourceChild: any, child: ChildNode, freshnessToken: { ts: number }, timestamp: number) {
-		if ((newValue === undefined || newValue === null) && sourceChild) {
-			this.children.splice(this.children.indexOf(sourceChild), 1);
-			sourceChild = undefined;
-			this.onChange.fire();
-		} else if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
+	private handleSourceChild(newValue: any, sourceChild: any, freshnessToken: { ts: number }, timestamp: number) {
+		if (newValue === undefined || newValue === null) {
+			if (sourceChild) {
+				this.children.splice(this.children.indexOf(sourceChild), 1);
+				sourceChild = undefined;
+				this.onChange.fire();
+			}
+			return;
+		}
+		if (newValue[aurumElementModelIdentitiy]) {
+			newValue = buildRenderableFromModel(newValue);
+		}
+
+		if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
 			if (!sourceChild) {
-				const textNode = new AurumTextElement(child as any);
+				const textNode = new AurumTextElement(newValue.toString());
 				this.children.push(textNode);
 				sourceChild = textNode;
 				this.onChange.fire();
 			} else if (sourceChild instanceof AurumElement) {
-				const textNode = new AurumTextElement(child as any);
+				const textNode = new AurumTextElement(newValue.toString());
 				this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
 				sourceChild = textNode;
 				this.onChange.fire();
 			}
 		} else if (newValue instanceof AurumElement) {
-			if (!sourceChild) {
-				this.children.push(newValue);
-				sourceChild = newValue;
-				this.onChange.fire();
-			} else if (sourceChild instanceof AurumTextElement || sourceChild !== newValue) {
-				this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
+			if (newValue !== sourceChild) {
+				if (sourceChild) {
+					this.children.splice(this.children.indexOf(sourceChild), 1, newValue);
+				} else {
+					this.children.push(newValue);
+				}
 				sourceChild = newValue;
 				this.onChange.fire();
 			}
@@ -577,15 +588,43 @@ export class AurumFragment {
 					this.onChange.fire();
 				}
 			});
+		} else if (newValue instanceof DataSource) {
+			if (!sourceChild) {
+				const result = new AurumFragment({}, [newValue]);
+				sourceChild = result;
+				this.children.push(result);
+				result.onChange.subscribe(() => this.onChange.fire());
+				this.onChange.fire();
+			} else if (sourceChild !== newValue) {
+				const result = new AurumFragment({}, [newValue]);
+				result.onChange.subscribe(() => this.onChange.fire());
+				this.children.splice(this.children.indexOf(sourceChild), 1, result);
+				sourceChild = result;
+				this.onChange.fire();
+			}
+		} else if (newValue instanceof ArrayDataSource) {
+			if (!sourceChild) {
+				const result = new AurumFragment({ repeatModel: newValue });
+				sourceChild = result;
+				this.children.push(result);
+				result.onChange.subscribe(() => this.onChange.fire());
+				this.onChange.fire();
+			} else if (sourceChild !== newValue) {
+				const result = new AurumFragment({ repeatModel: newValue });
+				result.onChange.subscribe(() => this.onChange.fire());
+				this.children.splice(this.children.indexOf(sourceChild), 1, result);
+				sourceChild = result;
+				this.onChange.fire();
+			}
 		}
 		return sourceChild;
 	}
 
-	private handleRepeat(dataSource: ArrayDataSource<AurumElement>): void {
+	private handleRepeat(dataSource: ArrayDataSource<AurumElementModel>): void {
 		dataSource.listenAndRepeat((change) => {
 			switch (change.operationDetailed) {
 				case 'replace':
-					this.children[change.index] = change.items[0];
+					this.children[change.index] = buildRenderableFromModel(change.items[0]);
 					break;
 				case 'swap':
 					const itemA = this.children[change.index];
@@ -594,10 +633,10 @@ export class AurumFragment {
 					this.children[change.index] = itemB;
 					break;
 				case 'append':
-					this.children = this.children.concat(change.items);
+					this.children = this.children.concat(change.items.map(buildRenderableFromModel));
 					break;
 				case 'prepend':
-					this.children.unshift(...change.items);
+					this.children.unshift(...change.items.map(buildRenderableFromModel));
 					break;
 				case 'remove':
 				case 'removeLeft':
@@ -612,12 +651,5 @@ export class AurumFragment {
 			}
 			this.onChange.fire();
 		});
-	}
-
-	public dispose() {
-		if (this.cancellationToken.isCanceled) {
-			return;
-		}
-		this.cancellationToken.cancel();
 	}
 }

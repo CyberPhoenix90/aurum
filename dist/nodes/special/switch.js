@@ -1,38 +1,33 @@
-import { AurumElement } from './aurum_element';
-export class Switch extends AurumElement {
-    constructor(props, children) {
-        super(props, children, 'switch');
-        this.firstRender = true;
-        this.templateMap = props.templateMap;
-        this.renderSwitch(props.state.value);
-        props.state.listen((data) => {
-            this.renderSwitch(data);
-        }, this.cancellationToken);
+import { buildRenderableFromModel } from './aurum_element';
+const switchCaseIdentity = Symbol('switchCase');
+export function Switch(props, children) {
+    children = children.map(buildRenderableFromModel);
+    if (children.some((c) => !c[switchCaseIdentity])) {
+        throw new Error('Switch only accepts SwitchCase as children');
     }
-    selectTemplate(ref) {
-        var _a;
-        if (ref === undefined || ref === null) {
-            return this.template;
-        }
-        else {
-            return _a = this.templateMap[ref], (_a !== null && _a !== void 0 ? _a : this.template);
-        }
+    if (children.filter((c) => c.default).length > 1) {
+        throw new Error('Too many default switch cases only 0 or 1 allowed');
     }
-    renderSwitch(data) {
-        var _a;
-        if (data !== this.lastValue || this.firstRender) {
-            this.lastValue = data;
-            this.firstRender = false;
-            const template = this.selectTemplate((_a = data) === null || _a === void 0 ? void 0 : _a.toString());
-            if (template !== this.lastTemplate) {
-                this.lastTemplate = template;
-                this.clearChildren();
-                if (template) {
-                    const result = template.generate();
-                    this.addChild(result);
-                }
-            }
-        }
-    }
+    return props.state.unique().map((state) => selectCase(state, children));
+}
+function selectCase(state, children) {
+    var _a, _b, _c;
+    return _b = (_a = children.find((c) => c.value === state)) === null || _a === void 0 ? void 0 : _a.content, (_b !== null && _b !== void 0 ? _b : (_c = children.find((p) => p.default)) === null || _c === void 0 ? void 0 : _c.content);
+}
+export function SwitchCase(props, children) {
+    return {
+        [switchCaseIdentity]: true,
+        content: children,
+        default: false,
+        value: props.when
+    };
+}
+export function DefaultSwitchCase(props, children) {
+    return {
+        [switchCaseIdentity]: true,
+        content: children,
+        default: true,
+        value: undefined
+    };
 }
 //# sourceMappingURL=switch.js.map
