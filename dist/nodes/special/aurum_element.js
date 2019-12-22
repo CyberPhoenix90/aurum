@@ -29,12 +29,12 @@ const defaultEvents = {
 };
 const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export function buildRenderableFromModel(model) {
-    const result = model.constructor(model.props, model.innerNodes);
-    if (result[aurumElementModelIdentitiy]) {
+    if (model && model[aurumElementModelIdentitiy]) {
+        const result = model.constructor(model.props, model.innerNodes);
         return buildRenderableFromModel(result);
     }
     else {
-        return result;
+        return model;
     }
 }
 export class AurumElement {
@@ -325,22 +325,22 @@ export class AurumElement {
         this.render();
     }
     addChild(child) {
+        if (child === undefined || child === null) {
+            return;
+        }
+        if (child[aurumElementModelIdentitiy]) {
+            child = buildRenderableFromModel(child);
+        }
         if (Array.isArray(child)) {
             for (const subChild of child) {
                 this.addChild(subChild);
             }
             return;
         }
-        if (child === undefined || child === null) {
-            return;
-        }
         this.children.push(this.childNodeToAurum(child));
         this.render();
     }
     childNodeToAurum(child) {
-        if (child[aurumElementModelIdentitiy]) {
-            child = buildRenderableFromModel(child);
-        }
         if (child instanceof AurumElement) {
             return child;
         }

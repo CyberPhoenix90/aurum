@@ -43,7 +43,7 @@ export interface AurumElementProps {
     onDetach?: Callback<HTMLElement>;
     onCreate?: Callback<HTMLElement>;
 }
-export declare function buildRenderableFromModel(model: AurumElementModel): Renderable;
+export declare function buildRenderableFromModel(model: any): Renderable;
 export declare type Renderable = AurumElement | string | Promise<Renderable> | DataSource<string> | DataSource<AurumElement> | DataSource<AurumElement[]> | ArrayDataSource<AurumElement> | ChildNode[];
 export declare type ChildNode = AurumElementModel | string | Promise<ChildNode> | DataSource<string> | DataSource<AurumElementModel> | DataSource<AurumElementModel[]> | ArrayDataSource<AurumElementModel> | ChildNode[];
 export declare abstract class AurumElement {

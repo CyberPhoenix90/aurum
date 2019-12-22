@@ -85,12 +85,12 @@ const defaultEvents: MapLike<string> = {
  */
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export function buildRenderableFromModel(model: AurumElementModel): Renderable {
-	const result = model.constructor(model.props, model.innerNodes);
-	if (result[aurumElementModelIdentitiy]) {
+export function buildRenderableFromModel(model: any): Renderable {
+	if (model && model[aurumElementModelIdentitiy]) {
+		const result = model.constructor(model.props, model.innerNodes);
 		return buildRenderableFromModel(result as any);
 	} else {
-		return result;
+		return model;
 	}
 }
 
@@ -421,13 +421,19 @@ export abstract class AurumElement {
 	}
 
 	public addChild(child: ChildNode): void {
+		if (child === undefined || child === null) {
+			return;
+		}
+
+		if (child[aurumElementModelIdentitiy]) {
+			//@ts-ignore
+			child = buildRenderableFromModel(child as AurumElementModel);
+		}
+
 		if (Array.isArray(child)) {
 			for (const subChild of child) {
 				this.addChild(subChild);
 			}
-			return;
-		}
-		if (child === undefined || child === null) {
 			return;
 		}
 
@@ -435,11 +441,7 @@ export abstract class AurumElement {
 		this.render();
 	}
 
-	private childNodeToAurum(child: ChildNode | Renderable): AurumElement | AurumFragment | AurumTextElement {
-		if (child[aurumElementModelIdentitiy]) {
-			child = buildRenderableFromModel(child as AurumElementModel);
-		}
-
+	private childNodeToAurum(child: ChildNode): AurumElement | AurumFragment | AurumTextElement {
 		if (child instanceof AurumElement) {
 			return child;
 		}
