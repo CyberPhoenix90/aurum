@@ -427,7 +427,7 @@ export class AurumFragment {
                         this.children.length = 0;
                         this.onChange.fire();
                         for (const newSubValue of newValue) {
-                            this.handleSourceChild(newSubValue, undefined, renderable, freshnessToken, freshnessToken.ts);
+                            this.handleSourceChild(newSubValue, undefined, undefined, freshnessToken, freshnessToken.ts);
                         }
                     }
                     else {
@@ -454,13 +454,13 @@ export class AurumFragment {
         }
         if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
             if (!sourceChild) {
-                const textNode = new AurumTextElement(dataSource);
+                const textNode = new AurumTextElement((dataSource !== null && dataSource !== void 0 ? dataSource : newValue));
                 this.children.push(textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
             }
             else if (sourceChild instanceof AurumElement) {
-                const textNode = new AurumTextElement(dataSource);
+                const textNode = new AurumTextElement((dataSource !== null && dataSource !== void 0 ? dataSource : newValue));
                 this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
