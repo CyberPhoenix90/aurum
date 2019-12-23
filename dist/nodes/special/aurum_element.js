@@ -427,11 +427,11 @@ export class AurumFragment {
                         this.children.length = 0;
                         this.onChange.fire();
                         for (const newSubValue of newValue) {
-                            this.handleSourceChild(newSubValue, undefined, freshnessToken, freshnessToken.ts);
+                            this.handleSourceChild(newSubValue, undefined, renderable, freshnessToken, freshnessToken.ts);
                         }
                     }
                     else {
-                        sourceChild = this.handleSourceChild(newValue, sourceChild, freshnessToken, freshnessToken.ts);
+                        sourceChild = this.handleSourceChild(newValue, sourceChild, renderable, freshnessToken, freshnessToken.ts);
                     }
                 });
             }
@@ -440,7 +440,7 @@ export class AurumFragment {
             }
         }
     }
-    handleSourceChild(newValue, sourceChild, freshnessToken, timestamp) {
+    handleSourceChild(newValue, sourceChild, dataSource, freshnessToken, timestamp) {
         if (newValue === undefined || newValue === null) {
             if (sourceChild) {
                 this.children.splice(this.children.indexOf(sourceChild), 1);
@@ -454,13 +454,13 @@ export class AurumFragment {
         }
         if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
             if (!sourceChild) {
-                const textNode = new AurumTextElement(newValue.toString());
+                const textNode = new AurumTextElement(dataSource);
                 this.children.push(textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
             }
             else if (sourceChild instanceof AurumElement) {
-                const textNode = new AurumTextElement(newValue.toString());
+                const textNode = new AurumTextElement(dataSource);
                 this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
