@@ -1,6 +1,6 @@
 {
 	"id": 0,
-	"name": "aurumjs",
+	"name": "aurumjs - v0.3.11",
 	"kind": 0,
 	"flags": {},
 	"children": [
@@ -1597,7 +1597,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -1654,7 +1654,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -3412,7 +3412,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -3469,7 +3469,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -4107,7 +4107,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -4164,7 +4164,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -4802,7 +4802,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -4859,7 +4859,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -6571,7 +6571,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -6628,7 +6628,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -7266,7 +7266,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -7323,7 +7323,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -7961,7 +7961,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -8018,7 +8018,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -9868,7 +9868,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -9925,7 +9925,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -10563,7 +10563,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -10620,7 +10620,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -12332,7 +12332,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -12389,7 +12389,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -14101,7 +14101,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -14158,7 +14158,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -15893,7 +15893,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -15950,7 +15950,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -17708,7 +17708,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -17765,7 +17765,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -19500,7 +19500,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -19557,7 +19557,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -21269,7 +21269,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -21326,7 +21326,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -23038,7 +23038,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -23095,7 +23095,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -23733,7 +23733,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -23790,7 +23790,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -24428,7 +24428,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -24485,7 +24485,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -26197,7 +26197,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -26254,7 +26254,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -26892,7 +26892,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -26949,7 +26949,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -27587,7 +27587,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -27644,7 +27644,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -28282,7 +28282,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -28339,7 +28339,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -28977,7 +28977,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -29034,7 +29034,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -29672,7 +29672,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -29729,7 +29729,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -30367,7 +30367,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -30424,7 +30424,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -32136,7 +32136,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -32193,7 +32193,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -32831,7 +32831,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -32888,7 +32888,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -34600,7 +34600,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -34657,7 +34657,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -36369,7 +36369,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -36426,7 +36426,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -37064,7 +37064,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -37121,7 +37121,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -38994,7 +38994,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -39051,7 +39051,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -40947,7 +40947,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -41004,7 +41004,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -43455,7 +43455,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -43512,7 +43512,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -45247,7 +45247,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -45304,7 +45304,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -47016,7 +47016,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -47073,7 +47073,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -48923,7 +48923,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -48980,7 +48980,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -49618,7 +49618,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -49675,7 +49675,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -50313,7 +50313,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -50370,7 +50370,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -52082,7 +52082,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -52139,7 +52139,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -53851,7 +53851,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -53908,7 +53908,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -55620,7 +55620,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -55677,7 +55677,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -57389,7 +57389,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -57446,7 +57446,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -59204,7 +59204,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -59261,7 +59261,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -60973,7 +60973,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -61030,7 +61030,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -62880,7 +62880,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -62937,7 +62937,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -64794,7 +64794,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -64851,7 +64851,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -66678,7 +66678,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -66735,7 +66735,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -68421,7 +68421,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							]
@@ -68468,7 +68468,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							]
@@ -69180,7 +69180,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 502,
+									"line": 505,
 									"character": 37
 								}
 							]
@@ -69197,7 +69197,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 501,
+									"line": 504,
 									"character": 16
 								}
 							],
@@ -69240,7 +69240,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 502,
+									"line": 505,
 									"character": 16
 								}
 							],
@@ -69298,7 +69298,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 514,
+									"line": 517,
 									"character": 19
 								}
 							]
@@ -69331,7 +69331,7 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/aurum_element.ts",
-							"line": 500,
+							"line": 503,
 							"character": 26
 						}
 					]
@@ -70658,7 +70658,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 494,
+									"line": 497,
 									"character": 12
 								}
 							],
@@ -70688,7 +70688,7 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/aurum_element.ts",
-							"line": 493,
+							"line": 496,
 							"character": 35
 						}
 					]
@@ -71987,7 +71987,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -72044,7 +72044,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -76053,7 +76053,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -76110,7 +76110,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -77845,7 +77845,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -77902,7 +77902,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -78540,7 +78540,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -78597,7 +78597,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -79235,7 +79235,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -79292,7 +79292,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -79930,7 +79930,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -79987,7 +79987,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -81745,7 +81745,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -81802,7 +81802,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -83514,7 +83514,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -83571,7 +83571,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -84209,7 +84209,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -84266,7 +84266,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -85978,7 +85978,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -86035,7 +86035,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -87747,7 +87747,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -87804,7 +87804,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -90048,7 +90048,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -90105,7 +90105,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -90743,7 +90743,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -90800,7 +90800,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -92512,7 +92512,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -92569,7 +92569,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -93207,7 +93207,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -93264,7 +93264,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -94999,7 +94999,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -95056,7 +95056,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -96768,7 +96768,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -96825,7 +96825,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -98537,7 +98537,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -98594,7 +98594,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -100306,7 +100306,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 474,
+									"line": 477,
 									"character": 18
 								}
 							],
@@ -100363,7 +100363,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/aurum_element.ts",
-									"line": 479,
+									"line": 482,
 									"character": 19
 								}
 							],
@@ -104775,8 +104775,15 @@
 										"id": 128,
 										"typeArguments": [
 											{
-												"type": "unknown",
-												"name": "T[keyof T]"
+												"type": "indexedAccess",
+												"indexType": {
+													"type": "unknown",
+													"name": "keyof T"
+												},
+												"objectType": {
+													"type": "typeParameter",
+													"name": "T"
+												}
 											}
 										]
 									}
@@ -111218,8 +111225,23 @@
 										}
 									],
 									"type": {
-										"type": "unknown",
-										"name": "T[K]"
+										"type": "indexedAccess",
+										"indexType": {
+											"type": "typeParameter",
+											"name": "K",
+											"constraint": {
+												"type": "typeOperator",
+												"operator": "keyof",
+												"target": {
+													"type": "typeParameter",
+													"name": "T"
+												}
+											}
+										},
+										"objectType": {
+											"type": "typeParameter",
+											"name": "T"
+										}
 									}
 								}
 							],
@@ -111625,8 +111647,15 @@
 										"id": 128,
 										"typeArguments": [
 											{
-												"type": "unknown",
-												"name": "T[keyof T]"
+												"type": "indexedAccess",
+												"indexType": {
+													"type": "unknown",
+													"name": "keyof T"
+												},
+												"objectType": {
+													"type": "typeParameter",
+													"name": "T"
+												}
 											}
 										]
 									}
@@ -111700,8 +111729,23 @@
 											"kindString": "Parameter",
 											"flags": {},
 											"type": {
-												"type": "unknown",
-												"name": "T[K]"
+												"type": "indexedAccess",
+												"indexType": {
+													"type": "typeParameter",
+													"name": "K",
+													"constraint": {
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "typeParameter",
+															"name": "T"
+														}
+													}
+												},
+												"objectType": {
+													"type": "typeParameter",
+													"name": "T"
+												}
 											}
 										}
 									],
@@ -111896,8 +111940,23 @@
 								}
 							],
 							"type": {
-								"type": "unknown",
-								"name": "T[K]"
+								"type": "indexedAccess",
+								"indexType": {
+									"type": "typeParameter",
+									"name": "K",
+									"constraint": {
+										"type": "typeOperator",
+										"operator": "keyof",
+										"target": {
+											"type": "typeParameter",
+											"name": "T"
+										}
+									}
+								},
+								"objectType": {
+									"type": "typeParameter",
+									"name": "T"
+								}
 							}
 						},
 						{
@@ -111916,8 +111975,23 @@
 								}
 							],
 							"type": {
-								"type": "unknown",
-								"name": "T[K]"
+								"type": "indexedAccess",
+								"indexType": {
+									"type": "typeParameter",
+									"name": "K",
+									"constraint": {
+										"type": "typeOperator",
+										"operator": "keyof",
+										"target": {
+											"type": "typeParameter",
+											"name": "T"
+										}
+									}
+								},
+								"objectType": {
+									"type": "typeParameter",
+									"name": "T"
+								}
 							}
 						}
 					],

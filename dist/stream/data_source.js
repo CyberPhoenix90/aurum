@@ -434,7 +434,7 @@ export class FilteredArrayView extends ArrayDataSource {
         if (Array.isArray(parent)) {
             parent = new ArrayDataSource(parent);
         }
-        filter = (filter !== null && filter !== void 0 ? filter : (() => true));
+        filter = filter !== null && filter !== void 0 ? filter : (() => true);
         const initial = parent.data.filter(filter);
         super(initial);
         this.parent = parent;

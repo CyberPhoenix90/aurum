@@ -12,7 +12,7 @@ export function Switch(props, children) {
 }
 function selectCase(state, children) {
     var _a, _b, _c;
-    return _b = (_a = children.find((c) => c.value === state)) === null || _a === void 0 ? void 0 : _a.content, (_b !== null && _b !== void 0 ? _b : (_c = children.find((p) => p.default)) === null || _c === void 0 ? void 0 : _c.content);
+    return (_b = (_a = children.find((c) => c.value === state)) === null || _a === void 0 ? void 0 : _a.content) !== null && _b !== void 0 ? _b : (_c = children.find((p) => p.default)) === null || _c === void 0 ? void 0 : _c.content;
 }
 export function SwitchCase(props, children) {
     return {

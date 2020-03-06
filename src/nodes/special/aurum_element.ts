@@ -428,6 +428,9 @@ export abstract class AurumElement {
 		if (child[aurumElementModelIdentitiy]) {
 			//@ts-ignore
 			child = buildRenderableFromModel(child as AurumElementModel);
+			if (child === undefined) {
+				return;
+			}
 		}
 
 		if (Array.isArray(child)) {

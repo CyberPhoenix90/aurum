@@ -157,7 +157,7 @@ export class Aurum {
                 throw new Error(`Node ${type} does not exist or is not supported`);
             }
         }
-        if (node.prototype) {
+        if (Object.getPrototypeOf(node) === AurumElement) {
             return {
                 [aurumElementModelIdentitiy]: true,
                 constructor: (args, innerNodes) => new node(args, innerNodes),

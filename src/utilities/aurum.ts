@@ -168,7 +168,7 @@ export class Aurum {
 			}
 		}
 
-		if ((node as Constructor<AurumElement>).prototype) {
+		if (Object.getPrototypeOf(node as Constructor<AurumElement>) === AurumElement) {
 			return {
 				[aurumElementModelIdentitiy]: true,
 				//@ts-ignore
