@@ -222,7 +222,7 @@ export abstract class AurumElement {
 	}
 
 	protected assignStringSourceToAttribute(data: StringSource, key: string) {
-		if (typeof data === 'string') {
+		if (typeof data === 'string' || typeof data === 'boolean') {
 			this.node.setAttribute(key, data);
 		} else {
 			if (data.value) {

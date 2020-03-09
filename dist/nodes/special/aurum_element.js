@@ -131,7 +131,7 @@ export class AurumElement {
         }
     }
     assignStringSourceToAttribute(data, key) {
-        if (typeof data === 'string') {
+        if (typeof data === 'string' || typeof data === 'boolean') {
             this.node.setAttribute(key, data);
         }
         else {
