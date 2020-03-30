@@ -9,17 +9,23 @@ export function AurumRouter(props, children) {
     if (children.filter((c) => c.default).length > 1) {
         throw new Error('Too many default routes only 0 or 1 allowed');
     }
-    const urlDataSource = new DataSource(location.hash.substring(1));
+    const urlDataSource = new DataSource(getUrlPath());
     window.addEventListener('hashchange', () => {
-        const hash = location.hash.substring(1);
-        if (hash.includes('?')) {
-            urlDataSource.update(hash.substring(0, hash.indexOf('?')));
-        }
-        else {
-            urlDataSource.update(hash);
-        }
+        urlDataSource.update(getUrlPath());
     });
     return urlDataSource.unique().map((p) => selectRoute(p, children));
+}
+function getUrlPath() {
+    const hash = location.hash.substring(1);
+    if (hash.includes('?')) {
+        return hash.substring(0, hash.indexOf('?'));
+    }
+    else if (hash.includes('#')) {
+        return hash.substring(0, hash.indexOf('#'));
+    }
+    else {
+        return hash;
+    }
 }
 function selectRoute(url, routes) {
     var _a, _b;

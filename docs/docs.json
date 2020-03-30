@@ -1,42 +1,42 @@
 {
 	"id": 0,
-	"name": "aurumjs - v0.3.11",
+	"name": "aurumjs - v0.3.14",
 	"kind": 0,
 	"flags": {},
 	"children": [
 		{
-			"id": 4769,
+			"id": 4771,
 			"name": "\"aurum\"",
 			"kind": 1,
 			"kindString": "External module",
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/aurum.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/aurum.ts",
 			"children": [
 				{
-					"id": 4770,
+					"id": 4772,
 					"name": "__global",
 					"kind": 2,
 					"kindString": "Module",
 					"flags": {},
 					"children": [
 						{
-							"id": 4771,
+							"id": 4773,
 							"name": "JSX",
 							"kind": 2,
 							"kindString": "Module",
 							"flags": {},
 							"children": [
 								{
-									"id": 4772,
+									"id": 4774,
 									"name": "IntrinsicElements",
 									"kind": 256,
 									"kindString": "Interface",
 									"flags": {},
 									"children": [
 										{
-											"id": 4784,
+											"id": 4786,
 											"name": "a",
 											"kind": 1024,
 											"kindString": "Property",
@@ -55,7 +55,7 @@
 											}
 										},
 										{
-											"id": 4809,
+											"id": 4811,
 											"name": "abbr",
 											"kind": 1024,
 											"kindString": "Property",
@@ -74,7 +74,7 @@
 											}
 										},
 										{
-											"id": 4810,
+											"id": 4812,
 											"name": "area",
 											"kind": 1024,
 											"kindString": "Property",
@@ -93,7 +93,7 @@
 											}
 										},
 										{
-											"id": 4785,
+											"id": 4787,
 											"name": "article",
 											"kind": 1024,
 											"kindString": "Property",
@@ -112,7 +112,7 @@
 											}
 										},
 										{
-											"id": 4811,
+											"id": 4813,
 											"name": "aside",
 											"kind": 1024,
 											"kindString": "Property",
@@ -131,7 +131,7 @@
 											}
 										},
 										{
-											"id": 4812,
+											"id": 4814,
 											"name": "audio",
 											"kind": 1024,
 											"kindString": "Property",
@@ -150,7 +150,7 @@
 											}
 										},
 										{
-											"id": 4806,
+											"id": 4808,
 											"name": "b",
 											"kind": 1024,
 											"kindString": "Property",
@@ -169,7 +169,7 @@
 											}
 										},
 										{
-											"id": 4833,
+											"id": 4835,
 											"name": "body",
 											"kind": 1024,
 											"kindString": "Property",
@@ -188,7 +188,7 @@
 											}
 										},
 										{
-											"id": 4786,
+											"id": 4788,
 											"name": "br",
 											"kind": 1024,
 											"kindString": "Property",
@@ -207,7 +207,7 @@
 											}
 										},
 										{
-											"id": 4773,
+											"id": 4775,
 											"name": "button",
 											"kind": 1024,
 											"kindString": "Property",
@@ -226,7 +226,7 @@
 											}
 										},
 										{
-											"id": 4783,
+											"id": 4785,
 											"name": "canvas",
 											"kind": 1024,
 											"kindString": "Property",
@@ -245,7 +245,7 @@
 											}
 										},
 										{
-											"id": 4831,
+											"id": 4833,
 											"name": "data",
 											"kind": 1024,
 											"kindString": "Property",
@@ -264,7 +264,7 @@
 											}
 										},
 										{
-											"id": 4827,
+											"id": 4829,
 											"name": "details",
 											"kind": 1024,
 											"kindString": "Property",
@@ -283,7 +283,7 @@
 											}
 										},
 										{
-											"id": 4774,
+											"id": 4776,
 											"name": "div",
 											"kind": 1024,
 											"kindString": "Property",
@@ -302,7 +302,7 @@
 											}
 										},
 										{
-											"id": 4813,
+											"id": 4815,
 											"name": "em",
 											"kind": 1024,
 											"kindString": "Property",
@@ -321,7 +321,7 @@
 											}
 										},
 										{
-											"id": 4804,
+											"id": 4806,
 											"name": "footer",
 											"kind": 1024,
 											"kindString": "Property",
@@ -340,7 +340,7 @@
 											}
 										},
 										{
-											"id": 4787,
+											"id": 4789,
 											"name": "form",
 											"kind": 1024,
 											"kindString": "Property",
@@ -359,7 +359,7 @@
 											}
 										},
 										{
-											"id": 4797,
+											"id": 4799,
 											"name": "h1",
 											"kind": 1024,
 											"kindString": "Property",
@@ -378,7 +378,7 @@
 											}
 										},
 										{
-											"id": 4798,
+											"id": 4800,
 											"name": "h2",
 											"kind": 1024,
 											"kindString": "Property",
@@ -397,7 +397,7 @@
 											}
 										},
 										{
-											"id": 4799,
+											"id": 4801,
 											"name": "h3",
 											"kind": 1024,
 											"kindString": "Property",
@@ -416,7 +416,7 @@
 											}
 										},
 										{
-											"id": 4800,
+											"id": 4802,
 											"name": "h4",
 											"kind": 1024,
 											"kindString": "Property",
@@ -435,7 +435,7 @@
 											}
 										},
 										{
-											"id": 4801,
+											"id": 4803,
 											"name": "h5",
 											"kind": 1024,
 											"kindString": "Property",
@@ -454,7 +454,7 @@
 											}
 										},
 										{
-											"id": 4802,
+											"id": 4804,
 											"name": "h6",
 											"kind": 1024,
 											"kindString": "Property",
@@ -473,7 +473,7 @@
 											}
 										},
 										{
-											"id": 4834,
+											"id": 4836,
 											"name": "head",
 											"kind": 1024,
 											"kindString": "Property",
@@ -492,7 +492,7 @@
 											}
 										},
 										{
-											"id": 4803,
+											"id": 4805,
 											"name": "header",
 											"kind": 1024,
 											"kindString": "Property",
@@ -511,7 +511,7 @@
 											}
 										},
 										{
-											"id": 4814,
+											"id": 4816,
 											"name": "heading",
 											"kind": 1024,
 											"kindString": "Property",
@@ -530,7 +530,7 @@
 											}
 										},
 										{
-											"id": 4807,
+											"id": 4809,
 											"name": "i",
 											"kind": 1024,
 											"kindString": "Property",
@@ -549,7 +549,7 @@
 											}
 										},
 										{
-											"id": 4815,
+											"id": 4817,
 											"name": "iframe",
 											"kind": 1024,
 											"kindString": "Property",
@@ -568,7 +568,7 @@
 											}
 										},
 										{
-											"id": 4781,
+											"id": 4783,
 											"name": "img",
 											"kind": 1024,
 											"kindString": "Property",
@@ -587,7 +587,7 @@
 											}
 										},
 										{
-											"id": 4775,
+											"id": 4777,
 											"name": "input",
 											"kind": 1024,
 											"kindString": "Property",
@@ -606,7 +606,7 @@
 											}
 										},
 										{
-											"id": 4788,
+											"id": 4790,
 											"name": "label",
 											"kind": 1024,
 											"kindString": "Property",
@@ -625,7 +625,7 @@
 											}
 										},
 										{
-											"id": 4776,
+											"id": 4778,
 											"name": "li",
 											"kind": 1024,
 											"kindString": "Property",
@@ -644,7 +644,7 @@
 											}
 										},
 										{
-											"id": 4782,
+											"id": 4784,
 											"name": "link",
 											"kind": 1024,
 											"kindString": "Property",
@@ -663,7 +663,7 @@
 											}
 										},
 										{
-											"id": 4805,
+											"id": 4807,
 											"name": "nav",
 											"kind": 1024,
 											"kindString": "Property",
@@ -682,7 +682,7 @@
 											}
 										},
 										{
-											"id": 4816,
+											"id": 4818,
 											"name": "noscript",
 											"kind": 1024,
 											"kindString": "Property",
@@ -701,7 +701,7 @@
 											}
 										},
 										{
-											"id": 4789,
+											"id": 4791,
 											"name": "ol",
 											"kind": 1024,
 											"kindString": "Property",
@@ -720,7 +720,7 @@
 											}
 										},
 										{
-											"id": 4817,
+											"id": 4819,
 											"name": "option",
 											"kind": 1024,
 											"kindString": "Property",
@@ -739,7 +739,7 @@
 											}
 										},
 										{
-											"id": 4780,
+											"id": 4782,
 											"name": "p",
 											"kind": 1024,
 											"kindString": "Property",
@@ -758,7 +758,7 @@
 											}
 										},
 										{
-											"id": 4790,
+											"id": 4792,
 											"name": "pre",
 											"kind": 1024,
 											"kindString": "Property",
@@ -777,7 +777,7 @@
 											}
 										},
 										{
-											"id": 4791,
+											"id": 4793,
 											"name": "progress",
 											"kind": 1024,
 											"kindString": "Property",
@@ -796,7 +796,7 @@
 											}
 										},
 										{
-											"id": 4818,
+											"id": 4820,
 											"name": "q",
 											"kind": 1024,
 											"kindString": "Property",
@@ -815,7 +815,7 @@
 											}
 										},
 										{
-											"id": 4808,
+											"id": 4810,
 											"name": "script",
 											"kind": 1024,
 											"kindString": "Property",
@@ -834,7 +834,7 @@
 											}
 										},
 										{
-											"id": 4819,
+											"id": 4821,
 											"name": "select",
 											"kind": 1024,
 											"kindString": "Property",
@@ -853,7 +853,7 @@
 											}
 										},
 										{
-											"id": 4820,
+											"id": 4822,
 											"name": "source",
 											"kind": 1024,
 											"kindString": "Property",
@@ -872,7 +872,7 @@
 											}
 										},
 										{
-											"id": 4777,
+											"id": 4779,
 											"name": "span",
 											"kind": 1024,
 											"kindString": "Property",
@@ -891,7 +891,7 @@
 											}
 										},
 										{
-											"id": 4778,
+											"id": 4780,
 											"name": "style",
 											"kind": 1024,
 											"kindString": "Property",
@@ -910,7 +910,7 @@
 											}
 										},
 										{
-											"id": 4828,
+											"id": 4830,
 											"name": "sub",
 											"kind": 1024,
 											"kindString": "Property",
@@ -929,7 +929,7 @@
 											}
 										},
 										{
-											"id": 4826,
+											"id": 4828,
 											"name": "summary",
 											"kind": 1024,
 											"kindString": "Property",
@@ -948,7 +948,7 @@
 											}
 										},
 										{
-											"id": 4829,
+											"id": 4831,
 											"name": "sup",
 											"kind": 1024,
 											"kindString": "Property",
@@ -967,7 +967,7 @@
 											}
 										},
 										{
-											"id": 4830,
+											"id": 4832,
 											"name": "svg",
 											"kind": 1024,
 											"kindString": "Property",
@@ -986,7 +986,7 @@
 											}
 										},
 										{
-											"id": 4792,
+											"id": 4794,
 											"name": "table",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1005,7 +1005,7 @@
 											}
 										},
 										{
-											"id": 4823,
+											"id": 4825,
 											"name": "tbody",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1024,7 +1024,7 @@
 											}
 										},
 										{
-											"id": 4793,
+											"id": 4795,
 											"name": "td",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1043,7 +1043,7 @@
 											}
 										},
 										{
-											"id": 4835,
+											"id": 4837,
 											"name": "template",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1062,7 +1062,7 @@
 											}
 										},
 										{
-											"id": 4796,
+											"id": 4798,
 											"name": "textarea",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1081,7 +1081,7 @@
 											}
 										},
 										{
-											"id": 4824,
+											"id": 4826,
 											"name": "tfoot",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1100,7 +1100,7 @@
 											}
 										},
 										{
-											"id": 4795,
+											"id": 4797,
 											"name": "th",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1119,7 +1119,7 @@
 											}
 										},
 										{
-											"id": 4825,
+											"id": 4827,
 											"name": "thead",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1138,7 +1138,7 @@
 											}
 										},
 										{
-											"id": 4832,
+											"id": 4834,
 											"name": "time",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1157,7 +1157,7 @@
 											}
 										},
 										{
-											"id": 4821,
+											"id": 4823,
 											"name": "title",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1176,7 +1176,7 @@
 											}
 										},
 										{
-											"id": 4794,
+											"id": 4796,
 											"name": "tr",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1195,7 +1195,7 @@
 											}
 										},
 										{
-											"id": 4779,
+											"id": 4781,
 											"name": "ul",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1214,7 +1214,7 @@
 											}
 										},
 										{
-											"id": 4822,
+											"id": 4824,
 											"name": "video",
 											"kind": 1024,
 											"kindString": "Property",
@@ -1238,69 +1238,69 @@
 											"title": "Properties",
 											"kind": 1024,
 											"children": [
-												4784,
-												4809,
-												4810,
-												4785,
+												4786,
 												4811,
 												4812,
-												4806,
-												4833,
-												4786,
-												4773,
-												4783,
-												4831,
-												4827,
-												4774,
-												4813,
-												4804,
 												4787,
-												4797,
-												4798,
+												4813,
+												4814,
+												4808,
+												4835,
+												4788,
+												4775,
+												4785,
+												4833,
+												4829,
+												4776,
+												4815,
+												4806,
+												4789,
 												4799,
 												4800,
 												4801,
 												4802,
-												4834,
 												4803,
-												4814,
-												4807,
-												4815,
-												4781,
-												4775,
-												4788,
-												4776,
-												4782,
+												4804,
+												4836,
 												4805,
 												4816,
-												4789,
+												4809,
 												4817,
-												4780,
-												4790,
-												4791,
-												4818,
-												4808,
-												4819,
-												4820,
+												4783,
 												4777,
+												4790,
 												4778,
-												4828,
-												4826,
-												4829,
-												4830,
+												4784,
+												4807,
+												4818,
+												4791,
+												4819,
+												4782,
 												4792,
-												4823,
 												4793,
-												4835,
-												4796,
-												4824,
-												4795,
-												4825,
-												4832,
+												4820,
+												4810,
 												4821,
-												4794,
+												4822,
 												4779,
-												4822
+												4780,
+												4830,
+												4828,
+												4831,
+												4832,
+												4794,
+												4825,
+												4795,
+												4837,
+												4798,
+												4826,
+												4797,
+												4827,
+												4834,
+												4823,
+												4796,
+												4781,
+												4824
 											]
 										}
 									],
@@ -1318,7 +1318,7 @@
 									"title": "Interfaces",
 									"kind": 256,
 									"children": [
-										4772
+										4774
 									]
 								}
 							],
@@ -1336,7 +1336,7 @@
 							"title": "Modules",
 							"kind": 2,
 							"children": [
-								4771
+								4773
 							]
 						}
 					],
@@ -1354,7 +1354,7 @@
 					"title": "Modules",
 					"kind": 2,
 					"children": [
-						4770
+						4772
 					]
 				}
 			],
@@ -1374,7 +1374,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/a.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/a.ts",
 			"children": [
 				{
 					"id": 832,
@@ -3189,7 +3189,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/abbr.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/abbr.ts",
 			"children": [
 				{
 					"id": 4169,
@@ -3877,17 +3877,17 @@
 			]
 		},
 		{
-			"id": 4836,
+			"id": 4838,
 			"name": "\"nodes/address\"",
 			"kind": 1,
 			"kindString": "External module",
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/address.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/address.ts",
 			"children": [
 				{
-					"id": 4837,
+					"id": 4839,
 					"name": "Address",
 					"kind": 128,
 					"kindString": "Class",
@@ -3904,7 +3904,7 @@
 					},
 					"children": [
 						{
-							"id": 4838,
+							"id": 4840,
 							"name": "constructor",
 							"kind": 512,
 							"kindString": "Constructor",
@@ -3913,14 +3913,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4839,
+									"id": 4841,
 									"name": "new Address",
 									"kind": 16384,
 									"kindString": "Constructor signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4840,
+											"id": 4842,
 											"name": "props",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -3932,7 +3932,7 @@
 											}
 										},
 										{
-											"id": 4841,
+											"id": 4843,
 											"name": "children",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -3950,7 +3950,7 @@
 									"type": {
 										"type": "reference",
 										"name": "Address",
-										"id": 4837
+										"id": 4839
 									},
 									"overwrites": {
 										"type": "reference",
@@ -3973,7 +3973,7 @@
 							}
 						},
 						{
-							"id": 4842,
+							"id": 4844,
 							"name": "node",
 							"kind": 1024,
 							"kindString": "Property",
@@ -3999,7 +3999,7 @@
 							}
 						},
 						{
-							"id": 4861,
+							"id": 4863,
 							"name": "addChild",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4009,14 +4009,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4862,
+									"id": 4864,
 									"name": "addChild",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4863,
+											"id": 4865,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4053,7 +4053,7 @@
 							}
 						},
 						{
-							"id": 4864,
+							"id": 4866,
 							"name": "addChildAt",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4063,14 +4063,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4865,
+									"id": 4867,
 									"name": "addChildAt",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4866,
+											"id": 4868,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4082,7 +4082,7 @@
 											}
 										},
 										{
-											"id": 4867,
+											"id": 4869,
 											"name": "index",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4118,7 +4118,7 @@
 							}
 						},
 						{
-							"id": 4868,
+							"id": 4870,
 							"name": "addChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4128,14 +4128,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4869,
+									"id": 4871,
 									"name": "addChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4870,
+											"id": 4872,
 											"name": "nodes",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4175,7 +4175,7 @@
 							}
 						},
 						{
-							"id": 4859,
+							"id": 4861,
 							"name": "clearChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4185,7 +4185,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4860,
+									"id": 4862,
 									"name": "clearChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -4215,7 +4215,7 @@
 							}
 						},
 						{
-							"id": 4845,
+							"id": 4847,
 							"name": "hasParent",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4225,7 +4225,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4846,
+									"id": 4848,
 									"name": "hasParent",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -4255,7 +4255,7 @@
 							}
 						},
 						{
-							"id": 4847,
+							"id": 4849,
 							"name": "isConnected",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4265,7 +4265,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4848,
+									"id": 4850,
 									"name": "isConnected",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -4295,7 +4295,7 @@
 							}
 						},
 						{
-							"id": 4843,
+							"id": 4845,
 							"name": "remove",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4305,7 +4305,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4844,
+									"id": 4846,
 									"name": "remove",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -4335,7 +4335,7 @@
 							}
 						},
 						{
-							"id": 4849,
+							"id": 4851,
 							"name": "removeChild",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4345,14 +4345,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4850,
+									"id": 4852,
 									"name": "removeChild",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4851,
+											"id": 4853,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4389,7 +4389,7 @@
 							}
 						},
 						{
-							"id": 4852,
+							"id": 4854,
 							"name": "removeChildAt",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4399,14 +4399,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4853,
+									"id": 4855,
 									"name": "removeChildAt",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4854,
+											"id": 4856,
 											"name": "index",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4442,7 +4442,7 @@
 							}
 						},
 						{
-							"id": 4855,
+							"id": 4857,
 							"name": "swapChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -4452,14 +4452,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4856,
+									"id": 4858,
 									"name": "swapChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4857,
+											"id": 4859,
 											"name": "indexA",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4470,7 +4470,7 @@
 											}
 										},
 										{
-											"id": 4858,
+											"id": 4860,
 											"name": "indexB",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -4511,30 +4511,30 @@
 							"title": "Constructors",
 							"kind": 512,
 							"children": [
-								4838
+								4840
 							]
 						},
 						{
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4842
+								4844
 							]
 						},
 						{
 							"title": "Methods",
 							"kind": 2048,
 							"children": [
+								4863,
+								4866,
+								4870,
 								4861,
-								4864,
-								4868,
-								4859,
-								4845,
 								4847,
-								4843,
 								4849,
-								4852,
-								4855
+								4845,
+								4851,
+								4854,
+								4857
 							]
 						}
 					],
@@ -4559,7 +4559,7 @@
 					"title": "Classes",
 					"kind": 128,
 					"children": [
-						4837
+						4839
 					]
 				}
 			],
@@ -4579,7 +4579,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/area.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/area.ts",
 			"children": [
 				{
 					"id": 900,
@@ -6348,7 +6348,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/article.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/article.ts",
 			"children": [
 				{
 					"id": 3749,
@@ -7043,7 +7043,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/aside.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/aside.ts",
 			"children": [
 				{
 					"id": 4204,
@@ -7738,7 +7738,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/audio.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/audio.ts",
 			"children": [
 				{
 					"id": 974,
@@ -9645,7 +9645,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/b.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/b.ts",
 			"children": [
 				{
 					"id": 4099,
@@ -10340,7 +10340,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/body.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/body.ts",
 			"children": [
 				{
 					"id": 3530,
@@ -12109,7 +12109,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/br.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/br.ts",
 			"children": [
 				{
 					"id": 1042,
@@ -13878,7 +13878,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/button.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/button.ts",
 			"children": [
 				{
 					"id": 1111,
@@ -15670,7 +15670,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/canvas.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/canvas.ts",
 			"children": [
 				{
 					"id": 1181,
@@ -17485,7 +17485,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/data.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/data.ts",
 			"children": [
 				{
 					"id": 1250,
@@ -19277,7 +19277,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/details.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/details.ts",
 			"children": [
 				{
 					"id": 1318,
@@ -21046,7 +21046,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/div.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/div.ts",
 			"children": [
 				{
 					"id": 1386,
@@ -22815,7 +22815,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/em.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/em.ts",
 			"children": [
 				{
 					"id": 4239,
@@ -23510,7 +23510,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/footer.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/footer.ts",
 			"children": [
 				{
 					"id": 4029,
@@ -24205,7 +24205,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/form.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/form.ts",
 			"children": [
 				{
 					"id": 1454,
@@ -25974,7 +25974,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h1.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h1.ts",
 			"children": [
 				{
 					"id": 3784,
@@ -26669,7 +26669,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h2.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h2.ts",
 			"children": [
 				{
 					"id": 3819,
@@ -27364,7 +27364,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h3.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h3.ts",
 			"children": [
 				{
 					"id": 3854,
@@ -28059,7 +28059,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h4.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h4.ts",
 			"children": [
 				{
 					"id": 3889,
@@ -28754,7 +28754,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h5.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h5.ts",
 			"children": [
 				{
 					"id": 3924,
@@ -29449,7 +29449,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/h6.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/h6.ts",
 			"children": [
 				{
 					"id": 3959,
@@ -30144,7 +30144,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/head.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/head.ts",
 			"children": [
 				{
 					"id": 3598,
@@ -31913,7 +31913,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/header.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/header.ts",
 			"children": [
 				{
 					"id": 3994,
@@ -32608,7 +32608,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/heading.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/heading.ts",
 			"children": [
 				{
 					"id": 1522,
@@ -34370,17 +34370,17 @@
 			]
 		},
 		{
-			"id": 4871,
+			"id": 4873,
 			"name": "\"nodes/hr\"",
 			"kind": 1,
 			"kindString": "External module",
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/hr.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/hr.ts",
 			"children": [
 				{
-					"id": 4905,
+					"id": 4907,
 					"name": "Hr",
 					"kind": 128,
 					"kindString": "Class",
@@ -34397,7 +34397,7 @@
 					},
 					"children": [
 						{
-							"id": 4907,
+							"id": 4909,
 							"name": "constructor",
 							"kind": 512,
 							"kindString": "Constructor",
@@ -34406,14 +34406,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4908,
+									"id": 4910,
 									"name": "new Hr",
 									"kind": 16384,
 									"kindString": "Constructor signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4909,
+											"id": 4911,
 											"name": "props",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34421,11 +34421,11 @@
 											"type": {
 												"type": "reference",
 												"name": "HrProps",
-												"id": 4872
+												"id": 4874
 											}
 										},
 										{
-											"id": 4910,
+											"id": 4912,
 											"name": "children",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34443,7 +34443,7 @@
 									"type": {
 										"type": "reference",
 										"name": "Hr",
-										"id": 4905
+										"id": 4907
 									},
 									"overwrites": {
 										"type": "reference",
@@ -34466,7 +34466,7 @@
 							}
 						},
 						{
-							"id": 4906,
+							"id": 4908,
 							"name": "node",
 							"kind": 1024,
 							"kindString": "Property",
@@ -34492,7 +34492,7 @@
 							}
 						},
 						{
-							"id": 4929,
+							"id": 4931,
 							"name": "addChild",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34502,14 +34502,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4930,
+									"id": 4932,
 									"name": "addChild",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4931,
+											"id": 4933,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34546,7 +34546,7 @@
 							}
 						},
 						{
-							"id": 4932,
+							"id": 4934,
 							"name": "addChildAt",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34556,14 +34556,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4933,
+									"id": 4935,
 									"name": "addChildAt",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4934,
+											"id": 4936,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34575,7 +34575,7 @@
 											}
 										},
 										{
-											"id": 4935,
+											"id": 4937,
 											"name": "index",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34611,7 +34611,7 @@
 							}
 						},
 						{
-							"id": 4936,
+							"id": 4938,
 							"name": "addChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34621,14 +34621,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4937,
+									"id": 4939,
 									"name": "addChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4938,
+											"id": 4940,
 											"name": "nodes",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34668,7 +34668,7 @@
 							}
 						},
 						{
-							"id": 4927,
+							"id": 4929,
 							"name": "clearChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34678,7 +34678,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4928,
+									"id": 4930,
 									"name": "clearChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -34708,7 +34708,7 @@
 							}
 						},
 						{
-							"id": 4913,
+							"id": 4915,
 							"name": "hasParent",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34718,7 +34718,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4914,
+									"id": 4916,
 									"name": "hasParent",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -34748,7 +34748,7 @@
 							}
 						},
 						{
-							"id": 4915,
+							"id": 4917,
 							"name": "isConnected",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34758,7 +34758,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4916,
+									"id": 4918,
 									"name": "isConnected",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -34788,7 +34788,7 @@
 							}
 						},
 						{
-							"id": 4911,
+							"id": 4913,
 							"name": "remove",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34798,7 +34798,7 @@
 							},
 							"signatures": [
 								{
-									"id": 4912,
+									"id": 4914,
 									"name": "remove",
 									"kind": 4096,
 									"kindString": "Call signature",
@@ -34828,7 +34828,7 @@
 							}
 						},
 						{
-							"id": 4917,
+							"id": 4919,
 							"name": "removeChild",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34838,14 +34838,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4918,
+									"id": 4920,
 									"name": "removeChild",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4919,
+											"id": 4921,
 											"name": "child",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34882,7 +34882,7 @@
 							}
 						},
 						{
-							"id": 4920,
+							"id": 4922,
 							"name": "removeChildAt",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34892,14 +34892,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4921,
+									"id": 4923,
 									"name": "removeChildAt",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4922,
+											"id": 4924,
 											"name": "index",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34935,7 +34935,7 @@
 							}
 						},
 						{
-							"id": 4923,
+							"id": 4925,
 							"name": "swapChildren",
 							"kind": 2048,
 							"kindString": "Method",
@@ -34945,14 +34945,14 @@
 							},
 							"signatures": [
 								{
-									"id": 4924,
+									"id": 4926,
 									"name": "swapChildren",
 									"kind": 4096,
 									"kindString": "Call signature",
 									"flags": {},
 									"parameters": [
 										{
-											"id": 4925,
+											"id": 4927,
 											"name": "indexA",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -34963,7 +34963,7 @@
 											}
 										},
 										{
-											"id": 4926,
+											"id": 4928,
 											"name": "indexB",
 											"kind": 32768,
 											"kindString": "Parameter",
@@ -35004,30 +35004,30 @@
 							"title": "Constructors",
 							"kind": 512,
 							"children": [
-								4907
+								4909
 							]
 						},
 						{
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4906
+								4908
 							]
 						},
 						{
 							"title": "Methods",
 							"kind": 2048,
 							"children": [
+								4931,
+								4934,
+								4938,
 								4929,
-								4932,
-								4936,
-								4927,
-								4913,
 								4915,
-								4911,
 								4917,
-								4920,
-								4923
+								4913,
+								4919,
+								4922,
+								4925
 							]
 						}
 					],
@@ -35047,7 +35047,7 @@
 					]
 				},
 				{
-					"id": 4872,
+					"id": 4874,
 					"name": "HrProps",
 					"kind": 256,
 					"kindString": "Interface",
@@ -35056,7 +35056,7 @@
 					},
 					"children": [
 						{
-							"id": 4879,
+							"id": 4881,
 							"name": "class",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35083,7 +35083,7 @@
 							}
 						},
 						{
-							"id": 4884,
+							"id": 4886,
 							"name": "contentEditable",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35110,7 +35110,7 @@
 							}
 						},
 						{
-							"id": 4878,
+							"id": 4880,
 							"name": "draggable",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35137,7 +35137,7 @@
 							}
 						},
 						{
-							"id": 4876,
+							"id": 4878,
 							"name": "id",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35164,7 +35164,7 @@
 							}
 						},
 						{
-							"id": 4877,
+							"id": 4879,
 							"name": "name",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35191,7 +35191,7 @@
 							}
 						},
 						{
-							"id": 4873,
+							"id": 4875,
 							"name": "onAttach",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35224,7 +35224,7 @@
 							}
 						},
 						{
-							"id": 4894,
+							"id": 4896,
 							"name": "onBlur",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35257,7 +35257,7 @@
 							}
 						},
 						{
-							"id": 4886,
+							"id": 4888,
 							"name": "onClick",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35290,7 +35290,7 @@
 							}
 						},
 						{
-							"id": 4875,
+							"id": 4877,
 							"name": "onCreate",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35323,7 +35323,7 @@
 							}
 						},
 						{
-							"id": 4885,
+							"id": 4887,
 							"name": "onDblclick",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35356,7 +35356,7 @@
 							}
 						},
 						{
-							"id": 4874,
+							"id": 4876,
 							"name": "onDetach",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35389,7 +35389,7 @@
 							}
 						},
 						{
-							"id": 4896,
+							"id": 4898,
 							"name": "onDrag",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35422,7 +35422,7 @@
 							}
 						},
 						{
-							"id": 4897,
+							"id": 4899,
 							"name": "onDragend",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35455,7 +35455,7 @@
 							}
 						},
 						{
-							"id": 4898,
+							"id": 4900,
 							"name": "onDragenter",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35488,7 +35488,7 @@
 							}
 						},
 						{
-							"id": 4899,
+							"id": 4901,
 							"name": "onDragexit",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35521,7 +35521,7 @@
 							}
 						},
 						{
-							"id": 4900,
+							"id": 4902,
 							"name": "onDragleave",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35554,7 +35554,7 @@
 							}
 						},
 						{
-							"id": 4901,
+							"id": 4903,
 							"name": "onDragover",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35587,7 +35587,7 @@
 							}
 						},
 						{
-							"id": 4902,
+							"id": 4904,
 							"name": "onDragstart",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35620,7 +35620,7 @@
 							}
 						},
 						{
-							"id": 4904,
+							"id": 4906,
 							"name": "onError",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35653,7 +35653,7 @@
 							}
 						},
 						{
-							"id": 4895,
+							"id": 4897,
 							"name": "onFocus",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35686,7 +35686,7 @@
 							}
 						},
 						{
-							"id": 4887,
+							"id": 4889,
 							"name": "onKeydown",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35719,7 +35719,7 @@
 							}
 						},
 						{
-							"id": 4888,
+							"id": 4890,
 							"name": "onKeyup",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35752,7 +35752,7 @@
 							}
 						},
 						{
-							"id": 4903,
+							"id": 4905,
 							"name": "onLoad",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35785,7 +35785,7 @@
 							}
 						},
 						{
-							"id": 4889,
+							"id": 4891,
 							"name": "onMousedown",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35818,7 +35818,7 @@
 							}
 						},
 						{
-							"id": 4891,
+							"id": 4893,
 							"name": "onMouseenter",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35851,7 +35851,7 @@
 							}
 						},
 						{
-							"id": 4892,
+							"id": 4894,
 							"name": "onMouseleave",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35884,7 +35884,7 @@
 							}
 						},
 						{
-							"id": 4890,
+							"id": 4892,
 							"name": "onMouseup",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35917,7 +35917,7 @@
 							}
 						},
 						{
-							"id": 4893,
+							"id": 4895,
 							"name": "onMousewheel",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35950,7 +35950,7 @@
 							}
 						},
 						{
-							"id": 4883,
+							"id": 4885,
 							"name": "role",
 							"kind": 1024,
 							"kindString": "Property",
@@ -35977,7 +35977,7 @@
 							}
 						},
 						{
-							"id": 4881,
+							"id": 4883,
 							"name": "style",
 							"kind": 1024,
 							"kindString": "Property",
@@ -36004,7 +36004,7 @@
 							}
 						},
 						{
-							"id": 4880,
+							"id": 4882,
 							"name": "tabindex",
 							"kind": 1024,
 							"kindString": "Property",
@@ -36031,7 +36031,7 @@
 							}
 						},
 						{
-							"id": 4882,
+							"id": 4884,
 							"name": "title",
 							"kind": 1024,
 							"kindString": "Property",
@@ -36063,38 +36063,38 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4879,
-								4884,
-								4878,
-								4876,
-								4877,
-								4873,
-								4894,
+								4881,
 								4886,
+								4880,
+								4878,
+								4879,
 								4875,
-								4885,
-								4874,
 								4896,
-								4897,
+								4888,
+								4877,
+								4887,
+								4876,
 								4898,
 								4899,
 								4900,
 								4901,
 								4902,
-								4904,
-								4895,
-								4887,
-								4888,
 								4903,
+								4904,
+								4906,
+								4897,
 								4889,
-								4891,
-								4892,
 								4890,
+								4905,
+								4891,
 								4893,
+								4894,
+								4892,
+								4895,
+								4885,
 								4883,
-								4881,
-								4880,
-								4882
+								4882,
+								4884
 							]
 						}
 					],
@@ -36119,14 +36119,14 @@
 					"title": "Classes",
 					"kind": 128,
 					"children": [
-						4905
+						4907
 					]
 				},
 				{
 					"title": "Interfaces",
 					"kind": 256,
 					"children": [
-						4872
+						4874
 					]
 				}
 			],
@@ -36146,7 +36146,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/i.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/i.ts",
 			"children": [
 				{
 					"id": 4134,
@@ -36841,7 +36841,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/iframe.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/iframe.ts",
 			"children": [
 				{
 					"id": 1597,
@@ -38771,7 +38771,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/img.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/img.ts",
 			"children": [
 				{
 					"id": 1673,
@@ -40724,7 +40724,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/input.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/input.ts",
 			"children": [
 				{
 					"id": 1767,
@@ -43232,7 +43232,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/label.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/label.ts",
 			"children": [
 				{
 					"id": 1840,
@@ -45024,7 +45024,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/li.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/li.ts",
 			"children": [
 				{
 					"id": 1908,
@@ -46793,7 +46793,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/link.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/link.ts",
 			"children": [
 				{
 					"id": 1982,
@@ -48700,7 +48700,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/nav.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/nav.ts",
 			"children": [
 				{
 					"id": 4064,
@@ -49395,7 +49395,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/noscript.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/noscript.ts",
 			"children": [
 				{
 					"id": 4274,
@@ -50090,7 +50090,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/ol.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/ol.ts",
 			"children": [
 				{
 					"id": 2050,
@@ -51859,7 +51859,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/option.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/option.ts",
 			"children": [
 				{
 					"id": 2118,
@@ -53628,7 +53628,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/p.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/p.ts",
 			"children": [
 				{
 					"id": 2186,
@@ -55397,7 +55397,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/pre.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/pre.ts",
 			"children": [
 				{
 					"id": 2254,
@@ -57166,7 +57166,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/progress.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/progress.ts",
 			"children": [
 				{
 					"id": 2324,
@@ -58981,7 +58981,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/q.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/q.ts",
 			"children": [
 				{
 					"id": 2392,
@@ -60750,7 +60750,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/script.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/script.ts",
 			"children": [
 				{
 					"id": 2466,
@@ -62657,7 +62657,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/select.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/select.ts",
 			"children": [
 				{
 					"id": 2537,
@@ -64571,7 +64571,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/source.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/source.ts",
 			"children": [
 				{
 					"id": 2612,
@@ -66455,7 +66455,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/span.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/span.ts",
 			"children": [
 				{
 					"id": 2680,
@@ -68224,7 +68224,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/aurum_element.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/aurum_element.ts",
 			"children": [
 				{
 					"id": 719,
@@ -69098,12 +69098,12 @@
 						{
 							"type": "reference",
 							"name": "Address",
-							"id": 4837
+							"id": 4839
 						},
 						{
 							"type": "reference",
 							"name": "Hr",
-							"id": 4905
+							"id": 4907
 						}
 					]
 				},
@@ -70620,12 +70620,12 @@
 						{
 							"type": "reference",
 							"name": "SwitchProps",
-							"id": 4705
+							"id": 4707
 						},
 						{
 							"type": "reference",
 							"name": "HrProps",
-							"id": 4872
+							"id": 4874
 						}
 					]
 				},
@@ -71540,7 +71540,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/aurum_text.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/aurum_text.ts",
 			"children": [
 				{
 					"id": 667,
@@ -71745,7 +71745,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/custom.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/custom.ts",
 			"children": [
 				{
 					"id": 4637,
@@ -73609,7 +73609,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/router.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/router.ts",
 			"children": [
 				{
 					"id": 4673,
@@ -73745,7 +73745,7 @@
 							"sources": [
 								{
 									"fileName": "nodes/special/router.ts",
-									"line": 58,
+									"line": 64,
 									"character": 5
 								}
 							],
@@ -73767,7 +73767,7 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/router.ts",
-							"line": 57,
+							"line": 63,
 							"character": 27
 						}
 					]
@@ -73848,7 +73848,7 @@
 					]
 				},
 				{
-					"id": 4693,
+					"id": 4695,
 					"name": "DefaultRoute",
 					"kind": 64,
 					"kindString": "Function",
@@ -73857,14 +73857,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4694,
+							"id": 4696,
 							"name": "DefaultRoute",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"parameters": [
 								{
-									"id": 4695,
+									"id": 4697,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -73875,7 +73875,7 @@
 									}
 								},
 								{
-									"id": 4696,
+									"id": 4698,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -73896,13 +73896,13 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/router.ts",
-							"line": 70,
+							"line": 76,
 							"character": 28
 						}
 					]
 				},
 				{
-					"id": 4689,
+					"id": 4691,
 					"name": "Route",
 					"kind": 64,
 					"kindString": "Function",
@@ -73911,14 +73911,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4690,
+							"id": 4692,
 							"name": "Route",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"parameters": [
 								{
-									"id": 4691,
+									"id": 4693,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -73930,7 +73930,7 @@
 									}
 								},
 								{
-									"id": 4692,
+									"id": 4694,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -73951,27 +73951,54 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/router.ts",
-							"line": 61,
+							"line": 67,
 							"character": 21
 						}
 					]
 				},
 				{
 					"id": 4685,
-					"name": "selectRoute",
+					"name": "getUrlPath",
 					"kind": 64,
 					"kindString": "Function",
 					"flags": {},
 					"signatures": [
 						{
 							"id": 4686,
+							"name": "getUrlPath",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"sources": [
+						{
+							"fileName": "nodes/special/router.ts",
+							"line": 31,
+							"character": 19
+						}
+					]
+				},
+				{
+					"id": 4687,
+					"name": "selectRoute",
+					"kind": 64,
+					"kindString": "Function",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 4688,
 							"name": "selectRoute",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"parameters": [
 								{
-									"id": 4687,
+									"id": 4689,
 									"name": "url",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -73982,7 +74009,7 @@
 									}
 								},
 								{
-									"id": 4688,
+									"id": 4690,
 									"name": "routes",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -74010,7 +74037,7 @@
 					"sources": [
 						{
 							"fileName": "nodes/special/router.ts",
-							"line": 36,
+							"line": 42,
 							"character": 20
 						}
 					]
@@ -74037,9 +74064,10 @@
 					"kind": 64,
 					"children": [
 						4681,
-						4693,
-						4689,
-						4685
+						4695,
+						4691,
+						4685,
+						4687
 					]
 				}
 			],
@@ -74052,17 +74080,17 @@
 			]
 		},
 		{
-			"id": 4697,
+			"id": 4699,
 			"name": "\"nodes/special/suspense\"",
 			"kind": 1,
 			"kindString": "External module",
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/suspense.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/suspense.ts",
 			"children": [
 				{
-					"id": 4698,
+					"id": 4700,
 					"name": "SuspenseProps",
 					"kind": 256,
 					"kindString": "Interface",
@@ -74071,7 +74099,7 @@
 					},
 					"children": [
 						{
-							"id": 4699,
+							"id": 4701,
 							"name": "fallback",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74098,7 +74126,7 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4699
+								4701
 							]
 						}
 					],
@@ -74111,7 +74139,7 @@
 					]
 				},
 				{
-					"id": 4700,
+					"id": 4702,
 					"name": "Suspense",
 					"kind": 64,
 					"kindString": "Function",
@@ -74120,14 +74148,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4701,
+							"id": 4703,
 							"name": "Suspense",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"parameters": [
 								{
-									"id": 4702,
+									"id": 4704,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -74135,11 +74163,11 @@
 									"type": {
 										"type": "reference",
 										"name": "SuspenseProps",
-										"id": 4698
+										"id": 4700
 									}
 								},
 								{
-									"id": 4703,
+									"id": 4705,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -74157,7 +74185,7 @@
 							"type": {
 								"type": "reference",
 								"name": "Suspense",
-								"id": 4700
+								"id": 4702
 							}
 						}
 					],
@@ -74175,14 +74203,14 @@
 					"title": "Interfaces",
 					"kind": 256,
 					"children": [
-						4698
+						4700
 					]
 				},
 				{
 					"title": "Functions",
 					"kind": 64,
 					"children": [
-						4700
+						4702
 					]
 				}
 			],
@@ -74195,17 +74223,17 @@
 			]
 		},
 		{
-			"id": 4704,
+			"id": 4706,
 			"name": "\"nodes/special/switch\"",
 			"kind": 1,
 			"kindString": "External module",
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/special/switch.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/switch.ts",
 			"children": [
 				{
-					"id": 4740,
+					"id": 4742,
 					"name": "SwitchCaseInstance",
 					"kind": 256,
 					"kindString": "Interface",
@@ -74214,7 +74242,7 @@
 					},
 					"typeParameter": [
 						{
-							"id": 4741,
+							"id": 4743,
 							"name": "T",
 							"kind": 131072,
 							"kindString": "Type parameter",
@@ -74223,7 +74251,7 @@
 					],
 					"children": [
 						{
-							"id": 4742,
+							"id": 4744,
 							"name": "[switchCaseIdentity]",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74243,7 +74271,7 @@
 							}
 						},
 						{
-							"id": 4745,
+							"id": 4747,
 							"name": "content",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74267,7 +74295,7 @@
 							}
 						},
 						{
-							"id": 4744,
+							"id": 4746,
 							"name": "default",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74287,7 +74315,7 @@
 							}
 						},
 						{
-							"id": 4743,
+							"id": 4745,
 							"name": "value",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74312,10 +74340,10 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4742,
-								4745,
 								4744,
-								4743
+								4747,
+								4746,
+								4745
 							]
 						}
 					],
@@ -74328,7 +74356,7 @@
 					]
 				},
 				{
-					"id": 4746,
+					"id": 4748,
 					"name": "SwitchCaseProps",
 					"kind": 256,
 					"kindString": "Interface",
@@ -74337,7 +74365,7 @@
 					},
 					"typeParameter": [
 						{
-							"id": 4747,
+							"id": 4749,
 							"name": "T",
 							"kind": 131072,
 							"kindString": "Type parameter",
@@ -74346,7 +74374,7 @@
 					],
 					"children": [
 						{
-							"id": 4748,
+							"id": 4750,
 							"name": "when",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74371,7 +74399,7 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4748
+								4750
 							]
 						}
 					],
@@ -74384,7 +74412,7 @@
 					]
 				},
 				{
-					"id": 4705,
+					"id": 4707,
 					"name": "SwitchProps",
 					"kind": 256,
 					"kindString": "Interface",
@@ -74393,7 +74421,7 @@
 					},
 					"typeParameter": [
 						{
-							"id": 4706,
+							"id": 4708,
 							"name": "T",
 							"kind": 131072,
 							"kindString": "Type parameter",
@@ -74402,7 +74430,7 @@
 					],
 					"children": [
 						{
-							"id": 4711,
+							"id": 4713,
 							"name": "class",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74429,7 +74457,7 @@
 							}
 						},
 						{
-							"id": 4716,
+							"id": 4718,
 							"name": "contentEditable",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74456,7 +74484,7 @@
 							}
 						},
 						{
-							"id": 4710,
+							"id": 4712,
 							"name": "draggable",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74483,7 +74511,7 @@
 							}
 						},
 						{
-							"id": 4708,
+							"id": 4710,
 							"name": "id",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74510,7 +74538,7 @@
 							}
 						},
 						{
-							"id": 4709,
+							"id": 4711,
 							"name": "name",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74537,7 +74565,7 @@
 							}
 						},
 						{
-							"id": 4737,
+							"id": 4739,
 							"name": "onAttach",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74570,7 +74598,7 @@
 							}
 						},
 						{
-							"id": 4726,
+							"id": 4728,
 							"name": "onBlur",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74603,7 +74631,7 @@
 							}
 						},
 						{
-							"id": 4718,
+							"id": 4720,
 							"name": "onClick",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74636,7 +74664,7 @@
 							}
 						},
 						{
-							"id": 4739,
+							"id": 4741,
 							"name": "onCreate",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74669,7 +74697,7 @@
 							}
 						},
 						{
-							"id": 4717,
+							"id": 4719,
 							"name": "onDblclick",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74702,7 +74730,7 @@
 							}
 						},
 						{
-							"id": 4738,
+							"id": 4740,
 							"name": "onDetach",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74735,7 +74763,7 @@
 							}
 						},
 						{
-							"id": 4728,
+							"id": 4730,
 							"name": "onDrag",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74768,7 +74796,7 @@
 							}
 						},
 						{
-							"id": 4729,
+							"id": 4731,
 							"name": "onDragend",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74801,7 +74829,7 @@
 							}
 						},
 						{
-							"id": 4730,
+							"id": 4732,
 							"name": "onDragenter",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74834,7 +74862,7 @@
 							}
 						},
 						{
-							"id": 4731,
+							"id": 4733,
 							"name": "onDragexit",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74867,7 +74895,7 @@
 							}
 						},
 						{
-							"id": 4732,
+							"id": 4734,
 							"name": "onDragleave",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74900,7 +74928,7 @@
 							}
 						},
 						{
-							"id": 4733,
+							"id": 4735,
 							"name": "onDragover",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74933,7 +74961,7 @@
 							}
 						},
 						{
-							"id": 4734,
+							"id": 4736,
 							"name": "onDragstart",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74966,7 +74994,7 @@
 							}
 						},
 						{
-							"id": 4736,
+							"id": 4738,
 							"name": "onError",
 							"kind": 1024,
 							"kindString": "Property",
@@ -74999,7 +75027,7 @@
 							}
 						},
 						{
-							"id": 4727,
+							"id": 4729,
 							"name": "onFocus",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75032,7 +75060,7 @@
 							}
 						},
 						{
-							"id": 4719,
+							"id": 4721,
 							"name": "onKeydown",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75065,7 +75093,7 @@
 							}
 						},
 						{
-							"id": 4720,
+							"id": 4722,
 							"name": "onKeyup",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75098,7 +75126,7 @@
 							}
 						},
 						{
-							"id": 4735,
+							"id": 4737,
 							"name": "onLoad",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75131,7 +75159,7 @@
 							}
 						},
 						{
-							"id": 4721,
+							"id": 4723,
 							"name": "onMousedown",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75164,7 +75192,7 @@
 							}
 						},
 						{
-							"id": 4723,
+							"id": 4725,
 							"name": "onMouseenter",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75197,7 +75225,7 @@
 							}
 						},
 						{
-							"id": 4724,
+							"id": 4726,
 							"name": "onMouseleave",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75230,7 +75258,7 @@
 							}
 						},
 						{
-							"id": 4722,
+							"id": 4724,
 							"name": "onMouseup",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75263,7 +75291,7 @@
 							}
 						},
 						{
-							"id": 4725,
+							"id": 4727,
 							"name": "onMousewheel",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75296,7 +75324,7 @@
 							}
 						},
 						{
-							"id": 4715,
+							"id": 4717,
 							"name": "role",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75323,7 +75351,7 @@
 							}
 						},
 						{
-							"id": 4707,
+							"id": 4709,
 							"name": "state",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75350,7 +75378,7 @@
 							}
 						},
 						{
-							"id": 4713,
+							"id": 4715,
 							"name": "style",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75377,7 +75405,7 @@
 							}
 						},
 						{
-							"id": 4712,
+							"id": 4714,
 							"name": "tabindex",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75404,7 +75432,7 @@
 							}
 						},
 						{
-							"id": 4714,
+							"id": 4716,
 							"name": "title",
 							"kind": 1024,
 							"kindString": "Property",
@@ -75436,39 +75464,39 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								4711,
-								4716,
-								4710,
-								4708,
-								4709,
-								4737,
-								4726,
+								4713,
 								4718,
+								4712,
+								4710,
+								4711,
 								4739,
-								4717,
-								4738,
 								4728,
-								4729,
+								4720,
+								4741,
+								4719,
+								4740,
 								4730,
 								4731,
 								4732,
 								4733,
 								4734,
-								4736,
-								4727,
-								4719,
-								4720,
 								4735,
+								4736,
+								4738,
+								4729,
 								4721,
-								4723,
-								4724,
 								4722,
+								4737,
+								4723,
 								4725,
+								4726,
+								4724,
+								4727,
+								4717,
+								4709,
 								4715,
-								4707,
-								4713,
-								4712,
-								4714
+								4714,
+								4716
 							]
 						}
 					],
@@ -75488,7 +75516,7 @@
 					]
 				},
 				{
-					"id": 4749,
+					"id": 4751,
 					"name": "switchCaseIdentity",
 					"kind": 32,
 					"kindString": "Variable",
@@ -75509,7 +75537,7 @@
 					"defaultValue": " Symbol('switchCase')"
 				},
 				{
-					"id": 4765,
+					"id": 4767,
 					"name": "DefaultSwitchCase",
 					"kind": 64,
 					"kindString": "Function",
@@ -75518,14 +75546,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4766,
+							"id": 4768,
 							"name": "DefaultSwitchCase",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"parameters": [
 								{
-									"id": 4767,
+									"id": 4769,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75536,7 +75564,7 @@
 									}
 								},
 								{
-									"id": 4768,
+									"id": 4770,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75550,7 +75578,7 @@
 							"type": {
 								"type": "reference",
 								"name": "SwitchCaseInstance",
-								"id": 4740,
+								"id": 4742,
 								"typeArguments": [
 									{
 										"type": "intrinsic",
@@ -75569,7 +75597,7 @@
 					]
 				},
 				{
-					"id": 4750,
+					"id": 4752,
 					"name": "Switch",
 					"kind": 64,
 					"kindString": "Function",
@@ -75578,14 +75606,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4751,
+							"id": 4753,
 							"name": "Switch",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"typeParameter": [
 								{
-									"id": 4752,
+									"id": 4754,
 									"name": "T",
 									"kind": 131072,
 									"kindString": "Type parameter",
@@ -75594,7 +75622,7 @@
 							],
 							"parameters": [
 								{
-									"id": 4753,
+									"id": 4755,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75602,7 +75630,7 @@
 									"type": {
 										"type": "reference",
 										"name": "SwitchProps",
-										"id": 4705,
+										"id": 4707,
 										"typeArguments": [
 											{
 												"type": "typeParameter",
@@ -75612,7 +75640,7 @@
 									}
 								},
 								{
-									"id": 4754,
+									"id": 4756,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75626,7 +75654,7 @@
 							"type": {
 								"type": "reference",
 								"name": "Switch",
-								"id": 4750
+								"id": 4752
 							}
 						}
 					],
@@ -75639,7 +75667,7 @@
 					]
 				},
 				{
-					"id": 4760,
+					"id": 4762,
 					"name": "SwitchCase",
 					"kind": 64,
 					"kindString": "Function",
@@ -75648,14 +75676,14 @@
 					},
 					"signatures": [
 						{
-							"id": 4761,
+							"id": 4763,
 							"name": "SwitchCase",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"typeParameter": [
 								{
-									"id": 4762,
+									"id": 4764,
 									"name": "T",
 									"kind": 131072,
 									"kindString": "Type parameter",
@@ -75664,7 +75692,7 @@
 							],
 							"parameters": [
 								{
-									"id": 4763,
+									"id": 4765,
 									"name": "props",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75672,7 +75700,7 @@
 									"type": {
 										"type": "reference",
 										"name": "SwitchCaseProps",
-										"id": 4746,
+										"id": 4748,
 										"typeArguments": [
 											{
 												"type": "typeParameter",
@@ -75682,7 +75710,7 @@
 									}
 								},
 								{
-									"id": 4764,
+									"id": 4766,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75696,7 +75724,7 @@
 							"type": {
 								"type": "reference",
 								"name": "SwitchCaseInstance",
-								"id": 4740,
+								"id": 4742,
 								"typeArguments": [
 									{
 										"type": "typeParameter",
@@ -75715,21 +75743,21 @@
 					]
 				},
 				{
-					"id": 4755,
+					"id": 4757,
 					"name": "selectCase",
 					"kind": 64,
 					"kindString": "Function",
 					"flags": {},
 					"signatures": [
 						{
-							"id": 4756,
+							"id": 4758,
 							"name": "selectCase",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"typeParameter": [
 								{
-									"id": 4757,
+									"id": 4759,
 									"name": "T",
 									"kind": 131072,
 									"kindString": "Type parameter",
@@ -75738,7 +75766,7 @@
 							],
 							"parameters": [
 								{
-									"id": 4758,
+									"id": 4760,
 									"name": "state",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75749,7 +75777,7 @@
 									}
 								},
 								{
-									"id": 4759,
+									"id": 4761,
 									"name": "children",
 									"kind": 32768,
 									"kindString": "Parameter",
@@ -75759,7 +75787,7 @@
 										"elementType": {
 											"type": "reference",
 											"name": "SwitchCaseInstance",
-											"id": 4740,
+											"id": 4742,
 											"typeArguments": [
 												{
 													"type": "typeParameter",
@@ -75773,7 +75801,7 @@
 							"type": {
 								"type": "reference",
 								"name": "selectCase",
-								"id": 4755
+								"id": 4757
 							}
 						}
 					],
@@ -75791,26 +75819,26 @@
 					"title": "Interfaces",
 					"kind": 256,
 					"children": [
-						4740,
-						4746,
-						4705
+						4742,
+						4748,
+						4707
 					]
 				},
 				{
 					"title": "Variables",
 					"kind": 32,
 					"children": [
-						4749
+						4751
 					]
 				},
 				{
 					"title": "Functions",
 					"kind": 64,
 					"children": [
-						4765,
-						4750,
-						4760,
-						4755
+						4767,
+						4752,
+						4762,
+						4757
 					]
 				}
 			],
@@ -75830,7 +75858,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/style.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/style.ts",
 			"children": [
 				{
 					"id": 3462,
@@ -77622,7 +77650,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/sub.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/sub.ts",
 			"children": [
 				{
 					"id": 4449,
@@ -78317,7 +78345,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/summary.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/summary.ts",
 			"children": [
 				{
 					"id": 4414,
@@ -79012,7 +79040,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/sup.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/sup.ts",
 			"children": [
 				{
 					"id": 4484,
@@ -79707,7 +79735,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/svg.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/svg.ts",
 			"children": [
 				{
 					"id": 2750,
@@ -81522,7 +81550,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/table.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/table.ts",
 			"children": [
 				{
 					"id": 2818,
@@ -83291,7 +83319,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/tbody.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/tbody.ts",
 			"children": [
 				{
 					"id": 4309,
@@ -83986,7 +84014,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/td.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/td.ts",
 			"children": [
 				{
 					"id": 2886,
@@ -85755,7 +85783,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/template.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/template.ts",
 			"children": [
 				{
 					"id": 3666,
@@ -87524,7 +87552,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/textarea.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/textarea.ts",
 			"children": [
 				{
 					"id": 2971,
@@ -89825,7 +89853,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/tfoot.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/tfoot.ts",
 			"children": [
 				{
 					"id": 4344,
@@ -90520,7 +90548,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/th.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/th.ts",
 			"children": [
 				{
 					"id": 3043,
@@ -92289,7 +92317,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/thead.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/thead.ts",
 			"children": [
 				{
 					"id": 4379,
@@ -92984,7 +93012,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/time.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/time.ts",
 			"children": [
 				{
 					"id": 3112,
@@ -94776,7 +94804,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/title.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/title.ts",
 			"children": [
 				{
 					"id": 3180,
@@ -96545,7 +96573,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/tr.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/tr.ts",
 			"children": [
 				{
 					"id": 3248,
@@ -98314,7 +98342,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/ul.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/ul.ts",
 			"children": [
 				{
 					"id": 3316,
@@ -100083,7 +100111,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/nodes/video.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/nodes/video.ts",
 			"children": [
 				{
 					"id": 3393,
@@ -102059,7 +102087,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/stream/data_source.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/stream/data_source.ts",
 			"children": [
 				{
 					"id": 244,
@@ -111058,7 +111086,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/stream/object_data_source.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/stream/object_data_source.ts",
 			"children": [
 				{
 					"id": 3707,
@@ -112047,7 +112075,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/aurum.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/aurum.ts",
 			"children": [
 				{
 					"id": 4519,
@@ -113713,7 +113741,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/cancellation_token.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/cancellation_token.ts",
 			"children": [
 				{
 					"id": 42,
@@ -114564,7 +114592,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/common.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/common.ts",
 			"children": [
 				{
 					"id": 630,
@@ -115203,7 +115231,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/event_emitter.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/event_emitter.ts",
 			"children": [
 				{
 					"id": 101,
@@ -115798,7 +115826,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/linkedlist/linked_list.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/linkedlist/linked_list.ts",
 			"children": [
 				{
 					"id": 15,
@@ -116289,7 +116317,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/linkedlist/linked_list_node.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/linkedlist/linked_list_node.ts",
 			"children": [
 				{
 					"id": 2,
@@ -116558,7 +116586,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/github/aurum/src/utilities/owner_symbol.ts",
+			"originalName": "/home/phoenix/dev/aurum/src/utilities/owner_symbol.ts",
 			"children": [
 				{
 					"id": 665,
@@ -116614,10 +116642,10 @@
 			"title": "External modules",
 			"kind": 1,
 			"children": [
-				4769,
+				4771,
 				796,
 				4168,
-				4836,
+				4838,
 				866,
 				3748,
 				4203,
@@ -116642,7 +116670,7 @@
 				3564,
 				3993,
 				1488,
-				4871,
+				4873,
 				4133,
 				1556,
 				1631,
@@ -116666,8 +116694,8 @@
 				666,
 				4600,
 				4672,
-				4697,
-				4704,
+				4699,
+				4706,
 				3427,
 				4448,
 				4413,

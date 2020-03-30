@@ -12,7 +12,7 @@ export class Select extends AurumElement {
                 props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value));
             }
             else {
-                this.node.selectedIndex = (_a = props.initialSelection) !== null && _a !== void 0 ? _a : -1;
+                this.node.selectedIndex = (_a = props.initialSelection, (_a !== null && _a !== void 0 ? _a : -1));
             }
             if (props.selectedIndexSource) {
                 this.needAttach = true;
