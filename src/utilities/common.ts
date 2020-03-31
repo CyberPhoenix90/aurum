@@ -1,5 +1,6 @@
 import { DataSource } from '../stream/data_source';
 
+export type AttributeValue = string | DataSource<string> | DataSource<boolean> | boolean;
 export type StringSource = string | DataSource<string>;
 export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
 

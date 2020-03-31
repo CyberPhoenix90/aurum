@@ -340,8 +340,12 @@ export class ArrayDataSource {
     map(mapper, cancellationToken) {
         return new MappedArrayView(this, mapper, cancellationToken);
     }
-    filter(callback, cancellationToken) {
-        return new FilteredArrayView(this, callback, cancellationToken);
+    filter(callback, dependencies = [], cancellationToken) {
+        const view = new FilteredArrayView(this, callback, cancellationToken);
+        dependencies.forEach((dep) => {
+            dep.unique().listen(() => view.refresh());
+        });
+        return view;
     }
     forEach(callbackfn) {
         return this.data.forEach(callbackfn);

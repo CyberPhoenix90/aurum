@@ -1,5 +1,5 @@
 import { ArrayDataSource, DataSource } from '../../stream/data_source';
-import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
+import { Callback, ClassType, DataDrain, MapLike, AttributeValue } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
@@ -17,15 +17,15 @@ export interface AurumElementModel {
 }
 
 export interface AurumElementProps {
-	id?: StringSource;
-	name?: StringSource;
-	draggable?: StringSource;
+	id?: AttributeValue;
+	name?: AttributeValue;
+	draggable?: AttributeValue;
 	class?: ClassType;
 	tabindex?: ClassType;
-	style?: StringSource;
-	title?: StringSource;
-	role?: StringSource;
-	contentEditable?: StringSource;
+	style?: AttributeValue;
+	title?: AttributeValue;
+	role?: AttributeValue;
+	contentEditable?: AttributeValue;
 	onDblclick?: DataDrain<MouseEvent>;
 	onClick?: DataDrain<MouseEvent>;
 	onKeydown?: DataDrain<KeyboardEvent>;
@@ -221,14 +221,27 @@ export abstract class AurumElement {
 		}
 	}
 
-	protected assignStringSourceToAttribute(data: StringSource, key: string) {
+	protected assignStringSourceToAttribute(data: AttributeValue, key: string) {
 		if (typeof data === 'string' || typeof data === 'boolean') {
-			this.node.setAttribute(key, data);
-		} else {
-			if (data.value) {
-				this.node.setAttribute(key, data.value);
+			if (typeof data === 'boolean') {
+				if (data) {
+					this.node.setAttribute(key, '');
+				} else {
+					this.node.removeAttribute(key);
+				}
 			}
-			data.unique().listen((v) => (this.node as HTMLElement).setAttribute(key, v));
+		} else {
+			data.unique().listenAndRepeat((v) => {
+				if (typeof v === 'boolean') {
+					if (v) {
+						this.node.setAttribute(key, '');
+					} else {
+						this.node.removeAttribute(key);
+					}
+				} else {
+					(this.node as HTMLElement).setAttribute(key, v);
+				}
+			});
 		}
 	}
 
@@ -306,14 +319,6 @@ export abstract class AurumElement {
 					});
 				}
 			}
-		}
-	}
-
-	protected resolveStringSource(source: StringSource): string {
-		if (typeof source === 'string') {
-			return source;
-		} else {
-			return source.value;
 		}
 	}
 

@@ -62,7 +62,7 @@ export declare class ArrayDataSource<T> {
     toArray(): T[];
     sort(comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken): SortedArrayView<T>;
     map<D>(mapper: (data: T) => D, cancellationToken?: CancellationToken): MappedArrayView<T, D>;
-    filter(callback: Predicate<T>, cancellationToken?: CancellationToken): FilteredArrayView<T>;
+    filter(callback: Predicate<T>, dependencies?: DataSource<any>[], cancellationToken?: CancellationToken): FilteredArrayView<T>;
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
     toDataSource(): DataSource<T[]>;
     private update;

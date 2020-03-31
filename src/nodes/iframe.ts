@@ -1,17 +1,17 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-import { StringSource, Callback } from '../utilities/common';
+import { Callback, AttributeValue } from '../utilities/common';
 
 export interface IFrameProps extends AurumElementProps {
 	onAttach?: Callback<HTMLIFrameElement>;
 	onDetach?: Callback<HTMLIFrameElement>;
 	onCreate?: Callback<HTMLIFrameElement>;
-	src?: StringSource;
-	allow?: StringSource;
-	allowFullscreen?: StringSource;
-	allowPaymentRequest?: StringSource;
-	width?: StringSource;
-	height?: StringSource;
-	srcdoc?: StringSource;
+	src?: AttributeValue;
+	allow?: AttributeValue;
+	allowFullscreen?: AttributeValue;
+	allowPaymentRequest?: AttributeValue;
+	width?: AttributeValue;
+	height?: AttributeValue;
+	srcdoc?: AttributeValue;
 }
 
 /**

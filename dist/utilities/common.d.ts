@@ -1,4 +1,5 @@
 import { DataSource } from '../stream/data_source';
+export declare type AttributeValue = string | DataSource<string> | DataSource<boolean> | boolean;
 export declare type StringSource = string | DataSource<string>;
 export declare type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
 export declare type Callback<T> = (data?: T) => void;

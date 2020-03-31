@@ -1,8 +1,8 @@
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
-import { StringSource, Callback } from '../utilities/common';
+import { Callback, AttributeValue } from '../utilities/common';
 
 export interface ButtonProps extends AurumElementProps {
-	disabled?: StringSource;
+	disabled?: AttributeValue;
 	onAttach?: Callback<HTMLButtonElement>;
 	onDetach?: Callback<HTMLButtonElement>;
 	onCreate?: Callback<HTMLButtonElement>;

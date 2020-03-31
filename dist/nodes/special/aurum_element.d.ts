@@ -1,5 +1,5 @@
 import { ArrayDataSource, DataSource } from '../../stream/data_source';
-import { Callback, ClassType, DataDrain, MapLike, StringSource } from '../../utilities/common';
+import { Callback, ClassType, DataDrain, MapLike, AttributeValue } from '../../utilities/common';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
 export declare const aurumElementModelIdentitiy: unique symbol;
@@ -10,15 +10,15 @@ export interface AurumElementModel {
     innerNodes: ChildNode[];
 }
 export interface AurumElementProps {
-    id?: StringSource;
-    name?: StringSource;
-    draggable?: StringSource;
+    id?: AttributeValue;
+    name?: AttributeValue;
+    draggable?: AttributeValue;
     class?: ClassType;
     tabindex?: ClassType;
-    style?: StringSource;
-    title?: StringSource;
-    role?: StringSource;
-    contentEditable?: StringSource;
+    style?: AttributeValue;
+    title?: AttributeValue;
+    role?: AttributeValue;
+    contentEditable?: AttributeValue;
     onDblclick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
     onKeydown?: DataDrain<KeyboardEvent>;
@@ -59,11 +59,10 @@ export declare abstract class AurumElement {
     protected render(): void;
     protected renderFragment(fragment: AurumFragment, absoluteIndex: number): number;
     private renderChild;
-    protected assignStringSourceToAttribute(data: StringSource, key: string): void;
+    protected assignStringSourceToAttribute(data: AttributeValue, key: string): void;
     protected handleAttach(parent: AurumElement): void;
     private handleDetach;
     private handleClass;
-    protected resolveStringSource(source: StringSource): string;
     protected create(domNodeName: string): HTMLElement;
     protected getChildIndex(node: HTMLElement): number;
     protected hasChild(node: HTMLElement): boolean;

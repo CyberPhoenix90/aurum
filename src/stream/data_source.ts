@@ -533,8 +533,13 @@ export class ArrayDataSource<T> {
 		return new MappedArrayView<T, D>(this, mapper, cancellationToken);
 	}
 
-	public filter(callback: Predicate<T>, cancellationToken?: CancellationToken): FilteredArrayView<T> {
-		return new FilteredArrayView(this, callback, cancellationToken);
+	public filter(callback: Predicate<T>, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
+		const view = new FilteredArrayView(this, callback, cancellationToken);
+		dependencies.forEach((dep) => {
+			dep.unique().listen(() => view.refresh());
+		});
+
+		return view;
 	}
 
 	public forEach(callbackfn: (value: T, index: number, array: T[]) => void): void {

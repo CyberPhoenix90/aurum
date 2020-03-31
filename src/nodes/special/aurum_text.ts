@@ -1,6 +1,6 @@
 import { DataSource } from '../../stream/data_source';
-import { StringSource } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
+import { StringSource } from '../../utilities/common';
 
 /**
  * @internal

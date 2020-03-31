@@ -1,19 +1,19 @@
-import { Callback, StringSource } from '../utilities/common';
+import { Callback, AttributeValue } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
 export interface VideoProps extends AurumElementProps {
 	onAttach?: Callback<HTMLVideoElement>;
 	onDetach?: Callback<HTMLVideoElement>;
 	onCreate?: Callback<HTMLVideoElement>;
-	controls?: StringSource;
-	autoplay?: StringSource;
-	loop?: StringSource;
-	muted?: StringSource;
-	preload?: StringSource;
-	src?: StringSource;
-	poster?: StringSource;
-	width?: StringSource;
-	height?: StringSource;
+	controls?: AttributeValue;
+	autoplay?: AttributeValue;
+	loop?: AttributeValue;
+	muted?: AttributeValue;
+	preload?: AttributeValue;
+	src?: AttributeValue;
+	poster?: AttributeValue;
+	width?: AttributeValue;
+	height?: AttributeValue;
 }
 
 /**

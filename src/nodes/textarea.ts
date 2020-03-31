@@ -1,30 +1,30 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
-import { DataDrain, StringSource, Callback } from '../utilities/common';
+import { DataDrain, Callback, AttributeValue } from '../utilities/common';
 
 export interface TextAreaProps extends AurumElementProps {
 	onAttach?: Callback<HTMLTextAreaElement>;
 	onDetach?: Callback<HTMLTextAreaElement>;
 	onCreate?: Callback<HTMLTextAreaElement>;
 
-	placeholder?: StringSource;
-	readonly?: StringSource;
-	disabled?: StringSource;
+	placeholder?: AttributeValue;
+	readonly?: AttributeValue;
+	disabled?: AttributeValue;
 	onChange?: DataDrain<InputEvent>;
 	onInput?: DataDrain<InputEvent>;
 	inputValueSource?: DataSource<string>;
 	initialValue?: string;
 
-	rows?: StringSource;
-	wrap?: StringSource;
-	autocomplete?: StringSource;
-	autofocus?: StringSource;
-	max?: StringSource;
-	maxLength?: StringSource;
-	min?: StringSource;
-	minLength?: StringSource;
-	required?: StringSource;
-	type?: StringSource;
+	rows?: AttributeValue;
+	wrap?: AttributeValue;
+	autocomplete?: AttributeValue;
+	autofocus?: AttributeValue;
+	max?: AttributeValue;
+	maxLength?: AttributeValue;
+	min?: AttributeValue;
+	minLength?: AttributeValue;
+	required?: AttributeValue;
+	type?: AttributeValue;
 }
 
 /**

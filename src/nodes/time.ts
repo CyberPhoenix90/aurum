@@ -1,11 +1,11 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-import { Callback, StringSource } from '../utilities/common';
+import { Callback, AttributeValue } from '../utilities/common';
 
 export interface TimeProps extends AurumElementProps {
 	onAttach?: Callback<HTMLTimeElement>;
 	onDetach?: Callback<HTMLTimeElement>;
 	onCreate?: Callback<HTMLTimeElement>;
-	datetime?: StringSource;
+	datetime?: AttributeValue;
 }
 
 /**

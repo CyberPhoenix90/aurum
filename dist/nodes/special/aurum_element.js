@@ -132,13 +132,29 @@ export class AurumElement {
     }
     assignStringSourceToAttribute(data, key) {
         if (typeof data === 'string' || typeof data === 'boolean') {
-            this.node.setAttribute(key, data);
+            if (typeof data === 'boolean') {
+                if (data) {
+                    this.node.setAttribute(key, '');
+                }
+                else {
+                    this.node.removeAttribute(key);
+                }
+            }
         }
         else {
-            if (data.value) {
-                this.node.setAttribute(key, data.value);
-            }
-            data.unique().listen((v) => this.node.setAttribute(key, v));
+            data.unique().listenAndRepeat((v) => {
+                if (typeof v === 'boolean') {
+                    if (v) {
+                        this.node.setAttribute(key, '');
+                    }
+                    else {
+                        this.node.removeAttribute(key);
+                    }
+                }
+                else {
+                    this.node.setAttribute(key, v);
+                }
+            });
         }
     }
     handleAttach(parent) {
@@ -222,14 +238,6 @@ export class AurumElement {
                     });
                 }
             }
-        }
-    }
-    resolveStringSource(source) {
-        if (typeof source === 'string') {
-            return source;
-        }
-        else {
-            return source.value;
         }
     }
     create(domNodeName) {
