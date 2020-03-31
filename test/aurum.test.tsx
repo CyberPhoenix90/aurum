@@ -78,6 +78,50 @@ describe('Aurum', () => {
 		assert((document.body.firstChild.firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
 
+	it('should accept booleans for attributes 1', () => {
+		Aurum.attach(
+			<div>
+				<p id={false}>Hello World</p>
+			</div>,
+			document.body
+		);
+		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+	});
+
+	it('should accept booleans for attributes 2', () => {
+		Aurum.attach(
+			<div>
+				<p id={true}>Hello World</p>
+			</div>,
+			document.body
+		);
+		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+	});
+
+	it('should accept booleans datasources for attributes', () => {
+		const ds = new DataSource(false);
+		Aurum.attach(
+			<div>
+				<p id={ds}>Hello World</p>
+			</div>,
+			document.body
+		);
+		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+
+		ds.update(true);
+
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+
+		ds.update(false);
+
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+	});
+
 	it('Should accept data sources', () => {
 		const ds = new DataSource('123');
 		Aurum.attach(
