@@ -13,12 +13,6 @@ export class DataSource {
         this.updateEvent.fire(newValue);
         this.updating = false;
     }
-    backPropagate(sender, newValue) {
-        this.value = newValue;
-        this.updating = true;
-        this.updateEvent.fireFiltered(newValue, sender);
-        this.updating = false;
-    }
     listenAndRepeat(callback, cancellationToken) {
         callback(this.value);
         return this.listen(callback, cancellationToken);
@@ -29,36 +23,34 @@ export class DataSource {
     filter(callback, cancellationToken) {
         const filteredSource = new DataSource();
         this.listen((value) => {
-            if (callback(value)) {
+            if (callback(value, filteredSource.value)) {
                 filteredSource.update(value);
             }
         }, cancellationToken);
         return filteredSource;
     }
-    filterDuplex(callback, cancellationToken) {
-        const filteredSource = new DataSource();
-        const cb = (value) => {
-            if (callback(value)) {
-                filteredSource.backPropagate(cb2, value);
+    max(cancellationToken) {
+        return this.filter((newValue, oldValue) => {
+            if (typeof newValue === 'string' && typeof oldValue === 'string') {
+                return newValue.localeCompare(oldValue) > 0;
             }
-        };
-        const cb2 = (value) => {
-            if (callback(value)) {
-                this.backPropagate(cb, value);
+            else {
+                return newValue > oldValue;
             }
-        };
-        this.listen(cb, cancellationToken);
-        filteredSource.listen(cb2, cancellationToken);
-        return filteredSource;
+        });
+    }
+    min(cancellationToken) {
+        return this.filter((newValue, oldValue) => {
+            if (typeof newValue === 'string' && typeof oldValue === 'string') {
+                return newValue.localeCompare(oldValue) < 0;
+            }
+            else {
+                return newValue < oldValue;
+            }
+        });
     }
     pipe(targetDataSource, cancellationToken) {
         this.listen((v) => targetDataSource.update(v), cancellationToken);
-    }
-    pipeDuplex(targetDataSource, cancellationToken) {
-        const cb = (v) => targetDataSource.backPropagate(cb2, v);
-        const cb2 = (v) => this.backPropagate(cb, v);
-        this.listen(cb, cancellationToken);
-        targetDataSource.listen(cb2, cancellationToken);
     }
     map(callback, cancellationToken) {
         const mappedSource = new DataSource(callback(this.value));
@@ -67,12 +59,11 @@ export class DataSource {
         }, cancellationToken);
         return mappedSource;
     }
-    mapDuplex(callback, reverseMap, cancellationToken) {
-        const mappedSource = new DataSource(callback(this.value));
-        const cb = (value) => mappedSource.backPropagate(cb2, callback(value));
-        const cb2 = (value) => this.backPropagate(cb, reverseMap(value));
-        this.listen(cb, cancellationToken);
-        mappedSource.listen(cb2, cancellationToken);
+    await(cancellationToken) {
+        const mappedSource = new DataSource();
+        this.listen(async (value) => {
+            mappedSource.update(await value);
+        }, cancellationToken);
         return mappedSource;
     }
     unique(cancellationToken) {
@@ -82,22 +73,6 @@ export class DataSource {
                 uniqueSource.update(value);
             }
         }, cancellationToken);
-        return uniqueSource;
-    }
-    uniqueDuplex(cancellationToken) {
-        const uniqueSource = new DataSource(this.value);
-        const cb = (value) => {
-            if (value !== uniqueSource.value) {
-                uniqueSource.backPropagate(cb2, value);
-            }
-        };
-        const cb2 = (value) => {
-            if (value !== this.value) {
-                this.backPropagate(cb, value);
-            }
-        };
-        this.listen(cb, cancellationToken);
-        uniqueSource.listen(cb2, cancellationToken);
         return uniqueSource;
     }
     reduce(reducer, initialValue, cancellationToken) {
@@ -110,6 +85,11 @@ export class DataSource {
         this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
         otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
         return aggregatedSource;
+    }
+    stringJoin(seperator, cancellationToken) {
+        const joinSource = new DataSource('');
+        this.listen((v) => joinSource.update(joinSource.value + seperator + v.toString()), cancellationToken);
+        return joinSource;
     }
     combine(otherSource, cancellationToken) {
         const combinedDataSource = new DataSource();
@@ -128,6 +108,20 @@ export class DataSource {
         }, cancellationToken);
         return debouncedDataSource;
     }
+    throttle(time, cancellationToken) {
+        const throttledDataSource = new DataSource(this.value);
+        let cooldown = false;
+        this.listen((v) => {
+            if (!cooldown) {
+                throttledDataSource.update(v);
+                cooldown = true;
+                setTimeout(() => {
+                    cooldown = false;
+                }, time);
+            }
+        }, cancellationToken);
+        return throttledDataSource;
+    }
     buffer(time, cancellationToken) {
         const bufferedDataSource = new DataSource();
         let timeout;
@@ -144,7 +138,7 @@ export class DataSource {
         }, cancellationToken);
         return bufferedDataSource;
     }
-    queue(cancellationToken) {
+    accumulate(cancellationToken) {
         const queueDataSource = new ArrayDataSource();
         this.listen((v) => {
             queueDataSource.push(v);
@@ -349,13 +343,6 @@ export class ArrayDataSource {
     }
     forEach(callbackfn) {
         return this.data.forEach(callbackfn);
-    }
-    toDataSource() {
-        const stream = new DataSource(this.data);
-        this.listen((s) => {
-            stream.update(s.newState);
-        });
-        return stream;
     }
     update(change) {
         this.updateEvent.fire(change);

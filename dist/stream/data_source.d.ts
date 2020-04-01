@@ -1,28 +1,28 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback, Predicate } from '../utilities/common';
+import { Callback, ThenArg, Predicate } from '../utilities/common';
 export declare class DataSource<T> {
     value: T;
     private updating;
     private updateEvent;
     constructor(initialValue?: T);
     update(newValue: T): void;
-    protected backPropagate(sender: Callback<T>, newValue: T): void;
     listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
     listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-    filter(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T>;
-    filterDuplex(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T>;
+    filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): DataSource<T>;
+    max(cancellationToken?: CancellationToken): DataSource<T>;
+    min(cancellationToken?: CancellationToken): DataSource<T>;
     pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void;
-    pipeDuplex(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void;
     map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D>;
-    mapDuplex<D>(callback: (value: T) => D, reverseMap: (value: D) => T, cancellationToken?: CancellationToken): DataSource<D>;
+    await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): DataSource<R>;
     unique(cancellationToken?: CancellationToken): DataSource<T>;
-    uniqueDuplex(cancellationToken?: CancellationToken): DataSource<T>;
     reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E>;
+    stringJoin(seperator: string, cancellationToken?: CancellationToken): DataSource<string>;
     combine(otherSource: DataSource<T>, cancellationToken?: CancellationToken): DataSource<T>;
     debounce(time: number, cancellationToken?: CancellationToken): DataSource<T>;
+    throttle(time: number, cancellationToken?: CancellationToken): DataSource<T>;
     buffer(time: number, cancellationToken?: CancellationToken): DataSource<T[]>;
-    queue(cancellationToken?: CancellationToken): ArrayDataSource<T>;
+    accumulate(cancellationToken?: CancellationToken): ArrayDataSource<T>;
     pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]>;
     cancelAll(): void;
 }
@@ -64,7 +64,6 @@ export declare class ArrayDataSource<T> {
     map<D>(mapper: (data: T) => D, cancellationToken?: CancellationToken): MappedArrayView<T, D>;
     filter(callback: Predicate<T>, dependencies?: DataSource<any>[], cancellationToken?: CancellationToken): FilteredArrayView<T>;
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
-    toDataSource(): DataSource<T[]>;
     private update;
 }
 export declare class MappedArrayView<D, T> extends ArrayDataSource<T> {

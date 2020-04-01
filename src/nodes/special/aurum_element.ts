@@ -3,6 +3,7 @@ import { Callback, ClassType, DataDrain, MapLike, AttributeValue } from '../../u
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
+import { DuplexDataSource } from '../../stream/duplex_data_source';
 
 /**
  * @inernal
@@ -173,6 +174,8 @@ export abstract class AurumElement {
 			if (props[events[key]]) {
 				if (props[events[key]] instanceof DataSource) {
 					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]].update(e));
+				} else if (props[events[key]] instanceof DuplexDataSource) {
+					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]].updateDownstream(e));
 				} else if (typeof props[events[key]] === 'function') {
 					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]](e));
 				}

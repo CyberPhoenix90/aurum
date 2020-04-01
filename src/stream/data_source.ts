@@ -1,5 +1,5 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback, Predicate } from '../utilities/common';
+import { Callback, ThenArg, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
 
 /**
@@ -35,18 +35,6 @@ export class DataSource<T> {
 	}
 
 	/**
-	 * Similar to update but does not update the the sender to avoid infinite mutual updates
-	 * @param sender Source of the backpropagation
-	 * @param newValue
-	 */
-	protected backPropagate(sender: Callback<T>, newValue: T): void {
-		this.value = newValue;
-		this.updating = true;
-		this.updateEvent.fireFiltered(newValue, sender);
-		this.updating = false;
-	}
-
-	/**
 	 * Same as listen but will immediately call the callback with the current value first
 	 * @param callback Callback to call when value is updated
 	 * @param cancellationToken Optional token to control the cancellation of the subscription
@@ -72,10 +60,10 @@ export class DataSource<T> {
 	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public filter(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
+	public filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
 		const filteredSource = new DataSource<T>();
 		this.listen((value) => {
-			if (callback(value)) {
+			if (callback(value, filteredSource.value)) {
 				filteredSource.update(value);
 			}
 		}, cancellationToken);
@@ -83,26 +71,35 @@ export class DataSource<T> {
 	}
 
 	/**
-	 * Same as filter except that updates to the new source are propagated back to the parent source
+	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they are larger than the previous value
+	 * In case of strings it checks alphabetical order when deciding what is bigger or smaller
 	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public filterDuplex(callback: (value: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
-		const filteredSource = new DataSource<T>();
-		const cb = (value) => {
-			if (callback(value)) {
-				filteredSource.backPropagate(cb2, value);
+	public max(cancellationToken?: CancellationToken): DataSource<T> {
+		return this.filter((newValue, oldValue) => {
+			if (typeof newValue === 'string' && typeof oldValue === 'string') {
+				return newValue.localeCompare(oldValue) > 0;
+			} else {
+				return newValue > oldValue;
 			}
-		};
-		const cb2 = (value) => {
-			if (callback(value)) {
-				this.backPropagate(cb, value);
-			}
-		};
+		});
+	}
 
-		this.listen(cb, cancellationToken);
-		filteredSource.listen(cb2, cancellationToken);
-		return filteredSource;
+	/**
+	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they are smaller than the previous value
+	 * In case of strings it checks alphabetical order when deciding what is bigger or smaller
+	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public min(cancellationToken?: CancellationToken): DataSource<T> {
+		return this.filter((newValue, oldValue) => {
+			if (typeof newValue === 'string' && typeof oldValue === 'string') {
+				return newValue.localeCompare(oldValue) < 0;
+			} else {
+				return newValue < oldValue;
+			}
+		});
 	}
 
 	/**
@@ -112,19 +109,6 @@ export class DataSource<T> {
 	 */
 	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void {
 		this.listen((v) => targetDataSource.update(v), cancellationToken);
-	}
-
-	/**
-	 * Duplex pipe is like pipe except that updates from the target source are propagated back to this source
-	 * @param targetDataSource datasource to pipe the updates to and from
-	 * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
-	 */
-	public pipeDuplex(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void {
-		const cb = (v) => targetDataSource.backPropagate(cb2, v);
-		const cb2 = (v) => this.backPropagate(cb, v);
-
-		this.listen(cb, cancellationToken);
-		targetDataSource.listen(cb2, cancellationToken);
 	}
 
 	/**
@@ -141,18 +125,15 @@ export class DataSource<T> {
 	}
 
 	/**
-	 * Duplex map is like map except that changes to the mapped stream will be backpropagated. This is useful for making duplex (both ways) data streams
+	 * Creates a new datasource that is listening to updates from this datasource and transforms them with a mapper function before fowarding them to itself
 	 * @param callback mapper function that transforms the updates of this source
-	 * @param reverseMap reverse mapping function when updates are done on the new source to map them back to data this source can accept
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public mapDuplex<D>(callback: (value: T) => D, reverseMap: (value: D) => T, cancellationToken?: CancellationToken): DataSource<D> {
-		const mappedSource = new DataSource<D>(callback(this.value));
-		const cb = (value) => mappedSource.backPropagate(cb2, callback(value));
-		const cb2 = (value) => this.backPropagate(cb, reverseMap(value));
-
-		this.listen(cb, cancellationToken);
-		mappedSource.listen(cb2, cancellationToken);
+	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): DataSource<R> {
+		const mappedSource = new DataSource<R>();
+		this.listen(async (value) => {
+			mappedSource.update(await (value as any));
+		}, cancellationToken);
 		return mappedSource;
 	}
 
@@ -167,28 +148,6 @@ export class DataSource<T> {
 				uniqueSource.update(value);
 			}
 		}, cancellationToken);
-		return uniqueSource;
-	}
-
-	/**
-	 * Same as unique except that updates to the new source are propagated back to this source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public uniqueDuplex(cancellationToken?: CancellationToken): DataSource<T> {
-		const uniqueSource = new DataSource<T>(this.value);
-		const cb = (value) => {
-			if (value !== uniqueSource.value) {
-				uniqueSource.backPropagate(cb2, value);
-			}
-		};
-		const cb2 = (value) => {
-			if (value !== this.value) {
-				this.backPropagate(cb, value);
-			}
-		};
-
-		this.listen(cb, cancellationToken);
-		uniqueSource.listen(cb2, cancellationToken);
 		return uniqueSource;
 	}
 
@@ -218,6 +177,18 @@ export class DataSource<T> {
 		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
 
 		return aggregatedSource;
+	}
+
+	/**
+	 * Creates a new datasource that listens to this source and creates a string that contains all the updates with a seperator
+	 * @param seperator string to be placed between all the values
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public stringJoin(seperator: string, cancellationToken?: CancellationToken): DataSource<string> {
+		const joinSource = new DataSource<string>('');
+		this.listen((v) => joinSource.update(joinSource.value + seperator + v.toString()), cancellationToken);
+
+		return joinSource;
 	}
 
 	/**
@@ -253,6 +224,28 @@ export class DataSource<T> {
 	}
 
 	/**
+	 * Creates a new source that listens to the updates of this source and forwards them to itself. In case many updates happen during the delay time only only at most one update per delay will be taken into account, effectively allowing to reduce load on the next stream. Useful for optimizations
+	 * @param time Milliseconds of cooldown after an update before another update can happen
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public throttle(time: number, cancellationToken?: CancellationToken): DataSource<T> {
+		const throttledDataSource = new DataSource<T>(this.value);
+		let cooldown = false;
+
+		this.listen((v) => {
+			if (!cooldown) {
+				throttledDataSource.update(v);
+				cooldown = true;
+				setTimeout(() => {
+					cooldown = false;
+				}, time);
+			}
+		}, cancellationToken);
+
+		return throttledDataSource;
+	}
+
+	/**
 	 * Creates a new source that listens to the updates of this source. The updates are collected in an array for a period of time and then the new source updates with an array of all the updates collected in the timespan. Useful to take a rapidly changing source and process it a buffered manner. Can be used for things like batching network requests
 	 * @param time Milliseconds to wait before updating
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
@@ -280,7 +273,7 @@ export class DataSource<T> {
 	 * Creates a new datasource that listens to the updates of this one. The datasource will accumulate all the updates from this source in form of an array data source. Useful to keep a history of all values from a source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public queue(cancellationToken?: CancellationToken): ArrayDataSource<T> {
+	public accumulate(cancellationToken?: CancellationToken): ArrayDataSource<T> {
 		const queueDataSource = new ArrayDataSource<T>();
 
 		this.listen((v) => {
@@ -544,14 +537,6 @@ export class ArrayDataSource<T> {
 
 	public forEach(callbackfn: (value: T, index: number, array: T[]) => void): void {
 		return this.data.forEach(callbackfn);
-	}
-
-	public toDataSource(): DataSource<T[]> {
-		const stream = new DataSource(this.data);
-		this.listen((s) => {
-			stream.update(s.newState);
-		});
-		return stream;
 	}
 
 	private update(change: CollectionChange<T>) {
