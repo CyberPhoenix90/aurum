@@ -140,6 +140,9 @@ export class AurumElement {
                     this.node.removeAttribute(key);
                 }
             }
+            else {
+                this.node.setAttribute(key, data);
+            }
         }
         else {
             data.unique().listenAndRepeat((v) => {

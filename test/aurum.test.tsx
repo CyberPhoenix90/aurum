@@ -122,6 +122,36 @@ describe('Aurum', () => {
 		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
 	});
 
+	it('should accept text for attributes', () => {
+		Aurum.attach(
+			<div>
+				<p id="test">Hello World</p>
+			</div>,
+			document.body
+		);
+		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
+	});
+
+	it('should accept string datasources for attributes', () => {
+		const ds = new DataSource('');
+		Aurum.attach(
+			<div>
+				<p id={ds}>Hello World</p>
+			</div>,
+			document.body
+		);
+		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+
+		ds.update('test');
+
+		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
+	});
+
 	it('Should accept data sources', () => {
 		const ds = new DataSource('123');
 		Aurum.attach(

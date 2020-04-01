@@ -229,6 +229,8 @@ export abstract class AurumElement {
 				} else {
 					this.node.removeAttribute(key);
 				}
+			} else {
+				(this.node as HTMLElement).setAttribute(key, data);
 			}
 		} else {
 			data.unique().listenAndRepeat((v) => {
