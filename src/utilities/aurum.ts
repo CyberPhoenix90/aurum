@@ -1,4 +1,4 @@
-import { AurumElement, AurumElementModel, buildRenderableFromModel, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
+import { AurumElement, AurumElementModel, prerender, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Constructor, MapLike } from './common';
 import { Div } from '../nodes/div';
@@ -129,7 +129,7 @@ const nodeMap = {
 
 export class Aurum {
 	public static attach(aurumElementModel: AurumElementModel, dom: HTMLElement) {
-		const aurumElement = buildRenderableFromModel(aurumElementModel);
+		const aurumElement = prerender(aurumElementModel);
 		if (dom[ownerSymbol]) {
 			throw new Error('This node is already managed by aurum and cannot be used');
 		}

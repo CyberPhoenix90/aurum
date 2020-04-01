@@ -1,8 +1,8 @@
 import { DataSource } from '../../stream/data_source';
-import { buildRenderableFromModel } from './aurum_element';
+import { prerender } from './aurum_element';
 const routeIdentity = Symbol('route');
 export function AurumRouter(props, children) {
-    children = children.map(buildRenderableFromModel);
+    children = children.map(prerender);
     if (children.some((c) => !c[routeIdentity])) {
         throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
     }

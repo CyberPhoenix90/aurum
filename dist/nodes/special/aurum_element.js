@@ -29,10 +29,10 @@ const defaultEvents = {
     error: 'onError'
 };
 const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
-export function buildRenderableFromModel(model) {
+export function prerender(model) {
     if (model && model[aurumElementModelIdentitiy]) {
         const result = model.constructor(model.props, model.innerNodes);
-        return buildRenderableFromModel(result);
+        return prerender(result);
     }
     else {
         return model;
@@ -344,7 +344,7 @@ export class AurumElement {
             return;
         }
         if (child[aurumElementModelIdentitiy]) {
-            child = buildRenderableFromModel(child);
+            child = prerender(child);
             if (child === undefined) {
                 return;
             }
@@ -415,7 +415,7 @@ export class AurumFragment {
         for (const child of children) {
             let renderable;
             if (child[aurumElementModelIdentitiy]) {
-                renderable = buildRenderableFromModel(child);
+                renderable = prerender(child);
             }
             else {
                 renderable = child;
@@ -468,7 +468,7 @@ export class AurumFragment {
             return;
         }
         if (newValue[aurumElementModelIdentitiy]) {
-            newValue = buildRenderableFromModel(newValue);
+            newValue = prerender(newValue);
         }
         if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
             if (!sourceChild) {
@@ -542,7 +542,7 @@ export class AurumFragment {
         dataSource.listenAndRepeat((change) => {
             switch (change.operationDetailed) {
                 case 'replace':
-                    this.children[change.index] = buildRenderableFromModel(change.items[0]);
+                    this.children[change.index] = prerender(change.items[0]);
                     break;
                 case 'swap':
                     const itemA = this.children[change.index];
@@ -551,10 +551,10 @@ export class AurumFragment {
                     this.children[change.index] = itemB;
                     break;
                 case 'append':
-                    this.children = this.children.concat(change.items.map(buildRenderableFromModel));
+                    this.children = this.children.concat(change.items.map(prerender));
                     break;
                 case 'prepend':
-                    this.children.unshift(...change.items.map(buildRenderableFromModel));
+                    this.children.unshift(...change.items.map(prerender));
                     break;
                 case 'remove':
                 case 'removeLeft':

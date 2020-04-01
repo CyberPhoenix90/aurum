@@ -1,7 +1,7 @@
-import { buildRenderableFromModel } from './aurum_element';
+import { prerender } from './aurum_element';
 const switchCaseIdentity = Symbol('switchCase');
 export function Switch(props, children) {
-    children = children.map(buildRenderableFromModel);
+    children = children.map(prerender);
     if (children.some((c) => !c[switchCaseIdentity])) {
         throw new Error('Switch only accepts SwitchCase as children');
     }

@@ -1,4 +1,4 @@
-import { AurumElement, buildRenderableFromModel, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
+import { AurumElement, prerender, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Div } from '../nodes/div';
 import { Button } from '../nodes/button';
@@ -126,7 +126,7 @@ const nodeMap = {
 };
 export class Aurum {
     static attach(aurumElementModel, dom) {
-        const aurumElement = buildRenderableFromModel(aurumElementModel);
+        const aurumElement = prerender(aurumElementModel);
         if (dom[ownerSymbol]) {
             throw new Error('This node is already managed by aurum and cannot be used');
         }

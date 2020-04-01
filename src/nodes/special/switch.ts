@@ -1,4 +1,4 @@
-import { AurumElementProps, ChildNode, buildRenderableFromModel } from './aurum_element';
+import { AurumElementProps, ChildNode, prerender } from './aurum_element';
 import { DataSource } from '../../stream/data_source';
 
 export interface SwitchProps<T = boolean> extends AurumElementProps {
@@ -15,7 +15,7 @@ export interface SwitchCaseInstance<T> {
 }
 
 export function Switch<T = boolean>(props: SwitchProps<T>, children) {
-	children = children.map(buildRenderableFromModel);
+	children = children.map(prerender);
 	if (children.some((c) => !c[switchCaseIdentity])) {
 		throw new Error('Switch only accepts SwitchCase as children');
 	}

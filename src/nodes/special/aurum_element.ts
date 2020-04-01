@@ -86,10 +86,10 @@ const defaultEvents: MapLike<string> = {
  */
 const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export function buildRenderableFromModel(model: any): Renderable {
+export function prerender(model: any): Renderable {
 	if (model && model[aurumElementModelIdentitiy]) {
 		const result = model.constructor(model.props, model.innerNodes);
-		return buildRenderableFromModel(result as any);
+		return prerender(result as any);
 	} else {
 		return model;
 	}
@@ -437,7 +437,7 @@ export abstract class AurumElement {
 
 		if (child[aurumElementModelIdentitiy]) {
 			//@ts-ignore
-			child = buildRenderableFromModel(child as AurumElementModel);
+			child = prerender(child as AurumElementModel);
 			if (child === undefined) {
 				return;
 			}
@@ -528,7 +528,7 @@ export class AurumFragment {
 		for (const child of children) {
 			let renderable;
 			if (child[aurumElementModelIdentitiy]) {
-				renderable = buildRenderableFromModel(child as any);
+				renderable = prerender(child as any);
 			} else {
 				renderable = child;
 			}
@@ -578,7 +578,7 @@ export class AurumFragment {
 			return;
 		}
 		if (newValue[aurumElementModelIdentitiy]) {
-			newValue = buildRenderableFromModel(newValue);
+			newValue = prerender(newValue);
 		}
 
 		if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
@@ -648,7 +648,7 @@ export class AurumFragment {
 				case 'replace':
 					//TODO:FIX THIS
 					//@ts-ignore
-					this.children[change.index] = buildRenderableFromModel(change.items[0]);
+					this.children[change.index] = prerender(change.items[0]);
 					break;
 				case 'swap':
 					const itemA = this.children[change.index];
@@ -658,11 +658,11 @@ export class AurumFragment {
 					break;
 				case 'append':
 					//@ts-ignore
-					this.children = this.children.concat(change.items.map(buildRenderableFromModel));
+					this.children = this.children.concat(change.items.map(prerender));
 					break;
 				case 'prepend':
 					//@ts-ignore
-					this.children.unshift(...change.items.map(buildRenderableFromModel));
+					this.children.unshift(...change.items.map(prerender));
 					break;
 				case 'remove':
 				case 'removeLeft':

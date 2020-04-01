@@ -1,5 +1,5 @@
 import { DataSource } from '../../stream/data_source';
-import { ChildNode, buildRenderableFromModel } from './aurum_element';
+import { ChildNode, prerender } from './aurum_element';
 
 export interface SuspenseProps {
 	fallback?: ChildNode;
@@ -7,7 +7,7 @@ export interface SuspenseProps {
 
 export function Suspense(props: SuspenseProps, children: ChildNode[]) {
 	const data = new DataSource<ChildNode>(props.fallback);
-	Promise.all(children.map(buildRenderableFromModel)).then((res) => {
+	Promise.all(children.map(prerender)).then((res) => {
 		data.update(res as ChildNode[]);
 	});
 
