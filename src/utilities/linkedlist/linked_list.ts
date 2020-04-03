@@ -42,19 +42,6 @@ export class LinkedList<T> {
 			return false;
 		});
 	}
-
-	public prepend(element: T): T {
-		if (!this.rootNode && !this.lastNode) {
-			this.rootNode = this.lastNode = new LinkedListNode(element);
-		} else {
-			this.rootNode.previous = new LinkedListNode(element);
-			this.rootNode.previous.next = this.rootNode;
-			this.rootNode = this.rootNode.previous;
-		}
-		this.length++;
-		return element;
-	}
-
 	public remove(element: T) {
 		if (element === this.rootNode.data) {
 			if (this.rootNode === this.lastNode) {

@@ -1,6 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
+import { DataSource } from './data_source';
 
 export enum DataFlow {
 	UPSTREAM,
@@ -26,6 +27,26 @@ export class DuplexDataSource<T> {
 		this.updateUpstreamEvent = new EventEmitter();
 	}
 
+	/**
+	 * Makes it possible to have 2 completely separate data flow pipelines for each direction
+	 * @param downStream stream to pipe downstream data to
+	 * @param upstream  stream to pipe upstream data to
+	 */
+	public static fromTwoDataSource<T>(downStream: DataSource<T>, upstream: DataSource<T>, initialValue?: T) {
+		const result = new DuplexDataSource<T>(initialValue);
+		//@ts-ignore
+		result.updateDownstreamEvent = downStream.updateEvent;
+		//@ts-ignore
+		result.updateUpstreamEvent = upstream.updateEvent;
+	}
+
+	/**
+	 * Allows creating a duplex stream that blocks data in one direction. Useful for plugging into code that uses two way flow but only one way is desired
+	 * @param direction direction of the dataflow that is allowed
+	 */
+	public static createOneWay<T>(direction: DataFlow = DataFlow.DOWNSTREAM, initialValue?: T): DuplexDataSource<T> {
+		return new DuplexDataSource(initialValue).oneWayFlow(direction);
+	}
 	/**
 	 * Updates the value in the data source and calls the listen callback for all listeners
 	 * @param newValue new value for the data source
@@ -175,7 +196,7 @@ export class DuplexDataSource<T> {
 
 	/**
 	 * Allows flow of data only in one direction
-	 * @param direction
+	 * @param direction direction of the dataflow that is allowed
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
 	public oneWayFlow(direction: DataFlow = DataFlow.DOWNSTREAM, cancellationToken?: CancellationToken): DuplexDataSource<T> {

@@ -34,8 +34,19 @@ export class ObjectDataSource {
         const event = this.updateEventOnKey.get(key);
         return event.subscribe(callback, cancellationToken).cancel;
     }
+    keys() {
+        return Object.keys(this.data);
+    }
+    values() {
+        return Object.values(this.data);
+    }
     get(key) {
         return this.data[key];
+    }
+    delete(key, value) {
+        const old = this.data[key];
+        delete this.data[key];
+        this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
     }
     set(key, value) {
         if (this.data[key] === value) {

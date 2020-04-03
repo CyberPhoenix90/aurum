@@ -125,6 +125,18 @@ export class DataSource<T> {
 	}
 
 	/**
+	 * Allows tapping into the stream and calls a function for each value.
+	 */
+	public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
+		const tapSource = new DataSource<T>(this.value);
+		this.listen((value) => {
+			callback(value);
+			tapSource.update(value);
+		}, cancellationToken);
+		return tapSource;
+	}
+
+	/**
 	 * Creates a new datasource that is listening to updates from this datasource and transforms them with a mapper function before fowarding them to itself
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
@@ -149,6 +161,24 @@ export class DataSource<T> {
 			}
 		}, cancellationToken);
 		return uniqueSource;
+	}
+
+	/**
+	 * Creates a new datasource that listens to this one and forwards updates revealing the previous value on each update
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public diff(cancellationToken?: CancellationToken): DataSource<{ new: T; old: T }> {
+		const diffingSource = new DataSource({
+			new: this.value,
+			old: undefined
+		});
+		this.listen((value) => {
+			diffingSource.update({
+				new: value,
+				old: diffingSource.value
+			});
+		}, cancellationToken);
+		return diffingSource;
 	}
 
 	/**
@@ -180,6 +210,53 @@ export class DataSource<T> {
 	}
 
 	/**
+	 * Combines three sources into a fourth source that listens to updates from all parent sources.
+	 * @param second Second parent for the new source
+	 * @param third Third parent for the new source
+	 * @param combinator Method allowing you to combine the data from all parents on update. Called each time a parent is updated with the latest values of all parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
+	 */
+	public aggregateThree<D, E, F>(
+		second: DataSource<D>,
+		third: DataSource<E>,
+		combinator: (self: T, second: D, third: E) => F,
+		cancellationToken?: CancellationToken
+	): DataSource<F> {
+		const aggregatedSource = new DataSource<F>(combinator(this.value, second.value, third.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	/**
+	 * Combines four sources into a fifth source that listens to updates from all parent sources.
+	 * @param second Second parent for the new source
+	 * @param third Third parent for the new source
+	 * @param fourth Fourth parent for the new source
+	 * @param combinator Method allowing you to combine the data from all parents on update. Called each time a parent is updated with the latest values of all parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
+	 */
+	public aggregateFour<D, E, F, G>(
+		second: DataSource<D>,
+		third: DataSource<E>,
+		fourth: DataSource<F>,
+		combinator: (self: T, second: D, third: E, fourth: F) => G,
+		cancellationToken?: CancellationToken
+	): DataSource<G> {
+		const aggregatedSource = new DataSource<G>(combinator(this.value, second.value, third.value, fourth.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	/**
 	 * Creates a new datasource that listens to this source and creates a string that contains all the updates with a seperator
 	 * @param seperator string to be placed between all the values
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
@@ -196,12 +273,31 @@ export class DataSource<T> {
 	 * @param otherSource Second parent for the new source
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public combine(otherSource: DataSource<T>, cancellationToken?: CancellationToken): DataSource<T> {
+	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
 		const combinedDataSource = new DataSource<T>();
 		this.pipe(combinedDataSource, cancellationToken);
-		otherSource.pipe(combinedDataSource, cancellationToken);
+		for (const otherSource of otherSources) {
+			otherSource.pipe(combinedDataSource, cancellationToken);
+		}
 
 		return combinedDataSource;
+	}
+
+	/**
+	 * Creates a datasource that forwards all the updates after a certain time has passed, useful to introduce a delay before something triggers. Does not debounce
+	 * @param time
+	 * @param cancellationToken
+	 */
+	public delay(time: number, cancellationToken?: CancellationToken): DataSource<T> {
+		const delayedDataSource = new DataSource<T>(this.value);
+
+		this.listen((v) => {
+			setTimeout(() => {
+				delayedDataSource.update(v);
+			}, time);
+		}, cancellationToken);
+
+		return delayedDataSource;
 	}
 
 	/**
@@ -224,7 +320,8 @@ export class DataSource<T> {
 	}
 
 	/**
-	 * Creates a new source that listens to the updates of this source and forwards them to itself. In case many updates happen during the delay time only only at most one update per delay will be taken into account, effectively allowing to reduce load on the next stream. Useful for optimizations
+	 * Creates a new source that listens to the updates of this source and forwards them to itself at most once per <time> milliseconds. In case many updates happen during the delay time only at most one update per delay will be taken into account,
+	 * effectively allowing to reduce load on the next stream. Useful for optimizations
 	 * @param time Milliseconds of cooldown after an update before another update can happen
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
@@ -247,7 +344,7 @@ export class DataSource<T> {
 
 	/**
 	 * Creates a new source that listens to the updates of this source. The updates are collected in an array for a period of time and then the new source updates with an array of all the updates collected in the timespan. Useful to take a rapidly changing source and process it a buffered manner. Can be used for things like batching network requests
-	 * @param time Milliseconds to wait before updating
+	 * @param time Milliseconds to wait before updating the returned source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
 	public buffer(time: number, cancellationToken?: CancellationToken): DataSource<T[]> {

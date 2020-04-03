@@ -110,7 +110,7 @@ describe('Datasource', () => {
 	it('should combine updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let combined = ds.combine(ds2);
+		let combined = ds.combine([ds2]);
 		assert(combined.value === undefined);
 		ds.update(100);
 		assert(combined.value === 100);

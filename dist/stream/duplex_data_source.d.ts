@@ -1,5 +1,6 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
+import { DataSource } from './data_source';
 export declare enum DataFlow {
     UPSTREAM = 0,
     DOWNSTREAM = 1
@@ -10,6 +11,8 @@ export declare class DuplexDataSource<T> {
     private updateDownstreamEvent;
     private updateUpstreamEvent;
     constructor(initialValue?: T);
+    static fromTwoDataSource<T>(downStream: DataSource<T>, upstream: DataSource<T>, initialValue?: T): void;
+    static createOneWay<T>(direction?: DataFlow, initialValue?: T): DuplexDataSource<T>;
     updateDownstream(newValue: T): void;
     updateUpstream(newValue: T): void;
     listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;

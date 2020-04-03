@@ -8,7 +8,6 @@ export declare class LinkedList<T> {
     find(predicate: Predicate<LinkedListNode<T>>): LinkedListNode<T>;
     append(element: T): T;
     forEach(cb: (d: T) => void): void;
-    prepend(element: T): T;
     remove(element: T): void;
 }
 //# sourceMappingURL=linked_list.d.ts.map

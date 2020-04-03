@@ -1,5 +1,4 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from './common';
 
 /**
  * @internal
@@ -53,21 +52,6 @@ export class EventEmitter<T> {
 		}
 	}
 
-	public fireFiltered(data: T, filter: Callback<T>): void {
-		this.isFiring = true;
-
-		let length = this.subscribeChannel.length;
-
-		for (let i = 0; i < length; i++) {
-			if (this.subscribeChannel[i].callback !== filter) {
-				this.subscribeChannel[i].callback(data);
-			}
-		}
-
-		this.isFiring = false;
-		this.afterFire();
-	}
-
 	private afterFire() {
 		if (this.onAfterFire.length > 0) {
 			this.onAfterFire.forEach((cb) => cb());
@@ -78,8 +62,7 @@ export class EventEmitter<T> {
 	public fire(data?: T): void {
 		this.isFiring = true;
 
-		let length = this.subscribeChannel.length;
-
+		const length = this.subscribeChannel.length;
 		for (let i = 0; i < length; i++) {
 			this.subscribeChannel[i].callback(data);
 		}

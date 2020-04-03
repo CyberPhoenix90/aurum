@@ -13,12 +13,20 @@ export declare class DataSource<T> {
     min(cancellationToken?: CancellationToken): DataSource<T>;
     pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void;
     map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D>;
+    tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T>;
     await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): DataSource<R>;
     unique(cancellationToken?: CancellationToken): DataSource<T>;
+    diff(cancellationToken?: CancellationToken): DataSource<{
+        new: T;
+        old: T;
+    }>;
     reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E>;
+    aggregateThree<D, E, F>(second: DataSource<D>, third: DataSource<E>, combinator: (self: T, second: D, third: E) => F, cancellationToken?: CancellationToken): DataSource<F>;
+    aggregateFour<D, E, F, G>(second: DataSource<D>, third: DataSource<E>, fourth: DataSource<F>, combinator: (self: T, second: D, third: E, fourth: F) => G, cancellationToken?: CancellationToken): DataSource<G>;
     stringJoin(seperator: string, cancellationToken?: CancellationToken): DataSource<string>;
-    combine(otherSource: DataSource<T>, cancellationToken?: CancellationToken): DataSource<T>;
+    combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T>;
+    delay(time: number, cancellationToken?: CancellationToken): DataSource<T>;
     debounce(time: number, cancellationToken?: CancellationToken): DataSource<T>;
     throttle(time: number, cancellationToken?: CancellationToken): DataSource<T>;
     buffer(time: number, cancellationToken?: CancellationToken): DataSource<T[]>;

@@ -5,6 +5,7 @@ export interface ObjectChange<T, K extends keyof T> {
     key: K;
     oldValue: T[K];
     newValue: T[K];
+    deleted?: boolean;
 }
 export declare class ObjectDataSource<T> {
     protected data: T;
@@ -15,7 +16,10 @@ export declare class ObjectDataSource<T> {
     listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
     listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void>;
     listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void>;
+    keys(): string[];
+    values(): any;
     get<K extends keyof T>(key: K): T[K];
+    delete<K extends keyof T>(key: K, value: T[K]): void;
     set<K extends keyof T>(key: K, value: T[K]): void;
     assign(newData: Partial<T>): void;
     toObject(): T;

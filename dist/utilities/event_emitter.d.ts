@@ -1,5 +1,4 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from './common';
 export interface EventSubscriptionFacade {
     cancel(): void;
 }
@@ -13,7 +12,6 @@ export declare class EventEmitter<T> {
     subscribe(callback: EventCallback<T>, cancellationToken?: CancellationToken): EventSubscriptionFacade;
     hasSubscriptions(): boolean;
     cancelAll(): void;
-    fireFiltered(data: T, filter: Callback<T>): void;
     private afterFire;
     fire(data?: T): void;
     private createSubscription;

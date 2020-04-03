@@ -21,17 +21,6 @@ export class EventEmitter {
             this.onAfterFire.push(() => (this.subscribeChannel.length = 0));
         }
     }
-    fireFiltered(data, filter) {
-        this.isFiring = true;
-        let length = this.subscribeChannel.length;
-        for (let i = 0; i < length; i++) {
-            if (this.subscribeChannel[i].callback !== filter) {
-                this.subscribeChannel[i].callback(data);
-            }
-        }
-        this.isFiring = false;
-        this.afterFire();
-    }
     afterFire() {
         if (this.onAfterFire.length > 0) {
             this.onAfterFire.forEach((cb) => cb());
@@ -40,7 +29,7 @@ export class EventEmitter {
     }
     fire(data) {
         this.isFiring = true;
-        let length = this.subscribeChannel.length;
+        const length = this.subscribeChannel.length;
         for (let i = 0; i < length; i++) {
             this.subscribeChannel[i].callback(data);
         }

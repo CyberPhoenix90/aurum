@@ -65,8 +65,12 @@ export class CancellationToken {
 	}
 
 	public requestAnimationFrame(cb: Callback<number>): void {
-		const id: number = requestAnimationFrame(cb);
-		this.addCancelable(() => cancelAnimationFrame(id));
+		const id: number = requestAnimationFrame(() => {
+			this.removeCancelable(cancelable);
+			cb();
+		});
+		const cancelable = () => cancelAnimationFrame(id);
+		this.addCancelable(cancelable);
 	}
 
 	public animationLoop(cb: Callback<number>): void {

@@ -25,18 +25,6 @@ describe('linked list', () => {
 		assert(list.rootNode.next.next === list.lastNode.previous);
 	});
 
-	it('prepend', () => {
-		const list = new LinkedList([1, 2, 3]);
-		list.prepend(0);
-		assert(list.rootNode.data === 0);
-		assert(list.rootNode.next.data === 1);
-		assert(list.rootNode.next.next.data === 2);
-		assert(list.rootNode.next.next.next.data === 3);
-		assert(list.rootNode === list.lastNode.previous.previous.previous);
-		assert(list.rootNode.next === list.lastNode.previous.previous);
-		assert(list.rootNode.next.next === list.lastNode.previous);
-	});
-
 	it('remove', () => {
 		const list = new LinkedList([1, 2, 3]);
 		list.remove(2);

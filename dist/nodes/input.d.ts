@@ -1,6 +1,7 @@
+import { AttributeValue, Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
-import { DataDrain, Callback, AttributeValue } from '../utilities/common';
+import { DuplexDataSource } from '../stream/duplex_data_source';
 export interface InputProps extends AurumElementProps {
     onAttach?: Callback<HTMLInputElement>;
     onDetach?: Callback<HTMLInputElement>;
@@ -10,13 +11,12 @@ export interface InputProps extends AurumElementProps {
     disabled?: AttributeValue;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
-    inputValueSource?: DataSource<string>;
-    initialValue?: string;
+    value?: DataSource<string> | DuplexDataSource<string> | string;
     accept?: AttributeValue;
     alt?: AttributeValue;
     autocomplete?: AttributeValue;
     autofocus?: AttributeValue;
-    checked?: AttributeValue;
+    checked?: DataSource<boolean> | DuplexDataSource<boolean> | boolean;
     defaultChecked?: AttributeValue;
     formAction?: AttributeValue;
     formEnctype?: AttributeValue;

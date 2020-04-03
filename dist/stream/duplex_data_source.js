@@ -10,6 +10,14 @@ export class DuplexDataSource {
         this.updateDownstreamEvent = new EventEmitter();
         this.updateUpstreamEvent = new EventEmitter();
     }
+    static fromTwoDataSource(downStream, upstream, initialValue) {
+        const result = new DuplexDataSource(initialValue);
+        result.updateDownstreamEvent = downStream.updateEvent;
+        result.updateUpstreamEvent = upstream.updateEvent;
+    }
+    static createOneWay(direction = DataFlow.DOWNSTREAM, initialValue) {
+        return new DuplexDataSource(initialValue).oneWayFlow(direction);
+    }
     updateDownstream(newValue) {
         if (this.updating) {
             throw new Error('Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed');

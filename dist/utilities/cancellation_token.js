@@ -42,8 +42,12 @@ export class CancellationToken {
         this.addCancelable(() => clearInterval(id));
     }
     requestAnimationFrame(cb) {
-        const id = requestAnimationFrame(cb);
-        this.addCancelable(() => cancelAnimationFrame(id));
+        const id = requestAnimationFrame(() => {
+            this.removeCancelable(cancelable);
+            cb();
+        });
+        const cancelable = () => cancelAnimationFrame(id);
+        this.addCancelable(cancelable);
     }
     animationLoop(cb) {
         let id = requestAnimationFrame(function f(time) {

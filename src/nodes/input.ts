@@ -1,6 +1,7 @@
+import { AttributeValue, Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
-import { DataDrain, Callback, AttributeValue } from '../utilities/common';
+import { DuplexDataSource } from '../stream/duplex_data_source';
 
 export interface InputProps extends AurumElementProps {
 	onAttach?: Callback<HTMLInputElement>;
@@ -12,13 +13,12 @@ export interface InputProps extends AurumElementProps {
 	disabled?: AttributeValue;
 	onChange?: DataDrain<InputEvent>;
 	onInput?: DataDrain<InputEvent>;
-	inputValueSource?: DataSource<string>;
-	initialValue?: string;
+	value?: DataSource<string> | DuplexDataSource<string> | string;
 	accept?: AttributeValue;
 	alt?: AttributeValue;
 	autocomplete?: AttributeValue;
 	autofocus?: AttributeValue;
-	checked?: AttributeValue;
+	checked?: DataSource<boolean> | DuplexDataSource<boolean> | boolean;
 	defaultChecked?: AttributeValue;
 	formAction?: AttributeValue;
 	formEnctype?: AttributeValue;
@@ -77,19 +77,33 @@ export class Input extends AurumElement {
 	constructor(props: InputProps, children: ChildNode[]) {
 		super(props, children, 'input');
 		if (props !== null) {
-			if (props.inputValueSource) {
-				props.inputValueSource.unique().listenAndRepeat((value) => (this.node.value = value));
+			if (props.value instanceof DataSource || props.value instanceof DuplexDataSource) {
+				props.value.unique().listenAndRepeat((value) => (this.node.value = value));
+				this.node.addEventListener('input', () => {
+					if (props.value instanceof DataSource) {
+						props.value.update(this.node.value);
+					} else if (props.value instanceof DuplexDataSource) {
+						props.value.updateUpstream(this.node.value);
+					}
+				});
 			} else {
-				this.node.value = props.initialValue ?? '';
+				this.node.value = props.value ?? '';
+			}
+
+			if (props.checked instanceof DataSource || props.checked instanceof DuplexDataSource) {
+				props.checked.unique().listenAndRepeat((value) => (this.node.checked = value));
+				this.node.addEventListener('change', () => {
+					if (props.checked instanceof DataSource) {
+						props.checked.update(this.node.checked);
+					} else if (props.checked instanceof DuplexDataSource) {
+						props.checked.updateUpstream(this.node.checked);
+					}
+				});
+			} else {
+				this.node.checked = props.checked ?? false;
 			}
 			this.bindProps(inputProps, props);
 			this.createEventHandlers(inputEvents, props);
-
-			if (props.inputValueSource) {
-				this.node.addEventListener('input', () => {
-					props.inputValueSource.update(this.node.value);
-				});
-			}
 		}
 	}
 }

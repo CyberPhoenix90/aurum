@@ -59,6 +59,14 @@ export class DataSource {
         }, cancellationToken);
         return mappedSource;
     }
+    tap(callback, cancellationToken) {
+        const tapSource = new DataSource(this.value);
+        this.listen((value) => {
+            callback(value);
+            tapSource.update(value);
+        }, cancellationToken);
+        return tapSource;
+    }
     await(cancellationToken) {
         const mappedSource = new DataSource();
         this.listen(async (value) => {
@@ -75,6 +83,19 @@ export class DataSource {
         }, cancellationToken);
         return uniqueSource;
     }
+    diff(cancellationToken) {
+        const diffingSource = new DataSource({
+            new: this.value,
+            old: undefined
+        });
+        this.listen((value) => {
+            diffingSource.update({
+                new: value,
+                old: diffingSource.value
+            });
+        }, cancellationToken);
+        return diffingSource;
+    }
     reduce(reducer, initialValue, cancellationToken) {
         const reduceSource = new DataSource(initialValue);
         this.listen((v) => reduceSource.update(reducer(reduceSource.value, v)), cancellationToken);
@@ -86,16 +107,42 @@ export class DataSource {
         otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
         return aggregatedSource;
     }
+    aggregateThree(second, third, combinator, cancellationToken) {
+        const aggregatedSource = new DataSource(combinator(this.value, second.value, third.value));
+        this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+        second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+        third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+        return aggregatedSource;
+    }
+    aggregateFour(second, third, fourth, combinator, cancellationToken) {
+        const aggregatedSource = new DataSource(combinator(this.value, second.value, third.value, fourth.value));
+        this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+        second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+        third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+        fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+        return aggregatedSource;
+    }
     stringJoin(seperator, cancellationToken) {
         const joinSource = new DataSource('');
         this.listen((v) => joinSource.update(joinSource.value + seperator + v.toString()), cancellationToken);
         return joinSource;
     }
-    combine(otherSource, cancellationToken) {
+    combine(otherSources, cancellationToken) {
         const combinedDataSource = new DataSource();
         this.pipe(combinedDataSource, cancellationToken);
-        otherSource.pipe(combinedDataSource, cancellationToken);
+        for (const otherSource of otherSources) {
+            otherSource.pipe(combinedDataSource, cancellationToken);
+        }
         return combinedDataSource;
+    }
+    delay(time, cancellationToken) {
+        const delayedDataSource = new DataSource(this.value);
+        this.listen((v) => {
+            setTimeout(() => {
+                delayedDataSource.update(v);
+            }, time);
+        }, cancellationToken);
+        return delayedDataSource;
     }
     debounce(time, cancellationToken) {
         const debouncedDataSource = new DataSource(this.value);
