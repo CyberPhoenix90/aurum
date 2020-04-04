@@ -129,9 +129,15 @@ export class ObjectDataSource<T> {
 	 * Merge the key value pairs of an object into this object non recursively
 	 * @param newData
 	 */
-	public assign(newData: Partial<T>): void {
-		for (const key of Object.keys(newData)) {
-			this.set(key as keyof T, newData[key]);
+	public assign(newData: Partial<T> | ObjectDataSource<T>): void {
+		if (newData instanceof ObjectDataSource) {
+			for (const key of newData.keys()) {
+				this.set(key as keyof T, newData.data[key]);
+			}
+		} else {
+			for (const key of Object.keys(newData)) {
+				this.set(key as keyof T, newData[key]);
+			}
 		}
 	}
 
