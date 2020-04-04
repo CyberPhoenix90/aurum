@@ -11,6 +11,9 @@ export interface AudioProps extends AurumElementProps {
     preload?: AttributeValue;
     src?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Audio extends AurumElement {
     readonly node: HTMLAudioElement;
     constructor(props: AudioProps, children: ChildNode[]);

@@ -12,7 +12,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/aurum.ts",
+			"originalName": "D:/Projects/aurum/src/aurum.ts",
 			"children": [
 				{
 					"id": 4893,
@@ -1374,7 +1374,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/a.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/a.ts",
 			"children": [
 				{
 					"id": 944,
@@ -3189,7 +3189,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/abbr.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/abbr.ts",
 			"children": [
 				{
 					"id": 4290,
@@ -3884,7 +3884,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/address.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/address.ts",
 			"children": [
 				{
 					"id": 4960,
@@ -4579,7 +4579,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/area.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/area.ts",
 			"children": [
 				{
 					"id": 1012,
@@ -6348,7 +6348,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/article.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/article.ts",
 			"children": [
 				{
 					"id": 3870,
@@ -7043,7 +7043,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/aside.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/aside.ts",
 			"children": [
 				{
 					"id": 4325,
@@ -7738,7 +7738,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/audio.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/audio.ts",
 			"children": [
 				{
 					"id": 1086,
@@ -9645,7 +9645,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/b.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/b.ts",
 			"children": [
 				{
 					"id": 4220,
@@ -10340,7 +10340,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/body.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/body.ts",
 			"children": [
 				{
 					"id": 3641,
@@ -12109,7 +12109,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/br.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/br.ts",
 			"children": [
 				{
 					"id": 1154,
@@ -13878,7 +13878,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/button.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/button.ts",
 			"children": [
 				{
 					"id": 1223,
@@ -15670,7 +15670,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/canvas.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/canvas.ts",
 			"children": [
 				{
 					"id": 1293,
@@ -17485,7 +17485,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/data.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/data.ts",
 			"children": [
 				{
 					"id": 1362,
@@ -19277,7 +19277,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/details.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/details.ts",
 			"children": [
 				{
 					"id": 1430,
@@ -21046,7 +21046,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/div.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/div.ts",
 			"children": [
 				{
 					"id": 1498,
@@ -22815,7 +22815,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/em.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/em.ts",
 			"children": [
 				{
 					"id": 4360,
@@ -23510,7 +23510,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/footer.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/footer.ts",
 			"children": [
 				{
 					"id": 4150,
@@ -24205,7 +24205,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/form.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/form.ts",
 			"children": [
 				{
 					"id": 1566,
@@ -25974,7 +25974,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h1.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h1.ts",
 			"children": [
 				{
 					"id": 3905,
@@ -26669,7 +26669,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h2.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h2.ts",
 			"children": [
 				{
 					"id": 3940,
@@ -27364,7 +27364,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h3.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h3.ts",
 			"children": [
 				{
 					"id": 3975,
@@ -28059,7 +28059,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h4.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h4.ts",
 			"children": [
 				{
 					"id": 4010,
@@ -28754,7 +28754,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h5.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h5.ts",
 			"children": [
 				{
 					"id": 4045,
@@ -29449,7 +29449,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/h6.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/h6.ts",
 			"children": [
 				{
 					"id": 4080,
@@ -30144,7 +30144,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/head.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/head.ts",
 			"children": [
 				{
 					"id": 3709,
@@ -31913,7 +31913,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/header.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/header.ts",
 			"children": [
 				{
 					"id": 4115,
@@ -32608,7 +32608,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/heading.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/heading.ts",
 			"children": [
 				{
 					"id": 1634,
@@ -34377,7 +34377,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/hr.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/hr.ts",
 			"children": [
 				{
 					"id": 5028,
@@ -36146,7 +36146,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/i.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/i.ts",
 			"children": [
 				{
 					"id": 4255,
@@ -36841,7 +36841,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/iframe.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/iframe.ts",
 			"children": [
 				{
 					"id": 1709,
@@ -38771,7 +38771,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/img.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/img.ts",
 			"children": [
 				{
 					"id": 1785,
@@ -40724,7 +40724,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/input.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/input.ts",
 			"children": [
 				{
 					"id": 1878,
@@ -43129,7 +43129,7 @@
 							"name": "string"
 						}
 					},
-					"defaultValue": " [\n\t'placeholder',\n\t'readonly',\n\t'disabled',\n\t'accept',\n\t'alt',\n\t'autocomplete',\n\t'autofocus',\n\t'checked',\n\t'defaultChecked',\n\t'formAction',\n\t'formEnctype',\n\t'formMethod',\n\t'formNoValidate',\n\t'formTarget',\n\t'max',\n\t'maxLength',\n\t'min',\n\t'minLength',\n\t'pattern',\n\t'multiple',\n\t'required',\n\t'type'\n]"
+					"defaultValue": " [\r\n\t'placeholder',\r\n\t'readonly',\r\n\t'disabled',\r\n\t'accept',\r\n\t'alt',\r\n\t'autocomplete',\r\n\t'autofocus',\r\n\t'checked',\r\n\t'defaultChecked',\r\n\t'formAction',\r\n\t'formEnctype',\r\n\t'formMethod',\r\n\t'formNoValidate',\r\n\t'formTarget',\r\n\t'max',\r\n\t'maxLength',\r\n\t'min',\r\n\t'minLength',\r\n\t'pattern',\r\n\t'multiple',\r\n\t'required',\r\n\t'type'\r\n]"
 				},
 				{
 					"id": 1912,
@@ -43256,7 +43256,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/label.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/label.ts",
 			"children": [
 				{
 					"id": 1951,
@@ -45048,7 +45048,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/li.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/li.ts",
 			"children": [
 				{
 					"id": 2019,
@@ -46817,7 +46817,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/link.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/link.ts",
 			"children": [
 				{
 					"id": 2093,
@@ -48724,7 +48724,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/nav.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/nav.ts",
 			"children": [
 				{
 					"id": 4185,
@@ -49419,7 +49419,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/noscript.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/noscript.ts",
 			"children": [
 				{
 					"id": 4395,
@@ -50114,7 +50114,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/ol.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/ol.ts",
 			"children": [
 				{
 					"id": 2161,
@@ -51883,7 +51883,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/option.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/option.ts",
 			"children": [
 				{
 					"id": 2229,
@@ -53652,7 +53652,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/p.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/p.ts",
 			"children": [
 				{
 					"id": 2297,
@@ -55421,7 +55421,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/pre.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/pre.ts",
 			"children": [
 				{
 					"id": 2365,
@@ -57190,7 +57190,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/progress.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/progress.ts",
 			"children": [
 				{
 					"id": 2435,
@@ -59005,7 +59005,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/q.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/q.ts",
 			"children": [
 				{
 					"id": 2503,
@@ -60774,7 +60774,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/script.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/script.ts",
 			"children": [
 				{
 					"id": 2577,
@@ -62681,7 +62681,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/select.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/select.ts",
 			"children": [
 				{
 					"id": 2648,
@@ -64595,7 +64595,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/source.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/source.ts",
 			"children": [
 				{
 					"id": 2723,
@@ -66479,7 +66479,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/span.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/span.ts",
 			"children": [
 				{
 					"id": 2791,
@@ -68248,7 +68248,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/aurum_element.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/aurum_element.ts",
 			"children": [
 				{
 					"id": 831,
@@ -71564,7 +71564,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/aurum_text.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/aurum_text.ts",
 			"children": [
 				{
 					"id": 779,
@@ -71769,7 +71769,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/custom.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/custom.ts",
 			"children": [
 				{
 					"id": 4758,
@@ -73633,7 +73633,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/router.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/router.ts",
 			"children": [
 				{
 					"id": 4794,
@@ -74111,7 +74111,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/suspense.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/suspense.ts",
 			"children": [
 				{
 					"id": 4821,
@@ -74254,7 +74254,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/special/switch.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/special/switch.ts",
 			"children": [
 				{
 					"id": 4863,
@@ -75882,7 +75882,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/style.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/style.ts",
 			"children": [
 				{
 					"id": 3573,
@@ -77674,7 +77674,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/sub.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/sub.ts",
 			"children": [
 				{
 					"id": 4570,
@@ -78369,7 +78369,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/summary.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/summary.ts",
 			"children": [
 				{
 					"id": 4535,
@@ -79064,7 +79064,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/sup.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/sup.ts",
 			"children": [
 				{
 					"id": 4605,
@@ -79759,7 +79759,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/svg.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/svg.ts",
 			"children": [
 				{
 					"id": 2861,
@@ -81574,7 +81574,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/table.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/table.ts",
 			"children": [
 				{
 					"id": 2929,
@@ -83343,7 +83343,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/tbody.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/tbody.ts",
 			"children": [
 				{
 					"id": 4430,
@@ -84038,7 +84038,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/td.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/td.ts",
 			"children": [
 				{
 					"id": 2997,
@@ -85807,7 +85807,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/template.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/template.ts",
 			"children": [
 				{
 					"id": 3777,
@@ -87576,7 +87576,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/textarea.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/textarea.ts",
 			"children": [
 				{
 					"id": 3082,
@@ -89750,7 +89750,7 @@
 							"name": "string"
 						}
 					},
-					"defaultValue": " [\n\t'placeholder',\n\t'readonly',\n\t'disabled',\n\t'rows',\n\t'wrap',\n\t'autocomplete',\n\t'autofocus',\n\t'max',\n\t'maxLength',\n\t'min',\n\t'minLength',\n\t'required',\n\t'type'\n]"
+					"defaultValue": " [\r\n\t'placeholder',\r\n\t'readonly',\r\n\t'disabled',\r\n\t'rows',\r\n\t'wrap',\r\n\t'autocomplete',\r\n\t'autofocus',\r\n\t'max',\r\n\t'maxLength',\r\n\t'min',\r\n\t'minLength',\r\n\t'required',\r\n\t'type'\r\n]"
 				},
 				{
 					"id": 3116,
@@ -89877,7 +89877,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/tfoot.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/tfoot.ts",
 			"children": [
 				{
 					"id": 4465,
@@ -90572,7 +90572,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/th.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/th.ts",
 			"children": [
 				{
 					"id": 3154,
@@ -92341,7 +92341,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/thead.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/thead.ts",
 			"children": [
 				{
 					"id": 4500,
@@ -93036,7 +93036,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/time.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/time.ts",
 			"children": [
 				{
 					"id": 3223,
@@ -94828,7 +94828,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/title.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/title.ts",
 			"children": [
 				{
 					"id": 3291,
@@ -96597,7 +96597,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/tr.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/tr.ts",
 			"children": [
 				{
 					"id": 3359,
@@ -98366,7 +98366,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/ul.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/ul.ts",
 			"children": [
 				{
 					"id": 3427,
@@ -100135,7 +100135,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/nodes/video.ts",
+			"originalName": "D:/Projects/aurum/src/nodes/video.ts",
 			"children": [
 				{
 					"id": 3504,
@@ -102111,7 +102111,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/stream/data_source.ts",
+			"originalName": "D:/Projects/aurum/src/stream/data_source.ts",
 			"children": [
 				{
 					"id": 278,
@@ -111691,7 +111691,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/stream/duplex_data_source.ts",
+			"originalName": "D:/Projects/aurum/src/stream/duplex_data_source.ts",
 			"children": [
 				{
 					"id": 658,
@@ -113099,7 +113099,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/stream/object_data_source.ts",
+			"originalName": "D:/Projects/aurum/src/stream/object_data_source.ts",
 			"children": [
 				{
 					"id": 3819,
@@ -114321,7 +114321,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/aurum.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/aurum.ts",
 			"children": [
 				{
 					"id": 4640,
@@ -115987,7 +115987,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/cancellation_token.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/cancellation_token.ts",
 			"children": [
 				{
 					"id": 39,
@@ -116838,7 +116838,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/common.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/common.ts",
 			"children": [
 				{
 					"id": 737,
@@ -117591,7 +117591,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/event_emitter.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/event_emitter.ts",
 			"children": [
 				{
 					"id": 98,
@@ -118124,7 +118124,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/linkedlist/linked_list.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/linkedlist/linked_list.ts",
 			"children": [
 				{
 					"id": 15,
@@ -118571,7 +118571,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/linkedlist/linked_list_node.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/linkedlist/linked_list_node.ts",
 			"children": [
 				{
 					"id": 2,
@@ -118840,7 +118840,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/phoenix/dev/aurum/src/utilities/owner_symbol.ts",
+			"originalName": "D:/Projects/aurum/src/utilities/owner_symbol.ts",
 			"children": [
 				{
 					"id": 777,

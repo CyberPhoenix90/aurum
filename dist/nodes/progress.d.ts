@@ -7,6 +7,9 @@ export interface ProgressProps extends AurumElementProps {
     max?: AttributeValue;
     value?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Progress extends AurumElement {
     node: HTMLProgressElement;
     constructor(props: ProgressProps, children: ChildNode[]);

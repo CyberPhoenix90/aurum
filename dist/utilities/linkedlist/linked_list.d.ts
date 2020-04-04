@@ -1,5 +1,8 @@
 import { LinkedListNode } from './linked_list_node';
 import { Predicate } from '../common';
+/**
+ * @internal
+ */
 export declare class LinkedList<T> {
     rootNode: LinkedListNode<T>;
     lastNode: LinkedListNode<T>;

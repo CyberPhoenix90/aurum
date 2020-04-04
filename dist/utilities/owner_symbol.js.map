@@ -1,1 +1,1 @@
-{"version":3,"file":"owner_symbol.js","sourceRoot":"","sources":["../../src/utilities/owner_symbol.ts"],"names":[],"mappings":"AAGA,MAAM,CAAC,MAAM,WAAW,GAAG,MAAM,CAAC,OAAO,CAAC,CAAC","sourcesContent":["/**\n * @internal\n */\nexport const ownerSymbol = Symbol('owner');\n"]}
+{"version":3,"file":"owner_symbol.js","sourceRoot":"","sources":["../../src/utilities/owner_symbol.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,MAAM,CAAC,MAAM,WAAW,GAAG,MAAM,CAAC,OAAO,CAAC,CAAC","sourcesContent":["/**\r\n * @internal\r\n */\r\nexport const ownerSymbol = Symbol('owner');\r\n"]}

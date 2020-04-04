@@ -1,5 +1,8 @@
 import { DataSource } from '../../stream/data_source';
 import { ownerSymbol } from '../../utilities/owner_symbol';
+/**
+ * @internal
+ */
 export class AurumTextElement {
     constructor(text) {
         this.node = this.create(text);

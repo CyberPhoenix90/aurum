@@ -5,6 +5,9 @@ export interface HrProps extends AurumElementProps {
     onDetach?: Callback<HTMLHRElement>;
     onCreate?: Callback<HTMLHRElement>;
 }
+/**
+ * @internal
+ */
 export declare class Hr extends AurumElement {
     readonly node: HTMLHRElement;
     constructor(props: HrProps, children: ChildNode[]);

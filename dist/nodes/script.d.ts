@@ -11,6 +11,9 @@ export interface ScriptProps extends AurumElementProps {
     noModule?: AttributeValue;
     type?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Script extends AurumElement {
     node: HTMLScriptElement;
     constructor(props: ScriptProps, children: ChildNode[]);

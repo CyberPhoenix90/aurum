@@ -9,6 +9,9 @@ export interface SelectProps extends AurumElementProps {
     initialSelection?: number;
     selectedIndexSource?: DataSource<number>;
 }
+/**
+ * @internal
+ */
 export declare class Select extends AurumElement {
     readonly node: HTMLSelectElement;
     private selectedIndexSource;

@@ -23,6 +23,9 @@ export interface TextAreaProps extends AurumElementProps {
     required?: AttributeValue;
     type?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class TextArea extends AurumElement {
     node: HTMLTextAreaElement;
     constructor(props: TextAreaProps, children: ChildNode[]);

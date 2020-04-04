@@ -2,6 +2,9 @@ import { ArrayDataSource, DataSource } from '../../stream/data_source';
 import { Callback, ClassType, DataDrain, MapLike, AttributeValue } from '../../utilities/common';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
+/**
+ * @inernal
+ */
 export declare const aurumElementModelIdentitiy: unique symbol;
 export interface AurumElementModel {
     [aurumElementModelIdentitiy]: boolean;
@@ -81,9 +84,15 @@ export declare abstract class AurumElement {
     addChildAt(child: ChildNode, index: number): void;
     addChildren(nodes: ChildNode[]): void;
 }
+/**
+ * @internal
+ */
 export interface AurumFragmentProps {
     repeatModel?: ArrayDataSource<AurumElementModel>;
 }
+/**
+ * @internal
+ */
 export declare class AurumFragment {
     children: Array<AurumElement | AurumTextElement | AurumFragment>;
     onChange: EventEmitter<void>;

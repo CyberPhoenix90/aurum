@@ -11,6 +11,9 @@ export interface LinkProps extends AurumElementProps {
     disabled?: AttributeValue;
     type?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Link extends AurumElement {
     node: HTMLLinkElement;
     constructor(props: LinkProps, children: ChildNode[]);

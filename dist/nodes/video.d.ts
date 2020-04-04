@@ -14,6 +14,9 @@ export interface VideoProps extends AurumElementProps {
     width?: AttributeValue;
     height?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Video extends AurumElement {
     readonly node: HTMLVideoElement;
     constructor(props: VideoProps, children: ChildNode[]);

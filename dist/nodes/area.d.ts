@@ -5,6 +5,9 @@ export interface AreaProps extends AurumElementProps {
     onDetach?: Callback<HTMLAreaElement>;
     onCreate?: Callback<HTMLAreaElement>;
 }
+/**
+ * @internal
+ */
 export declare class Area extends AurumElement {
     readonly node: HTMLAreaElement;
     constructor(props: AreaProps, children: ChildNode[]);

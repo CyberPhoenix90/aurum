@@ -10,6 +10,9 @@ export interface SourceProps extends AurumElementProps {
     sizes?: AttributeValue;
     type?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Source extends AurumElement {
     readonly node: HTMLSourceElement;
     constructor(props: SourceProps, children: ChildNode[]);

@@ -6,6 +6,9 @@ export interface ButtonProps extends AurumElementProps {
     onDetach?: Callback<HTMLButtonElement>;
     onCreate?: Callback<HTMLButtonElement>;
 }
+/**
+ * @internal
+ */
 export declare class Button extends AurumElement {
     readonly node: HTMLButtonElement;
     constructor(props: ButtonProps, children: ChildNode[]);

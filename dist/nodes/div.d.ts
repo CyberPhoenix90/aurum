@@ -5,6 +5,9 @@ export interface DivProps extends AurumElementProps {
     onDetach?: Callback<HTMLDivElement>;
     onCreate?: Callback<HTMLDivElement>;
 }
+/**
+ * @internal
+ */
 export declare class Div extends AurumElement {
     readonly node: HTMLDivElement;
     constructor(props: DivProps, children: ChildNode[]);

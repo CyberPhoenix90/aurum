@@ -5,6 +5,9 @@ export interface SpanProps extends AurumElementProps {
     onDetach?: Callback<HTMLSpanElement>;
     onCreate?: Callback<HTMLSpanElement>;
 }
+/**
+ * @internal
+ */
 export declare class Span extends AurumElement {
     node: HTMLSpanElement;
     constructor(props: SpanProps, children: ChildNode[]);

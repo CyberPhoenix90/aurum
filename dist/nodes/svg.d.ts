@@ -7,6 +7,9 @@ export interface SvgProps extends AurumElementProps {
     width?: AttributeValue;
     height?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Svg extends AurumElement {
     constructor(props: SvgProps, children: ChildNode[]);
 }

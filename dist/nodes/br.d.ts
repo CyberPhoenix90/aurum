@@ -5,6 +5,9 @@ export interface BrProps extends AurumElementProps {
     onDetach?: Callback<HTMLBRElement>;
     onCreate?: Callback<HTMLBRElement>;
 }
+/**
+ * @internal
+ */
 export declare class Br extends AurumElement {
     readonly node: HTMLBRElement;
     constructor(props: BrProps, children: ChildNode[]);

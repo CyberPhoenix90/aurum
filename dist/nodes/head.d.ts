@@ -5,6 +5,9 @@ export interface HeadProps extends AurumElementProps {
     onDetach?: Callback<HTMLHeadElement>;
     onCreate?: Callback<HTMLHeadElement>;
 }
+/**
+ * @internal
+ */
 export declare class Head extends AurumElement {
     readonly node: HTMLHeadElement;
     constructor(props: HeadProps, children: ChildNode[]);

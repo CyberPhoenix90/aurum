@@ -6,6 +6,9 @@ export interface StyleProps extends AurumElementProps {
     onCreate?: Callback<HTMLStyleElement>;
     media?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Style extends AurumElement {
     node: HTMLStyleElement;
     constructor(props: StyleProps, children: ChildNode[]);

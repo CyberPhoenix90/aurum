@@ -160,6 +160,7 @@ export class Aurum {
         if (Object.getPrototypeOf(node) === AurumElement) {
             return {
                 [aurumElementModelIdentitiy]: true,
+                //@ts-ignore
                 constructor: (args, innerNodes) => new node(args, innerNodes),
                 props: args,
                 innerNodes: innerNodes
@@ -168,6 +169,7 @@ export class Aurum {
         else {
             return {
                 [aurumElementModelIdentitiy]: true,
+                //@ts-ignore
                 constructor: node,
                 props: args,
                 innerNodes: innerNodes

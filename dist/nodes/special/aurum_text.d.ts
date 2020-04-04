@@ -1,4 +1,7 @@
 import { StringSource } from '../../utilities/common';
+/**
+ * @internal
+ */
 export declare class AurumTextElement {
     node: Text;
     constructor(text?: StringSource);

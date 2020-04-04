@@ -16,7 +16,6 @@
 		"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
 		"noEmitOnError": true,
-		"removeComments": true,
 		"outDir": "dist",
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"

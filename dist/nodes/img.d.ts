@@ -13,6 +13,9 @@ export interface ImgProps extends AurumElementProps {
     srcset?: AttributeValue;
     useMap?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Img extends AurumElement {
     readonly node: HTMLImageElement;
     constructor(props: ImgProps, children: ChildNode[]);

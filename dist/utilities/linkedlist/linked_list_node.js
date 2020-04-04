@@ -1,3 +1,6 @@
+/**
+ * @internal
+ */
 export class LinkedListNode {
     constructor(data) {
         this.data = data;

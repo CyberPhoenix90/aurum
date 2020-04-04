@@ -32,6 +32,9 @@ export interface InputProps extends AurumElementProps {
     required?: AttributeValue;
     type?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Input extends AurumElement {
     node: HTMLInputElement;
     constructor(props: InputProps, children: ChildNode[]);

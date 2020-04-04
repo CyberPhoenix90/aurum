@@ -1,4 +1,7 @@
 import { LinkedListNode } from './linked_list_node';
+/**
+ * @internal
+ */
 export class LinkedList {
     constructor(data = []) {
         this.length = 0;
