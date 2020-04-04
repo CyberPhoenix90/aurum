@@ -5,6 +5,9 @@ export interface LiProps extends AurumElementProps {
     onDetach?: Callback<HTMLLIElement>;
     onCreate?: Callback<HTMLLIElement>;
 }
+/**
+ * @internal
+ */
 export declare class Li extends AurumElement {
     node: HTMLLIElement;
     constructor(props: LiProps, children: ChildNode[]);

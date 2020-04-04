@@ -6,6 +6,9 @@ export interface TimeProps extends AurumElementProps {
     onCreate?: Callback<HTMLTimeElement>;
     datetime?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Time extends AurumElement {
     node: HTMLTimeElement;
     constructor(props: TimeProps, children: ChildNode[]);

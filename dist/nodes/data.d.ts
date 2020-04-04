@@ -6,6 +6,9 @@ export interface DataProps extends AurumElementProps {
     onCreate?: Callback<HTMLDataElement>;
     value?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Data extends AurumElement {
     node: HTMLDataElement;
     constructor(props: DataProps, children: ChildNode[]);

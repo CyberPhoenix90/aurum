@@ -1,3 +1,6 @@
+/**
+ * @internal
+ */
 export class EventEmitter {
     constructor() {
         this.subscribeChannel = [];

@@ -5,6 +5,9 @@ export interface PreProps extends AurumElementProps {
     onDetach?: Callback<HTMLPreElement>;
     onCreate?: Callback<HTMLPreElement>;
 }
+/**
+ * @internal
+ */
 export declare class Pre extends AurumElement {
     node: HTMLPreElement;
     constructor(props: PreProps, children: ChildNode[]);

@@ -7,6 +7,9 @@ export interface CanvasProps extends AurumElementProps {
     width?: AttributeValue;
     height?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Canvas extends AurumElement {
     readonly node: HTMLCanvasElement;
     constructor(props: CanvasProps, children: ChildNode[]);

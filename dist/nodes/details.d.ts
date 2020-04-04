@@ -5,6 +5,9 @@ export interface DetailsProps extends AurumElementProps {
     onDetach?: Callback<HTMLDetailsElement>;
     onCreate?: Callback<HTMLDetailsElement>;
 }
+/**
+ * @internal
+ */
 export declare class Details extends AurumElement {
     readonly node: HTMLDetailsElement;
     constructor(props: DetailsProps, children: ChildNode[]);

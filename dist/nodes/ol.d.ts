@@ -5,6 +5,9 @@ export interface OlProps extends AurumElementProps {
     onDetach?: Callback<HTMLOListElement>;
     onCreate?: Callback<HTMLOListElement>;
 }
+/**
+ * @internal
+ */
 export declare class Ol extends AurumElement {
     node: HTMLOListElement;
     constructor(props: OlProps, children: ChildNode[]);

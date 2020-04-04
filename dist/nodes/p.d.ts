@@ -5,6 +5,9 @@ export interface PProps extends AurumElementProps {
     onDetach?: Callback<HTMLParagraphElement>;
     onCreate?: Callback<HTMLParagraphElement>;
 }
+/**
+ * @internal
+ */
 export declare class P extends AurumElement {
     node: HTMLParagraphElement;
     constructor(props: PProps, children: ChildNode[]);

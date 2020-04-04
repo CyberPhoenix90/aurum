@@ -7,6 +7,9 @@ export interface AProps extends AurumElementProps {
     href?: AttributeValue;
     target?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class A extends AurumElement {
     readonly node: HTMLAnchorElement;
     constructor(props: AProps, children: ChildNode[]);

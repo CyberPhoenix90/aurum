@@ -5,6 +5,9 @@ export interface TemplateProps extends AurumElementProps {
     onDetach?: Callback<HTMLTemplateElement>;
     onCreate?: Callback<HTMLTemplateElement>;
 }
+/**
+ * @internal
+ */
 export declare class Template extends AurumElement {
     constructor(props: TemplateProps, children: ChildNode[]);
 }

@@ -1,4 +1,7 @@
 import { AurumElement } from './special/aurum_element';
+/**
+ * @internal
+ */
 export class Link extends AurumElement {
     constructor(props, children) {
         super(props, children, 'link');

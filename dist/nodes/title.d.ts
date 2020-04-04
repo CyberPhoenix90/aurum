@@ -5,6 +5,9 @@ export interface TitleProps extends AurumElementProps {
     onDetach?: Callback<HTMLTitleElement>;
     onCreate?: Callback<HTMLTitleElement>;
 }
+/**
+ * @internal
+ */
 export declare class Title extends AurumElement {
     node: HTMLTitleElement;
     constructor(props: TitleProps, children: ChildNode[]);

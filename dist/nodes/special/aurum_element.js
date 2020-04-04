@@ -3,7 +3,13 @@ import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
 import { DuplexDataSource } from '../../stream/duplex_data_source';
+/**
+ * @inernal
+ */
 export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
+/**
+ * @internal
+ */
 const defaultEvents = {
     drag: 'onDrag',
     dragstart: 'onDragStart',
@@ -28,6 +34,9 @@ const defaultEvents = {
     load: 'onLoad',
     error: 'onError'
 };
+/**
+ * @internal
+ */
 const defaultProps = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 export function prerender(model) {
     if (model && model[aurumElementModelIdentitiy]) {
@@ -40,7 +49,7 @@ export function prerender(model) {
 }
 export class AurumElement {
     constructor(props, children, domNodeName) {
-        var _a, _b;
+        var _a;
         this.node = this.create(domNodeName);
         this.children = [];
         if (props != null) {
@@ -50,7 +59,7 @@ export class AurumElement {
             }
             this.onDetach = props.onDetach;
             this.initialize(props);
-            (_b = (_a = props).onCreate) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
+            (_a = props.onCreate) === null || _a === void 0 ? void 0 : _a.call(props, this.node);
         }
         if (children) {
             this.addChildren(children);
@@ -165,12 +174,12 @@ export class AurumElement {
         }
     }
     handleAttach(parent) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c;
         if (this.needAttach) {
             if (parent.isConnected()) {
-                (_b = (_a = this).onAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
+                (_a = this.onAttach) === null || _a === void 0 ? void 0 : _a.call(this, this.node);
                 for (const child of this.node.childNodes) {
-                    (_e = (_c = child[ownerSymbol]) === null || _c === void 0 ? void 0 : (_d = _c).handleAttach) === null || _e === void 0 ? void 0 : _e.call(_d, this);
+                    (_c = (_b = child[ownerSymbol]) === null || _b === void 0 ? void 0 : _b.handleAttach) === null || _c === void 0 ? void 0 : _c.call(_b, this);
                 }
             }
             else {
@@ -178,13 +187,14 @@ export class AurumElement {
             }
         }
     }
+    //@ts-ignore
     handleDetach() {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         if (!this.node.isConnected) {
-            (_b = (_a = this).onDetach) === null || _b === void 0 ? void 0 : _b.call(_a, this.node);
+            (_a = this.onDetach) === null || _a === void 0 ? void 0 : _a.call(this, this.node);
             for (const child of this.node.childNodes) {
                 if (child[ownerSymbol]) {
-                    (_d = (_c = child[ownerSymbol]).handleDetach) === null || _d === void 0 ? void 0 : _d.call(_c);
+                    (_c = (_b = child[ownerSymbol]).handleDetach) === null || _c === void 0 ? void 0 : _c.call(_b);
                 }
             }
         }
@@ -271,9 +281,9 @@ export class AurumElement {
         return false;
     }
     addChildDom(child) {
-        var _a, _b;
+        var _a;
         this.node.appendChild(child.node);
-        (_b = (_a = child).handleAttach) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+        (_a = child.handleAttach) === null || _a === void 0 ? void 0 : _a.call(child, this);
     }
     swapChildrenDom(indexA, indexB) {
         if (indexA === indexB) {
@@ -344,6 +354,7 @@ export class AurumElement {
             return;
         }
         if (child[aurumElementModelIdentitiy]) {
+            //@ts-ignore
             child = prerender(child);
             if (child === undefined) {
                 return;
@@ -364,6 +375,7 @@ export class AurumElement {
         }
         if (child instanceof Promise) {
             const result = new AurumFragment({});
+            //@ts-ignore
             child.then((value) => {
                 result.addChildren([value]);
                 this.render();
@@ -371,6 +383,7 @@ export class AurumElement {
             return result;
         }
         else if (child instanceof ArrayDataSource) {
+            //@ts-ignore
             const result = new AurumFragment({ repeatModel: child });
             result.onChange.subscribe(() => this.render());
             return result;
@@ -379,6 +392,7 @@ export class AurumElement {
             return new AurumTextElement(child.toString());
         }
         else if (child instanceof DataSource) {
+            //@ts-ignore
             const result = new AurumFragment({}, [child]);
             result.onChange.subscribe(() => this.render());
             return result;
@@ -400,6 +414,9 @@ export class AurumElement {
         }
     }
 }
+/**
+ * @internal
+ */
 export class AurumFragment {
     constructor(props, children) {
         this.onChange = new EventEmitter();
@@ -472,13 +489,13 @@ export class AurumFragment {
         }
         if (typeof newValue === 'string' || typeof newValue === 'bigint' || typeof newValue === 'number' || typeof newValue === 'boolean') {
             if (!sourceChild) {
-                const textNode = new AurumTextElement((dataSource !== null && dataSource !== void 0 ? dataSource : newValue));
+                const textNode = new AurumTextElement(dataSource !== null && dataSource !== void 0 ? dataSource : newValue);
                 this.children.push(textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
             }
             else if (sourceChild instanceof AurumElement) {
-                const textNode = new AurumTextElement((dataSource !== null && dataSource !== void 0 ? dataSource : newValue));
+                const textNode = new AurumTextElement(dataSource !== null && dataSource !== void 0 ? dataSource : newValue);
                 this.children.splice(this.children.indexOf(sourceChild), 1, textNode);
                 sourceChild = textNode;
                 this.onChange.fire();
@@ -542,6 +559,8 @@ export class AurumFragment {
         dataSource.listenAndRepeat((change) => {
             switch (change.operationDetailed) {
                 case 'replace':
+                    //TODO:FIX THIS
+                    //@ts-ignore
                     this.children[change.index] = prerender(change.items[0]);
                     break;
                 case 'swap':
@@ -551,9 +570,11 @@ export class AurumFragment {
                     this.children[change.index] = itemB;
                     break;
                 case 'append':
+                    //@ts-ignore
                     this.children = this.children.concat(change.items.map(prerender));
                     break;
                 case 'prepend':
+                    //@ts-ignore
                     this.children.unshift(...change.items.map(prerender));
                     break;
                 case 'remove':

@@ -6,6 +6,9 @@ export interface LabelProps extends AurumElementProps {
     onCreate?: Callback<HTMLLabelElement>;
     for?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class Label extends AurumElement {
     node: HTMLLabelElement;
     constructor(props: LabelProps, children: ChildNode[]);

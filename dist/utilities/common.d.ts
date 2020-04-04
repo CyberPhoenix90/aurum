@@ -3,6 +3,9 @@ import { DuplexDataSource } from '../stream/duplex_data_source';
 export declare type AttributeValue = string | DataSource<string> | DataSource<boolean> | boolean;
 export declare type StringSource = string | DataSource<string>;
 export declare type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
+/**
+ * Type alias for a generic calback taking a parameter and not returning anything
+ */
 export declare type Callback<T> = (data?: T) => void;
 export declare type Delegate = () => void;
 export declare type Predicate<T> = (data: T) => boolean;

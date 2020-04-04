@@ -12,6 +12,9 @@ export interface IFrameProps extends AurumElementProps {
     height?: AttributeValue;
     srcdoc?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export declare class IFrame extends AurumElement {
     readonly node: HTMLIFrameElement;
     constructor(props: IFrameProps, children: ChildNode[]);

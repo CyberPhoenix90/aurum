@@ -5,6 +5,9 @@ export interface QProps extends AurumElementProps {
     onDetach?: Callback<HTMLQuoteElement>;
     onCreate?: Callback<HTMLQuoteElement>;
 }
+/**
+ * @internal
+ */
 export declare class Q extends AurumElement {
     node: HTMLQuoteElement;
     constructor(props: QProps, children: ChildNode[]);

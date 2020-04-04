@@ -5,6 +5,9 @@ export interface UlProps extends AurumElementProps {
     onDetach?: Callback<HTMLUListElement>;
     onCreate?: Callback<HTMLUListElement>;
 }
+/**
+ * @internal
+ */
 export declare class Ul extends AurumElement {
     node: HTMLUListElement;
     constructor(props: UlProps, children: ChildNode[]);

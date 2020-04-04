@@ -1,4 +1,7 @@
 import { AurumElement } from './special/aurum_element';
+/**
+ * @internal
+ */
 export class Time extends AurumElement {
     constructor(props, children) {
         super(props, children, 'time');

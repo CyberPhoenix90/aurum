@@ -5,6 +5,9 @@ export interface ThProps extends AurumElementProps {
     onDetach?: Callback<HTMLTableHeaderCellElement>;
     onCreate?: Callback<HTMLTableHeaderCellElement>;
 }
+/**
+ * @internal
+ */
 export declare class Th extends AurumElement {
     node: HTMLTableHeaderCellElement;
     constructor(props: ThProps, children: ChildNode[]);

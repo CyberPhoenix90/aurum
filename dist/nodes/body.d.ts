@@ -5,6 +5,9 @@ export interface BodyProps extends AurumElementProps {
     onDetach?: Callback<HTMLBodyElement>;
     onCreate?: Callback<HTMLBodyElement>;
 }
+/**
+ * @internal
+ */
 export declare class Body extends AurumElement {
     readonly node: HTMLBodyElement;
     constructor(props: BodyProps, children: ChildNode[]);

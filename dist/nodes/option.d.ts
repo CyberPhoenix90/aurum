@@ -5,6 +5,9 @@ export interface OptionProps extends AurumElementProps {
     onDetach?: Callback<HTMLOptionElement>;
     onCreate?: Callback<HTMLOptionElement>;
 }
+/**
+ * @internal
+ */
 export declare class Option extends AurumElement {
     readonly node: HTMLOptionElement;
     constructor(props: OptionProps, children: ChildNode[]);

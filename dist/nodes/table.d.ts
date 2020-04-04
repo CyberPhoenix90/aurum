@@ -5,6 +5,9 @@ export interface TableProps extends AurumElementProps {
     onDetach?: Callback<HTMLTableElement>;
     onCreate?: Callback<HTMLTableElement>;
 }
+/**
+ * @internal
+ */
 export declare class Table extends AurumElement {
     node: HTMLTableElement;
     constructor(props: TableProps, children: ChildNode[]);

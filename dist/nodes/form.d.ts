@@ -5,6 +5,9 @@ export interface FormProps extends AurumElementProps {
     onDetach?: Callback<HTMLFormElement>;
     onCreate?: Callback<HTMLFormElement>;
 }
+/**
+ * @internal
+ */
 export declare class Form extends AurumElement {
     readonly node: HTMLFormElement;
     constructor(props: FormProps, children: ChildNode[]);

@@ -1,7 +1,13 @@
 import { AurumElement } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+/**
+ * @internal
+ */
 const inputEvents = { input: 'onInput', change: 'onChange' };
+/**
+ * @internal
+ */
 const inputProps = [
     'placeholder',
     'readonly',
@@ -26,6 +32,9 @@ const inputProps = [
     'required',
     'type'
 ];
+/**
+ * @internal
+ */
 export class Input extends AurumElement {
     constructor(props, children) {
         var _a, _b;
@@ -43,7 +52,7 @@ export class Input extends AurumElement {
                 });
             }
             else {
-                this.node.value = (_a = props.value, (_a !== null && _a !== void 0 ? _a : ''));
+                this.node.value = (_a = props.value) !== null && _a !== void 0 ? _a : '';
             }
             if (props.checked instanceof DataSource || props.checked instanceof DuplexDataSource) {
                 props.checked.unique().listenAndRepeat((value) => (this.node.checked = value));
@@ -57,7 +66,7 @@ export class Input extends AurumElement {
                 });
             }
             else {
-                this.node.checked = (_b = props.checked, (_b !== null && _b !== void 0 ? _b : false));
+                this.node.checked = (_b = props.checked) !== null && _b !== void 0 ? _b : false;
             }
             this.bindProps(inputProps, props);
             this.createEventHandlers(inputEvents, props);

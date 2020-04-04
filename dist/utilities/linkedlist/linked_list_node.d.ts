@@ -1,3 +1,6 @@
+/**
+ * @internal
+ */
 export declare class LinkedListNode<T> {
     next: LinkedListNode<T>;
     previous: LinkedListNode<T>;
