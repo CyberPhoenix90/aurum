@@ -19,6 +19,23 @@ This makes it very fast to apply updates while keeping the code short.
 This project is and will always be dependency free for better security and performance
 This project is still under development but feel free to try it and make bug reports or suggestions.
 
+## Why use Aurum
+* Aurum encourages writing UIs in a way that makes them update faster in response to data changes than even in popular modern libraries like react, vue or angular
+
+* Aurum does most of the data management overhead for you, saving time and allowing to focus on what matters: Implementing your business logic
+
+* Aurum.js has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
+
+
+## Browser support
+* All chromium based browsers
+
+* Firefox
+
+* Safari
+
+* IE11 (requires several polyfills and your code bundler needs to downlevel the code to ES5 but it works)
+
 ## Getting started
 
 Install:
