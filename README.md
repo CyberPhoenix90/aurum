@@ -78,8 +78,10 @@ import {Aurum} from 'aurumjs'
 Aurum.attach((<div>Hello Aurum</div>), document.body)
 ```
 
+## Website with documentation and further explanations
+https://aurumjs.org/
+
+## Live example
 TODO App with creation, deletion drag and drop, editing and marking as done of tasks all under 100 lines of code with aurum:
 https://codepen.io/cyberphoenix90/pen/LYYMwVr
 
-For documentation and quickstart guides check out Aurums homepage (which is fully written in aurum and open source):
-https://aurumjs.org/
