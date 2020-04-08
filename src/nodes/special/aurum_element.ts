@@ -345,7 +345,7 @@ export abstract class AurumElement {
 	}
 
 	protected hasChild(node: HTMLElement): boolean {
-		for (const child of node.children) {
+		for (const child of node.childNodes) {
 			if (child === node) {
 				return true;
 			}
@@ -363,8 +363,8 @@ export abstract class AurumElement {
 			return;
 		}
 
-		const nodeA = this.node.children[indexA];
-		const nodeB = this.node.children[indexB];
+		const nodeA = this.node.childNodes[indexA];
+		const nodeB = this.node.childNodes[indexB];
 		nodeA.remove();
 		nodeB.remove();
 		if (indexA < indexB) {
@@ -377,11 +377,11 @@ export abstract class AurumElement {
 	}
 
 	protected addDomNodeAt(node: HTMLElement | Text, index: number): void {
-		if (index >= this.node.childElementCount) {
+		if (index >= this.node.childNodes.length) {
 			this.node.appendChild(node);
 			node[ownerSymbol].handleAttach?.(this);
 		} else {
-			this.node.insertBefore(node, this.node.children[index]);
+			this.node.insertBefore(node, this.node.childNodes[index]);
 			node[ownerSymbol].handleAttach?.(this);
 		}
 	}

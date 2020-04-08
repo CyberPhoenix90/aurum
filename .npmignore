@@ -4,3 +4,4 @@ tsconfig.json
 dist_test
 coverage
 .history
+.vscode
