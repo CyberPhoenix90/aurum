@@ -408,14 +408,15 @@ export class DataSource<T> {
 }
 
 export interface CollectionChange<T> {
-	operation: 'replace' | 'swap' | 'add' | 'remove';
-	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear';
+	operation: 'replace' | 'swap' | 'add' | 'remove' | 'merge';
+	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge';
 	count?: number;
 	index: number;
 	index2?: number;
 	target?: T;
 	items: T[];
 	newState: T[];
+	previousState?: T[];
 }
 export class ArrayDataSource<T> {
 	protected data: T[];
@@ -528,7 +529,6 @@ export class ArrayDataSource<T> {
 
 	public push(...items: T[]) {
 		this.appendArray(items);
-		this.lengthSource.update(this.data.length);
 	}
 
 	public unshift(...items: T[]) {
@@ -539,6 +539,7 @@ export class ArrayDataSource<T> {
 
 	public pop(): T {
 		const item = this.data.pop();
+
 		this.update({
 			operation: 'remove',
 			operationDetailed: 'removeRight',
@@ -553,18 +554,17 @@ export class ArrayDataSource<T> {
 	}
 
 	public merge(newData: T[]): void {
-		for (let i = 0; i < newData.length; i++) {
-			if (this.data[i] !== newData[i]) {
-				if (this.data.length > i) {
-					this.set(i, newData[i]);
-				} else {
-					this.push(newData[i]);
-				}
-			}
-		}
-		if (this.data.length > newData.length) {
-			this.removeRight(this.data.length - newData.length);
-		}
+		const old = this.data;
+		this.data = newData.slice();
+
+		this.update({
+			operation: 'merge',
+			operationDetailed: 'merge',
+			previousState: old,
+			index: 0,
+			items: this.data,
+			newState: this.data
+		});
 		this.lengthSource.update(this.data.length);
 	}
 
@@ -615,12 +615,22 @@ export class ArrayDataSource<T> {
 		return this.data.slice();
 	}
 
-	public sort(comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken): SortedArrayView<T> {
-		return new SortedArrayView(this, comparator, cancellationToken);
+	public sort(comparator: (a: T, b: T) => number, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
+		const view = new SortedArrayView(this, comparator, cancellationToken);
+		dependencies.forEach((dep) => {
+			dep.unique().listen(() => view.refresh());
+		});
+
+		return view;
 	}
 
-	public map<D>(mapper: (data: T) => D, cancellationToken?: CancellationToken): MappedArrayView<T, D> {
-		return new MappedArrayView<T, D>(this, mapper, cancellationToken);
+	public map<D>(mapper: (data: T) => D, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
+		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken);
+		dependencies.forEach((dep) => {
+			dep.unique().listen(() => view.refresh());
+		});
+
+		return view;
 	}
 
 	public filter(callback: Predicate<T>, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
@@ -636,17 +646,19 @@ export class ArrayDataSource<T> {
 		return this.data.forEach(callbackfn);
 	}
 
-	private update(change: CollectionChange<T>) {
+	protected update(change: CollectionChange<T>) {
 		this.updateEvent.fire(change);
 	}
 }
 
 export class MappedArrayView<D, T> extends ArrayDataSource<T> {
+	private parent: ArrayDataSource<D>;
 	private mapper: (a: D) => T;
 
 	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken?: CancellationToken) {
 		const initial = parent.getData().map(mapper);
 		super(initial);
+		this.parent = parent;
 		this.mapper = mapper;
 
 		parent.listen((change) => {
@@ -675,49 +687,103 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 				case 'replace':
 					this.set(change.index, this.mapper(change.items[0]));
 					break;
+				case 'merge':
+					const old = this.data.slice();
+					const source = change.previousState.slice();
+					for (let i = 0; i < change.newState.length; i++) {
+						if (this.data.length <= i) {
+							this.data.push(this.mapper(change.newState[i]));
+						}
+						if (source[i] !== change.newState[i]) {
+							const index = source.indexOf(change.newState[i]);
+							if (index !== -1) {
+								const a = this.data[i];
+								const b = this.data[index];
+								this.data[i] = b;
+								this.data[index] = a;
+								const c = source[i];
+								const d = source[index];
+								source[i] = d;
+								source[index] = c;
+							} else {
+								//@ts-ignore
+								this.data.splice(i, 0, this.mapper(change.newState[i]));
+								source.splice(i, 0, change.newState[i]);
+							}
+						}
+					}
+					if (this.data.length > change.newState.length) {
+						this.data.length = change.newState.length;
+					}
+					this.update({
+						operation: 'merge',
+						operationDetailed: 'merge',
+						previousState: old,
+						index: 0,
+						items: this.data,
+						newState: this.data
+					});
+					break;
 			}
 		}, cancellationToken);
+	}
+
+	public refresh() {
+		//@ts-ignore
+		this.merge(this.parent.data.map(this.mapper));
 	}
 }
 
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
+	private parent: ArrayDataSource<T>;
 
 	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken) {
 		const initial = parent.getData().sort(comparator);
 		super(initial);
+		this.parent = parent;
 		this.comparator = comparator;
 
 		parent.listen((change) => {
 			switch (change.operationDetailed) {
 				case 'removeLeft':
-					this.removeLeft(change.count);
-					break;
 				case 'removeRight':
-					this.removeRight(change.count);
+					for (const item of change.items) {
+						this.remove(item);
+					}
 					break;
 				case 'remove':
 					this.remove(change.items[0]);
 					break;
 				case 'clear':
-					this.data.length = 0;
+					this.clear();
 					break;
 				case 'prepend':
 					this.unshift(...change.items);
 					this.data.sort(this.comparator);
 					break;
 				case 'append':
-					this.push(...change.items);
-					this.data.sort(this.comparator);
+					this.appendSorted(change.items);
+					break;
+				case 'merge':
+					this.merge(change.items.slice().sort(this.comparator));
 					break;
 				case 'swap':
 					break;
 				case 'replace':
-					this.set(change.index, change.items[0]);
-					this.data.sort(this.comparator);
+					this.remove(change.target);
+					this.appendSorted(change.items);
 					break;
 			}
 		}, cancellationToken);
+	}
+
+	private appendSorted(items: T[]) {
+		this.merge(this.data.concat(items).sort(this.comparator));
+	}
+
+	public refresh() {
+		this.merge(this.parent.getData().sort(this.comparator));
 	}
 }
 
@@ -753,7 +819,10 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 					break;
 				case 'append':
 					filteredItems = change.items.filter(this.viewFilter);
-					this.push(...filteredItems);
+					this.appendArray(filteredItems);
+					break;
+				case 'merge':
+					this.merge(change.items.filter(this.viewFilter));
 					break;
 				case 'swap':
 					const indexA = this.data.indexOf(change.items[0]);
@@ -795,8 +864,6 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	 * Recalculates the filter. Only needed if your filter function isn't pure and you know the result would be different if run again compared to before
 	 */
 	public refresh() {
-		this.clear();
-		const data = (this.parent as FilteredArrayView<T>).data.filter(this.viewFilter);
-		this.push(...data);
+		this.merge((this.parent as FilteredArrayView<T>).data.filter(this.viewFilter));
 	}
 }

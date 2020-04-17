@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum } from '../src/aurum';
+import { Aurum, Switch, SwitchCase, DataSource } from '../src/aurum';
 
 describe('Aurum Element', () => {
 	afterEach(() => {
@@ -51,6 +51,30 @@ describe('Aurum Element', () => {
 				document.body
 			);
 			Aurum.detach(document.body);
+		});
+	});
+
+	it('Should detach on removal', () => {
+		const ds = new DataSource<boolean>(true);
+
+		return new Promise((resolve) => {
+			Aurum.attach(
+				<div>
+					<Switch state={ds}>
+						<SwitchCase when={true}>
+							<div
+								onDetach={() => {
+									resolve();
+								}}
+							></div>
+						</SwitchCase>
+						<SwitchCase when={false}></SwitchCase>
+					</Switch>
+				</div>,
+				document.body
+			);
+
+			ds.update(false);
 		});
 	});
 });

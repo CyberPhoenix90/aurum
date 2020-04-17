@@ -4,6 +4,7 @@ import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
 import { EventEmitter } from '../../utilities/event_emitter';
 import { DuplexDataSource } from '../../stream/duplex_data_source';
+import { CancellationToken } from '../../utilities/cancellation_token';
 
 /**
  * @inernal
@@ -123,6 +124,7 @@ export abstract class AurumElement {
 	protected needAttach: boolean;
 
 	public node: HTMLElement;
+	private cleanUp: CancellationToken;
 
 	constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string) {
 		this.node = this.create(domNodeName);
@@ -195,6 +197,7 @@ export abstract class AurumElement {
 		while (this.node.childNodes.length > absoluteIndex) {
 			const child = this.node.childNodes[this.node.childNodes.length - 1];
 			this.node.removeChild(child);
+			child[ownerSymbol]?.handleDetach?.();
 		}
 	}
 
@@ -236,7 +239,10 @@ export abstract class AurumElement {
 				(this.node as HTMLElement).setAttribute(key, data);
 			}
 		} else {
-			data.unique().listenAndRepeat((v) => {
+			if (!this.cleanUp) {
+				this.cleanUp = new CancellationToken();
+			}
+			data.unique(this.cleanUp).listenAndRepeat((v) => {
 				if (typeof v === 'boolean') {
 					if (v) {
 						this.node.setAttribute(key, '');
@@ -265,6 +271,9 @@ export abstract class AurumElement {
 
 	//@ts-ignore
 	private handleDetach() {
+		if (this.cleanUp) {
+			this.cleanUp.cancel();
+		}
 		if (!this.node.isConnected) {
 			this.onDetach?.(this.node);
 			for (const child of this.node.childNodes) {
@@ -279,20 +288,24 @@ export abstract class AurumElement {
 		if (typeof data === 'string') {
 			this.node.className = data;
 		} else if (data instanceof DataSource) {
+			if (!this.cleanUp) {
+				this.cleanUp = new CancellationToken();
+			}
+
 			if (data.value) {
 				if (Array.isArray(data.value)) {
 					this.node.className = data.value.join(' ');
-					data.unique().listen(() => {
+					data.unique(this.cleanUp).listen(() => {
 						(this.node as HTMLElement).className = (data.value as string[]).join(' ');
 					});
 				} else {
 					this.node.className = data.value;
-					data.unique().listen(() => {
+					data.unique(this.cleanUp).listen(() => {
 						(this.node as HTMLElement).className = data.value as string;
 					});
 				}
 			}
-			data.unique().listen((v) => ((this.node as HTMLElement).className = v));
+			data.unique(this.cleanUp).listen((v) => ((this.node as HTMLElement).className = v));
 		} else {
 			const value: string = data.reduce<string>((p, c) => {
 				if (typeof c === 'string') {
@@ -308,7 +321,11 @@ export abstract class AurumElement {
 			this.node.className = value;
 			for (const i of data) {
 				if (i instanceof DataSource) {
-					i.unique().listen((v) => {
+					if (!this.cleanUp) {
+						this.cleanUp = new CancellationToken();
+					}
+
+					i.unique(this.cleanUp).listen((v) => {
 						const value: string = data.reduce<string>((p, c) => {
 							if (typeof c === 'string') {
 								return `${p} ${c}`;
@@ -646,7 +663,6 @@ export class AurumFragment {
 		dataSource.listenAndRepeat((change) => {
 			switch (change.operationDetailed) {
 				case 'replace':
-					//TODO:FIX THIS
 					//@ts-ignore
 					this.children[change.index] = prerender(change.items[0]);
 					break;
@@ -655,6 +671,35 @@ export class AurumFragment {
 					const itemB = this.children[change.index2];
 					this.children[change.index2] = itemA;
 					this.children[change.index] = itemB;
+					break;
+				case 'merge':
+					const source = change.previousState.slice();
+					for (let i = 0; i < change.newState.length; i++) {
+						if (this.children.length <= i) {
+							//@ts-ignore
+							this.children.push(prerender(change.newState[i]));
+						}
+						if (source[i] !== change.newState[i]) {
+							const index = source.indexOf(change.newState[i]);
+							if (index !== -1) {
+								const a = this.children[i];
+								const b = this.children[index];
+								this.children[i] = b;
+								this.children[index] = a;
+								const c = source[i];
+								const d = source[index];
+								source[i] = d;
+								source[index] = c;
+							} else {
+								//@ts-ignore
+								this.children.splice(i, 0, prerender(change.newState[i]));
+								source.splice(i, 0, change.newState[i]);
+							}
+						}
+					}
+					if (this.children.length > change.newState.length) {
+						this.children.length = change.newState.length;
+					}
 					break;
 				case 'append':
 					//@ts-ignore
