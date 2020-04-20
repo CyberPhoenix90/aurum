@@ -1,8 +1,8 @@
+import { ReadOnlyDataSource } from '../../stream/data_source';
 import { AurumElementProps, ChildNode, prerender } from './aurum_element';
-import { DataSource } from '../../stream/data_source';
 
 export interface SwitchProps<T = boolean> extends AurumElementProps {
-	state: DataSource<T>;
+	state: ReadOnlyDataSource<T>;
 }
 
 const switchCaseIdentity = Symbol('switchCase');

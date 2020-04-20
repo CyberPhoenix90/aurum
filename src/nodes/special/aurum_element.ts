@@ -1,4 +1,4 @@
-import { ArrayDataSource, DataSource } from '../../stream/data_source';
+import { ArrayDataSource, DataSource, ReadOnlyDataSource } from '../../stream/data_source';
 import { Callback, ClassType, DataDrain, MapLike, AttributeValue } from '../../utilities/common';
 import { ownerSymbol } from '../../utilities/owner_symbol';
 import { AurumTextElement } from './aurum_text';
@@ -287,7 +287,7 @@ export abstract class AurumElement {
 	private handleClass(data: ClassType) {
 		if (typeof data === 'string') {
 			this.node.className = data;
-		} else if (data instanceof DataSource) {
+		} else if (data instanceof DataSource || data instanceof DuplexDataSource) {
 			if (!this.cleanUp) {
 				this.cleanUp = new CancellationToken();
 			}
@@ -307,7 +307,7 @@ export abstract class AurumElement {
 			}
 			data.unique(this.cleanUp).listen((v) => ((this.node as HTMLElement).className = v));
 		} else {
-			const value: string = data.reduce<string>((p, c) => {
+			const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
 				if (typeof c === 'string') {
 					return `${p} ${c}`;
 				} else {
@@ -319,14 +319,14 @@ export abstract class AurumElement {
 				}
 			}, '');
 			this.node.className = value;
-			for (const i of data) {
+			for (const i of data as Array<string | ReadOnlyDataSource<string>>) {
 				if (i instanceof DataSource) {
 					if (!this.cleanUp) {
 						this.cleanUp = new CancellationToken();
 					}
 
 					i.unique(this.cleanUp).listen((v) => {
-						const value: string = data.reduce<string>((p, c) => {
+						const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
 							if (typeof c === 'string') {
 								return `${p} ${c}`;
 							} else {

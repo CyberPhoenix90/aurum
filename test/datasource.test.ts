@@ -163,7 +163,7 @@ describe('Datasource', () => {
 		return new Promise((resolve) => {
 			let i = 0;
 			let asserts = [4, 0, 100, 200];
-			let ds = new DuplexDataSource(0);
+			let ds = new DuplexDataSource(0, false);
 			let validated = true;
 
 			const ud = ds.unique();
@@ -223,7 +223,10 @@ describe('Datasource', () => {
 
 	it('should filter updates both ways', () => {
 		let ds = new DuplexDataSource(123);
-		let filtered = ds.filter((v) => v > 200);
+		let filtered = ds.filter(
+			(v) => v > 200,
+			(v) => v > 200
+		);
 
 		assert(filtered.value === undefined);
 		ds.updateDownstream(100);

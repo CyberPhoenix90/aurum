@@ -43,9 +43,11 @@ import { AurumElementProps } from './nodes/special/aurum_element';
 
 export * from './stream/data_source';
 export * from './stream/object_data_source';
+export * from './stream/duplex_data_source';
 
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
+export * from './utilities/classname';
 
 export * from './nodes/special/custom';
 export * from './nodes/special/router';

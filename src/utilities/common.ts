@@ -1,9 +1,9 @@
-import { DataSource } from '../stream/data_source';
+import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 
-export type AttributeValue = string | DataSource<string> | DataSource<boolean> | boolean ;
-export type StringSource = string | DataSource<string>;
-export type ClassType = string | DataSource<string> | DataSource<string[]> | Array<string | DataSource<string>>;
+export type AttributeValue = string | ReadOnlyDataSource<string> | ReadOnlyDataSource<boolean> | boolean;
+export type StringSource = string | ReadOnlyDataSource<string>;
+export type ClassType = string | ReadOnlyDataSource<string> | ReadOnlyDataSource<string[]> | Array<string | ReadOnlyDataSource<string>>;
 /**
  * Type alias for a generic calback taking a parameter and not returning anything
  */

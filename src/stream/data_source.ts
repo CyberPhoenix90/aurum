@@ -2,10 +2,20 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, ThenArg, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
 
+export interface ReadOnlyDataSource<T> {
+	readonly value: T;
+	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
+	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+}
+
 /**
  * Datasources wrap a value and allow you to update it in an observable way. Datasources can be manipulated like streams and can be bound directly in the JSX syntax and will update the html whenever the value changes
  */
-export class DataSource<T> {
+export class DataSource<T> implements ReadOnlyDataSource<T> {
 	/**
 	 * The current value of this data source, can be changed through update
 	 */
@@ -615,28 +625,28 @@ export class ArrayDataSource<T> {
 		return this.data.slice();
 	}
 
-	public sort(comparator: (a: T, b: T) => number, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
+	public sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
 		const view = new SortedArrayView(this, comparator, cancellationToken);
 		dependencies.forEach((dep) => {
-			dep.unique().listen(() => view.refresh());
+			dep.listen(() => view.refresh());
 		});
 
 		return view;
 	}
 
-	public map<D>(mapper: (data: T) => D, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
+	public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
 		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken);
 		dependencies.forEach((dep) => {
-			dep.unique().listen(() => view.refresh());
+			dep.listen(() => view.refresh());
 		});
 
 		return view;
 	}
 
-	public filter(callback: Predicate<T>, dependencies: DataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
+	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		const view = new FilteredArrayView(this, callback, cancellationToken);
 		dependencies.forEach((dep) => {
-			dep.unique().listen(() => view.refresh());
+			dep.listen(() => view.refresh());
 		});
 
 		return view;

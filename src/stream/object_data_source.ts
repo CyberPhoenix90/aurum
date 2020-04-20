@@ -101,7 +101,7 @@ export class ObjectDataSource<T> {
 	 * @param key
 	 * @param value
 	 */
-	public delete<K extends keyof T>(key: K, value: T[K]): void {
+	public delete<K extends keyof T>(key: K): void {
 		const old = this.data[key];
 		delete this.data[key];
 		this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
