@@ -231,6 +231,52 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	}
 
 	/**
+	 * Returns a promise that resolves when the next downstream update occurs
+	 * @param cancellationToken
+	 */
+	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
+		return new Promise((resolve) => {
+			this.listen((value) => resolve(value), cancellationToken);
+		});
+	}
+
+	public debounceUpstream(time: number, cancellationToken?: CancellationToken): DuplexDataSource<T> {
+		const debouncedDataSource = new DuplexDataSource<T>(this.value);
+		let timeout;
+
+		debouncedDataSource.listenUpstream((v) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				this.updateUpstream(v);
+			}, time);
+		}, cancellationToken);
+
+		this.listenDownstream((v) => {
+			debouncedDataSource.updateDownstream(v);
+		}, cancellationToken);
+
+		return debouncedDataSource;
+	}
+
+	public debounceDownstream(time: number, cancellationToken?: CancellationToken): DuplexDataSource<T> {
+		const debouncedDataSource = new DuplexDataSource<T>(this.value);
+		let timeout;
+
+		this.listenDownstream((v) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				debouncedDataSource.updateDownstream(v);
+			}, time);
+		}, cancellationToken);
+
+		debouncedDataSource.listenUpstream((v) => {
+			this.updateUpstream(v);
+		}, cancellationToken);
+
+		return debouncedDataSource;
+	}
+
+	/**
 	 * Creates a new datasource that listens to this one and forwards updates if they are not the same as the last update
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */

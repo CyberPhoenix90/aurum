@@ -10,6 +10,7 @@ export interface ReadOnlyDataSource<T> {
 	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 }
 
 /**
@@ -308,6 +309,52 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 		}, cancellationToken);
 
 		return delayedDataSource;
+	}
+
+	/**
+	 * Creates a datasource that forwards all the updates after a certain amount of updates have been ignored, Useful to create a stream that ignores some initialization noise
+	 * @param amount
+	 * @param cancellationToken
+	 */
+	public skip(amount: number, cancellationToken?: CancellationToken): DataSource<T> {
+		const delayedDataSource = new DataSource<T>(this.value);
+
+		this.listen((v) => {
+			if (amount === 0) {
+				delayedDataSource.update(v);
+			} else {
+				amount--;
+			}
+		}, cancellationToken);
+
+		return delayedDataSource;
+	}
+
+	/**
+	 * Creates a datasource that forwards up to a certain amount of updates, Useful to create a stream that shuts down after a cap has been reached
+	 * @param amount
+	 * @param cancellationToken
+	 */
+	public cutoff(amount: number, cancellationToken?: CancellationToken): DataSource<T> {
+		const delayedDataSource = new DataSource<T>(this.value);
+
+		this.listen((v) => {
+			if (amount-- > 0) {
+				delayedDataSource.update(v);
+			}
+		}, cancellationToken);
+
+		return delayedDataSource;
+	}
+
+	/**
+	 * Returns a promise that resolves when the next update occurs
+	 * @param cancellationToken
+	 */
+	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
+		return new Promise((resolve) => {
+			this.listen((value) => resolve(value), cancellationToken);
+		});
 	}
 
 	/**
