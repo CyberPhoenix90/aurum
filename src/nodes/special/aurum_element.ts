@@ -586,6 +586,12 @@ export class AurumFragment {
 	}
 
 	private handleSourceChild(newValue: any, sourceChild: any, dataSource, freshnessToken: { ts: number }, timestamp: number) {
+		if (Array.isArray(newValue)) {
+			for (const item of newValue) {
+				this.handleSourceChild(item, sourceChild, dataSource, freshnessToken, timestamp);
+			}
+		}
+
 		if (newValue === undefined || newValue === null) {
 			if (sourceChild) {
 				this.children.splice(this.children.indexOf(sourceChild), 1);
