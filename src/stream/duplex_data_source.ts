@@ -207,24 +207,20 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param reverseMapper mapper function that transforms the data when it flows upwards
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions added to the datasources by this operation
 	 */
-	public map<D>(mapper: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D>;
-	public map<D>(mapper: (value: T) => D, reverseMapper: (value: D) => T, cancellationToken?: CancellationToken): DuplexDataSource<D>;
-	public map<D>(
-		mapper: (value: T) => D,
-		reverseMapper?: ((value: D) => T) | CancellationToken,
-		cancellationToken?: CancellationToken
-	): DataSource<D> | DuplexDataSource<D> {
+	public map<D>(mapper: (value: T) => D, initialValue: D = mapper(this.value), cancellationToken?: CancellationToken): DataSource<D> {
+		const mappedSource = new DataSource<D>(initialValue);
+
+		this.listenDownstream((v) => mappedSource.update(mapper(v)), cancellationToken);
+
+		return mappedSource;
+	}
+
+	public mapDuplex<D>(mapper: (value: T) => D, reverseMapper: (value: D) => T, cancellationToken?: CancellationToken): DuplexDataSource<D> {
 		if (typeof reverseMapper === 'function') {
 			const mappedSource = new DuplexDataSource<D>(mapper(this.value), false);
 
 			this.listenDownstream((v) => mappedSource.updateDownstream(mapper(v)), cancellationToken);
 			mappedSource.listenUpstream((v) => this.updateUpstream((reverseMapper as any)(v)), cancellationToken);
-
-			return mappedSource;
-		} else {
-			const mappedSource = new DataSource<D>(mapper(this.value));
-
-			this.listenDownstream((v) => mappedSource.update(mapper(v)), reverseMapper as any);
 
 			return mappedSource;
 		}

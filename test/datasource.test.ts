@@ -201,7 +201,7 @@ describe('Datasource', () => {
 
 	it('should map updates both ways', () => {
 		let ds = new DuplexDataSource(123);
-		let mapped = ds.map(
+		let mapped = ds.mapDuplex(
 			(v) => v + 10,
 			(v) => v - 10
 		);

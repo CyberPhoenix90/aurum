@@ -8,7 +8,7 @@ export interface ReadOnlyDataSource<T> {
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
+	map<D>(callback: (value: T) => D, initialValue?: D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 }
@@ -127,8 +127,8 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D> {
-		const mappedSource = new DataSource<D>(callback(this.value));
+	public map<D>(callback: (value: T) => D, initialValue: D = callback(this.value), cancellationToken?: CancellationToken): DataSource<D> {
+		const mappedSource = new DataSource<D>(initialValue);
 		this.listen((value) => {
 			mappedSource.update(callback(value));
 		}, cancellationToken);
