@@ -8,7 +8,7 @@ export interface ReadOnlyDataSource<T> {
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	map<D>(callback: (value: T) => D, initialValue?: D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 }
@@ -21,11 +21,13 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * The current value of this data source, can be changed through update
 	 */
 	public value: T;
+	private primed: boolean;
 	private updating: boolean;
 	private updateEvent: EventEmitter<T>;
 
 	constructor(initialValue?: T) {
 		this.value = initialValue;
+		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
 	}
 
@@ -34,6 +36,7 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param newValue new value for the data source
 	 */
 	public update(newValue: T): void {
+		this.primed = true;
 		if (this.updating) {
 			throw new Error(
 				'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
@@ -127,8 +130,13 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public map<D>(callback: (value: T) => D, initialValue: D = callback(this.value), cancellationToken?: CancellationToken): DataSource<D> {
-		const mappedSource = new DataSource<D>(initialValue);
+	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D> {
+		let mappedSource;
+		if (this.primed) {
+			mappedSource = new DataSource<D>(callback(this.value));
+		} else {
+			mappedSource = new DataSource<D>();
+		}
 		this.listen((value) => {
 			mappedSource.update(callback(value));
 		}, cancellationToken);
