@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface HrProps extends AurumElementProps {
+export interface HrProps extends AurumElementProps<HTMLHRElement> {
 	onAttach?: Callback<HTMLHRElement>;
 	onDetach?: Callback<HTMLHRElement>;
 	onCreate?: Callback<HTMLHRElement>;

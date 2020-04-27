@@ -4,7 +4,7 @@ import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_elem
  * @internal
  */
 export class Aside extends AurumElement {
-	constructor(props: AurumElementProps, children: ChildNode[]) {
+	constructor(props: AurumElementProps<HTMLElement>, children: ChildNode[]) {
 		super(props, children, 'aside');
 	}
 }

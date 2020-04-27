@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface FormProps extends AurumElementProps {
+export interface FormProps extends AurumElementProps<HTMLFormElement> {
 	onAttach?: Callback<HTMLFormElement>;
 	onDetach?: Callback<HTMLFormElement>;
 	onCreate?: Callback<HTMLFormElement>;

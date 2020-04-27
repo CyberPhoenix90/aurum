@@ -1,7 +1,7 @@
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface LabelProps extends AurumElementProps {
+export interface LabelProps extends AurumElementProps<HTMLLabelElement> {
 	onAttach?: Callback<HTMLLabelElement>;
 	onDetach?: Callback<HTMLLabelElement>;
 	onCreate?: Callback<HTMLLabelElement>;

@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface ThProps extends AurumElementProps {
+export interface ThProps extends AurumElementProps<HTMLTableHeaderCellElement> {
 	onAttach?: Callback<HTMLTableHeaderCellElement>;
 	onDetach?: Callback<HTMLTableHeaderCellElement>;
 	onCreate?: Callback<HTMLTableHeaderCellElement>;

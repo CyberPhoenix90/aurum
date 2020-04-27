@@ -1,7 +1,7 @@
 import { Callback, MapLike, AttributeValue } from '../../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './aurum_element';
 
-export interface CustomProps<T extends HTMLElement> extends AurumElementProps {
+export interface CustomProps<T extends HTMLElement> extends AurumElementProps<T> {
 	onAttach?: Callback<T>;
 	onDetach?: Callback<T>;
 	onCreate?: Callback<T>;

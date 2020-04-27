@@ -8,6 +8,7 @@
 		"noUnusedLocals": true,
 		"declarationMap": true,
 		"jsx": "react",
+		"strictFunctionTypes": true,
 		"jsxFactory": "Aurum.factory",
 		"declaration": true,
 		"inlineSources": true,
@@ -20,7 +21,5 @@
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"
 	},
-	"include": [
-		"src/**/*.ts"
-	]
+	"include": ["src/**/*.ts"]
 }

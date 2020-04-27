@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface QProps extends AurumElementProps {
+export interface QProps extends AurumElementProps<HTMLQuoteElement> {
 	onAttach?: Callback<HTMLQuoteElement>;
 	onDetach?: Callback<HTMLQuoteElement>;
 	onCreate?: Callback<HTMLQuoteElement>;

@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface DivProps extends AurumElementProps {
+export interface DivProps extends AurumElementProps<HTMLDivElement> {
 	onAttach?: Callback<HTMLDivElement>;
 	onDetach?: Callback<HTMLDivElement>;
 	onCreate?: Callback<HTMLDivElement>;

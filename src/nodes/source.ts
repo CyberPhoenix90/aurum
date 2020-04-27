@@ -1,7 +1,7 @@
 import { Callback, AttributeValue } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface SourceProps extends AurumElementProps {
+export interface SourceProps extends AurumElementProps<HTMLSourceElement> {
 	onAttach?: Callback<HTMLSourceElement>;
 	onDetach?: Callback<HTMLSourceElement>;
 	onCreate?: Callback<HTMLSourceElement>;

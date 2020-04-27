@@ -1,7 +1,7 @@
 import { Callback } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface OptionProps extends AurumElementProps {
+export interface OptionProps extends AurumElementProps<HTMLOptionElement> {
 	onAttach?: Callback<HTMLOptionElement>;
 	onDetach?: Callback<HTMLOptionElement>;
 	onCreate?: Callback<HTMLOptionElement>;

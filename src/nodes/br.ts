@@ -1,7 +1,7 @@
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface BrProps extends AurumElementProps {
+export interface BrProps extends AurumElementProps<HTMLBRElement> {
 	onAttach?: Callback<HTMLBRElement>;
 	onDetach?: Callback<HTMLBRElement>;
 	onCreate?: Callback<HTMLBRElement>;

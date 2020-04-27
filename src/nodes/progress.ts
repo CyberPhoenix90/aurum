@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface ProgressProps extends AurumElementProps {
+export interface ProgressProps extends AurumElementProps<HTMLProgressElement> {
 	onAttach?: Callback<HTMLProgressElement>;
 	onDetach?: Callback<HTMLProgressElement>;
 	onCreate?: Callback<HTMLProgressElement>;

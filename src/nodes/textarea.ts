@@ -2,7 +2,7 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { DataSource } from '../stream/data_source';
 import { DataDrain, Callback, AttributeValue } from '../utilities/common';
 
-export interface TextAreaProps extends AurumElementProps {
+export interface TextAreaProps extends AurumElementProps<HTMLTextAreaElement> {
 	onAttach?: Callback<HTMLTextAreaElement>;
 	onDetach?: Callback<HTMLTextAreaElement>;
 	onCreate?: Callback<HTMLTextAreaElement>;

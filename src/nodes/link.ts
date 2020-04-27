@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface LinkProps extends AurumElementProps {
+export interface LinkProps extends AurumElementProps<HTMLLinkElement> {
 	onAttach?: Callback<HTMLLinkElement>;
 	onDetach?: Callback<HTMLLinkElement>;
 	onCreate?: Callback<HTMLLinkElement>;

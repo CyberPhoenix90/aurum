@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface IFrameProps extends AurumElementProps {
+export interface IFrameProps extends AurumElementProps<HTMLIFrameElement> {
 	onAttach?: Callback<HTMLIFrameElement>;
 	onDetach?: Callback<HTMLIFrameElement>;
 	onCreate?: Callback<HTMLIFrameElement>;

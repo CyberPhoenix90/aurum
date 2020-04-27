@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface HeadingProps extends AurumElementProps {
+export interface HeadingProps extends AurumElementProps<HTMLHeadingElement> {
 	onAttach?: Callback<HTMLHeadingElement>;
 	onDetach?: Callback<HTMLHeadingElement>;
 	onCreate?: Callback<HTMLHeadingElement>;

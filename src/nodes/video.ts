@@ -1,7 +1,7 @@
 import { Callback, AttributeValue } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface VideoProps extends AurumElementProps {
+export interface VideoProps extends AurumElementProps<HTMLVideoElement> {
 	onAttach?: Callback<HTMLVideoElement>;
 	onDetach?: Callback<HTMLVideoElement>;
 	onCreate?: Callback<HTMLVideoElement>;

@@ -1,7 +1,7 @@
 import { ReadOnlyDataSource } from '../../stream/data_source';
-import { AurumElementProps, ChildNode, prerender } from './aurum_element';
+import { ChildNode, prerender } from './aurum_element';
 
-export interface SwitchProps<T = boolean> extends AurumElementProps {
+export interface SwitchProps<T = boolean> {
 	state: ReadOnlyDataSource<T>;
 }
 

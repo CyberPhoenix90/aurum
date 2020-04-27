@@ -3,7 +3,7 @@ import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_elem
 import { DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 
-export interface InputProps extends AurumElementProps {
+export interface InputProps extends AurumElementProps<HTMLInputElement> {
 	onAttach?: Callback<HTMLInputElement>;
 	onDetach?: Callback<HTMLInputElement>;
 	onCreate?: Callback<HTMLInputElement>;

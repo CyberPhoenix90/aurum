@@ -53,7 +53,11 @@ export class ObjectDataSource<T> {
 	/**
 	 * Same as listenOnKey but will immediately call the callback with the current value first
 	 */
-	public listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void> {
+	public listenOnKeyAndRepeat<K extends keyof T>(
+		key: K,
+		callback: Callback<ObjectChange<T, keyof T>>,
+		cancellationToken?: CancellationToken
+	): Callback<void> {
 		callback({
 			key,
 			newValue: this.data[key],
@@ -66,7 +70,7 @@ export class ObjectDataSource<T> {
 	/**
 	 * Listen to changes of a single key of the object
 	 */
-	public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void> {
+	public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
 		if (!this.updateEventOnKey.has(key)) {
 			this.updateEventOnKey.set(key, new EventEmitter());
 		}

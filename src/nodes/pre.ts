@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback } from '../utilities/common';
 
-export interface PreProps extends AurumElementProps {
+export interface PreProps extends AurumElementProps<HTMLPreElement> {
 	onAttach?: Callback<HTMLPreElement>;
 	onDetach?: Callback<HTMLPreElement>;
 	onCreate?: Callback<HTMLPreElement>;

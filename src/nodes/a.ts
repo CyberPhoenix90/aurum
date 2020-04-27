@@ -1,7 +1,7 @@
 import { Callback, AttributeValue } from '../utilities/common';
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 
-export interface AProps extends AurumElementProps {
+export interface AProps extends AurumElementProps<HTMLAnchorElement> {
 	onAttach?: Callback<HTMLAnchorElement>;
 	onDetach?: Callback<HTMLAnchorElement>;
 	onCreate?: Callback<HTMLAnchorElement>;

@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface DataProps extends AurumElementProps {
+export interface DataProps extends AurumElementProps<HTMLDataElement> {
 	onAttach?: Callback<HTMLDataElement>;
 	onDetach?: Callback<HTMLDataElement>;
 	onCreate?: Callback<HTMLDataElement>;

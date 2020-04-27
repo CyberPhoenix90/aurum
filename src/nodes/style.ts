@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface StyleProps extends AurumElementProps {
+export interface StyleProps extends AurumElementProps<HTMLStyleElement> {
 	onAttach?: Callback<HTMLStyleElement>;
 	onDetach?: Callback<HTMLStyleElement>;
 	onCreate?: Callback<HTMLStyleElement>;

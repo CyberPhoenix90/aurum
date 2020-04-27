@@ -2,7 +2,7 @@ import { DataSource } from '../stream/data_source';
 import { Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
-export interface SelectProps extends AurumElementProps {
+export interface SelectProps extends AurumElementProps<HTMLSelectElement> {
 	onAttach?: Callback<HTMLSelectElement>;
 	onDetach?: Callback<HTMLSelectElement>;
 	onCreate?: Callback<HTMLSelectElement>;

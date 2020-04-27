@@ -13,12 +13,12 @@ export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
 
 export interface AurumElementModel {
 	[aurumElementModelIdentitiy]: boolean;
-	constructor: (props: AurumElementProps, innerNodes: ChildNode[]) => AurumElement;
-	props: AurumElementProps;
+	constructor: (props: AurumElementProps<HTMLElement>, innerNodes: ChildNode[]) => AurumElement;
+	props: AurumElementProps<HTMLElement>;
 	innerNodes: ChildNode[];
 }
 
-export interface AurumElementProps {
+export interface AurumElementProps<T extends HTMLElement> {
 	id?: AttributeValue;
 	name?: AttributeValue;
 	draggable?: AttributeValue;
@@ -49,9 +49,9 @@ export interface AurumElementProps {
 	onLoad?: DataDrain<Event>;
 	onError?: DataDrain<ErrorEvent>;
 
-	onAttach?: Callback<HTMLElement>;
-	onDetach?: Callback<HTMLElement>;
-	onCreate?: Callback<HTMLElement>;
+	onAttach?: Callback<T>;
+	onDetach?: Callback<T>;
+	onCreate?: Callback<T>;
 }
 
 /**
@@ -126,7 +126,7 @@ export abstract class AurumElement {
 	public node: HTMLElement;
 	private cleanUp: CancellationToken;
 
-	constructor(props: AurumElementProps, children: ChildNode[], domNodeName: string) {
+	constructor(props: AurumElementProps<any>, children: ChildNode[], domNodeName: string) {
 		this.node = this.create(domNodeName);
 		this.children = [];
 
@@ -145,7 +145,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	private initialize(props: AurumElementProps) {
+	private initialize(props: AurumElementProps<any>) {
 		this.createEventHandlers(defaultEvents, props);
 
 		const dataProps = Object.keys(props).filter((e) => e.includes('-'));
@@ -175,11 +175,11 @@ export abstract class AurumElement {
 		for (const key in events) {
 			if (props[events[key]]) {
 				if (props[events[key]] instanceof DataSource) {
-					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]].update(e));
+					this.node.addEventListener(key, (e: Event) => props[events[key]].update(e));
 				} else if (props[events[key]] instanceof DuplexDataSource) {
-					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]].updateDownstream(e));
+					this.node.addEventListener(key, (e: Event) => props[events[key]].updateDownstream(e));
 				} else if (typeof props[events[key]] === 'function') {
-					this.node.addEventListener(key, (e: MouseEvent) => props[events[key]](e));
+					this.node.addEventListener(key, (e: Event) => props[events[key]](e));
 				}
 			}
 		}

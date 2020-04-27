@@ -1,7 +1,7 @@
 import { AurumElement, ChildNode, AurumElementProps } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface CanvasProps extends AurumElementProps {
+export interface CanvasProps extends AurumElementProps<HTMLCanvasElement> {
 	onAttach?: Callback<HTMLCanvasElement>;
 	onDetach?: Callback<HTMLCanvasElement>;
 	onCreate?: Callback<HTMLCanvasElement>;

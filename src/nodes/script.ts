@@ -1,7 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { Callback, AttributeValue } from '../utilities/common';
 
-export interface ScriptProps extends AurumElementProps {
+export interface ScriptProps extends AurumElementProps<HTMLScriptElement> {
 	onAttach?: Callback<HTMLScriptElement>;
 	onDetach?: Callback<HTMLScriptElement>;
 	onCreate?: Callback<HTMLScriptElement>;
