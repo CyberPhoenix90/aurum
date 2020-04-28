@@ -6,6 +6,7 @@ export interface ReadOnlyDataSource<T> {
 	readonly value: T;
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
@@ -67,6 +68,16 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Subscribes to the updates of the data stream for a single update
+	 * @param callback Callback to call when value is updated
+	 * @param cancellationToken Optional token to control the cancellation of the subscription
+	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
+	 */
+	public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
 	}
 
 	/**
@@ -361,7 +372,7 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 */
 	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
 		return new Promise((resolve) => {
-			this.listen((value) => resolve(value), cancellationToken);
+			this.listenOnce((value) => resolve(value), cancellationToken);
 		});
 	}
 
@@ -515,6 +526,20 @@ export class ArrayDataSource<T> {
 
 	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+	}
+
+	public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Returns a promise that resolves when the next update occurs
+	 * @param cancellationToken
+	 */
+	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<CollectionChange<T>> {
+		return new Promise((resolve) => {
+			this.listenOnce((value) => resolve(value), cancellationToken);
+		});
 	}
 
 	public get length(): DataSource<number> {
