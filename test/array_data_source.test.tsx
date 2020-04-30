@@ -37,7 +37,10 @@ describe('ArrayDatasource', () => {
 		const ds = new ArrayDataSource([4, 5, 7, 3, 8, 6, 9, 1, 2]);
 		const key = new DataSource(2);
 		const reverse = new DataSource<boolean>(false);
-		const sorted = ds.filter((v) => v % key.value === 0, [key]).sort((a, b) => (reverse.value ? b - a : a - b), [reverse]);
+		const sorted = ds
+			.filter((v) => v % key.value === 0, [key])
+			.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
+			.persist();
 
 		assert.deepEqual(sorted.toArray(), [2, 4, 6, 8]);
 		key.update(3);
@@ -55,7 +58,8 @@ describe('ArrayDatasource', () => {
 		const mapped = ds
 			.filter((v) => v % key.value === 0, [key])
 			.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
-			.map((v) => 'val:' + v);
+			.map((v) => 'val:' + v)
+			.persist();
 
 		assert.deepEqual(mapped.toArray(), ['val:2', 'val:4', 'val:6', 'val:8']);
 		key.update(3);
@@ -73,7 +77,8 @@ describe('ArrayDatasource', () => {
 		const mapped = ds
 			.filter((v) => v % key.value === 0, [key])
 			.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
-			.map((v) => <div>{v}</div>);
+			.map((v) => <div>{v}</div>)
+			.persist();
 
 		Aurum.attach(<div>{mapped}</div>, document.body);
 

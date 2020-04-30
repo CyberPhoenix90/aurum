@@ -1,4 +1,5 @@
 import { CancellationToken } from '../utilities/cancellation_token';
+import { Callback } from './common';
 
 /**
  * @internal
@@ -22,9 +23,10 @@ interface EventSubscription<T> {
 export class EventEmitter<T> {
 	private isFiring: boolean;
 	private onAfterFire: Array<() => void>;
+	public onEmpty: Callback<void>;
 
 	public get subscriptions(): number {
-		return this.subscribeChannel.length;
+		return this.subscribeChannel.length + this.subscribeOnceChannel.length;
 	}
 
 	private subscribeChannel: EventSubscription<T>[];
@@ -56,10 +58,12 @@ export class EventEmitter<T> {
 		if (!this.isFiring) {
 			this.subscribeChannel.length = 0;
 			this.subscribeOnceChannel.length = 0;
+			this.onEmpty?.();
 		} else {
 			this.onAfterFire.push(() => {
 				this.subscribeChannel.length = 0;
 				this.subscribeOnceChannel.length = 0;
+				this.onEmpty?.();
 			});
 		}
 	}
@@ -121,6 +125,9 @@ export class EventEmitter<T> {
 		if (index >= 0) {
 			if (!this.isFiring) {
 				channel.splice(index, 1);
+				if (!this.hasSubscriptions()) {
+					this.onEmpty?.();
+				}
 			} else {
 				this.onAfterFire.push(() => this.cancel(subscription, channel));
 			}

@@ -276,6 +276,11 @@ export abstract class AurumElement {
 		}
 		if (!this.node.isConnected) {
 			this.onDetach?.(this.node);
+			for (const child of this.children) {
+				if (child instanceof AurumFragment) {
+					child.handleDetach();
+				}
+			}
 			for (const child of this.node.childNodes) {
 				if (child[ownerSymbol]) {
 					child[ownerSymbol].handleDetach?.();
@@ -530,8 +535,10 @@ export interface AurumFragmentProps {
 export class AurumFragment {
 	public children: Array<AurumElement | AurumTextElement | AurumFragment>;
 	public onChange: EventEmitter<void>;
+	private cancellationToken: CancellationToken;
 
 	constructor(props: AurumFragmentProps, children?: ChildNode[]) {
+		this.cancellationToken = new CancellationToken();
 		this.onChange = new EventEmitter();
 		this.children = [];
 		if (props.repeatModel) {
@@ -539,6 +546,10 @@ export class AurumFragment {
 		} else if (children) {
 			this.addChildren(children);
 		}
+	}
+
+	public handleDetach() {
+		this.cancellationToken.cancel();
 	}
 
 	public addChildren(children: ChildNode[]) {
@@ -578,7 +589,7 @@ export class AurumFragment {
 					} else {
 						sourceChild = this.handleSourceChild(newValue, sourceChild, renderable, freshnessToken, freshnessToken.ts);
 					}
-				});
+				}, this.cancellationToken);
 			} else {
 				throw new Error('case not yet implemented');
 			}
@@ -727,6 +738,6 @@ export class AurumFragment {
 					throw new Error('unhandled operation');
 			}
 			this.onChange.fire();
-		});
+		}, this.cancellationToken);
 	}
 }
