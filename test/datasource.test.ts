@@ -162,7 +162,7 @@ describe('Datasource', () => {
 	it('should fire unique events both ways', () => {
 		return new Promise((resolve) => {
 			let i = 0;
-			let asserts = [4, 0, 100, 200];
+			let asserts = [200, 4, 0, 100, 200];
 			let ds = new DuplexDataSource(0);
 			let validated = true;
 

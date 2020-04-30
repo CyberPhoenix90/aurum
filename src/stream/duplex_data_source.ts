@@ -296,14 +296,18 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	public unique(cancellationToken?: CancellationToken): DuplexDataSource<T> {
 		const uniqueSource = new DuplexDataSource<T>(this.value, false);
 
+		let upstreamValue = this.value;
+		let downStreamValue = this.value;
 		this.listenDownstream((v) => {
-			if (uniqueSource.value !== v) {
+			if (downStreamValue !== v) {
+				downStreamValue = v;
 				uniqueSource.updateDownstream(v);
 			}
 		}, cancellationToken);
 
 		uniqueSource.listenUpstream((v) => {
-			if (this.value !== v) {
+			if (upstreamValue !== v) {
+				upstreamValue = v;
 				this.updateUpstream(v);
 			}
 		}, cancellationToken);

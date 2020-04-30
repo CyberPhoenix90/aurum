@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.4.12",
+	"version": "0.4.13",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "prebuilt/aurumjs.js",
 	"typings": "dist/aurum.d.ts",
