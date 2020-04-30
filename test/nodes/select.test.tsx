@@ -8,7 +8,7 @@ describe('Select', () => {
 
 	it('Should apply initial selection', () => {
 		Aurum.attach(
-			<select initialSelection={1}>
+			<select selectedIndex={1}>
 				<option>1</option>
 				<option>2</option>
 			</select>,
@@ -20,7 +20,7 @@ describe('Select', () => {
 	it('Should apply selection source', () => {
 		const source = new DataSource(1);
 		Aurum.attach(
-			<select selectedIndexSource={source}>
+			<select selectedIndex={source}>
 				<option>1</option>
 				<option>2</option>
 				<option>3</option>

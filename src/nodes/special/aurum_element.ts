@@ -124,7 +124,7 @@ export abstract class AurumElement {
 	protected needAttach: boolean;
 
 	public node: HTMLElement;
-	private cleanUp: CancellationToken;
+	protected cleanUp: CancellationToken;
 
 	constructor(props: AurumElementProps<any>, children: ChildNode[], domNodeName: string) {
 		this.node = this.create(domNodeName);

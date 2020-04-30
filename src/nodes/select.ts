@@ -1,14 +1,16 @@
 import { DataSource } from '../stream/data_source';
 import { Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
+import { DuplexDataSource } from '../stream/duplex_data_source';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface SelectProps extends AurumElementProps<HTMLSelectElement> {
 	onAttach?: Callback<HTMLSelectElement>;
 	onDetach?: Callback<HTMLSelectElement>;
 	onCreate?: Callback<HTMLSelectElement>;
 	onChange?: DataDrain<Event>;
-	initialSelection?: number;
-	selectedIndexSource?: DataSource<number>;
+	value?: DataSource<string> | DuplexDataSource<string> | string;
+	selectedIndex?: DataSource<number> | DuplexDataSource<number> | number;
 }
 
 /**
@@ -21,27 +23,54 @@ const selectEvents = { change: 'onChange' };
  */
 export class Select extends AurumElement {
 	public readonly node: HTMLSelectElement;
-	private selectedIndexSource: DataSource<number>;
-	private initialSelection: number;
+	private value: DataSource<string> | DuplexDataSource<string> | string;
+	private selectedIndex: DataSource<number> | DuplexDataSource<number> | number;
 
 	constructor(props: SelectProps, children: ChildNode[]) {
 		super(props, children, 'select');
 		if (props !== null) {
 			this.createEventHandlers(selectEvents, props);
-			this.initialSelection = props.initialSelection;
 
-			if (props.selectedIndexSource) {
-				this.selectedIndexSource = props.selectedIndexSource;
-				props.selectedIndexSource.unique().listenAndRepeat((value) => (this.node.selectedIndex = value));
-			} else {
-				this.node.selectedIndex = props.initialSelection ?? -1;
+			if (props.value) {
+				this.value = props.value;
+				this.needAttach = true;
+				if (props.value instanceof DataSource || props.value instanceof DuplexDataSource) {
+					if (!this.cleanUp) {
+						this.cleanUp = new CancellationToken();
+					}
+
+					props.value.listen((v) => {
+						this.node.value = v;
+					}, this.cleanUp);
+					this.node.addEventListener('change', () => {
+						if (props.value instanceof DataSource) {
+							props.value.update(this.node.value);
+						} else if (props.value instanceof DuplexDataSource) {
+							props.value.updateUpstream(this.node.value);
+						}
+					});
+				}
 			}
 
-			if (props.selectedIndexSource) {
+			if (props.selectedIndex) {
+				this.selectedIndex = props.selectedIndex;
 				this.needAttach = true;
-				this.node.addEventListener('change', () => {
-					props.selectedIndexSource.update(this.node.selectedIndex);
-				});
+				if (props.selectedIndex instanceof DataSource || props.selectedIndex instanceof DuplexDataSource) {
+					if (!this.cleanUp) {
+						this.cleanUp = new CancellationToken();
+					}
+
+					props.selectedIndex.listen((v) => {
+						this.node.selectedIndex = v;
+					}, this.cleanUp);
+					this.node.addEventListener('change', () => {
+						if (props.selectedIndex instanceof DataSource) {
+							props.selectedIndex.update(this.node.selectedIndex);
+						} else if (props.selectedIndex instanceof DuplexDataSource) {
+							props.selectedIndex.updateUpstream(this.node.selectedIndex);
+						}
+					});
+				}
 			}
 		}
 	}
@@ -49,10 +78,14 @@ export class Select extends AurumElement {
 	protected handleAttach(parent: AurumElement) {
 		super.handleAttach(parent);
 		if (this.node.isConnected) {
-			if (this.selectedIndexSource) {
-				this.node.selectedIndex = this.selectedIndexSource.value;
-			} else if (this.initialSelection !== undefined) {
-				this.node.selectedIndex = this.initialSelection;
+			if (this.value instanceof DataSource || this.value instanceof DuplexDataSource) {
+				this.node.value = this.value.value;
+			} else if (this.value !== undefined) {
+				this.node.value = this.value;
+			} else if (this.selectedIndex instanceof DataSource || this.selectedIndex instanceof DuplexDataSource) {
+				this.node.selectedIndex = this.selectedIndex.value;
+			} else if (this.selectedIndex !== undefined) {
+				this.node.selectedIndex = this.selectedIndex;
 			}
 		}
 	}
