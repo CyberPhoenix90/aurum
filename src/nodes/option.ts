@@ -1,7 +1,8 @@
-import { Callback } from '../utilities/common';
+import { Callback, AttributeValue } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 
 export interface OptionProps extends AurumElementProps<HTMLOptionElement> {
+	value?: AttributeValue;
 	onAttach?: Callback<HTMLOptionElement>;
 	onDetach?: Callback<HTMLOptionElement>;
 	onCreate?: Callback<HTMLOptionElement>;
@@ -15,5 +16,8 @@ export class Option extends AurumElement {
 
 	constructor(props: OptionProps, children: ChildNode[]) {
 		super(props, children, 'option');
+		if (props) {
+			this.bindProps(['value'], props);
+		}
 	}
 }

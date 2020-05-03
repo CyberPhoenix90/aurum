@@ -109,14 +109,13 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	}
 
 	/**
-	 * Subscribes to the updates of the data stream
+	 * alias for listenDownstream
 	 * @param callback Callback to call when value is updated
 	 * @param cancellationToken Optional token to control the cancellation of the subscription
 	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		this.updateDownstreamEvent.subscribe(callback, cancellationToken).cancel;
-		return this.updateUpstreamEvent.subscribe(callback, cancellationToken).cancel;
+		return this.updateDownstreamEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
 	/**
@@ -127,6 +126,16 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	 */
 	public listenUpstream(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateUpstreamEvent.subscribe(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Subscribes exclusively to one update of the data stream that occur due to an update flowing upstream
+	 * @param callback Callback to call when value is updated
+	 * @param cancellationToken Optional token to control the cancellation of the subscription
+	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
+	 */
+	public listenUpstreamOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateUpstreamEvent.subscribeOnce(callback, cancellationToken).cancel;
 	}
 
 	/**
@@ -230,13 +239,17 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 		}
 	}
 
+	public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateDownstreamEvent.subscribeOnce(callback, cancellationToken).cancel;
+	}
+
 	/**
-	 * Returns a promise that resolves when the next downstream update occurs
+	 * Returns a promise that resolves when the next update occurs
 	 * @param cancellationToken
 	 */
 	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
 		return new Promise((resolve) => {
-			this.listen((value) => resolve(value), cancellationToken);
+			this.listenOnce((value) => resolve(value), cancellationToken);
 		});
 	}
 
@@ -283,14 +296,18 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	public unique(cancellationToken?: CancellationToken): DuplexDataSource<T> {
 		const uniqueSource = new DuplexDataSource<T>(this.value, false);
 
+		let upstreamValue = this.value;
+		let downStreamValue = this.value;
 		this.listenDownstream((v) => {
-			if (uniqueSource.value !== v) {
+			if (downStreamValue !== v) {
+				downStreamValue = v;
 				uniqueSource.updateDownstream(v);
 			}
 		}, cancellationToken);
 
 		uniqueSource.listenUpstream((v) => {
-			if (this.value !== v) {
+			if (upstreamValue !== v) {
+				upstreamValue = v;
 				this.updateUpstream(v);
 			}
 		}, cancellationToken);

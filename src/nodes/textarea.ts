@@ -1,6 +1,7 @@
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DataDrain, Callback, AttributeValue } from '../utilities/common';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface TextAreaProps extends AurumElementProps<HTMLTextAreaElement> {
 	onAttach?: Callback<HTMLTextAreaElement>;
@@ -62,7 +63,11 @@ export class TextArea extends AurumElement {
 		if (props !== null) {
 			if (props.inputValueSource) {
 				this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';
-				props.inputValueSource.unique().listen((value) => (this.node.value = value));
+				if (!this.cleanUp) {
+					this.cleanUp = new CancellationToken();
+				}
+
+				props.inputValueSource.unique(this.cleanUp).listen((value) => (this.node.value = value));
 			} else {
 				this.node.value = props.initialValue ?? '';
 			}

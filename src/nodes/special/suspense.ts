@@ -6,7 +6,7 @@ export interface SuspenseProps {
 }
 
 export function Suspense(props: SuspenseProps, children: ChildNode[]) {
-	const data = new DataSource<ChildNode>(props.fallback);
+	const data = new DataSource<ChildNode>(props?.fallback);
 	Promise.all(children.map(prerender)).then((res) => {
 		data.update(res as ChildNode[]);
 	});

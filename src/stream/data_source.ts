@@ -6,6 +6,7 @@ export interface ReadOnlyDataSource<T> {
 	readonly value: T;
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
@@ -21,11 +22,13 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * The current value of this data source, can be changed through update
 	 */
 	public value: T;
+	private primed: boolean;
 	private updating: boolean;
-	private updateEvent: EventEmitter<T>;
+	protected updateEvent: EventEmitter<T>;
 
 	constructor(initialValue?: T) {
 		this.value = initialValue;
+		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
 	}
 
@@ -34,6 +37,7 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param newValue new value for the data source
 	 */
 	public update(newValue: T): void {
+		this.primed = true;
 		if (this.updating) {
 			throw new Error(
 				'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
@@ -67,12 +71,24 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	}
 
 	/**
+	 * Subscribes to the updates of the data stream for a single update
+	 * @param callback Callback to call when value is updated
+	 * @param cancellationToken Optional token to control the cancellation of the subscription
+	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
+	 */
+	public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+	}
+
+	/**
 	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they pass a predicate check
 	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): DataSource<T> {
-		const filteredSource = new DataSource<T>();
+	public filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const filteredSource = new TransientDataSource<T>(cancellationToken);
 		this.listen((value) => {
 			if (callback(value, filteredSource.value)) {
 				filteredSource.update(value);
@@ -87,14 +103,14 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public max(cancellationToken?: CancellationToken): DataSource<T> {
+	public max(cancellationToken?: CancellationToken): TransientDataSource<T> {
 		return this.filter((newValue, oldValue) => {
 			if (typeof newValue === 'string' && typeof oldValue === 'string') {
 				return newValue.localeCompare(oldValue) > 0;
 			} else {
 				return newValue > oldValue;
 			}
-		});
+		}, cancellationToken);
 	}
 
 	/**
@@ -103,14 +119,14 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public min(cancellationToken?: CancellationToken): DataSource<T> {
+	public min(cancellationToken?: CancellationToken): TransientDataSource<T> {
 		return this.filter((newValue, oldValue) => {
 			if (typeof newValue === 'string' && typeof oldValue === 'string') {
 				return newValue.localeCompare(oldValue) < 0;
 			} else {
 				return newValue < oldValue;
 			}
-		});
+		}, cancellationToken);
 	}
 
 	/**
@@ -127,8 +143,15 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): DataSource<D> {
-		const mappedSource = new DataSource<D>(callback(this.value));
+	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): TransientDataSource<D> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		let mappedSource;
+		if (this.primed) {
+			mappedSource = new TransientDataSource<D>(cancellationToken, callback(this.value));
+		} else {
+			mappedSource = new TransientDataSource<D>(cancellationToken);
+		}
 		this.listen((value) => {
 			mappedSource.update(callback(value));
 		}, cancellationToken);
@@ -139,12 +162,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * Allows tapping into the stream and calls a function for each value.
 	 */
 	public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
-		const tapSource = new DataSource<T>(this.value);
 		this.listen((value) => {
 			callback(value);
-			tapSource.update(value);
 		}, cancellationToken);
-		return tapSource;
+		return this;
 	}
 
 	/**
@@ -152,8 +173,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): DataSource<R> {
-		const mappedSource = new DataSource<R>();
+	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const mappedSource = new TransientDataSource<R>(cancellationToken);
 		this.listen(async (value) => {
 			mappedSource.update(await (value as any));
 		}, cancellationToken);
@@ -164,8 +187,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * Creates a new datasource that listens to this one and forwards updates if they are not the same as the last update
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public unique(cancellationToken?: CancellationToken): DataSource<T> {
-		const uniqueSource = new DataSource<T>(this.value);
+	public unique(cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const uniqueSource = new TransientDataSource<T>(cancellationToken, this.value);
 		this.listen((value) => {
 			if (value !== uniqueSource.value) {
 				uniqueSource.update(value);
@@ -178,15 +203,17 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * Creates a new datasource that listens to this one and forwards updates revealing the previous value on each update
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public diff(cancellationToken?: CancellationToken): DataSource<{ new: T; old: T }> {
-		const diffingSource = new DataSource({
+	public diff(cancellationToken?: CancellationToken): TransientDataSource<{ new: T; old: T }> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const diffingSource = new TransientDataSource(cancellationToken, {
 			new: this.value,
 			old: undefined
 		});
 		this.listen((value) => {
 			diffingSource.update({
 				new: value,
-				old: diffingSource.value
+				old: diffingSource.value.new
 			});
 		}, cancellationToken);
 		return diffingSource;
@@ -198,8 +225,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param initialValue initial value given to the new source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): DataSource<T> {
-		const reduceSource = new DataSource<T>(initialValue);
+	public reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const reduceSource = new TransientDataSource<T>(cancellationToken, initialValue);
 		this.listen((v) => reduceSource.update(reducer(reduceSource.value, v)), cancellationToken);
 
 		return reduceSource;
@@ -211,8 +240,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E> {
-		const aggregatedSource = new DataSource<E>(combinator(this.value, otherSource.value));
+	public aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): TransientDataSource<E> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
 		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
@@ -232,8 +262,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 		third: DataSource<E>,
 		combinator: (self: T, second: D, third: E) => F,
 		cancellationToken?: CancellationToken
-	): DataSource<F> {
-		const aggregatedSource = new DataSource<F>(combinator(this.value, second.value, third.value));
+	): TransientDataSource<F> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<F>(cancellationToken, combinator(this.value, second.value, third.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
@@ -256,8 +287,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 		fourth: DataSource<F>,
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
-	): DataSource<G> {
-		const aggregatedSource = new DataSource<G>(combinator(this.value, second.value, third.value, fourth.value));
+	): TransientDataSource<G> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<G>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
@@ -272,8 +304,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param seperator string to be placed between all the values
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public stringJoin(seperator: string, cancellationToken?: CancellationToken): DataSource<string> {
-		const joinSource = new DataSource<string>('');
+	public stringJoin(seperator: string, cancellationToken?: CancellationToken): TransientDataSource<string> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const joinSource = new TransientDataSource<string>(cancellationToken, '');
 		this.listen((v) => joinSource.update(joinSource.value + seperator + v.toString()), cancellationToken);
 
 		return joinSource;
@@ -284,8 +317,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param otherSource Second parent for the new source
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
-		const combinedDataSource = new DataSource<T>();
+	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const combinedDataSource = new TransientDataSource<T>(cancellationToken);
 		this.pipe(combinedDataSource, cancellationToken);
 		for (const otherSource of otherSources) {
 			otherSource.pipe(combinedDataSource, cancellationToken);
@@ -299,8 +334,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param time
 	 * @param cancellationToken
 	 */
-	public delay(time: number, cancellationToken?: CancellationToken): DataSource<T> {
-		const delayedDataSource = new DataSource<T>(this.value);
+	public delay(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
 
 		this.listen((v) => {
 			setTimeout(() => {
@@ -316,8 +352,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param amount
 	 * @param cancellationToken
 	 */
-	public skip(amount: number, cancellationToken?: CancellationToken): DataSource<T> {
-		const delayedDataSource = new DataSource<T>(this.value);
+	public skip(amount: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
 
 		this.listen((v) => {
 			if (amount === 0) {
@@ -335,8 +372,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param amount
 	 * @param cancellationToken
 	 */
-	public cutoff(amount: number, cancellationToken?: CancellationToken): DataSource<T> {
-		const delayedDataSource = new DataSource<T>(this.value);
+	public cutoff(amount: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
 
 		this.listen((v) => {
 			if (amount-- > 0) {
@@ -353,7 +391,7 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 */
 	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
 		return new Promise((resolve) => {
-			this.listen((value) => resolve(value), cancellationToken);
+			this.listenOnce((value) => resolve(value), cancellationToken);
 		});
 	}
 
@@ -362,8 +400,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param time Milliseconds to wait before updating
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public debounce(time: number, cancellationToken?: CancellationToken): DataSource<T> {
-		const debouncedDataSource = new DataSource<T>(this.value);
+	public debounce(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const debouncedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
 		let timeout;
 
 		this.listen((v) => {
@@ -382,8 +421,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param time Milliseconds of cooldown after an update before another update can happen
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public throttle(time: number, cancellationToken?: CancellationToken): DataSource<T> {
-		const throttledDataSource = new DataSource<T>(this.value);
+	public throttle(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const throttledDataSource = new TransientDataSource<T>(cancellationToken, this.value);
 		let cooldown = false;
 
 		this.listen((v) => {
@@ -404,8 +444,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param time Milliseconds to wait before updating the returned source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public buffer(time: number, cancellationToken?: CancellationToken): DataSource<T[]> {
-		const bufferedDataSource = new DataSource<T[]>();
+	public buffer(time: number, cancellationToken?: CancellationToken): TransientDataSource<T[]> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const bufferedDataSource = new TransientDataSource<T[]>(cancellationToken);
 		let timeout;
 		let buffer = [];
 
@@ -442,8 +483,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param key key to take from the object
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]> {
-		const subDataSource: DataSource<T[typeof key]> = new DataSource(this.value?.[key]);
+	public pick(key: keyof T, cancellationToken?: CancellationToken): TransientDataSource<T[typeof key]> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const subDataSource: TransientDataSource<T[typeof key]> = new TransientDataSource(cancellationToken, this.value?.[key]);
 
 		this.listen((v) => {
 			if (v !== undefined && v !== null) {
@@ -464,6 +506,59 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	}
 }
 
+/**
+ * Same as data source except that once all listeners are gone this stream will self destruct. This prevents memory leaks
+ */
+export class TransientDataSource<T> extends DataSource<T> {
+	private disposeToken: CancellationToken;
+
+	constructor(disposeToken: CancellationToken, initialValue?: T) {
+		super(initialValue);
+		this.disposeToken = disposeToken;
+		this.updateEvent.onEmpty = () => {
+			disposeToken.cancel();
+			Object.defineProperty(this, 'value', {
+				get() {
+					throw new Error(
+						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
+					);
+				},
+				set() {
+					throw new Error(
+						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
+					);
+				}
+			});
+		};
+	}
+
+	/**
+	 * Turns the transient data source into a regular data source
+	 * @returns self
+	 */
+	public persist(): this {
+		this.updateEvent.onEmpty = undefined;
+		return this;
+	}
+
+	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		return super.listen(callback, cancellationToken);
+	}
+
+	public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		return super.listenAndRepeat(callback, cancellationToken);
+	}
+
+	public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		if (cancellationToken) {
+		}
+		return super.listen(callback, cancellationToken);
+	}
+}
+
 export interface CollectionChange<T> {
 	operation: 'replace' | 'swap' | 'add' | 'remove' | 'merge';
 	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge';
@@ -477,7 +572,7 @@ export interface CollectionChange<T> {
 }
 export class ArrayDataSource<T> {
 	protected data: T[];
-	private updateEvent: EventEmitter<CollectionChange<T>>;
+	protected updateEvent: EventEmitter<CollectionChange<T>>;
 	private lengthSource: DataSource<number>;
 
 	constructor(initialData?: T[]) {
@@ -486,7 +581,7 @@ export class ArrayDataSource<T> {
 		} else {
 			this.data = [];
 		}
-		this.lengthSource = new DataSource(this.data.length).unique();
+		this.lengthSource = new DataSource(this.data.length);
 		this.updateEvent = new EventEmitter();
 	}
 
@@ -509,12 +604,26 @@ export class ArrayDataSource<T> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
+	public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Returns a promise that resolves when the next update occurs
+	 * @param cancellationToken
+	 */
+	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<CollectionChange<T>> {
+		return new Promise((resolve) => {
+			this.listenOnce((value) => resolve(value), cancellationToken);
+		});
+	}
+
 	public get length(): DataSource<number> {
 		return this.lengthSource;
 	}
 
-	public getData(): T[] {
-		return this.data.slice();
+	public getData(): ReadonlyArray<T> {
+		return this.data;
 	}
 
 	public get(index: number): T {
@@ -528,7 +637,9 @@ export class ArrayDataSource<T> {
 		}
 		this.data[index] = item;
 		this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public swap(indexA: number, indexB: number): void {
@@ -542,7 +653,9 @@ export class ArrayDataSource<T> {
 		this.data[indexA] = itemB;
 
 		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public swapItems(itemA: T, itemB: T): void {
@@ -558,20 +671,13 @@ export class ArrayDataSource<T> {
 		}
 
 		this.update({ operation: 'swap', operationDetailed: 'swap', index: indexA, index2: indexB, items: [itemA, itemB], newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public appendArray(items: T[]) {
-		const old = this.data;
-		this.data = new Array(old.length);
-		let i = 0;
-		for (i = 0; i < old.length; i++) {
-			this.data[i] = old[i];
-		}
-
-		for (let n = 0; n < items.length; n++) {
-			this.data[i + n] = items[n];
-		}
+		this.data = this.data.concat(items);
 
 		this.update({
 			operation: 'add',
@@ -581,7 +687,9 @@ export class ArrayDataSource<T> {
 			items,
 			newState: this.data
 		});
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public push(...items: T[]) {
@@ -591,7 +699,9 @@ export class ArrayDataSource<T> {
 	public unshift(...items: T[]) {
 		this.data.unshift(...items);
 		this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public pop(): T {
@@ -606,7 +716,9 @@ export class ArrayDataSource<T> {
 			newState: this.data
 		});
 
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 		return item;
 	}
 
@@ -622,31 +734,43 @@ export class ArrayDataSource<T> {
 			items: this.data,
 			newState: this.data
 		});
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public removeRight(count: number): void {
 		const length = this.data.length;
 		const result = this.data.splice(length - count, count);
 		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public removeLeft(count: number): void {
 		const result = this.data.splice(0, count);
 		this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: result, newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 	public remove(item: T): void {
 		const index = this.data.indexOf(item);
 		if (index !== -1) {
 			this.data.splice(index, 1);
 			this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
-			this.lengthSource.update(this.data.length);
+			if (this.lengthSource.value !== this.data.length) {
+				this.lengthSource.update(this.data.length);
+			}
 		}
 	}
 
 	public clear(): void {
+		if (this.data.length === 0) {
+			return;
+		}
+
 		const items = this.data;
 		this.data = [];
 		this.update({
@@ -657,13 +781,17 @@ export class ArrayDataSource<T> {
 			items,
 			newState: this.data
 		});
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 	}
 
 	public shift(): T {
 		const item = this.data.shift();
 		this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
-		this.lengthSource.update(this.data.length);
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
 
 		return item;
 	}
@@ -693,7 +821,7 @@ export class ArrayDataSource<T> {
 	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		const view = new FilteredArrayView(this, callback, cancellationToken);
 		dependencies.forEach((dep) => {
-			dep.listen(() => view.refresh());
+			dep.listen(() => view.refresh(), cancellationToken);
 		});
 
 		return view;
@@ -708,13 +836,61 @@ export class ArrayDataSource<T> {
 	}
 }
 
-export class MappedArrayView<D, T> extends ArrayDataSource<T> {
+export class TransientArrayDataSource<T> extends ArrayDataSource<T> {
+	private disposeToken: CancellationToken;
+
+	constructor(disposeToken: CancellationToken, initialValue?: T[]) {
+		super(initialValue);
+		this.disposeToken = disposeToken;
+		this.updateEvent.onEmpty = () => {
+			disposeToken.cancel();
+			Object.defineProperty(this, 'data', {
+				get() {
+					throw new Error(
+						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
+					);
+				},
+				set() {
+					throw new Error(
+						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
+					);
+				}
+			});
+		};
+	}
+
+	/**
+	 * Turns the transient data source into a regular data source
+	 * @returns self
+	 */
+	public persist(): this {
+		this.updateEvent.onEmpty = undefined;
+		return this;
+	}
+
+	public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		return super.listenAndRepeat(callback, cancellationToken);
+	}
+
+	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		return super.listen(callback, cancellationToken);
+	}
+
+	public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
+		return super.listenOnce(callback, cancellationToken);
+	}
+}
+
+export class MappedArrayView<D, T> extends TransientArrayDataSource<T> {
 	private parent: ArrayDataSource<D>;
 	private mapper: (a: D) => T;
 
-	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken?: CancellationToken) {
+	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken: CancellationToken = new CancellationToken()) {
 		const initial = parent.getData().map(mapper);
-		super(initial);
+		super(cancellationToken, initial);
 		this.parent = parent;
 		this.mapper = mapper;
 
@@ -791,13 +967,16 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 	}
 }
 
-export class SortedArrayView<T> extends ArrayDataSource<T> {
+export class SortedArrayView<T> extends TransientArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;
 
-	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken?: CancellationToken) {
-		const initial = parent.getData().sort(comparator);
-		super(initial);
+	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken()) {
+		const initial = parent
+			.getData()
+			.slice()
+			.sort(comparator);
+		super(cancellationToken, initial);
 		this.parent = parent;
 		this.comparator = comparator;
 
@@ -840,20 +1019,25 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 	}
 
 	public refresh() {
-		this.merge(this.parent.getData().sort(this.comparator));
+		this.merge(
+			this.parent
+				.getData()
+				.slice()
+				.sort(this.comparator)
+		);
 	}
 }
 
-export class FilteredArrayView<T> extends ArrayDataSource<T> {
+export class FilteredArrayView<T> extends TransientArrayDataSource<T> {
 	private viewFilter: Predicate<T>;
 	private parent: ArrayDataSource<T>;
-	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken?: CancellationToken) {
+	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken: CancellationToken = new CancellationToken()) {
 		if (Array.isArray(parent)) {
 			parent = new ArrayDataSource(parent);
 		}
 		filter = filter ?? (() => true);
 		const initial = (parent as FilteredArrayView<T>).data.filter(filter);
-		super(initial);
+		super(cancellationToken, initial);
 
 		this.parent = parent;
 		this.viewFilter = filter;

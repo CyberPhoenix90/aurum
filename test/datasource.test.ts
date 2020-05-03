@@ -47,7 +47,7 @@ describe('Datasource', () => {
 
 	it('should filter updates', () => {
 		let ds = new DataSource(123);
-		let filtered = ds.filter((v) => v > 200);
+		let filtered = ds.filter((v) => v > 200).persist();
 		assert(filtered.value === undefined);
 		ds.update(100);
 		assert(filtered.value === undefined);
@@ -72,7 +72,7 @@ describe('Datasource', () => {
 
 	it('should map updates', () => {
 		let ds = new DataSource(123);
-		let mapped = ds.map((v) => v + 10);
+		let mapped = ds.map((v) => v + 10).persist();
 		assert(mapped.value === 133);
 		ds.update(100);
 		assert(mapped.value === 110);
@@ -84,7 +84,7 @@ describe('Datasource', () => {
 
 	it('should reduce updates', () => {
 		let ds = new DataSource(123);
-		let reduced = ds.reduce((p, c) => p + c, ds.value);
+		let reduced = ds.reduce((p, c) => p + c, ds.value).persist();
 		assert(reduced.value === 123);
 		ds.update(100);
 		assert(reduced.value === 223);
@@ -97,7 +97,7 @@ describe('Datasource', () => {
 	it('should aggregate updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let aggregated = ds.aggregate(ds2, (valueA, valueB) => valueA + valueB);
+		let aggregated = ds.aggregate(ds2, (valueA, valueB) => valueA + valueB).persist();
 		assert(aggregated.value === 2);
 		ds.update(100);
 		assert(aggregated.value === 101);
@@ -110,7 +110,7 @@ describe('Datasource', () => {
 	it('should combine updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let combined = ds.combine([ds2]);
+		let combined = ds.combine([ds2]).persist();
 		assert(combined.value === undefined);
 		ds.update(100);
 		assert(combined.value === 100);
@@ -122,7 +122,7 @@ describe('Datasource', () => {
 
 	it('should pick keys from object updates', () => {
 		let ds = new DataSource({ someKey: 123 });
-		let pick = ds.pick('someKey');
+		let pick = ds.pick('someKey').persist();
 		assert(pick.value === 123);
 		ds.update({ someKey: 100 });
 		assert(pick.value === 100);
@@ -162,8 +162,8 @@ describe('Datasource', () => {
 	it('should fire unique events both ways', () => {
 		return new Promise((resolve) => {
 			let i = 0;
-			let asserts = [4, 0, 100, 200];
-			let ds = new DuplexDataSource(0, false);
+			let asserts = [200, 4, 0, 100, 200];
+			let ds = new DuplexDataSource(0);
 			let validated = true;
 
 			const ud = ds.unique();

@@ -2,6 +2,7 @@ import { AttributeValue, Callback, DataDrain } from '../utilities/common';
 import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface InputProps extends AurumElementProps<HTMLInputElement> {
 	onAttach?: Callback<HTMLInputElement>;
@@ -78,7 +79,11 @@ export class Input extends AurumElement {
 		super(props, children, 'input');
 		if (props !== null) {
 			if (props.value instanceof DataSource || props.value instanceof DuplexDataSource) {
-				props.value.unique().listenAndRepeat((value) => (this.node.value = value));
+				if (!this.cleanUp) {
+					this.cleanUp = new CancellationToken();
+				}
+
+				props.value.unique(this.cleanUp).listenAndRepeat((value) => (this.node.value = value));
 				this.node.addEventListener('input', () => {
 					if (props.value instanceof DataSource) {
 						props.value.update(this.node.value);
@@ -91,7 +96,11 @@ export class Input extends AurumElement {
 			}
 
 			if (props.checked instanceof DataSource || props.checked instanceof DuplexDataSource) {
-				props.checked.unique().listenAndRepeat((value) => (this.node.checked = value));
+				if (!this.cleanUp) {
+					this.cleanUp = new CancellationToken();
+				}
+
+				props.checked.unique(this.cleanUp).listenAndRepeat((value) => (this.node.checked = value));
 				this.node.addEventListener('change', () => {
 					if (props.checked instanceof DataSource) {
 						props.checked.update(this.node.checked);

@@ -1,4 +1,5 @@
 import { CancellationToken } from '../utilities/cancellation_token';
+import { Callback } from './common';
 
 /**
  * @internal
@@ -22,20 +23,29 @@ interface EventSubscription<T> {
 export class EventEmitter<T> {
 	private isFiring: boolean;
 	private onAfterFire: Array<() => void>;
+	public onEmpty: Callback<void>;
 
 	public get subscriptions(): number {
-		return this.subscribeChannel.length;
+		return this.subscribeChannel.length + this.subscribeOnceChannel.length;
 	}
 
 	private subscribeChannel: EventSubscription<T>[];
+	private subscribeOnceChannel: EventSubscription<T>[];
 
 	constructor() {
 		this.subscribeChannel = [];
+		this.subscribeOnceChannel = [];
 		this.onAfterFire = [];
 	}
 
 	public subscribe(callback: EventCallback<T>, cancellationToken?: CancellationToken): EventSubscriptionFacade {
 		const { facade } = this.createSubscription(callback, this.subscribeChannel, cancellationToken);
+
+		return facade;
+	}
+
+	subscribeOnce(callback: import('./common').Callback<T>, cancellationToken: CancellationToken) {
+		const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
 
 		return facade;
 	}
@@ -47,8 +57,14 @@ export class EventEmitter<T> {
 	public cancelAll(): void {
 		if (!this.isFiring) {
 			this.subscribeChannel.length = 0;
+			this.subscribeOnceChannel.length = 0;
+			this.onEmpty?.();
 		} else {
-			this.onAfterFire.push(() => (this.subscribeChannel.length = 0));
+			this.onAfterFire.push(() => {
+				this.subscribeChannel.length = 0;
+				this.subscribeOnceChannel.length = 0;
+				this.onEmpty?.();
+			});
 		}
 	}
 
@@ -62,9 +78,17 @@ export class EventEmitter<T> {
 	public fire(data?: T): void {
 		this.isFiring = true;
 
-		const length = this.subscribeChannel.length;
+		let length = this.subscribeChannel.length;
 		for (let i = 0; i < length; i++) {
 			this.subscribeChannel[i].callback(data);
+		}
+
+		if (this.subscribeOnceChannel.length > 0) {
+			length = this.subscribeOnceChannel.length;
+			for (let i = 0; i < length; i++) {
+				this.subscribeOnceChannel[i].callback(data);
+			}
+			this.subscribeOnceChannel.length = 0;
 		}
 
 		this.isFiring = false;
@@ -101,6 +125,9 @@ export class EventEmitter<T> {
 		if (index >= 0) {
 			if (!this.isFiring) {
 				channel.splice(index, 1);
+				if (!this.hasSubscriptions()) {
+					this.onEmpty?.();
+				}
 			} else {
 				this.onAfterFire.push(() => this.cancel(subscription, channel));
 			}

@@ -23,7 +23,11 @@ export function Switch<T = boolean>(props: SwitchProps<T>, children) {
 		throw new Error('Too many default switch cases only 0 or 1 allowed');
 	}
 
-	return props.state.unique().map((state) => selectCase(state, children));
+	const u = props.state.unique();
+	//HACK: Force initial mapping. Need to find a better solution for this
+	///@ts-ignore
+	u.primed = true;
+	return u.map((state) => selectCase(state, children));
 }
 
 function selectCase<T>(state: T, children: SwitchCaseInstance<T>[]) {
