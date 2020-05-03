@@ -7,17 +7,21 @@ export interface ReadOnlyDataSource<T> {
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
-	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
+	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
+	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): GenericDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
+}
+
+export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
+	withInitial(value: T): this;
 }
 
 /**
  * Datasources wrap a value and allow you to update it in an observable way. Datasources can be manipulated like streams and can be bound directly in the JSX syntax and will update the html whenever the value changes
  */
-export class DataSource<T> implements ReadOnlyDataSource<T> {
+export class DataSource<T> implements GenericDataSource<T> {
 	/**
 	 * The current value of this data source, can be changed through update
 	 */
@@ -47,6 +51,17 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 		this.value = newValue;
 		this.updateEvent.fire(newValue);
 		this.updating = false;
+	}
+
+	/**
+	 * Updates the data source with a value if it has never had a value before
+	 */
+	public withInitial(value: T): this {
+		if (!this.primed) {
+			this.update(value);
+		}
+
+		return this;
 	}
 
 	/**
@@ -134,8 +149,10 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param targetDataSource datasource to pipe the updates to
 	 * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
 	 */
-	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): void {
+	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
 		this.listen((v) => targetDataSource.update(v), cancellationToken);
+
+		return this;
 	}
 
 	/**

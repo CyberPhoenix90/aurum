@@ -30,6 +30,7 @@ export interface AurumComponentAPI {
 }
 
 export interface AurumElementModel<T> {
+	[aurumElementModelIdentitiy]: boolean;
 	props: T;
 	children: Renderable[];
 	factory(props: T, children: Renderable[], api: AurumComponentAPI): Renderable;
@@ -47,7 +48,7 @@ export class AurumElement {
 		this.children = newChildren;
 	}
 
-	public attachToDom(node: HTMLElement, index): void {
+	public attachToDom(node: HTMLElement, index: number, aurumSiblings: AurumElement[]): void {
 		if (this.parentNode) {
 			throw new Error('Aurum Element is already attached');
 		}

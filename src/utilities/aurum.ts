@@ -1,71 +1,77 @@
-import { ownerSymbol } from './owner_symbol';
-import { Constructor, MapLike } from './common';
-import { Div, DivProps } from '../nodes/div';
-import { Button, ButtonProps } from '../nodes/button';
-import { Input, InputProps } from '../nodes/input';
-import { Li, LiProps } from '../nodes/li';
-import { Span, SpanProps } from '../nodes/span';
-import { Style, StyleProps } from '../nodes/style';
-import { Audio, AudioProps } from '../nodes/audio';
-import { Ul, UlProps } from '../nodes/ul';
-import { P, PProps } from '../nodes/p';
-import { Img, ImgProps } from '../nodes/img';
-import { Link, LinkProps } from '../nodes/link';
-import { Canvas, CanvasProps } from '../nodes/canvas';
-import { A, AProps } from '../nodes/a';
-import { Article } from '../nodes/article';
+import Q from 'q';
+import { AudioProps } from '../nodes/audio';
+import { B } from '../nodes/b';
+import { BodyProps } from '../nodes/body';
 import { Br, BrProps } from '../nodes/br';
+import { Button, ButtonProps } from '../nodes/button';
+import { Canvas, CanvasProps } from '../nodes/canvas';
+import { Data, DataProps } from '../nodes/data';
+import { Details, DetailsProps } from '../nodes/details';
+import { Em } from '../nodes/em';
+import { Footer } from '../nodes/footer';
 import { Form, FormProps } from '../nodes/form';
+import { HeadProps } from '../nodes/head';
+import { Header } from '../nodes/header';
+import { Heading, HeadingProps } from '../nodes/heading';
+import { I } from '../nodes/i';
+import { IFrame, IFrameProps } from '../nodes/iframe';
+import { Img, ImgProps } from '../nodes/img';
+import { Input, InputProps } from '../nodes/input';
 import { Label, LabelProps } from '../nodes/label';
-import { Ol, OlProps } from '../nodes/ol';
+import { Link, LinkProps } from '../nodes/link';
+import { Nav } from '../nodes/nav';
+import { OptionProps } from '../nodes/option';
+import { P, PProps } from '../nodes/p';
 import { Pre, PreProps } from '../nodes/pre';
 import { Progress, ProgressProps } from '../nodes/progress';
-import { Table, TableProps } from '../nodes/table';
-import { Td, TdProps } from '../nodes/td';
-import { Tr, TrProps } from '../nodes/tr';
-import { Th, ThProps } from '../nodes/th';
-import { TextArea, TextAreaProps } from '../nodes/textarea';
-import { H1 } from '../nodes/h1';
-import { H2 } from '../nodes/h2';
-import { H3 } from '../nodes/h3';
-import { H4 } from '../nodes/h4';
-import { H5 } from '../nodes/h5';
-import { H6 } from '../nodes/h6';
-import { Header } from '../nodes/header';
-import { Footer } from '../nodes/footer';
-import { Nav } from '../nodes/nav';
-import { B } from '../nodes/b';
-import { I } from '../nodes/i';
+import { QProps } from '../nodes/q';
 import { Script, ScriptProps } from '../nodes/script';
-import { Abbr } from '../nodes/abbr';
-import { Area, AreaProps } from '../nodes/area';
-import { Aside } from '../nodes/aside';
-import { Em } from '../nodes/em';
-import { Heading, HeadingProps } from '../nodes/heading';
-import { IFrame, IFrameProps } from '../nodes/iframe';
-import { NoScript } from '../nodes/noscript';
-import { Q, QProps } from '../nodes/q';
 import { Select, SelectProps } from '../nodes/select';
+import {
+	A,
+	Abbr,
+	AProps,
+	Area,
+	Article,
+	Aside,
+	Div,
+	H1,
+	H2,
+	H3,
+	H4,
+	H5,
+	H6,
+	Span,
+	AreaProps,
+	NoScript,
+	Video,
+	VideoProps,
+	Li,
+	Ul,
+	Ol,
+	Tr
+} from '../nodes/simple_dom_nodes';
 import { Source, SourceProps } from '../nodes/source';
-import { Title, TitleProps } from '../nodes/title';
-import { Video, VideoProps } from '../nodes/video';
-import { Tbody } from '../nodes/tbody';
-import { Tfoot } from '../nodes/tfoot';
-import { Thead } from '../nodes/thead';
-import { Summary } from '../nodes/summary';
-import { Details, DetailsProps } from '../nodes/details';
+import { Style, StyleProps } from '../nodes/style';
 import { Sub } from '../nodes/sub';
+import { Summary } from '../nodes/summary';
 import { Sup } from '../nodes/sup';
 import { Svg, SvgProps } from '../nodes/svg';
-import { Data, DataProps } from '../nodes/data';
-import { Time, TimeProps } from '../nodes/time';
-import { Option, OptionProps } from '../nodes/option';
+import { Table, TableProps } from '../nodes/table';
+import { Tbody } from '../nodes/tbody';
+import { Td, TdProps } from '../nodes/td';
 import { Template, TemplateProps } from '../nodes/template';
-import { BodyProps } from '../nodes/body';
-import { HeadProps } from '../nodes/head';
-import { AurumElementProps } from '../nodes/special/aurum_element';
-import { Renderable, AurumElement, AurumElementModel, aurumElementModelIdentitiy } from '../rendering/aurum_element';
+import { TextArea, TextAreaProps } from '../nodes/textarea';
+import { Tfoot } from '../nodes/tfoot';
+import { Th, ThProps } from '../nodes/th';
+import { Thead } from '../nodes/thead';
+import { Time, TimeProps } from '../nodes/time';
+import { Title, TitleProps } from '../nodes/title';
+import { MapLike } from './common';
+import { ownerSymbol } from './owner_symbol';
+import { Renderable, AurumElement, AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy } from '../rendering/aurum_element';
 import { render } from '../rendering/renderer';
+import { HTMLNodeProps } from '../nodes/dom_adapter';
 
 const nodeMap = {
 	button: Button,
@@ -136,7 +142,7 @@ export class Aurum {
 		const content = render(aurumRenderable);
 		const root = new AurumElement();
 		root.updateChildren(Array.isArray(content) ? content : [content]);
-		root.attachToDom(dom, dom.childNodes.length);
+		root.attachToDom(dom, dom.childNodes.length, []);
 	}
 
 	public static detachAll(domNode: HTMLElement): void {
@@ -148,7 +154,7 @@ export class Aurum {
 	}
 
 	public static factory(
-		node: string | Constructor<AurumElement> | ((...args: any[]) => AurumElement),
+		node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
 		args: MapLike<any>,
 		...innerNodes: AurumElementModel<any>[]
 	): AurumElementModel<any> {
@@ -160,23 +166,12 @@ export class Aurum {
 			}
 		}
 
-		if (Object.getPrototypeOf(node as Constructor<AurumElement>) === AurumElement) {
-			return {
-				[aurumElementModelIdentitiy]: true,
-				//@ts-ignore
-				constructor: (args, innerNodes) => new node(args, innerNodes),
-				props: args,
-				innerNodes: innerNodes
-			};
-		} else {
-			return {
-				[aurumElementModelIdentitiy]: true,
-				//@ts-ignore
-				constructor: node,
-				props: args,
-				innerNodes: innerNodes
-			};
-		}
+		return {
+			[aurumElementModelIdentitiy]: true,
+			factory: node as (props: any, children: Renderable[], api: AurumComponentAPI) => Renderable,
+			props: args,
+			children: innerNodes
+		};
 	}
 }
 
@@ -184,62 +179,62 @@ export namespace Aurum {
 	export namespace JSX {
 		export interface IntrinsicElements {
 			button: ButtonProps;
-			div: DivProps;
+			div: HTMLNodeProps<HTMLElement>;
 			input: InputProps;
-			li: LiProps;
-			span: SpanProps;
+			li: HTMLNodeProps<HTMLLIElement>;
+			span: HTMLNodeProps<HTMLElement>;
 			style: StyleProps;
-			ul: UlProps;
+			ul: HTMLNodeProps<HTMLUListElement>;
 			p: PProps;
 			img: ImgProps;
 			link: LinkProps;
 			canvas: CanvasProps;
 			a: AProps;
-			article: AurumElementProps<HTMLElement>;
+			article: HTMLNodeProps<HTMLElement>;
 			br: BrProps;
 			form: FormProps;
 			label: LabelProps;
-			ol: OlProps;
+			ol: HTMLNodeProps<HTMLOListElement>;
 			pre: PreProps;
 			progress: ProgressProps;
 			table: TableProps;
 			td: TdProps;
-			tr: TrProps;
+			tr: HTMLNodeProps<HTMLTableRowElement>;
 			th: ThProps;
 			textarea: TextAreaProps;
-			h1: AurumElementProps<HTMLElement>;
-			h2: AurumElementProps<HTMLElement>;
-			h3: AurumElementProps<HTMLElement>;
-			h4: AurumElementProps<HTMLElement>;
-			h5: AurumElementProps<HTMLElement>;
-			h6: AurumElementProps<HTMLElement>;
-			header: AurumElementProps<HTMLElement>;
-			footer: AurumElementProps<HTMLElement>;
-			nav: AurumElementProps<HTMLElement>;
-			b: AurumElementProps<HTMLElement>;
-			i: AurumElementProps<HTMLElement>;
+			h1: HTMLNodeProps<HTMLElement>;
+			h2: HTMLNodeProps<HTMLElement>;
+			h3: HTMLNodeProps<HTMLElement>;
+			h4: HTMLNodeProps<HTMLElement>;
+			h5: HTMLNodeProps<HTMLElement>;
+			h6: HTMLNodeProps<HTMLElement>;
+			header: HTMLNodeProps<HTMLElement>;
+			footer: HTMLNodeProps<HTMLElement>;
+			nav: HTMLNodeProps<HTMLElement>;
+			b: HTMLNodeProps<HTMLElement>;
+			i: HTMLNodeProps<HTMLElement>;
 			script: ScriptProps;
-			abbr: AurumElementProps<HTMLElement>;
+			abbr: HTMLNodeProps<HTMLElement>;
 			area: AreaProps;
-			aside: AurumElementProps<HTMLElement>;
+			aside: HTMLNodeProps<HTMLElement>;
 			audio: AudioProps;
-			em: AurumElementProps<HTMLElement>;
+			em: HTMLNodeProps<HTMLElement>;
 			heading: HeadingProps;
 			iframe: IFrameProps;
-			noscript: AurumElementProps<HTMLElement>;
+			noscript: HTMLNodeProps<HTMLElement>;
 			option: OptionProps;
 			q: QProps;
 			select: SelectProps;
 			source: SourceProps;
 			title: TitleProps;
 			video: VideoProps;
-			tbody: AurumElementProps<HTMLElement>;
-			tfoot: AurumElementProps<HTMLElement>;
-			thead: AurumElementProps<HTMLElement>;
-			summary: AurumElementProps<HTMLElement>;
+			tbody: HTMLNodeProps<HTMLElement>;
+			tfoot: HTMLNodeProps<HTMLElement>;
+			thead: HTMLNodeProps<HTMLElement>;
+			summary: HTMLNodeProps<HTMLElement>;
 			details: DetailsProps;
-			sub: AurumElementProps<HTMLElement>;
-			sup: AurumElementProps<HTMLElement>;
+			sub: HTMLNodeProps<HTMLElement>;
+			sup: HTMLNodeProps<HTMLElement>;
 			svg: SvgProps;
 			data: DataProps;
 			time: TimeProps;

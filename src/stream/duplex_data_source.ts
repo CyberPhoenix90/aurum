@@ -1,7 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource, ReadOnlyDataSource } from './data_source';
+import { DataSource, GenericDataSource } from './data_source';
 
 export enum DataFlow {
 	UPSTREAM,
@@ -11,11 +11,12 @@ export enum DataFlow {
 /**
  * Same as DataSource except data can flow in both directions
  */
-export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
+export class DuplexDataSource<T> implements GenericDataSource<T> {
 	/**
 	 * The current value of this data source, can be changed through update
 	 */
 	public value: T;
+	private primed: boolean;
 
 	private updatingUpstream: boolean;
 	private updatingDownstream: boolean;
@@ -30,6 +31,7 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	 */
 	constructor(initialValue?: T, propagateWritesToReadStream: boolean = true) {
 		this.value = initialValue;
+		this.primed = initialValue !== undefined;
 		this.updateDownstreamEvent = new EventEmitter();
 		this.updateUpstreamEvent = new EventEmitter();
 		this.propagateWritesToReadStream = propagateWritesToReadStream;
@@ -72,6 +74,8 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 				'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
 			);
 		}
+
+		this.primed = true;
 		this.updatingDownstream = true;
 		this.value = newValue;
 		this.updateDownstreamEvent.fire(newValue);
@@ -205,9 +209,10 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param targetDataSource datasource to pipe the updates to
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions added to the datasources by this operation
 	 */
-	public pipe(targetDataSource: DuplexDataSource<T>, cancellationToken?: CancellationToken): void {
+	public pipe(targetDataSource: DuplexDataSource<T>, cancellationToken?: CancellationToken): this {
 		this.listenDownstream((newVal) => targetDataSource.updateDownstream(newVal), cancellationToken);
 		targetDataSource.listenUpstream((newVal) => this.updateUpstream(newVal), cancellationToken);
+		return this;
 	}
 
 	/**
@@ -224,14 +229,24 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 		cancellationToken?: CancellationToken
 	): DataSource<D> | DuplexDataSource<D> {
 		if (typeof reverseMapper === 'function') {
-			const mappedSource = new DuplexDataSource<D>(mapper(this.value), false);
+			let mappedSource;
+			if (this.primed) {
+				mappedSource = new DuplexDataSource<D>(mapper(this.value), false);
+			} else {
+				mappedSource = new DuplexDataSource<D>(undefined, false);
+			}
 
 			this.listenDownstream((v) => mappedSource.updateDownstream(mapper(v)), cancellationToken);
 			mappedSource.listenUpstream((v) => this.updateUpstream((reverseMapper as any)(v)), cancellationToken);
 
 			return mappedSource;
 		} else {
-			const mappedSource = new DataSource<D>(mapper(this.value));
+			let mappedSource;
+			if (this.primed) {
+				mappedSource = new DataSource<D>(mapper(this.value));
+			} else {
+				mappedSource = new DataSource<D>();
+			}
 
 			this.listenDownstream((v) => mappedSource.update(mapper(v)), reverseMapper as any);
 
@@ -287,6 +302,14 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 		}, cancellationToken);
 
 		return debouncedDataSource;
+	}
+
+	public withInitial(value: T): this {
+		if (!this.primed) {
+			this.updateDownstream(value);
+		}
+
+		return this;
 	}
 
 	/**

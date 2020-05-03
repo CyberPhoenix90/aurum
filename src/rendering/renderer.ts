@@ -12,11 +12,6 @@ export function render<T extends Renderable>(element: T): T extends Array<any> ?
 		return Array.prototype.concat.apply([], ...element.map(render));
 	}
 
-	//Typescript seems to struggle to believe that T cannot be an array past this point so return values must be cast to any
-	if (element instanceof HTMLElement || element instanceof AurumElement || element instanceof Text) {
-		return element as any;
-	}
-
 	if (element instanceof DataSource || element instanceof DuplexDataSource) {
 		const result = new AurumElement();
 		element.listenAndRepeat((value) => {

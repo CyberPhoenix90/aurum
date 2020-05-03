@@ -1,5 +1,7 @@
-import { DataSource } from '../../stream/data_source';
-import { ChildNode, prerender } from './aurum_element';
+import { render } from '../rendering/renderer';
+import { DataSource } from '../stream/data_source';
+import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 const routeIdentity = Symbol('route');
 
@@ -10,22 +12,30 @@ export interface RouteInstance {
 	content: ChildNode[];
 }
 
-export function AurumRouter(props, children) {
-	children = children.map(prerender);
+export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
+	children = render(children);
 	if (children.some((c) => !c[routeIdentity])) {
 		throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
 	}
-	if (children.filter((c) => c.default).length > 1) {
+	if (children.filter((c) => (c as any).default).length > 1) {
 		throw new Error('Too many default routes only 0 or 1 allowed');
 	}
 
+	const cleanUp = new CancellationToken();
+	api.onDetach(() => {
+		cleanUp.cancel();
+	});
+
 	const urlDataSource = new DataSource(getUrlPath());
 
-	window.addEventListener('hashchange', () => {
+	cleanUp.registerDomEvent(window, 'hashchange', () => {
 		urlDataSource.update(getUrlPath());
 	});
 
-	return urlDataSource.unique().map((p) => selectRoute(p, children));
+	return urlDataSource
+		.unique(cleanUp)
+		.withInitial(urlDataSource.value)
+		.map((p) => selectRoute(p, children as any));
 }
 
 function getUrlPath(): string {
