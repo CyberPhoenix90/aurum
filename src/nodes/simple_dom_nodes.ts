@@ -31,6 +31,62 @@ export interface VideoProps extends HTMLNodeProps<HTMLVideoElement> {
 	height?: AttributeValue;
 }
 
+export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
+	controls?: AttributeValue;
+	autoplay?: AttributeValue;
+	loop?: AttributeValue;
+	muted?: AttributeValue;
+	preload?: AttributeValue;
+	src?: AttributeValue;
+}
+
+export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
+	disabled?: AttributeValue;
+}
+
+export interface CanvasProps extends HTMLNodeProps<HTMLCanvasElement> {
+	width?: AttributeValue;
+	height?: AttributeValue;
+}
+
+export interface DataProps extends HTMLNodeProps<HTMLDataElement> {
+	value?: AttributeValue;
+}
+
+export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
+	src?: AttributeValue;
+	allow?: AttributeValue;
+	allowFullscreen?: AttributeValue;
+	allowPaymentRequest?: AttributeValue;
+	width?: AttributeValue;
+	height?: AttributeValue;
+	srcdoc?: AttributeValue;
+}
+
+export interface ImgProps extends HTMLNodeProps<HTMLImageElement> {
+	src?: AttributeValue;
+	alt?: AttributeValue;
+	width?: AttributeValue;
+	height?: AttributeValue;
+	referrerPolicy?: AttributeValue;
+	sizes?: AttributeValue;
+	srcset?: AttributeValue;
+	useMap?: AttributeValue;
+}
+
+export interface LabelProps extends HTMLNodeProps<HTMLLabelElement> {
+	for?: AttributeValue;
+}
+
+export interface LinkProps extends HTMLNodeProps<HTMLLinkElement> {
+	href?: AttributeValue;
+	rel?: AttributeValue;
+	media?: AttributeValue;
+	as?: AttributeValue;
+	disabled?: AttributeValue;
+	type?: AttributeValue;
+}
+
 /**
  * @internal
  */
@@ -111,3 +167,143 @@ export const Li = DomNodeCreator<HTMLNodeProps<HTMLLIElement>>('li');
  * @internal
  */
 export const Tr = DomNodeCreator<HTMLNodeProps<HTMLTableRowElement>>('tr');
+/**
+ * @internal
+ */
+export const B = DomNodeCreator<HTMLNodeProps<HTMLElement>>('b');
+/**
+ * @internal
+ */
+export const Body = DomNodeCreator<HTMLNodeProps<HTMLBodyElement>>('body');
+/**
+ * @internal
+ */
+export const Title = DomNodeCreator<HTMLNodeProps<HTMLTitleElement>>('title');
+/**
+ * @internal
+ */
+export const Summary = DomNodeCreator<HTMLNodeProps<HTMLElement>>('summary');
+/**
+ * @internal
+ */
+export const THead = DomNodeCreator<HTMLNodeProps<HTMLElement>>('thead');
+/**
+ * @internal
+ */
+export const Template = DomNodeCreator<HTMLNodeProps<HTMLTemplateElement>>('template');
+/**
+ * @internal
+ */
+export const Q = DomNodeCreator<HTMLNodeProps<HTMLQuoteElement>>('q');
+/**
+ * @internal
+ */
+export const Pre = DomNodeCreator<HTMLNodeProps<HTMLPreElement>>('pre');
+/**
+ * @internal
+ */
+export const P = DomNodeCreator<HTMLNodeProps<HTMLParagraphElement>>('p');
+/**
+ * @internal
+ */
+export const Hr = DomNodeCreator<HTMLNodeProps<HTMLHRElement>>('hr');
+/**
+ * @internal
+ */
+export const Audio = DomNodeCreator<AudioProps>('audio', ['controls', 'autoplay', 'loop', 'muted', 'preload', 'src']);
+/**
+ * @internal
+ */
+export const Br = DomNodeCreator<HTMLNodeProps<HTMLBRElement>>('br');
+/**
+ * @internal
+ */
+export const Button = DomNodeCreator<ButtonProps>('button', ['disabled']);
+/**
+ * @internal
+ */
+export const Canvas = DomNodeCreator<CanvasProps>('canvas', ['width', 'height']);
+/**
+ * @internal
+ */
+export const Data = DomNodeCreator<DataProps>('data', ['value']);
+/**
+ * @internal
+ */
+export const Details = DomNodeCreator<HTMLNodeProps<HTMLDetailsElement>>('details');
+/**
+ * @internal
+ */
+export const Em = DomNodeCreator<HTMLNodeProps<HTMLElement>>('em');
+/**
+ * @internal
+ */
+export const Footer = DomNodeCreator<HTMLNodeProps<HTMLElement>>('footer');
+/**
+ * @internal
+ */
+export const Form = DomNodeCreator<HTMLNodeProps<HTMLElement>>('form');
+/**
+ * @internal
+ */
+export const Head = DomNodeCreator<HTMLNodeProps<HTMLHeadElement>>('head');
+/**
+ * @internal
+ */
+export const Header = DomNodeCreator<HTMLNodeProps<HTMLElement>>('header');
+/**
+ * @internal
+ */
+export const Heading = DomNodeCreator<HTMLNodeProps<HTMLHeadingElement>>('heading');
+/**
+ * @internal
+ */
+export const I = DomNodeCreator<HTMLNodeProps<HTMLElement>>('i');
+/**
+ * @internal
+ */
+export const IFrame = DomNodeCreator<IFrameProps>('iframe', ['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest']);
+/**
+ * @internal
+ */
+export const Img = DomNodeCreator<ImgProps>('img', ['src', 'alt', 'width', 'height', 'referrerPolicy', 'sizes', 'srcset', 'useMap']);
+/**
+ * @internal
+ */
+export const Label = DomNodeCreator<LabelProps>('label', ['for']);
+/**
+ * @internal
+ */
+export const Link = DomNodeCreator<LinkProps>('link', ['href', 'rel', 'media', 'as', 'disabled', 'type']);
+/**
+ * @internal
+ */
+export const Nav = DomNodeCreator<HTMLNodeProps<HTMLElement>>('nav');
+/**
+ * @internal
+ */
+export const Sub = DomNodeCreator<HTMLNodeProps<HTMLElement>>('sub');
+/**
+ * @internal
+ */
+export const Sup = DomNodeCreator<HTMLNodeProps<HTMLElement>>('sup');
+/**
+ * @internal
+ */
+export const Table = DomNodeCreator<HTMLNodeProps<HTMLTableElement>>('table');
+/**
+ * @internal
+ */
+export const TBody = DomNodeCreator<HTMLNodeProps<HTMLElement>>('tbody');
+/**
+ * @internal
+ */
+export const TFoot = DomNodeCreator<HTMLNodeProps<HTMLElement>>('tfoot');
+/**
+ * @internal
+ */
+export const Td = DomNodeCreator<HTMLNodeProps<HTMLTableColElement>>('td');
+/**
+ * @internal
+ */
+export const Th = DomNodeCreator<HTMLNodeProps<HTMLTableHeaderCellElement>>('th');

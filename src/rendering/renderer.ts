@@ -9,7 +9,7 @@ export function render<T extends Renderable>(element: T): T extends Array<any> ?
 
 	if (Array.isArray(element)) {
 		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
-		return Array.prototype.concat.apply([], ...element.map(render));
+		return Array.prototype.concat.apply([], element.map(render));
 	}
 
 	if (element instanceof DataSource || element instanceof DuplexDataSource) {

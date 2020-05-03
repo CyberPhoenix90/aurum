@@ -1,7 +1,7 @@
 import { StringSource, ClassType, DataDrain, Callback, MapLike } from '../utilities/common';
 import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
-import { AurumElementModel, render, Rendered, AurumElement } from '../aurum';
+import { render, Rendered, AurumElement } from '../aurum';
 import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
 import { CancellationToken } from '../utilities/cancellation_token';
 
@@ -90,9 +90,16 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(nodeName: string, e
 	};
 }
 
-function handleAttach(target: HTMLElement, children: Rendered | Rendered[], index = 0, siblings: AurumElement[] = []) {
+function handleAttach(target: HTMLElement, children: Rendered | Rendered[], index = 0, siblings: AurumElement[] = []): void {
+	if (children === undefined || children === null) {
+		return;
+	}
+
 	if (Array.isArray(children)) {
-		handleAttach(target, children, index, siblings);
+		for (const child of children) {
+			handleAttach(target, child, index, siblings);
+		}
+		return;
 	}
 
 	if (children instanceof AurumElement) {

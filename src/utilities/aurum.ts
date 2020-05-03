@@ -1,30 +1,6 @@
-import Q from 'q';
-import { AudioProps } from '../nodes/audio';
-import { B } from '../nodes/b';
-import { BodyProps } from '../nodes/body';
-import { Br, BrProps } from '../nodes/br';
-import { Button, ButtonProps } from '../nodes/button';
-import { Canvas, CanvasProps } from '../nodes/canvas';
-import { Data, DataProps } from '../nodes/data';
-import { Details, DetailsProps } from '../nodes/details';
-import { Em } from '../nodes/em';
-import { Footer } from '../nodes/footer';
-import { Form, FormProps } from '../nodes/form';
-import { HeadProps } from '../nodes/head';
-import { Header } from '../nodes/header';
-import { Heading, HeadingProps } from '../nodes/heading';
-import { I } from '../nodes/i';
-import { IFrame, IFrameProps } from '../nodes/iframe';
-import { Img, ImgProps } from '../nodes/img';
-import { Input, InputProps } from '../nodes/input';
-import { Label, LabelProps } from '../nodes/label';
-import { Link, LinkProps } from '../nodes/link';
-import { Nav } from '../nodes/nav';
+import { HTMLNodeProps } from '../nodes/dom_adapter';
 import { OptionProps } from '../nodes/option';
-import { P, PProps } from '../nodes/p';
-import { Pre, PreProps } from '../nodes/pre';
 import { Progress, ProgressProps } from '../nodes/progress';
-import { QProps } from '../nodes/q';
 import { Script, ScriptProps } from '../nodes/script';
 import { Select, SelectProps } from '../nodes/select';
 import {
@@ -32,8 +8,10 @@ import {
 	Abbr,
 	AProps,
 	Area,
+	AreaProps,
 	Article,
 	Aside,
+	B,
 	Div,
 	H1,
 	H2,
@@ -41,37 +19,64 @@ import {
 	H4,
 	H5,
 	H6,
-	Span,
-	AreaProps,
+	Li,
 	NoScript,
+	Ol,
+	P,
+	Pre,
+	Q,
+	Span,
+	Summary,
+	Template,
+	THead,
+	Title,
+	Tr,
+	Ul,
 	Video,
 	VideoProps,
-	Li,
-	Ul,
-	Ol,
-	Tr
+	Button,
+	Canvas,
+	Br,
+	Form,
+	Footer,
+	Em,
+	Details,
+	Data,
+	ButtonProps,
+	CanvasProps,
+	AudioProps,
+	DataProps,
+	Head,
+	Img,
+	Link,
+	Label,
+	Header,
+	I,
+	Heading,
+	IFrame,
+	ImgProps,
+	LinkProps,
+	LabelProps,
+	IFrameProps,
+	Table,
+	Td,
+	Th,
+	Nav,
+	Sub,
+	Sup,
+	TBody,
+	TFoot
 } from '../nodes/simple_dom_nodes';
 import { Source, SourceProps } from '../nodes/source';
 import { Style, StyleProps } from '../nodes/style';
-import { Sub } from '../nodes/sub';
-import { Summary } from '../nodes/summary';
-import { Sup } from '../nodes/sup';
 import { Svg, SvgProps } from '../nodes/svg';
-import { Table, TableProps } from '../nodes/table';
-import { Tbody } from '../nodes/tbody';
-import { Td, TdProps } from '../nodes/td';
-import { Template, TemplateProps } from '../nodes/template';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
-import { Tfoot } from '../nodes/tfoot';
-import { Th, ThProps } from '../nodes/th';
-import { Thead } from '../nodes/thead';
 import { Time, TimeProps } from '../nodes/time';
-import { Title, TitleProps } from '../nodes/title';
+import { AurumComponentAPI, AurumElement, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
+import { render } from '../rendering/renderer';
 import { MapLike } from './common';
 import { ownerSymbol } from './owner_symbol';
-import { Renderable, AurumElement, AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy } from '../rendering/aurum_element';
-import { render } from '../rendering/renderer';
-import { HTMLNodeProps } from '../nodes/dom_adapter';
+import { Input, InputProps } from '../nodes/input';
 
 const nodeMap = {
 	button: Button,
@@ -104,6 +109,7 @@ const nodeMap = {
 	h4: H4,
 	h5: H5,
 	h6: H6,
+	head: Head,
 	header: Header,
 	footer: Footer,
 	nav: Nav,
@@ -124,9 +130,9 @@ const nodeMap = {
 	source: Source,
 	title: Title,
 	video: Video,
-	tbody: Tbody,
-	tfoot: Tfoot,
-	thead: Thead,
+	tbody: TBody,
+	tfoot: TFoot,
+	thead: THead,
 	summary: Summary,
 	details: Details,
 	sub: Sub,
@@ -185,22 +191,22 @@ export namespace Aurum {
 			span: HTMLNodeProps<HTMLElement>;
 			style: StyleProps;
 			ul: HTMLNodeProps<HTMLUListElement>;
-			p: PProps;
+			p: HTMLNodeProps<HTMLParagraphElement>;
 			img: ImgProps;
 			link: LinkProps;
 			canvas: CanvasProps;
 			a: AProps;
 			article: HTMLNodeProps<HTMLElement>;
-			br: BrProps;
-			form: FormProps;
+			br: HTMLNodeProps<HTMLBRElement>;
+			form: HTMLNodeProps<HTMLElement>;
 			label: LabelProps;
 			ol: HTMLNodeProps<HTMLOListElement>;
-			pre: PreProps;
+			pre: HTMLNodeProps<HTMLPreElement>;
 			progress: ProgressProps;
-			table: TableProps;
-			td: TdProps;
+			table: HTMLNodeProps<HTMLTableElement>;
+			td: HTMLNodeProps<HTMLTableColElement>;
 			tr: HTMLNodeProps<HTMLTableRowElement>;
-			th: ThProps;
+			th: HTMLNodeProps<HTMLTableHeaderCellElement>;
 			textarea: TextAreaProps;
 			h1: HTMLNodeProps<HTMLElement>;
 			h2: HTMLNodeProps<HTMLElement>;
@@ -219,28 +225,28 @@ export namespace Aurum {
 			aside: HTMLNodeProps<HTMLElement>;
 			audio: AudioProps;
 			em: HTMLNodeProps<HTMLElement>;
-			heading: HeadingProps;
+			heading: HTMLNodeProps<HTMLHeadingElement>;
 			iframe: IFrameProps;
 			noscript: HTMLNodeProps<HTMLElement>;
 			option: OptionProps;
-			q: QProps;
+			q: HTMLNodeProps<HTMLQuoteElement>;
 			select: SelectProps;
 			source: SourceProps;
-			title: TitleProps;
+			title: HTMLNodeProps<HTMLTitleElement>;
 			video: VideoProps;
 			tbody: HTMLNodeProps<HTMLElement>;
 			tfoot: HTMLNodeProps<HTMLElement>;
 			thead: HTMLNodeProps<HTMLElement>;
 			summary: HTMLNodeProps<HTMLElement>;
-			details: DetailsProps;
+			details: HTMLNodeProps<HTMLDetailsElement>;
 			sub: HTMLNodeProps<HTMLElement>;
 			sup: HTMLNodeProps<HTMLElement>;
 			svg: SvgProps;
 			data: DataProps;
 			time: TimeProps;
-			body: BodyProps;
-			head: HeadProps;
-			template: TemplateProps;
+			body: HTMLNodeProps<HTMLBodyElement>;
+			head: HTMLNodeProps<HTMLHeadElement>;
+			template: HTMLNodeProps<HTMLTemplateElement>;
 		}
 	}
 }
