@@ -39,7 +39,6 @@ import { StyleProps } from './nodes/style';
 import { BodyProps } from './nodes/body';
 import { HeadProps } from './nodes/head';
 import { TemplateProps } from './nodes/template';
-import { AurumElementProps } from './nodes/special/aurum_element';
 
 export * from './stream/data_source';
 export * from './stream/object_data_source';
@@ -54,7 +53,8 @@ export * from './nodes/special/router';
 export * from './nodes/special/suspense';
 export * from './nodes/special/switch';
 
-export * from './nodes/special/aurum_element';
+export * from './rendering/aurum_element';
+export * from './rendering/renderer';
 
 declare global {
 	namespace JSX {

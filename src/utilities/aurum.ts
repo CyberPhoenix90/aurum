@@ -1,4 +1,3 @@
-import { AurumElement, AurumElementModel, prerender, aurumElementModelIdentitiy } from '../nodes/special/aurum_element';
 import { ownerSymbol } from './owner_symbol';
 import { Constructor, MapLike } from './common';
 import { Div } from '../nodes/div';
@@ -62,6 +61,8 @@ import { Data } from '../nodes/data';
 import { Time } from '../nodes/time';
 import { Option } from '../nodes/option';
 import { Template } from '../nodes/template';
+import { Renderable, AurumElement } from '../rendering/aurum_element';
+import { render } from '../rendering/renderer';
 
 const nodeMap = {
 	button: Button,
@@ -128,26 +129,14 @@ const nodeMap = {
 };
 
 export class Aurum {
-	public static attach(aurumElementModel: AurumElementModel, dom: HTMLElement) {
-		const aurumElement = prerender(aurumElementModel);
-		if (dom[ownerSymbol]) {
-			throw new Error('This node is already managed by aurum and cannot be used');
-		}
-
-		if (aurumElement instanceof AurumElement) {
-			dom.appendChild(aurumElement.node);
-			aurumElement['handleAttach'](aurumElement);
-			dom[ownerSymbol] = aurumElement;
-		} else {
-			throw new Error('Root node of aurum application must be a single dom node');
-		}
+	public static attach(aurumRenderable: Renderable, dom: HTMLElement) {
+		const content = render(aurumRenderable);
+		const root = new AurumElement();
+		root.updateChildren(Array.isArray(content) ? content : [content]);
+		root.attachToDom(dom, dom.childNodes.length);
 	}
 
-	public static isAttached(dom: HTMLElement) {
-		return dom[ownerSymbol] !== undefined;
-	}
-
-	public static detach(domNode: HTMLElement): void {
+	public static detachAll(domNode: HTMLElement): void {
 		if (domNode[ownerSymbol]) {
 			domNode[ownerSymbol].node.remove();
 			domNode[ownerSymbol].handleDetach();
