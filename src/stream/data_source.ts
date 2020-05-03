@@ -213,7 +213,7 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 		this.listen((value) => {
 			diffingSource.update({
 				new: value,
-				old: diffingSource.value
+				old: diffingSource.value.new
 			});
 		}, cancellationToken);
 		return diffingSource;
@@ -622,8 +622,8 @@ export class ArrayDataSource<T> {
 		return this.lengthSource;
 	}
 
-	public getData(): T[] {
-		return this.data.slice();
+	public getData(): ReadonlyArray<T> {
+		return this.data;
 	}
 
 	public get(index: number): T {
@@ -677,16 +677,7 @@ export class ArrayDataSource<T> {
 	}
 
 	public appendArray(items: T[]) {
-		const old = this.data;
-		this.data = new Array(old.length);
-		let i = 0;
-		for (i = 0; i < old.length; i++) {
-			this.data[i] = old[i];
-		}
-
-		for (let n = 0; n < items.length; n++) {
-			this.data[i + n] = items[n];
-		}
+		this.data = this.data.concat(items);
 
 		this.update({
 			operation: 'add',
@@ -981,7 +972,10 @@ export class SortedArrayView<T> extends TransientArrayDataSource<T> {
 	private parent: ArrayDataSource<T>;
 
 	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken()) {
-		const initial = parent.getData().sort(comparator);
+		const initial = parent
+			.getData()
+			.slice()
+			.sort(comparator);
 		super(cancellationToken, initial);
 		this.parent = parent;
 		this.comparator = comparator;
@@ -1025,7 +1019,12 @@ export class SortedArrayView<T> extends TransientArrayDataSource<T> {
 	}
 
 	public refresh() {
-		this.merge(this.parent.getData().sort(this.comparator));
+		this.merge(
+			this.parent
+				.getData()
+				.slice()
+				.sort(this.comparator)
+		);
 	}
 }
 
