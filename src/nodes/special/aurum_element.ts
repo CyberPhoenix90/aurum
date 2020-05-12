@@ -28,24 +28,25 @@ export interface AurumElementProps<T extends HTMLElement> {
 	title?: AttributeValue;
 	role?: AttributeValue;
 	contentEditable?: AttributeValue;
-	onDblclick?: DataDrain<MouseEvent>;
+	onDblClick?: DataDrain<MouseEvent>;
 	onClick?: DataDrain<MouseEvent>;
-	onKeydown?: DataDrain<KeyboardEvent>;
-	onKeyup?: DataDrain<KeyboardEvent>;
-	onMousedown?: DataDrain<KeyboardEvent>;
-	onMouseup?: DataDrain<KeyboardEvent>;
-	onMouseenter?: DataDrain<KeyboardEvent>;
-	onMouseleave?: DataDrain<KeyboardEvent>;
-	onMousewheel?: DataDrain<WheelEvent>;
+	onKeyDown?: DataDrain<KeyboardEvent>;
+	onKeyUp?: DataDrain<KeyboardEvent>;
+	onMouseDown?: DataDrain<MouseEvent>;
+	onMouseUp?: DataDrain<MouseEvent>;
+	onMouseEnter?: DataDrain<MouseEvent>;
+	onMouseLeave?: DataDrain<MouseEvent>;
+	onMouseMove?: DataDrain<MouseEvent>;
+	onMouseWheel?: DataDrain<WheelEvent>;
 	onBlur?: DataDrain<FocusEvent>;
 	onFocus?: DataDrain<FocusEvent>;
 	onDrag?: DataDrain<DragEvent>;
-	onDragend?: DataDrain<DragEvent>;
-	onDragenter?: DataDrain<DragEvent>;
-	onDragexit?: DataDrain<DragEvent>;
-	onDragleave?: DataDrain<DragEvent>;
-	onDragover?: DataDrain<DragEvent>;
-	onDragstart?: DataDrain<DragEvent>;
+	onDragEnd?: DataDrain<DragEvent>;
+	onDragEnter?: DataDrain<DragEvent>;
+	onDragExit?: DataDrain<DragEvent>;
+	onDragLeave?: DataDrain<DragEvent>;
+	onDragOver?: DataDrain<DragEvent>;
+	onDragStart?: DataDrain<DragEvent>;
 	onLoad?: DataDrain<Event>;
 	onError?: DataDrain<ErrorEvent>;
 
@@ -121,10 +122,10 @@ export abstract class AurumElement {
 	private onDetach?: Callback<HTMLElement>;
 
 	private children: Array<AurumElement | AurumFragment | AurumTextElement>;
-	protected needAttach: boolean;
 
 	public node: HTMLElement;
 	protected cleanUp: CancellationToken;
+	protected pendingChildren: ChildNode[];
 
 	constructor(props: AurumElementProps<any>, children: ChildNode[], domNodeName: string) {
 		this.node = this.create(domNodeName);
@@ -133,7 +134,6 @@ export abstract class AurumElement {
 		if (props != null) {
 			if (props.onAttach) {
 				this.onAttach = props.onAttach;
-				this.needAttach = true;
 			}
 			this.onDetach = props.onDetach;
 
@@ -141,7 +141,7 @@ export abstract class AurumElement {
 			props.onCreate?.(this.node);
 		}
 		if (children) {
-			this.addChildren(children);
+			this.pendingChildren = children;
 		}
 	}
 
@@ -257,14 +257,15 @@ export abstract class AurumElement {
 	}
 
 	protected handleAttach(parent: AurumElement) {
-		if (this.needAttach) {
-			if (parent.isConnected()) {
-				this.onAttach?.(this.node);
-				for (const child of this.node.childNodes) {
-					child[ownerSymbol]?.handleAttach?.(this);
-				}
-			} else {
-				parent.needAttach = true;
+		if (parent.isConnected()) {
+			if (this.pendingChildren) {
+				this.addChildren(this.pendingChildren);
+				this.pendingChildren = undefined;
+			}
+			this.onAttach?.(this.node);
+			this.onAttach = undefined;
+			for (const child of this.node.childNodes) {
+				child[ownerSymbol]?.handleAttach?.(this);
 			}
 		}
 	}
@@ -286,6 +287,7 @@ export abstract class AurumElement {
 					child[ownerSymbol].handleDetach?.();
 				}
 			}
+			this.node[ownerSymbol] = undefined;
 		}
 	}
 
