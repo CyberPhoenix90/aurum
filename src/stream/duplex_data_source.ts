@@ -1,7 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource, ReadOnlyDataSource } from './data_source';
+import { DataSource, ReadOnlyDataSource, TransientDataSource } from './data_source';
 
 export enum DataFlow {
 	UPSTREAM,
@@ -155,6 +155,75 @@ export class DuplexDataSource<T> implements ReadOnlyDataSource<T> {
 		}, cancellationToken);
 
 		return downStreamDatasource;
+	}
+
+	/**
+	 * Combines two sources into a third source that listens to updates from both parent sources.
+	 * @param otherSource Second parent for the new source
+	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
+	 */
+	public aggregate<D, E>(
+		otherSource: ReadOnlyDataSource<D>,
+		combinator: (self: T, other: D) => E,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<E> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	/**
+	 * Combines three sources into a fourth source that listens to updates from all parent sources.
+	 * @param second Second parent for the new source
+	 * @param third Third parent for the new source
+	 * @param combinator Method allowing you to combine the data from all parents on update. Called each time a parent is updated with the latest values of all parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
+	 */
+	public aggregateThree<D, E, F>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		combinator: (self: T, second: D, third: E) => F,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<F> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<F>(cancellationToken, combinator(this.value, second.value, third.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	/**
+	 * Combines four sources into a fifth source that listens to updates from all parent sources.
+	 * @param second Second parent for the new source
+	 * @param third Third parent for the new source
+	 * @param fourth Fourth parent for the new source
+	 * @param combinator Method allowing you to combine the data from all parents on update. Called each time a parent is updated with the latest values of all parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
+	 */
+	public aggregateFour<D, E, F, G>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
+		combinator: (self: T, second: D, third: E, fourth: F) => G,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<G> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<G>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+		fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+
+		return aggregatedSource;
 	}
 
 	/**

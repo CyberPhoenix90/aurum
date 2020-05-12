@@ -12,6 +12,20 @@ export interface ReadOnlyDataSource<T> {
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
+	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): ReadOnlyDataSource<E>;
+	aggregateThree<D, E, F>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		combinator: (self: T, second: D, third: E) => F,
+		cancellationToken?: CancellationToken
+	): ReadOnlyDataSource<F>;
+	aggregateFour<D, E, F, G>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
+		combinator: (self: T, second: D, third: E, fourth: F) => G,
+		cancellationToken?: CancellationToken
+	): ReadOnlyDataSource<G>;
 }
 
 /**
@@ -240,7 +254,11 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): TransientDataSource<E> {
+	public aggregate<D, E>(
+		otherSource: ReadOnlyDataSource<D>,
+		combinator: (self: T, other: D) => E,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<E> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
 
@@ -258,8 +276,8 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
 	 */
 	public aggregateThree<D, E, F>(
-		second: DataSource<D>,
-		third: DataSource<E>,
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
 		combinator: (self: T, second: D, third: E) => F,
 		cancellationToken?: CancellationToken
 	): TransientDataSource<F> {
@@ -282,9 +300,9 @@ export class DataSource<T> implements ReadOnlyDataSource<T> {
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
 	 */
 	public aggregateFour<D, E, F, G>(
-		second: DataSource<D>,
-		third: DataSource<E>,
-		fourth: DataSource<F>,
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
 	): TransientDataSource<G> {
