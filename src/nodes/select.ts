@@ -33,7 +33,6 @@ export class Select extends AurumElement {
 
 			if (props.value) {
 				this.value = props.value;
-				this.needAttach = true;
 				if (props.value instanceof DataSource || props.value instanceof DuplexDataSource) {
 					if (!this.cleanUp) {
 						this.cleanUp = new CancellationToken();
@@ -54,7 +53,6 @@ export class Select extends AurumElement {
 
 			if (props.selectedIndex) {
 				this.selectedIndex = props.selectedIndex;
-				this.needAttach = true;
 				if (props.selectedIndex instanceof DataSource || props.selectedIndex instanceof DuplexDataSource) {
 					if (!this.cleanUp) {
 						this.cleanUp = new CancellationToken();

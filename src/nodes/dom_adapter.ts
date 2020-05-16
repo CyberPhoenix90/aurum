@@ -73,18 +73,25 @@ const defaultEvents: MapLike<string> = {
  */
 const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
 
-export function DomNodeCreator<T extends HTMLNodeProps<any>>(nodeName: string, extraAttributes?: string[]) {
+export function DomNodeCreator<T extends HTMLNodeProps<any>>(
+	nodeName: string,
+	extraAttributes?: string[],
+	extraEvents?: MapLike<string>,
+	extraLogic?: (node: HTMLElement, props: T, cleanUp:CancellationToken) => void
+) {
 	return function(props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
 		const cleanUp = new CancellationToken();
 		const node = document.createElement(nodeName);
 		if (props) {
-			processHTMLNode(node, props, cleanUp, extraAttributes);
+			processHTMLNode(node, props, cleanUp, extraAttributes, extraEvents);
 		}
 		const renderedChildren = render(children);
 		handleAttach(node, renderedChildren);
 		if (cleanUp.hasCancellables()) {
 			api.onDetach(() => cleanUp.cancel());
 		}
+
+		extraLogic(node, props, cleanUp);
 
 		return node;
 	};
@@ -113,8 +120,17 @@ function handleAttach(target: HTMLElement, children: Rendered | Rendered[], inde
 	}
 }
 
-export function processHTMLNode(node: HTMLElement, props: HTMLNodeProps<any>, cleanUp: CancellationToken, extraAttributes?: string[]) {
+export function processHTMLNode(
+	node: HTMLElement,
+	props: HTMLNodeProps<any>,
+	cleanUp: CancellationToken,
+	extraAttributes?: string[],
+	extraEvents?: MapLike<string>
+) {
 	createEventHandlers(node, defaultEvents, props);
+	if (extraEvents) {
+		createEventHandlers(node, extraEvents, props);
+	}
 
 	const dataProps = Object.keys(props).filter((e) => e.includes('-'));
 	bindProps(node, defaultAttributes, props, dataProps);

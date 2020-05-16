@@ -87,6 +87,36 @@ export interface LinkProps extends HTMLNodeProps<HTMLLinkElement> {
 	type?: AttributeValue;
 }
 
+export interface TimeProps extends HTMLNodeProps<HTMLTimeElement> {
+	datetime?: AttributeValue;
+}
+
+export interface StyleProps extends HTMLNodeProps<HTMLStyleElement> {
+	media?: AttributeValue;
+}
+
+export interface SourceProps extends HTMLNodeProps<HTMLSourceElement> {
+	src?: AttributeValue;
+	srcSet?: AttributeValue;
+	media?: AttributeValue;
+	sizes?: AttributeValue;
+	type?: AttributeValue;
+}
+
+export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
+	src?: AttributeValue;
+	async?: AttributeValue;
+	defer?: AttributeValue;
+	integrity?: AttributeValue;
+	noModule?: AttributeValue;
+	type?: AttributeValue;
+}
+
+export interface SvgProps extends HTMLNodeProps<HTMLOrSVGElement> {
+	width?: AttributeValue;
+	height?: AttributeValue;
+}
+
 /**
  * @internal
  */
@@ -307,3 +337,23 @@ export const Td = DomNodeCreator<HTMLNodeProps<HTMLTableColElement>>('td');
  * @internal
  */
 export const Th = DomNodeCreator<HTMLNodeProps<HTMLTableHeaderCellElement>>('th');
+/**
+ * @internal
+ */
+export const Time = DomNodeCreator<TimeProps>('time', ['datetime']);
+/**
+ * @internal
+ */
+export const Style = DomNodeCreator<StyleProps>('style', ['media']);
+/**
+ * @internal
+ */
+export const Source = DomNodeCreator<SourceProps>('source', ['src', 'srcSet', 'media', 'sizes', 'type']);
+/**
+ * @internal
+ */
+export const Script = DomNodeCreator<ScriptProps>('script', ['src', 'async', 'defer', 'integrity', 'noModule', 'type']);
+/**
+ * @internal
+ */
+export const Svg = DomNodeCreator<SvgProps>('svg', ['width', 'height']);

@@ -44,18 +44,6 @@ export class CancellationToken {
 		return this;
 	}
 
-	public addDisposable(disposable: { dispose(): any }): this {
-		this.addCancelable(() => disposable.dispose());
-
-		return this;
-	}
-
-	public callIfNotCancelled(action: Delegate): void {
-		if (!this.isCanceled) {
-			action();
-		}
-	}
-
 	public setTimeout(cb: Delegate, time: number = 0): void {
 		const id = setTimeout(() => {
 			this.removeCancelable(cancelable);

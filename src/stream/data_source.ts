@@ -10,7 +10,30 @@ export interface ReadOnlyDataSource<T> {
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
 	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): GenericDataSource<T>;
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
+	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
+	aggregateThree<D, E, F>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		combinator: (self: T, second: D, third: E) => F,
+		cancellationToken?: CancellationToken
+	): GenericDataSource<F>;
+	aggregateFour<D, E, F, G>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
+		combinator: (self: T, second: D, third: E, fourth: F) => G,
+		cancellationToken?: CancellationToken
+	): GenericDataSource<G>;
+}
+
+export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
+	withInitial(value: T): this;
+	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
+	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
+	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): GenericDataSource<T>;
 }
 
 export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
@@ -34,6 +57,14 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.value = initialValue;
 		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
+	}
+
+	/**
+	 * Updates with the same value as the last value
+	 */
+	public repeatLast(): this {
+		this.update(this.value);
+		return this;
 	}
 
 	/**
@@ -186,7 +217,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
-	 * Creates a new datasource that is listening to updates from this datasource and transforms them with a mapper function before fowarding them to itself
+	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value
 	 * @param callback mapper function that transforms the updates of this source
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
@@ -196,6 +227,63 @@ export class DataSource<T> implements GenericDataSource<T> {
 		const mappedSource = new TransientDataSource<R>(cancellationToken);
 		this.listen(async (value) => {
 			mappedSource.update(await (value as any));
+		}, cancellationToken);
+		return mappedSource;
+	}
+
+	/**
+	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value while ensuring the order of updates is not disturbed
+	 * @param callback mapper function that transforms the updates of this source
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const queue: Promise<any>[] = [];
+		const mappedSource = new TransientDataSource<R>(cancellationToken);
+		this.listen(async (value) => {
+			let flushing = false;
+			async function flush() {
+				if (!flushing) {
+					flushing = true;
+				}
+
+				while (queue.length) {
+					const item = queue[0];
+					mappedSource.update(await item);
+					queue.shift();
+				}
+
+				flushing = false;
+			}
+
+			if (value instanceof Promise) {
+				queue.push(value);
+				flush();
+			} else {
+				mappedSource.update(await (value as any));
+			}
+		}, cancellationToken);
+		return mappedSource;
+	}
+
+	/**
+	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value. In case of multiple pending promises only the latest value is forwarded
+	 * @param callback mapper function that transforms the updates of this source
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		let freshnessToken: number;
+		const mappedSource = new TransientDataSource<R>(cancellationToken);
+		this.listen(async (value) => {
+			freshnessToken = Date.now();
+			const timestamp = freshnessToken;
+			const resolved = await (value as any);
+			if (freshnessToken === timestamp) {
+				mappedSource.update(resolved);
+			}
 		}, cancellationToken);
 		return mappedSource;
 	}
@@ -257,7 +345,11 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public aggregate<D, E>(otherSource: DataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): TransientDataSource<E> {
+	public aggregate<D, E>(
+		otherSource: ReadOnlyDataSource<D>,
+		combinator: (self: T, other: D) => E,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<E> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
 
@@ -275,8 +367,8 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
 	 */
 	public aggregateThree<D, E, F>(
-		second: DataSource<D>,
-		third: DataSource<E>,
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
 		combinator: (self: T, second: D, third: E) => F,
 		cancellationToken?: CancellationToken
 	): TransientDataSource<F> {
@@ -299,9 +391,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
 	 */
 	public aggregateFour<D, E, F, G>(
-		second: DataSource<D>,
-		third: DataSource<E>,
-		fourth: DataSource<F>,
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
 	): TransientDataSource<G> {

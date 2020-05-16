@@ -1,10 +1,10 @@
 import { HTMLNodeProps } from '../nodes/dom_adapter';
 import { OptionProps } from '../nodes/option';
 import { Progress, ProgressProps } from '../nodes/progress';
-import { Script, ScriptProps } from '../nodes/script';
 import { Select, SelectProps } from '../nodes/select';
 import {
 	A,
+	Script,
 	Abbr,
 	AProps,
 	Area,
@@ -65,13 +65,18 @@ import {
 	Sub,
 	Sup,
 	TBody,
-	TFoot
+	TFoot,
+	Style,
+	Source,
+	Time,
+	StyleProps,
+	SourceProps,
+	TimeProps,
+	ScriptProps,
+	Svg,
+	SvgProps
 } from '../nodes/simple_dom_nodes';
-import { Source, SourceProps } from '../nodes/source';
-import { Style, StyleProps } from '../nodes/style';
-import { Svg, SvgProps } from '../nodes/svg';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
-import { Time, TimeProps } from '../nodes/time';
 import { AurumComponentAPI, AurumElement, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
 import { render } from '../rendering/renderer';
 import { MapLike } from './common';

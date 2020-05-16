@@ -1,21 +1,16 @@
-import { AurumElement, AurumElementProps, ChildNode } from './special/aurum_element';
-import { DataSource } from '../stream/data_source';
-import { DataDrain, Callback, AttributeValue } from '../utilities/common';
+import { GenericDataSource, DataSource } from '../stream/data_source';
+import { AttributeValue, DataDrain } from '../utilities/common';
+import { DomNodeCreator, HTMLNodeProps } from './dom_adapter';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { DuplexDataSource } from '../stream/duplex_data_source';
 
-export interface TextAreaProps extends AurumElementProps<HTMLTextAreaElement> {
-	onAttach?: Callback<HTMLTextAreaElement>;
-	onDetach?: Callback<HTMLTextAreaElement>;
-	onCreate?: Callback<HTMLTextAreaElement>;
-
+export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
 	placeholder?: AttributeValue;
 	readonly?: AttributeValue;
 	disabled?: AttributeValue;
 	onChange?: DataDrain<InputEvent>;
 	onInput?: DataDrain<InputEvent>;
-	inputValueSource?: DataSource<string>;
-	initialValue?: string;
-
+	value?: GenericDataSource<string> | string;
 	rows?: AttributeValue;
 	wrap?: AttributeValue;
 	autocomplete?: AttributeValue;
@@ -55,30 +50,30 @@ const textAreaProps = [
 /**
  * @internal
  */
-export class TextArea extends AurumElement {
-	public node: HTMLTextAreaElement;
-
-	constructor(props: TextAreaProps, children: ChildNode[]) {
-		super(props, children, 'textArea');
-		if (props !== null) {
-			if (props.inputValueSource) {
-				this.node.value = props.initialValue ?? props.inputValueSource.value ?? '';
-				if (!this.cleanUp) {
-					this.cleanUp = new CancellationToken();
-				}
-
-				props.inputValueSource.unique(this.cleanUp).listen((value) => (this.node.value = value));
-			} else {
-				this.node.value = props.initialValue ?? '';
-			}
-			this.bindProps(textAreaProps, props);
-			this.createEventHandlers(textAreaEvents, props);
-
-			if (props.inputValueSource) {
-				this.node.addEventListener('input', () => {
-					props.inputValueSource.update(this.node.value);
+export const TextArea = DomNodeCreator<TextAreaProps>(
+	'textArea',
+	textAreaProps,
+	textAreaEvents,
+	(node: HTMLElement, props: TextAreaProps, cleanUp: CancellationToken) => {
+		const textArea = node as HTMLTextAreaElement;
+		if (props.value) {
+			if (props.value instanceof DataSource) {
+				props.value.listenAndRepeat((v) => {
+					textArea.value = v;
+				}, cleanUp);
+				textArea.addEventListener('input', () => {
+					(props.value as DataSource<string>).update(this.node.value);
 				});
+			} else if (props.value instanceof DuplexDataSource) {
+				props.value.listenAndRepeat((v) => {
+					textArea.value = v;
+				}, cleanUp);
+				textArea.addEventListener('input', () => {
+					(props.value as DuplexDataSource<string>).updateUpstream(this.node.value);
+				});
+			} else {
+				textArea.value = props.value as string;
 			}
 		}
 	}
-}
+);

@@ -1,24 +1,38 @@
 import { Rendered, Renderable, AurumElement, aurumElementModelIdentitiy, AurumElementModel } from './aurum_element';
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+import { CancellationToken } from '../utilities/cancellation_token';
 
-export function render<T extends Renderable>(element: T): T extends Array<any> ? Rendered[] : Rendered {
+export function prerender<T extends Renderable>(element: T, cancelationToken: CancellationToken): T extends Array<any> ? Rendered[] : Rendered {
+	return render(element, cancelationToken);
+}
+
+/**
+ * @internal
+ */
+export function render<T extends Renderable>(element: T, cancelationToken?: CancellationToken): T extends Array<any> ? Rendered[] : Rendered {
 	if (element == undefined) {
 		return undefined;
 	}
 
 	if (Array.isArray(element)) {
 		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
-		return Array.prototype.concat.apply([], element.map(render));
+		return Array.prototype.concat.apply(
+			[],
+			element.map((e) => render(e, cancelationToken))
+		);
 	}
 
 	if (element instanceof DataSource || element instanceof DuplexDataSource) {
-		const result = new AurumElement();
-		element.listenAndRepeat((value) => {
-			if (Array.isArray(value)) {
-				result.updateChildren(render(value));
-			} else {
-				result.updateChildren([render(value) as any]);
+		const result = new AurumElement({
+			onAttach: () => {
+				element.listenAndRepeat((value) => {
+					if (Array.isArray(value)) {
+						result.updateChildren(render(value));
+					} else {
+						result.updateChildren([render(value) as any]);
+					}
+				}, result.lifetimeToken);
 			}
 		});
 
@@ -26,8 +40,11 @@ export function render<T extends Renderable>(element: T): T extends Array<any> ?
 	}
 
 	if (element instanceof ArrayDataSource) {
-		const result = new AurumElement();
-		element.listenAndRepeat((change) => {});
+		const result = new AurumElement({
+			onAttach: () => {
+				element.listenAndRepeat((change) => {}, result.lifetimeToken);
+			}
+		});
 
 		return result as any;
 	}
@@ -44,8 +61,10 @@ export function render<T extends Renderable>(element: T): T extends Array<any> ?
 				onAttach: () => {
 					throw new Error('not implemented');
 				},
-				onDetach: () => {
-					throw new Error('not implemented');
+				onDetach: (cb) => {
+					if (cancelationToken) {
+						cancelationToken.addCancelable(cb);
+					}
 				},
 				onError: () => {
 					throw new Error('not implemented');

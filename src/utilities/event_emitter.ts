@@ -80,13 +80,21 @@ export class EventEmitter<T> {
 
 		let length = this.subscribeChannel.length;
 		for (let i = 0; i < length; i++) {
-			this.subscribeChannel[i].callback(data);
+			try {
+				this.subscribeChannel[i].callback(data);
+			} catch (e) {
+				console.error(e);
+			}
 		}
 
 		if (this.subscribeOnceChannel.length > 0) {
 			length = this.subscribeOnceChannel.length;
 			for (let i = 0; i < length; i++) {
-				this.subscribeOnceChannel[i].callback(data);
+				try {
+					this.subscribeOnceChannel[i].callback(data);
+				} catch (e) {
+					console.error(e);
+				}
 			}
 			this.subscribeOnceChannel.length = 0;
 		}

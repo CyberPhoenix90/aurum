@@ -1,23 +1,17 @@
-import { render } from '../rendering/renderer';
 import { DataSource } from '../stream/data_source';
-import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
+import { Renderable, AurumComponentAPI, aurumElementModelIdentitiy, AurumElementModel } from '../rendering/aurum_element';
 import { CancellationToken } from '../utilities/cancellation_token';
 
-const routeIdentity = Symbol('route');
-
-export interface RouteInstance {
-	[routeIdentity]: boolean;
-	href: string;
-	default: boolean;
-	content: ChildNode[];
-}
-
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
-	children = render(children);
-	if (children.some((c) => !c[routeIdentity])) {
+	if (
+		children.some(
+			(c) =>
+				!c[aurumElementModelIdentitiy] || !((c as AurumElementModel<any>).factory === Route || (c as AurumElementModel<any>).factory === DefaultRoute)
+		)
+	) {
 		throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
 	}
-	if (children.filter((c) => (c as any).default).length > 1) {
+	if (children.filter((c) => (c as AurumElementModel<any>).factory === DefaultRoute).length > 1) {
 		throw new Error('Too many default routes only 0 or 1 allowed');
 	}
 
@@ -49,23 +43,23 @@ function getUrlPath(): string {
 	}
 }
 
-function selectRoute(url: string, routes: RouteInstance[]): ChildNode[] {
+function selectRoute(url: string, routes: AurumElementModel<RouteProps>[]): Renderable[] {
 	if (url === undefined || url === null) {
-		return routes.find((r) => r.default)?.content;
+		return routes.find((r) => r.factory === DefaultRoute)?.children;
 	} else {
-		if (routes.find((r) => r.href === url)) {
-			return routes.find((r) => r.href === url).content;
+		if (routes.find((r) => r.props.href === url)) {
+			return routes.find((r) => r.props.href === url).children;
 		} else {
 			const segments = url.split('/');
 			segments.pop();
 			while (segments.length) {
 				const path = segments.join('/');
-				if (routes.find((r) => r.href === path)) {
-					return routes.find((r) => r.href === path).content;
+				if (routes.find((r) => r.props.href === path)) {
+					return routes.find((r) => r.props.href === path).children;
 				}
 				segments.pop();
 			}
-			return routes.find((r) => r.default)?.content;
+			return routes.find((r) => r.factory === DefaultRoute)?.children;
 		}
 	}
 }
@@ -74,20 +68,10 @@ export interface RouteProps {
 	href: string;
 }
 
-export function Route(props: RouteProps, children): RouteInstance {
-	return {
-		[routeIdentity]: true,
-		content: children,
-		default: false,
-		href: props.href
-	};
+export function Route(props: RouteProps, children): undefined {
+	return undefined;
 }
 
-export function DefaultRoute(props: {}, children): RouteInstance {
-	return {
-		[routeIdentity]: true,
-		content: children,
-		default: true,
-		href: undefined
-	};
+export function DefaultRoute(props: {}, children): undefined {
+	return undefined;
 }

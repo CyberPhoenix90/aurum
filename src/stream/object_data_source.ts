@@ -109,6 +109,9 @@ export class ObjectDataSource<T> {
 		const old = this.data[key];
 		delete this.data[key];
 		this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
+		if (this.updateEventOnKey.has(key)) {
+			this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
+		}
 	}
 
 	/**

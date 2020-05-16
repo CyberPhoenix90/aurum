@@ -1,5 +1,6 @@
 import { DataSource, ArrayDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
 
@@ -24,8 +25,8 @@ export type Renderable =
 export type Rendered = AurumElement | HTMLElement | Text;
 
 export interface AurumComponentAPI {
-	onAttach(cb: (rootNode?: Rendered) => void);
-	onDetach(cb: (rootNode?: Rendered) => void);
+	onAttach(cb: (element: AurumElement) => void);
+	onDetach(cb: () => void);
 	onError(cb: (error: Error) => Renderable);
 }
 
@@ -38,10 +39,14 @@ export interface AurumElementModel<T> {
 
 export class AurumElement {
 	private children: Rendered[];
-	private parentNode: HTMLElement;
+	private hostNode: HTMLElement;
+	public lifetimeToken: CancellationToken;
+	private onAttach: (element: AurumElement) => void;
 
-	constructor() {
+	constructor(props: { onAttach?: (element: AurumElement) => void } = {}) {
 		this.children = [];
+		this.onAttach = props.onAttach;
+		this.lifetimeToken = new CancellationToken();
 	}
 
 	public updateChildren(newChildren: Rendered[]): void {
@@ -49,11 +54,12 @@ export class AurumElement {
 	}
 
 	public attachToDom(node: HTMLElement, index: number, aurumSiblings: AurumElement[]): void {
-		if (this.parentNode) {
+		if (this.hostNode) {
 			throw new Error('Aurum Element is already attached');
 		}
 
-		this.parentNode = node;
+		this.hostNode = node;
+		this.onAttach?.(this);
 		if (this.children.length > 0) {
 			this.render();
 		}
