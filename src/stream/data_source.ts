@@ -904,26 +904,47 @@ export class ArrayDataSource<T> {
 
 	public sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
 		const view = new SortedArrayView(this, comparator, cancellationToken);
+
+		const token = new CancellationToken();
+		if (cancellationToken) {
+			cancellationToken.addCancelable(() => token.cancel());
+		}
+		view.disposeToken.addCancelable(() => token.cancel());
+
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
-		});
+		}, token);
 
 		return view;
 	}
 
 	public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
 		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken);
+
+		const token = new CancellationToken();
+		if (cancellationToken) {
+			cancellationToken.addCancelable(() => token.cancel());
+		}
+		view.disposeToken.addCancelable(() => token.cancel());
+
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
-		});
+		}, token);
 
 		return view;
 	}
 
 	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		const view = new FilteredArrayView(this, callback, cancellationToken);
+
+		const token = new CancellationToken();
+		if (cancellationToken) {
+			cancellationToken.addCancelable(() => token.cancel());
+		}
+		view.disposeToken.addCancelable(() => token.cancel());
+
 		dependencies.forEach((dep) => {
-			dep.listen(() => view.refresh(), cancellationToken);
+			dep.listen(() => view.refresh(), token);
 		});
 
 		return view;
@@ -939,7 +960,7 @@ export class ArrayDataSource<T> {
 }
 
 export class TransientArrayDataSource<T> extends ArrayDataSource<T> {
-	private disposeToken: CancellationToken;
+	public disposeToken: CancellationToken;
 
 	constructor(disposeToken: CancellationToken, initialValue?: T[]) {
 		super(initialValue);
