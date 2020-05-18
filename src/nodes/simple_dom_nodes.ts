@@ -117,6 +117,15 @@ export interface SvgProps extends HTMLNodeProps<HTMLOrSVGElement> {
 	height?: AttributeValue;
 }
 
+export interface ProgressProps extends HTMLNodeProps<HTMLProgressElement> {
+	max?: AttributeValue;
+	value?: AttributeValue;
+}
+
+export interface OptionProps extends HTMLNodeProps<HTMLElement> {
+	value?: AttributeValue;
+}
+
 /**
  * @internal
  */
@@ -357,3 +366,11 @@ export const Script = DomNodeCreator<ScriptProps>('script', ['src', 'async', 'de
  * @internal
  */
 export const Svg = DomNodeCreator<SvgProps>('svg', ['width', 'height']);
+/**
+ * @internal
+ */
+export const Progress = DomNodeCreator<ProgressProps>('svg', ['max', 'value']);
+/**
+ * @internal
+ */
+export const Option = DomNodeCreator<OptionProps>('option', ['value']);

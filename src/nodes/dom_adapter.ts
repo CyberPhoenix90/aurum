@@ -77,7 +77,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 	nodeName: string,
 	extraAttributes?: string[],
 	extraEvents?: MapLike<string>,
-	extraLogic?: (node: HTMLElement, props: T, cleanUp:CancellationToken) => void
+	extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void
 ) {
 	return function(props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
 		const cleanUp = new CancellationToken();
@@ -91,7 +91,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 			api.onDetach(() => cleanUp.cancel());
 		}
 
-		extraLogic(node, props, cleanUp);
+		extraLogic?.(node, props, cleanUp);
 
 		return node;
 	};

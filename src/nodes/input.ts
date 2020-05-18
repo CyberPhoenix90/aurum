@@ -1,13 +1,10 @@
-import { AttributeValue, Callback, DataDrain } from '../utilities/common';
-import { DataSource, GenericDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
+import { HTMLNodeProps, DomNodeCreator } from './dom_adapter';
+import { AttributeValue, DataDrain } from '../utilities/common';
+import { GenericDataSource, DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { DuplexDataSource } from '../stream/duplex_data_source';
 
-export interface InputProps extends AurumElementProps<HTMLInputElement> {
-	onAttach?: Callback<HTMLInputElement>;
-	onDetach?: Callback<HTMLInputElement>;
-	onCreate?: Callback<HTMLInputElement>;
-
+export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
 	placeholder?: AttributeValue;
 	readonly?: AttributeValue;
 	disabled?: AttributeValue;
@@ -71,47 +68,45 @@ const inputProps = [
 /**
  * @internal
  */
-export class Input extends AurumElement {
-	public node: HTMLInputElement;
-
-	constructor(props: InputProps, children: ChildNode[]) {
-		super(props, children, 'input');
-		if (props !== null) {
-			if (props.value instanceof DataSource || props.value instanceof DuplexDataSource) {
-				if (!this.cleanUp) {
-					this.cleanUp = new CancellationToken();
-				}
-
-				props.value.unique(this.cleanUp).listenAndRepeat((value) => (this.node.value = value));
-				this.node.addEventListener('input', () => {
-					if (props.value instanceof DataSource) {
-						props.value.update(this.node.value);
-					} else if (props.value instanceof DuplexDataSource) {
-						props.value.updateUpstream(this.node.value);
-					}
-				});
-			} else {
-				this.node.value = props.value ?? '';
-			}
-
-			if (props.checked instanceof DataSource || props.checked instanceof DuplexDataSource) {
-				if (!this.cleanUp) {
-					this.cleanUp = new CancellationToken();
-				}
-
-				props.checked.unique(this.cleanUp).listenAndRepeat((value) => (this.node.checked = value));
-				this.node.addEventListener('change', () => {
-					if (props.checked instanceof DataSource) {
-						props.checked.update(this.node.checked);
-					} else if (props.checked instanceof DuplexDataSource) {
-						props.checked.updateUpstream(this.node.checked);
-					}
-				});
-			} else {
-				this.node.checked = props.checked ?? false;
-			}
-			this.bindProps(inputProps, props);
-			this.createEventHandlers(inputEvents, props);
+export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents, (node: HTMLElement, props: InputProps, cleanUp: CancellationToken) => {
+	const input = node as HTMLInputElement;
+	if (props.value) {
+		if (props.value instanceof DataSource) {
+			props.value.listenAndRepeat((v) => {
+				input.value = v;
+			}, cleanUp);
+			input.addEventListener('input', () => {
+				(props.value as DataSource<string>).update(input.value);
+			});
+		} else if (props.value instanceof DuplexDataSource) {
+			props.value.listenAndRepeat((v) => {
+				input.value = v;
+			}, cleanUp);
+			input.addEventListener('input', () => {
+				(props.value as DuplexDataSource<string>).updateUpstream(input.value);
+			});
+		} else {
+			input.value = props.value as string;
 		}
 	}
-}
+
+	if (props.checked) {
+		if (props.checked instanceof DataSource) {
+			props.checked.listenAndRepeat((v) => {
+				input.checked = v;
+			}, cleanUp);
+			input.addEventListener('change', () => {
+				(props.checked as DataSource<boolean>).update(input.checked);
+			});
+		} else if (props.checked instanceof DuplexDataSource) {
+			props.checked.listenAndRepeat((v) => {
+				input.checked = v;
+			}, cleanUp);
+			input.addEventListener('change', () => {
+				(props.checked as DuplexDataSource<boolean>).updateUpstream(input.checked);
+			});
+		} else {
+			input.checked = props.checked as boolean;
+		}
+	}
+});

@@ -26,11 +26,11 @@ export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[
 	});
 
 	const u = props.state.unique(cleanUp);
-	return u.withInitial(props.state.value).map((state) => selectCase(state, children));
+	return u.withInitial(props.state.value).map((state) => selectCase(state, children as AurumElementModel<SwitchCaseProps<any>>[]));
 }
 
-function selectCase<T>(state: T, children: AurumElementModel<SwitchCaseProps>[]) {
-	return children.find((c) => c.props.value === state)?.children ?? children.find((p) => p.factory === DefaultSwitchCase)?.children;
+function selectCase<T>(state: T, children: AurumElementModel<SwitchCaseProps<any>>[]) {
+	return children.find((c) => c.props.when === state)?.children ?? children.find((p) => p.factory === DefaultSwitchCase)?.children;
 }
 
 export interface SwitchCaseProps<T> {

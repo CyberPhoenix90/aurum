@@ -62,14 +62,14 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
 					textArea.value = v;
 				}, cleanUp);
 				textArea.addEventListener('input', () => {
-					(props.value as DataSource<string>).update(this.node.value);
+					(props.value as DataSource<string>).update(textArea.value);
 				});
 			} else if (props.value instanceof DuplexDataSource) {
 				props.value.listenAndRepeat((v) => {
 					textArea.value = v;
 				}, cleanUp);
 				textArea.addEventListener('input', () => {
-					(props.value as DuplexDataSource<string>).updateUpstream(this.node.value);
+					(props.value as DuplexDataSource<string>).updateUpstream(textArea.value);
 				});
 			} else {
 				textArea.value = props.value as string;

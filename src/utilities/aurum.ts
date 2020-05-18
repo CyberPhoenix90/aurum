@@ -1,10 +1,10 @@
 import { HTMLNodeProps } from '../nodes/dom_adapter';
-import { OptionProps } from '../nodes/option';
-import { Progress, ProgressProps } from '../nodes/progress';
 import { Select, SelectProps } from '../nodes/select';
 import {
 	A,
+	Audio,
 	Script,
+	Option,
 	Abbr,
 	AProps,
 	Area,
@@ -74,7 +74,10 @@ import {
 	TimeProps,
 	ScriptProps,
 	Svg,
-	SvgProps
+	SvgProps,
+	ProgressProps,
+	Progress,
+	OptionProps
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import { AurumComponentAPI, AurumElement, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
@@ -151,9 +154,15 @@ const nodeMap = {
 export class Aurum {
 	public static attach(aurumRenderable: Renderable, dom: HTMLElement) {
 		const content = render(aurumRenderable);
-		const root = new AurumElement();
-		root.updateChildren(Array.isArray(content) ? content : [content]);
-		root.attachToDom(dom, dom.childNodes.length, []);
+		if (content instanceof AurumElement) {
+			content.attachToDom(dom, dom.childNodes.length, []);
+		} else if (Array.isArray(content)) {
+			const root = new AurumElement();
+			root.updateChildren(content);
+			root.attachToDom(dom, dom.childNodes.length, []);
+		} else {
+			dom.appendChild(content);
+		}
 	}
 
 	public static detachAll(domNode: HTMLElement): void {

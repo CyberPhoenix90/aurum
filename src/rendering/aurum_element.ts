@@ -51,6 +51,9 @@ export class AurumElement {
 
 	public updateChildren(newChildren: Rendered[]): void {
 		this.children = newChildren;
+		if (this.hostNode && this.children.length > 0) {
+			this.render();
+		}
 	}
 
 	public attachToDom(node: HTMLElement, index: number, aurumSiblings: AurumElement[]): void {
@@ -65,5 +68,11 @@ export class AurumElement {
 		}
 	}
 
-	private render(): void {}
+	private render(): void {
+		for (const child of this.children) {
+			if (child instanceof HTMLElement || child instanceof Text) {
+				this.hostNode.appendChild(child);
+			}
+		}
+	}
 }
