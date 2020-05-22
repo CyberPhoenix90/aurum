@@ -86,7 +86,7 @@ const defaultEvents: MapLike<string> = {
 /**
  * @internal
  */
-const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable'];
+const defaultProps: string[] = ['id', 'name', 'draggable', 'tabindex', 'title', 'style', 'role', 'contentEditable'];
 
 export function prerender(model: any): Renderable {
 	if (model && model[aurumElementModelIdentitiy]) {
