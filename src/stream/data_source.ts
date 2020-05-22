@@ -909,7 +909,6 @@ export class ArrayDataSource<T> {
 		if (cancellationToken) {
 			cancellationToken.addCancelable(() => token.cancel());
 		}
-		view.disposeToken.addCancelable(() => token.cancel());
 
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
@@ -921,15 +920,9 @@ export class ArrayDataSource<T> {
 	public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
 		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken);
 
-		const token = new CancellationToken();
-		if (cancellationToken) {
-			cancellationToken.addCancelable(() => token.cancel());
-		}
-		view.disposeToken.addCancelable(() => token.cancel());
-
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
-		}, token);
+		}, cancellationToken);
 
 		return view;
 	}
@@ -937,14 +930,8 @@ export class ArrayDataSource<T> {
 	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		const view = new FilteredArrayView(this, callback, cancellationToken);
 
-		const token = new CancellationToken();
-		if (cancellationToken) {
-			cancellationToken.addCancelable(() => token.cancel());
-		}
-		view.disposeToken.addCancelable(() => token.cancel());
-
 		dependencies.forEach((dep) => {
-			dep.listen(() => view.refresh(), token);
+			dep.listen(() => view.refresh(), cancellationToken);
 		});
 
 		return view;
@@ -959,61 +946,13 @@ export class ArrayDataSource<T> {
 	}
 }
 
-export class TransientArrayDataSource<T> extends ArrayDataSource<T> {
-	public disposeToken: CancellationToken;
-
-	constructor(disposeToken: CancellationToken, initialValue?: T[]) {
-		super(initialValue);
-		this.disposeToken = disposeToken;
-		this.updateEvent.onEmpty = () => {
-			disposeToken.cancel();
-			Object.defineProperty(this, 'data', {
-				get() {
-					throw new Error(
-						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
-					);
-				},
-				set() {
-					throw new Error(
-						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
-					);
-				}
-			});
-		};
-	}
-
-	/**
-	 * Turns the transient data source into a regular data source
-	 * @returns self
-	 */
-	public persist(): this {
-		this.updateEvent.onEmpty = undefined;
-		return this;
-	}
-
-	public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		return super.listenAndRepeat(callback, cancellationToken);
-	}
-
-	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		return super.listen(callback, cancellationToken);
-	}
-
-	public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		return super.listenOnce(callback, cancellationToken);
-	}
-}
-
-export class MappedArrayView<D, T> extends TransientArrayDataSource<T> {
+export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 	private parent: ArrayDataSource<D>;
 	private mapper: (a: D) => T;
 
 	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken: CancellationToken = new CancellationToken()) {
 		const initial = parent.getData().map(mapper);
-		super(cancellationToken, initial);
+		super(initial);
 		this.parent = parent;
 		this.mapper = mapper;
 
@@ -1090,7 +1029,7 @@ export class MappedArrayView<D, T> extends TransientArrayDataSource<T> {
 	}
 }
 
-export class SortedArrayView<T> extends TransientArrayDataSource<T> {
+export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;
 
@@ -1099,7 +1038,7 @@ export class SortedArrayView<T> extends TransientArrayDataSource<T> {
 			.getData()
 			.slice()
 			.sort(comparator);
-		super(cancellationToken, initial);
+		super(initial);
 		this.parent = parent;
 		this.comparator = comparator;
 
@@ -1151,7 +1090,7 @@ export class SortedArrayView<T> extends TransientArrayDataSource<T> {
 	}
 }
 
-export class FilteredArrayView<T> extends TransientArrayDataSource<T> {
+export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	private viewFilter: Predicate<T>;
 	private parent: ArrayDataSource<T>;
 	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken: CancellationToken = new CancellationToken()) {
@@ -1160,7 +1099,7 @@ export class FilteredArrayView<T> extends TransientArrayDataSource<T> {
 		}
 		filter = filter ?? (() => true);
 		const initial = (parent as FilteredArrayView<T>).data.filter(filter);
-		super(cancellationToken, initial);
+		super(initial);
 
 		this.parent = parent;
 		this.viewFilter = filter;
