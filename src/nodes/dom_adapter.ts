@@ -43,7 +43,7 @@ export interface HTMLNodeProps<T> {
 /**
  * @internal
  */
-const defaultEvents: MapLike<string> = {
+export const defaultEvents: MapLike<string> = {
 	drag: 'onDrag',
 	dragstart: 'onDragStart',
 	dragend: 'onDragEnd',
@@ -71,7 +71,7 @@ const defaultEvents: MapLike<string> = {
 /**
  * @internal
  */
-const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', 'slot'];
+export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', 'slot'];
 
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 	nodeName: string,
@@ -178,11 +178,13 @@ function bindProps(node: HTMLElement, keys: string[], props: any, dynamicProps?:
 function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string) {
 	if (typeof data === 'string' || typeof data === 'boolean') {
 		node.setAttribute(key, data);
-	} else {
+	} else if (data instanceof DataSource || data instanceof DuplexDataSource) {
 		if (data.value) {
 			node.setAttribute(key, data.value);
 		}
 		data.unique().listen((v) => (node as HTMLElement).setAttribute(key, v));
+	} else {
+		throw new Error('Attributes only support types boolean, string, number and data sources');
 	}
 }
 
