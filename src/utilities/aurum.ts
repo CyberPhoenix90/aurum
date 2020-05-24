@@ -78,10 +78,15 @@ import {
 	Tr,
 	Ul,
 	Video,
-	VideoProps
+	VideoProps,
+	Slot,
+	SlotProps,
+	Code,
+	Hr
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
+	ArrayAurumElement,
 	AurumComponentAPI,
 	AurumElement,
 	AurumElementModel,
@@ -96,6 +101,8 @@ import { MapLike } from './common';
 
 const nodeMap = {
 	button: Button,
+	code: Code,
+	hr: Hr,
 	div: Div,
 	input: Input,
 	li: Li,
@@ -156,7 +163,8 @@ const nodeMap = {
 	svg: Svg,
 	data: Data,
 	time: Time,
-	template: Template
+	template: Template,
+	slot: Slot
 };
 
 export class Aurum {
@@ -166,7 +174,7 @@ export class Aurum {
 		if (content instanceof AurumElement) {
 			content.attachToDom(dom, dom.childNodes.length);
 		} else if (Array.isArray(content)) {
-			const root = new AurumElement(new ArrayDataSource(content), createAPI(session));
+			const root = new ArrayAurumElement(new ArrayDataSource(content), createAPI(session));
 			root.attachToDom(dom, dom.childNodes.length);
 		} else {
 			dom.appendChild(content);
@@ -201,7 +209,9 @@ export class Aurum {
 export namespace Aurum {
 	export namespace JSX {
 		export interface IntrinsicElements {
+			code: HTMLNodeProps<HTMLElement>;
 			button: ButtonProps;
+			hr: HTMLNodeProps<HTMLHRElement>;
 			div: HTMLNodeProps<HTMLElement>;
 			input: InputProps;
 			li: HTMLNodeProps<HTMLLIElement>;
@@ -239,6 +249,7 @@ export namespace Aurum {
 			script: ScriptProps;
 			abbr: HTMLNodeProps<HTMLElement>;
 			area: AreaProps;
+			slot: SlotProps;
 			aside: HTMLNodeProps<HTMLElement>;
 			audio: AudioProps;
 			em: HTMLNodeProps<HTMLElement>;

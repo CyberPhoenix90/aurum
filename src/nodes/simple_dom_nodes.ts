@@ -126,6 +126,12 @@ export interface OptionProps extends HTMLNodeProps<HTMLElement> {
 	value?: AttributeValue;
 }
 
+export interface SlotProps extends HTMLNodeProps<HTMLSlotElement> {}
+
+/**
+ * @internal
+ */
+export const Code = DomNodeCreator<HTMLNodeProps<HTMLElement>>('code');
 /**
  * @internal
  */
@@ -374,3 +380,8 @@ export const Progress = DomNodeCreator<ProgressProps>('svg', ['max', 'value']);
  * @internal
  */
 export const Option = DomNodeCreator<OptionProps>('option', ['value']);
+
+/**
+ * @internal
+ */
+export const Slot = DomNodeCreator<SlotProps>('slot', ['name']);

@@ -1,13 +1,19 @@
-import { DataSource, ArrayDataSource } from '../stream/data_source';
+import { DataSource, ArrayDataSource, CollectionChange } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 
 export function createRenderSession(): RenderSession {
-	return {
+	const session = {
 		attachCalls: [],
-		sessionToken: new CancellationToken(),
+		sessionToken: new CancellationToken(() => {
+			for (const token of session.tokens) {
+				token.cancel();
+			}
+		}),
 		tokens: []
 	};
+
+	return session;
 }
 
 export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
@@ -48,13 +54,14 @@ export interface AurumElementModel<T> {
 	factory(props: T, children: Renderable[], api: AurumComponentAPI): Renderable;
 }
 
-export class AurumElement {
+export abstract class AurumElement {
 	public children: Rendered[];
+	protected api: AurumComponentAPI;
+
 	private contentStartMarker: Comment;
 	private contentEndMarker: Comment;
 	private hostNode: HTMLElement;
-	private api: AurumComponentAPI;
-	private renderSession: RenderSession;
+	private lastStartIndex: number;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
 		this.children = [];
@@ -62,7 +69,6 @@ export class AurumElement {
 		this.api.onAttach(() => {
 			this.render(dataSource);
 		});
-		this.api.cancellationToken.addCancelable(() => this.renderSession?.sessionToken.cancel());
 	}
 
 	public attachToDom(node: HTMLElement, index: number): void {
@@ -83,28 +89,21 @@ export class AurumElement {
 	}
 
 	private getWorkIndex(): number {
+		if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
+			return this.lastStartIndex + 1;
+		}
+
 		for (let i = 0; i < this.hostNode.childNodes.length; i++) {
 			if (this.hostNode.childNodes[i] === this.contentStartMarker) {
+				this.lastStartIndex = i;
 				return i + 1;
 			}
 		}
 	}
 
-	private render(dataSource: DataSource<any> | ArrayDataSource<any> | DuplexDataSource<any>): void {
-		if (dataSource instanceof DataSource) {
-			dataSource.listenAndRepeat((n) => {
-				const rendered = render(n, createRenderSession());
-				if (Array.isArray(rendered)) {
-					this.children = rendered;
-				} else {
-					this.children = [rendered];
-				}
-				this.updateDom();
-			});
-		}
-	}
+	protected abstract render(dataSource: DataSource<any> | ArrayDataSource<any> | DuplexDataSource<any>): void;
 
-	private updateDom() {
+	protected updateDom() {
 		const workIndex = this.getWorkIndex();
 		let i: number;
 		for (i = 0; i < this.children.length; i++) {
@@ -163,9 +162,11 @@ export function render<T extends Renderable>(element: T, session: RenderSession)
 		);
 	}
 
-	if (element instanceof DataSource || element instanceof DuplexDataSource || element instanceof ArrayDataSource) {
-		const result = new AurumElement(element as any, createAPI(session));
-
+	if (element instanceof DataSource || element instanceof DuplexDataSource) {
+		const result = new SingularAurumElement(element as any, createAPI(session));
+		return result as any;
+	} else if (element instanceof ArrayDataSource) {
+		const result = new ArrayAurumElement(element as any, createAPI(session));
 		return result as any;
 	}
 
@@ -212,4 +213,84 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 			return render(target, session);
 		}
 	};
+}
+
+export class ArrayAurumElement extends AurumElement {
+	constructor(dataSource: ArrayDataSource<any>, api: AurumComponentAPI) {
+		super(dataSource, api);
+	}
+
+	protected render(dataSource: ArrayDataSource<any>): void {
+		dataSource.listenAndRepeat((n) => {
+			this.handleNewContent(n);
+			this.updateDom();
+		}, this.api.cancellationToken);
+	}
+
+	private handleNewContent(newValue: CollectionChange<any>): void {
+		switch (newValue.operationDetailed) {
+			case 'append':
+				const s = createRenderSession();
+				console.log('NEW SESSION');
+				const rendered = render(newValue.items, s);
+				for (const cb of s.attachCalls) {
+					cb();
+				}
+				if (Array.isArray(rendered)) {
+					this.children = rendered;
+				} else {
+					this.children = [rendered];
+				}
+		}
+		this.updateDom();
+	}
+}
+
+export class SingularAurumElement extends AurumElement {
+	private renderSession: RenderSession;
+	private lastValue: any;
+
+	constructor(dataSource: DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
+		super(dataSource, api);
+		this.api.cancellationToken.addCancelable(() => this.renderSession?.sessionToken.cancel());
+	}
+
+	protected render(dataSource: DataSource<any> | DuplexDataSource<any>): void {
+		dataSource.listenAndRepeat((n) => {
+			this.handleNewContent(n);
+			this.updateDom();
+		}, this.api.cancellationToken);
+	}
+
+	private handleNewContent(newValue: any): void {
+		if (this.lastValue === newValue) {
+			return;
+		}
+		if (this.children.length === 1 && this.children[0] instanceof Text && typeof this.lastValue === typeof newValue) {
+			this.children[0].nodeValue = newValue;
+		} else {
+			this.endSession();
+			this.renderSession = createRenderSession();
+			console.log('NEW SESSION');
+			const rendered = render(newValue, this.renderSession);
+			for (const cb of this.renderSession.attachCalls) {
+				cb();
+			}
+			if (Array.isArray(rendered)) {
+				this.children = rendered;
+			} else {
+				this.children = [rendered];
+			}
+		}
+
+		this.lastValue = newValue;
+	}
+
+	private endSession(): void {
+		if (this.renderSession) {
+			console.log('END SESSION');
+			this.renderSession.sessionToken.cancel();
+			this.renderSession = undefined;
+		}
+	}
 }
