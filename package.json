@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.4.20",
+	"version": "0.4.23",
 	"description": "Fast and concise declarative DOM rendering library for javascript",
 	"main": "prebuilt/aurumjs.js",
 	"typings": "dist/aurum.d.ts",
@@ -10,6 +10,7 @@
 		"prepublish": "npm run deploy",
 		"test": "jest",
 		"generateDocs": "typedoc --json docs/docs.json --mode modules --excludePrivate --excludeProtected",
+		"deploy-test": "npm run build && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum",
 		"deploy": "npm run build && npm run generateDocs && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum && microbundle --entry dist/aurum.js --output prebuilt_minified --name aurum"
 	},
 	"homepage": "https://aurumjs.org/",

@@ -385,6 +385,26 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
+	 * Creates a new datasource that listens to this one and forwards updates revealing the previous value on each update
+	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
+	 */
+	public diff(cancellationToken?: CancellationToken): TransientDataSource<{ new: T; old: T }> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const diffingSource = new TransientDataSource(cancellationToken, {
+			new: this.value,
+			old: undefined
+		});
+		this.listen((value) => {
+			diffingSource.update({
+				new: value,
+				old: diffingSource.value.new
+			});
+		}, cancellationToken);
+		return diffingSource;
+	}
+
+	/**
 	 * Creates a new datasource that listens to this one and forwards updates if they are not the same as the last update
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
