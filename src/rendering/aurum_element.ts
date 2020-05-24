@@ -44,7 +44,8 @@ export interface AurumElementModel<T> {
 
 export class AurumElement {
 	public children: Rendered[];
-	private contentMarker: Comment;
+	private contentStartMarker: Comment;
+	private contentEndMarker: Comment;
 	private hostNode: HTMLElement;
 	public lifetimeToken: CancellationToken;
 
@@ -77,22 +78,33 @@ export class AurumElement {
 		}
 
 		this.hostNode = node;
-		this.contentMarker = document.createComment('content marker');
-		node.appendChild(this.contentMarker);
+		this.contentStartMarker = document.createComment('START');
+		this.contentEndMarker = document.createComment('END');
+		node.appendChild(this.contentStartMarker);
+		node.appendChild(this.contentEndMarker);
 		if (this.children.length > 0) {
 			this.render();
 		}
 	}
 
+	private getWorkIndex(): number {
+		for (let i = 0; i < this.hostNode.childNodes.length; i++) {
+			if (this.hostNode.childNodes[i] === this.contentStartMarker) {
+				return i + 1;
+			}
+		}
+	}
+
 	private render(): void {
+		const workIndex = this.getWorkIndex();
 		let i;
 		for (i = 0; i < this.children.length; i++) {
 			const child = this.children[i];
-			if (this.hostNode.childNodes.length > i && this.hostNode.childNodes[i] !== this.children[i]) {
+			if (this.hostNode.childNodes[i + workIndex] !== this.contentEndMarker && this.hostNode.childNodes[i + workIndex] !== this.children[i]) {
 				if (child instanceof HTMLElement || child instanceof Text) {
-					this.hostNode.removeChild(this.hostNode.childNodes[i]);
-					if (this.hostNode.childNodes[i]) {
-						this.hostNode.insertBefore(child, this.hostNode.childNodes[i]);
+					this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex]);
+					if (this.hostNode.childNodes[i + workIndex]) {
+						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex]);
 					} else {
 						this.hostNode.appendChild(child);
 					}
@@ -101,8 +113,8 @@ export class AurumElement {
 				}
 			} else {
 				if (child instanceof HTMLElement || child instanceof Text) {
-					if (this.hostNode.childNodes[i]) {
-						this.hostNode.insertBefore(child, this.hostNode.childNodes[i]);
+					if (this.hostNode.childNodes[i + workIndex]) {
+						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex]);
 					} else {
 						this.hostNode.appendChild(child);
 					}
@@ -111,8 +123,8 @@ export class AurumElement {
 				}
 			}
 		}
-		while (i < this.hostNode.childNodes.length) {
-			this.hostNode.removeChild(this.hostNode.childNodes[i]);
+		while (this.hostNode.childNodes[i + workIndex] !== this.contentEndMarker) {
+			this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex]);
 		}
 	}
 }
