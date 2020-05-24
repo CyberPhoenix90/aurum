@@ -1,5 +1,4 @@
 export * from './rendering/aurum_element';
-export * from './rendering/renderer';
 export * from './builtin_compoents/router';
 export * from './builtin_compoents/suspense';
 export * from './builtin_compoents/switch';

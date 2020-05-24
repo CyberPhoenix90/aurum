@@ -98,24 +98,22 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 	};
 }
 
-function connectChildren(target: HTMLElement, children: Rendered | Rendered[], index = 0, siblings: AurumElement[] = []): void {
+function connectChildren(target: HTMLElement, children: Rendered | Rendered[]): void {
 	if (children === undefined || children === null) {
 		return;
 	}
 
 	if (Array.isArray(children)) {
 		for (const child of children) {
-			connectChildren(target, child, index, siblings);
+			connectChildren(target, child);
 		}
 		return;
 	}
 
 	if (children instanceof AurumElement) {
-		siblings.push(children);
-		children.attachToDom(target, index++, siblings);
+		children.attachToDom(target, target.childNodes.length);
 	} else if (children instanceof HTMLElement || children instanceof Text) {
 		target.appendChild(children);
-		index++;
 	} else {
 		throw new Error(`Unexpected child type passed to DOM Node: ${children}`);
 	}

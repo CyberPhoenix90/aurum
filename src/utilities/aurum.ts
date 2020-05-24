@@ -1,91 +1,98 @@
 import { HTMLNodeProps } from '../nodes/dom_adapter';
+import { Input, InputProps } from '../nodes/input';
 import { Select, SelectProps } from '../nodes/select';
 import {
 	A,
-	Audio,
-	Script,
-	Option,
 	Abbr,
 	AProps,
 	Area,
 	AreaProps,
 	Article,
 	Aside,
+	Audio,
+	AudioProps,
 	B,
+	Br,
+	Button,
+	ButtonProps,
+	Canvas,
+	CanvasProps,
+	Data,
+	DataProps,
+	Details,
 	Div,
+	Em,
+	Footer,
+	Form,
 	H1,
 	H2,
 	H3,
 	H4,
 	H5,
 	H6,
+	Head,
+	Header,
+	Heading,
+	I,
+	IFrame,
+	IFrameProps,
+	Img,
+	ImgProps,
+	Label,
+	LabelProps,
 	Li,
+	Link,
+	LinkProps,
+	Nav,
 	NoScript,
 	Ol,
+	Option,
+	OptionProps,
 	P,
 	Pre,
+	Progress,
+	ProgressProps,
 	Q,
+	Script,
+	ScriptProps,
+	Source,
+	SourceProps,
 	Span,
+	Style,
+	StyleProps,
+	Sub,
 	Summary,
+	Sup,
+	Svg,
+	SvgProps,
+	Table,
+	TBody,
+	Td,
 	Template,
+	TFoot,
+	Th,
 	THead,
+	Time,
+	TimeProps,
 	Title,
 	Tr,
 	Ul,
 	Video,
-	VideoProps,
-	Button,
-	Canvas,
-	Br,
-	Form,
-	Footer,
-	Em,
-	Details,
-	Data,
-	ButtonProps,
-	CanvasProps,
-	AudioProps,
-	DataProps,
-	Head,
-	Img,
-	Link,
-	Label,
-	Header,
-	I,
-	Heading,
-	IFrame,
-	ImgProps,
-	LinkProps,
-	LabelProps,
-	IFrameProps,
-	Table,
-	Td,
-	Th,
-	Nav,
-	Sub,
-	Sup,
-	TBody,
-	TFoot,
-	Style,
-	Source,
-	Time,
-	StyleProps,
-	SourceProps,
-	TimeProps,
-	ScriptProps,
-	Svg,
-	SvgProps,
-	ProgressProps,
-	Progress,
-	OptionProps
+	VideoProps
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
-import { AurumComponentAPI, AurumElement, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
-import { render, RenderSession, createAPI } from '../rendering/renderer';
-import { MapLike } from './common';
-import { Input, InputProps } from '../nodes/input';
-import { CancellationToken } from './cancellation_token';
+import {
+	AurumComponentAPI,
+	AurumElement,
+	AurumElementModel,
+	aurumElementModelIdentitiy,
+	createAPI,
+	createRenderSession,
+	render,
+	Renderable
+} from '../rendering/aurum_element';
 import { ArrayDataSource } from '../stream/data_source';
+import { MapLike } from './common';
 
 const nodeMap = {
 	button: Button,
@@ -152,24 +159,15 @@ const nodeMap = {
 	template: Template
 };
 
-export function createRenderSession(): RenderSession {
-	return {
-		attachCalls: [],
-		sessionToken: new CancellationToken(),
-		tokens: []
-	};
-}
-
 export class Aurum {
 	public static attach(aurumRenderable: Renderable, dom: HTMLElement) {
 		const session = createRenderSession();
 		const content = render(aurumRenderable, session);
 		if (content instanceof AurumElement) {
-			content.attachToDom(dom, dom.childNodes.length, []);
+			content.attachToDom(dom, dom.childNodes.length);
 		} else if (Array.isArray(content)) {
 			const root = new AurumElement(new ArrayDataSource(content), createAPI(session));
-			root.updateChildren(content);
-			root.attachToDom(dom, dom.childNodes.length, []);
+			root.attachToDom(dom, dom.childNodes.length);
 		} else {
 			dom.appendChild(content);
 		}
