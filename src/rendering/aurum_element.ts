@@ -45,6 +45,7 @@ export interface AurumComponentAPI {
 	cancellationToken: CancellationToken;
 	prerender(children: Renderable[], disposalToken?: CancellationToken): any[];
 	prerender(child: Renderable, disposalToken?: CancellationToken): any;
+	style(fragments: TemplateStringsArray, ...input: any[]);
 }
 
 export interface AurumElementModel<T> {
@@ -188,7 +189,7 @@ export function render<T extends Renderable>(element: T, session: RenderSession)
  */
 export function createAPI(session: RenderSession): AurumComponentAPI {
 	let token: CancellationToken = undefined;
-	return {
+	const api = {
 		onAttach: (cb) => {
 			session.attachCalls.push(cb);
 		},
@@ -211,8 +212,40 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 		},
 		prerender(target: Renderable | Renderable[]) {
 			return render(target, session);
+		},
+		get style() {
+			return function aurumStyle(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {
+				const result = new DataSource<string>();
+				for (const ins of input) {
+					if (ins instanceof DataSource || ins instanceof DuplexDataSource) {
+						ins.listen(() => result.update(recompute(fragments, input)), api.cancellationToken);
+					}
+				}
+
+				result.update(recompute(fragments, input));
+
+				return result;
+			};
 		}
 	};
+
+	return api;
+}
+
+function recompute(fragments: TemplateStringsArray, input: any[]) {
+	let result = '';
+	for (let i = 0; i < fragments.length; i++) {
+		result += fragments[i];
+		if (input[i]) {
+			if (typeof input[i] === 'string') {
+				result += input[i];
+			} else {
+				result += input[i].value;
+			}
+		}
+	}
+
+	return result;
 }
 
 export class ArrayAurumElement extends AurumElement {
