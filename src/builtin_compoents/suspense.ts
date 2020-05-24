@@ -1,5 +1,4 @@
 import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
-import { prerender } from '../rendering/renderer';
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 export interface SuspenseProps {
@@ -13,7 +12,7 @@ export function Suspense(props: SuspenseProps, children: Renderable[], api: Auru
 		cleanUp.cancel();
 	});
 
-	Promise.all(prerender(children, cleanUp)).then(
+	Promise.all(api.prerender(children, cleanUp)).then(
 		(res) => {
 			if (!cleanUp.isCanceled) {
 				data.update(res);

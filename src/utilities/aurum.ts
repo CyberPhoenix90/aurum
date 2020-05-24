@@ -81,10 +81,11 @@ import {
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import { AurumComponentAPI, AurumElement, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
-import { render } from '../rendering/renderer';
+import { render, RenderSession, createAPI } from '../rendering/renderer';
 import { MapLike } from './common';
-import { ownerSymbol } from './owner_symbol';
 import { Input, InputProps } from '../nodes/input';
+import { CancellationToken } from './cancellation_token';
+import { ArrayDataSource } from '../stream/data_source';
 
 const nodeMap = {
 	button: Button,
@@ -151,25 +152,29 @@ const nodeMap = {
 	template: Template
 };
 
+export function createRenderSession(): RenderSession {
+	return {
+		attachCalls: [],
+		sessionToken: new CancellationToken(),
+		tokens: []
+	};
+}
+
 export class Aurum {
 	public static attach(aurumRenderable: Renderable, dom: HTMLElement) {
-		const content = render(aurumRenderable);
+		const session = createRenderSession();
+		const content = render(aurumRenderable, session);
 		if (content instanceof AurumElement) {
 			content.attachToDom(dom, dom.childNodes.length, []);
 		} else if (Array.isArray(content)) {
-			const root = new AurumElement();
+			const root = new AurumElement(new ArrayDataSource(content), createAPI(session));
 			root.updateChildren(content);
 			root.attachToDom(dom, dom.childNodes.length, []);
 		} else {
 			dom.appendChild(content);
 		}
-	}
-
-	public static detachAll(domNode: HTMLElement): void {
-		if (domNode[ownerSymbol]) {
-			domNode[ownerSymbol].node.remove();
-			domNode[ownerSymbol].handleDetach();
-			domNode[ownerSymbol] = undefined;
+		for (let i = session.attachCalls.length - 1; i >= 0; i--) {
+			session.attachCalls[i]();
 		}
 	}
 

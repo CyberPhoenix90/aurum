@@ -1,8 +1,7 @@
 import { StringSource, ClassType, DataDrain, Callback, MapLike } from '../utilities/common';
 import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
-import { render, Rendered, AurumElement } from '../aurum';
-import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
+import { Renderable, AurumComponentAPI, AurumElement, Rendered } from '../rendering/aurum_element';
 import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface HTMLNodeProps<T> {
@@ -80,31 +79,33 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 	extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void
 ) {
 	return function(props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
-		const cleanUp = new CancellationToken();
 		const node = document.createElement(nodeName);
 		if (props) {
-			processHTMLNode(node, props, cleanUp, extraAttributes, extraEvents);
+			processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
 		}
-		const renderedChildren = render(children);
-		handleAttach(node, renderedChildren);
-		if (cleanUp.hasCancellables()) {
-			api.onDetach(() => cleanUp.cancel());
+		const renderedChildren = api.prerender(children);
+		connectChildren(node, renderedChildren);
+		if (props.onAttach) {
+			api.onAttach(() => props.onAttach(node));
+		}
+		if (props.onDetach) {
+			api.onDetach(() => props.onDetach(node));
 		}
 
-		extraLogic?.(node, props, cleanUp);
+		extraLogic?.(node, props, api.cancellationToken);
 
 		return node;
 	};
 }
 
-function handleAttach(target: HTMLElement, children: Rendered | Rendered[], index = 0, siblings: AurumElement[] = []): void {
+function connectChildren(target: HTMLElement, children: Rendered | Rendered[], index = 0, siblings: AurumElement[] = []): void {
 	if (children === undefined || children === null) {
 		return;
 	}
 
 	if (Array.isArray(children)) {
 		for (const child of children) {
-			handleAttach(target, child, index, siblings);
+			connectChildren(target, child, index, siblings);
 		}
 		return;
 	}
