@@ -218,9 +218,13 @@ export class DataSource<T> implements GenericDataSource<T> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 
 		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		this.listen(async (value) => {
-			mappedSource.update(await (value as any));
-		}, cancellationToken);
+		(this.primed ? this.listenAndRepeat : this.listen).call(
+			this,
+			async (value) => {
+				mappedSource.update(await (value as any));
+			},
+			cancellationToken
+		);
 		return mappedSource;
 	}
 
@@ -234,29 +238,32 @@ export class DataSource<T> implements GenericDataSource<T> {
 
 		const queue: Promise<any>[] = [];
 		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		this.listen(async (value) => {
-			let flushing = false;
-			async function flush() {
-				if (!flushing) {
-					flushing = true;
+		(this.primed ? this.listenAndRepeat : this.listen).call(
+			this,
+			async (value) => {
+				let flushing = false;
+				async function flush() {
+					if (!flushing) {
+						flushing = true;
+					}
+
+					while (queue.length) {
+						const item = queue[0];
+						mappedSource.update(await item);
+						queue.shift();
+					}
+					flushing = false;
 				}
 
-				while (queue.length) {
-					const item = queue[0];
-					mappedSource.update(await item);
-					queue.shift();
+				if (value instanceof Promise) {
+					queue.push(value);
+					flush();
+				} else {
+					mappedSource.update(await (value as any));
 				}
-
-				flushing = false;
-			}
-
-			if (value instanceof Promise) {
-				queue.push(value);
-				flush();
-			} else {
-				mappedSource.update(await (value as any));
-			}
-		}, cancellationToken);
+			},
+			cancellationToken
+		);
 		return mappedSource;
 	}
 
@@ -270,14 +277,18 @@ export class DataSource<T> implements GenericDataSource<T> {
 
 		let freshnessToken: number;
 		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		this.listen(async (value) => {
-			freshnessToken = Date.now();
-			const timestamp = freshnessToken;
-			const resolved = await (value as any);
-			if (freshnessToken === timestamp) {
-				mappedSource.update(resolved);
-			}
-		}, cancellationToken);
+		(this.primed ? this.listenAndRepeat : this.listen).call(
+			this,
+			async (value) => {
+				freshnessToken = Date.now();
+				const timestamp = freshnessToken;
+				const resolved = await (value as any);
+				if (freshnessToken === timestamp) {
+					mappedSource.update(resolved);
+				}
+			},
+			cancellationToken
+		);
 		return mappedSource;
 	}
 
@@ -399,19 +410,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 		fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 
 		return aggregatedSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to this source and creates a string that contains all the updates with a seperator
-	 * @param seperator string to be placed between all the values
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public stringJoin(seperator: string, cancellationToken?: CancellationToken): TransientDataSource<string> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const joinSource = new TransientDataSource<string>(cancellationToken, '');
-		this.listen((v) => joinSource.update(joinSource.value + seperator + v.toString()), cancellationToken);
-
-		return joinSource;
 	}
 
 	/**
