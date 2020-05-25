@@ -249,8 +249,11 @@ function recompute(fragments: TemplateStringsArray, input: any[]) {
 }
 
 export class ArrayAurumElement extends AurumElement {
+	private renderSessions: WeakMap<any, RenderSession>;
+
 	constructor(dataSource: ArrayDataSource<any>, api: AurumComponentAPI) {
 		super(dataSource, api);
+		this.renderSessions = new WeakMap();
 	}
 
 	protected render(dataSource: ArrayDataSource<any>): void {
@@ -260,22 +263,127 @@ export class ArrayAurumElement extends AurumElement {
 		}, this.api.cancellationToken);
 	}
 
-	private handleNewContent(newValue: CollectionChange<any>): void {
-		switch (newValue.operationDetailed) {
+	private spliceChildren(index: number, amount: number, newItems?: Rendered): void {
+		let removed;
+		if (newItems) {
+			removed = this.children.splice(index, amount, newItems);
+		} else {
+			removed = this.children.splice(index, amount);
+		}
+		for (const item of removed) {
+			this.renderSessions.get(item).sessionToken.cancel();
+		}
+	}
+
+	private handleNewContent(change: CollectionChange<any>): void {
+		switch (change.operationDetailed) {
+			case 'merge':
+				const source = change.previousState.slice();
+				for (let i = 0; i < change.newState.length; i++) {
+					if (this.children.length <= i) {
+						this.children.push(this.renderItem(change.newState[i]));
+					}
+					if (source[i] !== change.newState[i]) {
+						const index = source.indexOf(change.newState[i]);
+						if (index !== -1) {
+							const a = this.children[i];
+							const b = this.children[index];
+							this.children[i] = b;
+							this.children[index] = a;
+							const c = source[i];
+							const d = source[index];
+							source[i] = d;
+							source[index] = c;
+						} else {
+							this.spliceChildren(i, 0, this.renderItem(change.newState[i]));
+							source.splice(i, 0, change.newState[i]);
+						}
+					}
+				}
+				if (this.children.length > change.newState.length) {
+					this.children.length = change.newState.length;
+				}
+				break;
+			case 'remove':
+			case 'removeLeft':
+			case 'removeRight':
+				this.spliceChildren(change.index, change.count);
+				break;
 			case 'append':
-				const s = createRenderSession();
-				console.log('NEW SESSION');
-				const rendered = render(newValue.items, s);
-				for (const cb of s.attachCalls) {
-					cb();
+				for (const item of change.items) {
+					const rendered = this.renderItem(item);
+					if (Array.isArray(rendered)) {
+						this.children = this.children.concat(rendered);
+					} else {
+						this.children.push(rendered);
+					}
 				}
+				break;
+			case 'replace':
+				const rendered = this.renderItem(change.items[0]);
 				if (Array.isArray(rendered)) {
-					this.children = rendered;
+					throw new Error('illegal state');
 				} else {
-					this.children = [rendered];
+					this.children[change.index] = rendered;
 				}
+				break;
+			case 'swap':
+				const itemA = this.children[change.index];
+				const itemB = this.children[change.index2];
+				this.children[change.index2] = itemA;
+				this.children[change.index] = itemB;
+				break;
+			case 'prepend':
+				for (const item of change.items) {
+					const rendered = this.renderItem(item);
+					if (Array.isArray(rendered)) {
+						throw new Error('illegal state');
+					} else {
+						this.children.unshift(rendered);
+					}
+				}
+				break;
+			case 'insert':
+				let index = change.index;
+				for (const item of change.items) {
+					const rendered = this.renderItem(item);
+					if (Array.isArray(rendered)) {
+						throw new Error('illegal state');
+					} else {
+						this.children.splice(index, 0, rendered);
+						index += 1;
+					}
+				}
+				break;
+			case 'remove':
+				for (const item of change.items) {
+					const rendered = this.renderItem(item);
+					if (Array.isArray(rendered)) {
+						throw new Error('illegal state');
+					} else {
+						this.children.unshift(rendered);
+					}
+				}
+				break;
+			case 'clear':
+				this.children.length = 0;
+				this.renderSessions = new WeakMap();
+				break;
+			default:
+				throw new Error('not implemented');
 		}
 		this.updateDom();
+	}
+
+	private renderItem(item: any) {
+		const s = createRenderSession();
+		console.log('NEW SESSION');
+		const rendered = render(item, s);
+		for (const cb of s.attachCalls) {
+			cb();
+		}
+		this.renderSessions.set(rendered, s);
+		return rendered;
 	}
 }
 

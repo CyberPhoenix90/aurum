@@ -668,7 +668,7 @@ export class TransientDataSource<T> extends DataSource<T> {
 
 export interface CollectionChange<T> {
 	operation: 'replace' | 'swap' | 'add' | 'remove' | 'merge';
-	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge';
+	operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge' | 'insert';
 	count?: number;
 	index: number;
 	index2?: number;
@@ -797,6 +797,24 @@ export class ArrayDataSource<T> {
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
 		}
+	}
+
+	public insertAt(index: number, ...items: T[]) {
+		if (items.length === 0) {
+			return;
+		}
+
+		this.data.splice(index, 0, ...items);
+
+		this.update({
+			operation: 'add',
+			operationDetailed: 'insert',
+			count: items.length,
+			index,
+			items,
+			newState: this.data
+		});
+		this.lengthSource.update(this.data.length);
 	}
 
 	public push(...items: T[]) {
@@ -981,6 +999,9 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 				case 'append':
 					this.appendArray(change.items.map(this.mapper));
 					break;
+				case 'insert':
+					this.insertAt(change.index, ...change.items.map(this.mapper));
+					break;
 				case 'swap':
 					this.swap(change.index, change.index2);
 					break;
@@ -1066,6 +1087,10 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 					this.data.sort(this.comparator);
 					break;
 				case 'append':
+					this.insertAt(change.index, ...change.items);
+					this.data.sort(this.comparator);
+					break;
+				case 'insert':
 					this.appendSorted(change.items);
 					break;
 				case 'merge':
@@ -1128,6 +1153,10 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 				case 'append':
 					filteredItems = change.items.filter(this.viewFilter);
 					this.appendArray(filteredItems);
+					break;
+				case 'insert':
+					filteredItems = change.items.filter(this.viewFilter);
+					this.insertAt(change.index, ...filteredItems);
 					break;
 				case 'merge':
 					this.merge(change.items.filter(this.viewFilter));
