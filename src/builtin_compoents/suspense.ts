@@ -2,7 +2,7 @@ import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 export interface SuspenseProps {
-	fallback?: Renderable[];
+	fallback?: Renderable;
 }
 
 export function Suspense(props: SuspenseProps, children: Renderable[], api: AurumComponentAPI) {

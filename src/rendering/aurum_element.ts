@@ -61,13 +61,17 @@ export abstract class AurumElement {
 
 	private contentStartMarker: Comment;
 	private contentEndMarker: Comment;
-	private hostNode: HTMLElement;
+	protected hostNode: HTMLElement;
 	private lastStartIndex: number;
+	private lastEndIndex: number;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
 		this.children = [];
 		this.api = api;
 		this.api.onAttach(() => {
+			if (this.hostNode === undefined) {
+				throw new Error('illegal state: Attach fired but not actually attached');
+			}
 			this.render(dataSource);
 		});
 	}
@@ -89,7 +93,7 @@ export abstract class AurumElement {
 		}
 	}
 
-	private getWorkIndex(): number {
+	protected getWorkIndex(): number {
 		if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
 			return this.lastStartIndex + 1;
 		}
@@ -102,18 +106,54 @@ export abstract class AurumElement {
 		}
 	}
 
+	protected getLastIndex(): number {
+		if (this.lastEndIndex !== undefined && this.hostNode.childNodes[this.lastEndIndex] === this.contentEndMarker) {
+			return this.lastEndIndex;
+		}
+
+		for (let i = 0; i < this.hostNode.childNodes.length; i++) {
+			if (this.hostNode.childNodes[i] === this.contentEndMarker) {
+				this.lastEndIndex = i;
+				return i;
+			}
+		}
+	}
+
 	protected abstract render(dataSource: DataSource<any> | ArrayDataSource<any> | DuplexDataSource<any>): void;
 
-	protected updateDom() {
+	protected clearContent(): void {
+		if (this.hostNode === undefined) {
+			throw new Error('illegal state: Aurum element was not attched to anything');
+		}
+		const workIndex = this.getWorkIndex();
+		while (this.hostNode.childNodes[workIndex] !== this.contentEndMarker) {
+			this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
+		}
+	}
+
+	protected updateDom(): void {
+		if (this.hostNode === undefined) {
+			throw new Error('illegal state: Aurum element was not attched to anything');
+		}
+
 		const workIndex = this.getWorkIndex();
 		let i: number;
+		let offset: number = 0;
 		for (i = 0; i < this.children.length; i++) {
 			const child = this.children[i];
-			if (this.hostNode.childNodes[i + workIndex] !== this.contentEndMarker && this.hostNode.childNodes[i + workIndex] !== this.children[i]) {
+			if (child instanceof AurumElement) {
+				offset += child.getLastIndex() - i - offset - workIndex;
+				continue;
+			}
+
+			if (
+				this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker &&
+				this.hostNode.childNodes[i + workIndex + offset] !== this.children[i]
+			) {
 				if (child instanceof HTMLElement || child instanceof Text) {
-					this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex]);
-					if (this.hostNode.childNodes[i + workIndex]) {
-						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex]);
+					this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
+					if (this.hostNode.childNodes[i + workIndex + offset]) {
+						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
 					} else {
 						this.hostNode.appendChild(child);
 					}
@@ -122,8 +162,8 @@ export abstract class AurumElement {
 				}
 			} else {
 				if (child instanceof HTMLElement || child instanceof Text) {
-					if (this.hostNode.childNodes[i + workIndex]) {
-						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex]);
+					if (this.hostNode.childNodes[i + workIndex + offset]) {
+						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
 					} else {
 						this.hostNode.appendChild(child);
 					}
@@ -132,8 +172,8 @@ export abstract class AurumElement {
 				}
 			}
 		}
-		while (this.hostNode.childNodes[i + workIndex] !== this.contentEndMarker) {
-			this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex]);
+		while (this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker) {
+			this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
 		}
 	}
 }
@@ -163,7 +203,14 @@ export function render<T extends Renderable>(element: T, session: RenderSession)
 		);
 	}
 
-	if (element instanceof DataSource || element instanceof DuplexDataSource) {
+	if (element instanceof Promise) {
+		const ds = new DataSource();
+		element.then((val) => {
+			ds.update(val);
+		});
+		const result = new SingularAurumElement(ds, createAPI(session));
+		return result as any;
+	} else if (element instanceof DataSource || element instanceof DuplexDataSource) {
 		const result = new SingularAurumElement(element as any, createAPI(session));
 		return result as any;
 	} else if (element instanceof ArrayDataSource) {
@@ -410,17 +457,26 @@ export class SingularAurumElement extends AurumElement {
 		if (this.children.length === 1 && this.children[0] instanceof Text && typeof this.lastValue === typeof newValue) {
 			this.children[0].nodeValue = newValue;
 		} else {
+			this.clearContent();
 			this.endSession();
 			this.renderSession = createRenderSession();
 			console.log('NEW SESSION');
-			const rendered = render(newValue, this.renderSession);
+			let rendered = render(newValue, this.renderSession);
+
+			if (!Array.isArray(rendered)) {
+				rendered = [rendered];
+			}
+			for (const item of rendered) {
+				if (item instanceof AurumElement) {
+					item.attachToDom(this.hostNode, this.getLastIndex());
+				}
+			}
+
 			for (const cb of this.renderSession.attachCalls) {
 				cb();
 			}
 			if (Array.isArray(rendered)) {
 				this.children = rendered;
-			} else {
-				this.children = [rendered];
 			}
 		}
 

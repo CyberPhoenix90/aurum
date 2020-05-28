@@ -30,7 +30,7 @@ export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[
 }
 
 function selectCase<T>(state: T, children: AurumElementModel<SwitchCaseProps<any>>[]) {
-	return children.find((c) => c.props.when === state)?.children ?? children.find((p) => p.factory === DefaultSwitchCase)?.children;
+	return children.find((c) => c.props?.when === state)?.children ?? children.find((p) => p.factory === DefaultSwitchCase)?.children;
 }
 
 export interface SwitchCaseProps<T> {

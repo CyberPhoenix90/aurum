@@ -47,15 +47,15 @@ function selectRoute(url: string, routes: AurumElementModel<RouteProps>[]): Rend
 	if (url === undefined || url === null) {
 		return routes.find((r) => r.factory === DefaultRoute)?.children;
 	} else {
-		if (routes.find((r) => r.props.href === url)) {
-			return routes.find((r) => r.props.href === url).children;
+		if (routes.find((r) => r.props?.href === url)) {
+			return routes.find((r) => r.props?.href === url).children;
 		} else {
 			const segments = url.split('/');
 			segments.pop();
 			while (segments.length) {
 				const path = segments.join('/');
-				if (routes.find((r) => r.props.href === path)) {
-					return routes.find((r) => r.props.href === path).children;
+				if (routes.find((r) => r.props?.href === path)) {
+					return routes.find((r) => r.props?.href === path).children;
 				}
 				segments.pop();
 			}
