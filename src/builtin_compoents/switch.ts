@@ -1,9 +1,9 @@
 import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
-import { ReadOnlyDataSource } from '../stream/data_source';
+import { GenericDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface SwitchProps<T = boolean> {
-	state: ReadOnlyDataSource<T>;
+	state: GenericDataSource<T>;
 }
 
 export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[], api: AurumComponentAPI) {

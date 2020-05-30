@@ -1,5 +1,5 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
+import { Callback, ThenArg } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
 import { DataSource, ReadOnlyDataSource, TransientDataSource, GenericDataSource } from './data_source';
 
@@ -402,6 +402,29 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 			});
 		}, cancellationToken);
 		return diffingSource;
+	}
+
+	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const mappedSource = new DuplexDataSource<R>(undefined, false);
+		(this.primed ? this.listenAndRepeat : this.listen).call(
+			this,
+			async (value) => {
+				mappedSource.updateDownstream(await (value as any));
+			},
+			cancellationToken
+		);
+		this.listenUpstream(async (value) => {
+			mappedSource.updateUpstream(await (value as any));
+		}, cancellationToken);
+		return mappedSource;
+	}
+	public awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
+		throw new Error('not implemented');
+	}
+	public awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
+		throw new Error('not implemented');
 	}
 
 	/**

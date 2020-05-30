@@ -7,33 +7,24 @@ export interface ReadOnlyDataSource<T> {
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
-	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
-	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): GenericDataSource<T>;
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
+	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
-	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
-	aggregateThree<D, E, F>(
-		second: ReadOnlyDataSource<D>,
-		third: ReadOnlyDataSource<E>,
-		combinator: (self: T, second: D, third: E) => F,
-		cancellationToken?: CancellationToken
-	): GenericDataSource<F>;
-	aggregateFour<D, E, F, G>(
-		second: ReadOnlyDataSource<D>,
-		third: ReadOnlyDataSource<E>,
-		fourth: ReadOnlyDataSource<F>,
-		combinator: (self: T, second: D, third: E, fourth: F) => G,
-		cancellationToken?: CancellationToken
-	): GenericDataSource<G>;
+	await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
+	awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
+	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
 }
 
 export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
 	withInitial(value: T): this;
-	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
 	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
-	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): GenericDataSource<T>;
+	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
+	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
+	await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
+	awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
+	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
 }
 
 export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
@@ -57,6 +48,16 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.value = initialValue;
 		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
+	}
+
+	static fromMultipleSources<T>(sources: DataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
+		const result = new DataSource<T>();
+
+		for (const s of sources) {
+			s.pipe(result, cancellation);
+		}
+
+		return result;
 	}
 
 	/**
@@ -214,6 +215,19 @@ export class DataSource<T> implements GenericDataSource<T> {
 			callback(value);
 		}, cancellationToken);
 		return this;
+	}
+
+	/**
+	 * Connects this datasource to N other sources and forwards events to them in round robin fashion
+	 */
+	public loadBalance(targets: DataSource<T>[], cancellation?: CancellationToken): void {
+		let i = 0;
+		this.listen((v) => {
+			targets[i++].update(v);
+			if (i >= targets.length) {
+				i = 0;
+			}
+		}, cancellation);
 	}
 
 	/**
