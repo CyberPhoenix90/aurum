@@ -1,6 +1,5 @@
 import { DataSource } from '../stream/data_source';
 import { Renderable, AurumComponentAPI, aurumElementModelIdentitiy, AurumElementModel } from '../rendering/aurum_element';
-import { CancellationToken } from '../utilities/cancellation_token';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
 	if (
@@ -15,19 +14,14 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
 		throw new Error('Too many default routes only 0 or 1 allowed');
 	}
 
-	const cleanUp = new CancellationToken();
-	api.onDetach(() => {
-		cleanUp.cancel();
-	});
-
 	const urlDataSource = new DataSource(getUrlPath());
 
-	cleanUp.registerDomEvent(window, 'hashchange', () => {
+	api.cancellationToken.registerDomEvent(window, 'hashchange', () => {
 		urlDataSource.update(getUrlPath());
 	});
 
 	return urlDataSource
-		.unique(cleanUp)
+		.unique(api.cancellationToken)
 		.withInitial(urlDataSource.value)
 		.map((p) => selectRoute(p, children as any));
 }

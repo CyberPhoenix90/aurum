@@ -190,26 +190,38 @@ export interface RenderSession {
 /**
  * @internal
  */
-export function render<T extends Renderable>(element: T, session: RenderSession): T extends Array<any> ? any[] : any {
+export function render<T extends Renderable>(element: T, session: RenderSession, prerendering: boolean = false): T extends Array<any> ? any[] : any {
 	if (element == undefined) {
 		return undefined;
+	}
+
+	if (pendingSessions.has(element)) {
+		const subSession = pendingSessions.get(element);
+		session.attachCalls.push(...subSession.attachCalls);
+		session.tokens.push(...subSession.tokens);
+		session.sessionToken.chain(subSession.sessionToken);
+		pendingSessions.delete(element);
 	}
 
 	if (Array.isArray(element)) {
 		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
 		return Array.prototype.concat.apply(
 			[],
-			element.map((e) => render(e, session))
+			element.map((e) => render(e, session, prerendering))
 		);
 	}
 
 	if (element instanceof Promise) {
-		const ds = new DataSource();
-		element.then((val) => {
-			ds.update(val);
-		});
-		const result = new SingularAurumElement(ds, createAPI(session));
-		return result as any;
+		if (prerendering) {
+			return element as any;
+		} else {
+			const ds = new DataSource();
+			element.then((val) => {
+				ds.update(val);
+			});
+			const result = new SingularAurumElement(ds, createAPI(session));
+			return result as any;
+		}
 	} else if (element instanceof DataSource || element instanceof DuplexDataSource) {
 		const result = new SingularAurumElement(element as any, createAPI(session));
 		return result as any;
@@ -225,11 +237,13 @@ export function render<T extends Renderable>(element: T, session: RenderSession)
 
 	if (element[aurumElementModelIdentitiy]) {
 		const model: AurumElementModel<any> = (element as any) as AurumElementModel<any>;
-		return render(model.factory(model.props || {}, model.children, createAPI(session)), session);
+		return render(model.factory(model.props || {}, model.children, createAPI(session)), session, prerendering);
 	}
 	// Unsupported types are returned as is in hope that a transclusion component will transform it into something compatible
 	return element as any;
 }
+
+export const pendingSessions: WeakMap<any, RenderSession> = new WeakMap();
 
 /**
  * @internal
@@ -237,6 +251,7 @@ export function render<T extends Renderable>(element: T, session: RenderSession)
 export function createAPI(session: RenderSession): AurumComponentAPI {
 	let token: CancellationToken = undefined;
 	const api = {
+		renderSession: session,
 		onAttach: (cb) => {
 			session.attachCalls.push(cb);
 		},
@@ -258,7 +273,10 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 			return token;
 		},
 		prerender(target: Renderable | Renderable[]) {
-			return render(target, session);
+			const subSession = createRenderSession();
+			const result = render(target, subSession, true);
+			pendingSessions.set(result, subSession);
+			return result;
 		},
 		get style() {
 			return function aurumStyle(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {

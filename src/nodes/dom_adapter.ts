@@ -1,7 +1,7 @@
 import { StringSource, ClassType, DataDrain, Callback, MapLike } from '../utilities/common';
 import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
-import { Renderable, AurumComponentAPI, AurumElement, Rendered } from '../rendering/aurum_element';
+import { Renderable, AurumComponentAPI, AurumElement, Rendered, render } from '../rendering/aurum_element';
 import { CancellationToken } from '../utilities/cancellation_token';
 
 export interface HTMLNodeProps<T> {
@@ -84,7 +84,8 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 		if (props) {
 			processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
 		}
-		const renderedChildren = api.prerender(children);
+		//@ts-ignore
+		const renderedChildren = render(children, api.renderSession);
 		connectChildren(node, renderedChildren);
 		if (props.onAttach) {
 			api.onAttach(() => props.onAttach(node));
