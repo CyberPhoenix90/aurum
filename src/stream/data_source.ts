@@ -25,11 +25,20 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
 	await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
 	awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
 	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
-}
-
-export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
-	withInitial(value: T): this;
+	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
+	aggregateThree<D, E, F>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		combinator: (self: T, second: D, third: E) => F,
+		cancellationToken?: CancellationToken
+	): GenericDataSource<F>;
+	aggregateFour<D, E, F, G>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
+		combinator: (self: T, second: D, third: E, fourth: F) => G,
+		cancellationToken?: CancellationToken
+	): GenericDataSource<G>;
 }
 
 /**
@@ -1101,8 +1110,7 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 					this.data.sort(this.comparator);
 					break;
 				case 'append':
-					this.insertAt(change.index, ...change.items);
-					this.data.sort(this.comparator);
+					this.appendSorted(change.items);
 					break;
 				case 'insert':
 					this.appendSorted(change.items);

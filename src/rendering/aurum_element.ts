@@ -28,7 +28,6 @@ export type Renderable =
 	| Text
 	| string
 	| number
-	| BigInt
 	| AurumElementModel<any>
 	| Promise<Renderable>
 	| DataSource<Renderable>
@@ -211,28 +210,26 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 		);
 	}
 
-	if (element instanceof Promise) {
-		if (prerendering) {
-			return element as any;
-		} else {
+	if (!prerendering) {
+		if (element instanceof Promise) {
 			const ds = new DataSource();
 			element.then((val) => {
 				ds.update(val);
 			});
 			const result = new SingularAurumElement(ds, createAPI(session));
 			return result as any;
+		} else if (element instanceof DataSource || element instanceof DuplexDataSource) {
+			const result = new SingularAurumElement(element as any, createAPI(session));
+			return result as any;
+		} else if (element instanceof ArrayDataSource) {
+			const result = new ArrayAurumElement(element as any, createAPI(session));
+			return result as any;
 		}
-	} else if (element instanceof DataSource || element instanceof DuplexDataSource) {
-		const result = new SingularAurumElement(element as any, createAPI(session));
-		return result as any;
-	} else if (element instanceof ArrayDataSource) {
-		const result = new ArrayAurumElement(element as any, createAPI(session));
-		return result as any;
-	}
 
-	const type = typeof element;
-	if (type === 'string' || type === 'number' || type === 'bigint') {
-		return document.createTextNode(element.toString()) as any;
+		const type = typeof element;
+		if (type === 'string' || type === 'number' || type === 'bigint') {
+			return document.createTextNode(element.toString()) as any;
+		}
 	}
 
 	if (element[aurumElementModelIdentitiy]) {
@@ -472,33 +469,47 @@ export class SingularAurumElement extends AurumElement {
 		if (this.lastValue === newValue) {
 			return;
 		}
-		if (this.children.length === 1 && this.children[0] instanceof Text && typeof this.lastValue === typeof newValue) {
-			this.children[0].nodeValue = newValue;
-		} else {
-			this.clearContent();
-			this.endSession();
-			this.renderSession = createRenderSession();
-			console.log('NEW SESSION');
-			let rendered = render(newValue, this.renderSession);
-
-			if (!Array.isArray(rendered)) {
-				rendered = [rendered];
+		let optimized = false;
+		if (this.children.length === 1 && this.children[0] instanceof Text) {
+			const type = typeof newValue;
+			if (type === 'string' || type === 'bigint' || type === 'number') {
+				this.children[0].nodeValue = newValue;
+				optimized = true;
 			}
-			for (const item of rendered) {
-				if (item instanceof AurumElement) {
-					item.attachToDom(this.hostNode, this.getLastIndex());
-				}
-			}
-
-			for (const cb of this.renderSession.attachCalls) {
-				cb();
-			}
-			if (Array.isArray(rendered)) {
-				this.children = rendered;
-			}
+		}
+		if (!optimized) {
+			this.fullRebuild(newValue);
 		}
 
 		this.lastValue = newValue;
+	}
+
+	private fullRebuild(newValue: any): void {
+		this.clearContent();
+		this.endSession();
+		this.renderSession = createRenderSession();
+		console.log('NEW SESSION');
+		let rendered = render(newValue, this.renderSession);
+		if (rendered === undefined) {
+			this.children = [];
+			return;
+		}
+
+		if (!Array.isArray(rendered)) {
+			rendered = [rendered];
+		}
+		for (const item of rendered) {
+			if (item instanceof AurumElement) {
+				item.attachToDom(this.hostNode, this.getLastIndex());
+			}
+		}
+
+		for (const cb of this.renderSession.attachCalls) {
+			cb();
+		}
+		if (Array.isArray(rendered)) {
+			this.children = rendered;
+		}
 	}
 
 	private endSession(): void {

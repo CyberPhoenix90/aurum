@@ -212,7 +212,7 @@ export namespace Aurum {
 			code: HTMLNodeProps<HTMLElement>;
 			button: ButtonProps;
 			hr: HTMLNodeProps<HTMLHRElement>;
-			div: HTMLNodeProps<HTMLElement>;
+			div: HTMLNodeProps<HTMLDivElement>;
 			input: InputProps;
 			li: HTMLNodeProps<HTMLLIElement>;
 			span: HTMLNodeProps<HTMLElement>;

@@ -16,4 +16,4 @@ export type Constructor<T> = new (...args: any[]) => T;
 export type MapLike<T> = { [key: string]: T };
 
 export type DataDrain<T> = Callback<T> | DataSource<T> | DuplexDataSource<T>;
-export type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
+export declare type ThenArg<T> = T extends any ? any : T extends PromiseLike<infer U> ? U : T;
