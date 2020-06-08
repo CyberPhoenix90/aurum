@@ -11,6 +11,8 @@ export interface RouteInstance {
 }
 
 export function AurumRouter(props, children) {
+	children = [].concat.apply([], children);
+	children = children.filter((v) => v !== undefined && v !== null);
 	children = children.map(prerender);
 	if (children.some((c) => !c[routeIdentity])) {
 		throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
