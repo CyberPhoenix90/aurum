@@ -17,7 +17,11 @@ export interface ReadOnlyDataSource<T> {
 	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
 }
 
-export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
+export interface GenericDataSource<T> {
+	readonly value: T;
+	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	withInitial(value: T): this;
 	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
