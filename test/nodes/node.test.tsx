@@ -66,11 +66,11 @@ describe('Nodes', () => {
 		'template'
 	].forEach((n) => {
 		it('should render node ' + n, () => {
-			Aurum.attach(Aurum.factory(n, {}, null), document.body);
+			let attachToken = Aurum.attach(Aurum.factory(n, {}, null), document.body);
 			try {
 				assert(document.body.firstChild.nodeName.toLowerCase() === n);
 			} finally {
-				Aurum.detach(document.body);
+				attachToken.cancel();
 			}
 		});
 	});
@@ -78,7 +78,7 @@ describe('Nodes', () => {
 	it('should bind array data source ', () => {
 		const repeatModel = new ArrayDataSource([1, 2, 3, 4]);
 
-		Aurum.attach(
+		let attachToken = Aurum.attach(
 			<div>
 				{repeatModel.map((i) => (
 					<div>{i}</div>
@@ -90,14 +90,14 @@ describe('Nodes', () => {
 			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
 			assert((document.body.firstChild as HTMLDivElement).textContent === '1234');
 		} finally {
-			Aurum.detach(document.body);
+			attachToken.cancel();
 		}
 	});
 
 	it('repeat should sync with changes ', () => {
 		const repeatModel = new ArrayDataSource([1, 2, 3, 4]);
 
-		Aurum.attach(
+		let attachToken =Aurum.attach(
 			<div>
 				{repeatModel.map((i) => (
 					<div>{i}</div>
@@ -121,7 +121,7 @@ describe('Nodes', () => {
 			repeatModel.clear();
 			assert((document.body.firstChild as HTMLDivElement).textContent === '');
 		} finally {
-			Aurum.detach(document.body);
+			attachToken.cancel();
 		}
 	});
 });

@@ -2,12 +2,14 @@ import { assert } from 'chai';
 import { Aurum, DataSource, Switch, DefaultSwitchCase, SwitchCase } from '../../src/aurum';
 
 describe('Switch', () => {
+	let attachToken;
 	afterEach(() => {
-		Aurum.detach(document.body);
+		attachToken?.cancel();
+		attachToken = undefined;
 	});
 
 	it('Should not add anything to the DOM', () => {
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={new DataSource()}></Switch>
 			</div>,
@@ -17,7 +19,7 @@ describe('Switch', () => {
 	});
 
 	it('Should not add anything to the DOM with empty cases', () => {
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={new DataSource()}>
 					<DefaultSwitchCase></DefaultSwitchCase>
@@ -29,7 +31,7 @@ describe('Switch', () => {
 	});
 
 	it('Should pick none if no match', () => {
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={new DataSource()}>
 					<SwitchCase when={'whatever'}>
@@ -44,7 +46,7 @@ describe('Switch', () => {
 	});
 
 	it('Should pick default', () => {
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={new DataSource()}>
 					<DefaultSwitchCase>
@@ -59,7 +61,7 @@ describe('Switch', () => {
 	});
 
 	it('Should pick correct', () => {
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={new DataSource('yes')}>
 					<SwitchCase when="no">
@@ -78,7 +80,7 @@ describe('Switch', () => {
 
 	it('Should update', () => {
 		const data = new DataSource('one');
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={data}>
 					<SwitchCase when="one">
@@ -106,7 +108,7 @@ describe('Switch', () => {
 		const data = new DataSource('one');
 		const data2 = new DataSource('one');
 
-		Aurum.attach(
+		attachToken = Aurum.attach(
 			<div>
 				<Switch state={data}>
 					<SwitchCase when="one">

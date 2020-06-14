@@ -75,6 +75,10 @@ export abstract class AurumElement {
 		});
 	}
 
+	public dispose() {
+		this.clearContent();
+	}
+
 	public attachToDom(node: HTMLElement, index: number): void {
 		if (this.hostNode) {
 			throw new Error('Aurum Element is already attached');
@@ -196,9 +200,12 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 
 	if (pendingSessions.has(element)) {
 		const subSession = pendingSessions.get(element);
-		session.attachCalls.push(...subSession.attachCalls);
-		session.tokens.push(...subSession.tokens);
-		session.sessionToken.chain(subSession.sessionToken);
+		if (subSession.sessionToken) {
+			session.attachCalls.push(...subSession.attachCalls);
+			session.sessionToken.chain(subSession.sessionToken);
+			subSession.attachCalls = undefined;
+			subSession.sessionToken = undefined;
+		}
 		pendingSessions.delete(element);
 	}
 
@@ -272,7 +279,15 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 		prerender(target: Renderable | Renderable[]) {
 			const subSession = createRenderSession();
 			const result = render(target, subSession, true);
-			pendingSessions.set(result, subSession);
+			if (Array.isArray(result)) {
+				for (const item of result) {
+					if (typeof item === 'object') {
+						pendingSessions.set(item, subSession);
+					}
+				}
+			} else {
+				pendingSessions.set(result, subSession);
+			}
 			return result;
 		},
 		get style() {

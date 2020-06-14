@@ -92,7 +92,12 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 			api.onAttach(() => props.onAttach(node));
 		}
 		if (props.onDetach) {
-			api.onDetach(() => props.onDetach(node));
+			api.onDetach(() => {
+				if (node.isConnected) {
+					node.parentElement.removeChild(node);
+				}
+				props.onDetach(node);
+			});
 		}
 
 		extraLogic?.(node, props, api.cancellationToken);
@@ -178,13 +183,31 @@ function bindProps(node: HTMLElement, keys: string[], props: any, dynamicProps?:
 }
 
 function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string) {
-	if (typeof data === 'string' || typeof data === 'boolean') {
+	if (typeof data === 'string') {
 		node.setAttribute(key, data);
-	} else if (data instanceof DataSource || data instanceof DuplexDataSource) {
-		if (data.value) {
-			node.setAttribute(key, data.value);
+	} else if (typeof data === 'boolean') {
+		if (data) {
+			node.setAttribute(key, '');
 		}
-		data.unique().listen((v) => (node as HTMLElement).setAttribute(key, v));
+	} else if (data instanceof DataSource || data instanceof DuplexDataSource) {
+		if (typeof data.value === 'string') {
+			node.setAttribute(key, data.value);
+		} else if (typeof data.value === 'boolean') {
+			if (data.value) {
+				node.setAttribute(key, '');
+			}
+		}
+		data.unique().listen((v) => {
+			if (typeof v === 'string') {
+				node.setAttribute(key, v);
+			} else if (typeof v === 'boolean') {
+				if (v) {
+					node.setAttribute(key, '');
+				} else {
+					node.removeAttribute(key);
+				}
+			}
+		});
 	} else {
 		throw new Error('Attributes only support types boolean, string, number and data sources');
 	}

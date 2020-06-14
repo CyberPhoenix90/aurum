@@ -98,6 +98,7 @@ import {
 } from '../rendering/aurum_element';
 import { ArrayDataSource } from '../stream/data_source';
 import { MapLike } from './common';
+import { CancellationToken } from './cancellation_token';
 
 const nodeMap = {
 	button: Button,
@@ -168,20 +169,27 @@ const nodeMap = {
 };
 
 export class Aurum {
-	public static attach(aurumRenderable: Renderable, dom: HTMLElement) {
+	public static attach(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
 		const session = createRenderSession();
 		const content = render(aurumRenderable, session);
 		if (content instanceof AurumElement) {
 			content.attachToDom(dom, dom.childNodes.length);
+			session.sessionToken.addCancelable(() => content.dispose());
 		} else if (Array.isArray(content)) {
 			const root = new ArrayAurumElement(new ArrayDataSource(content), createAPI(session));
+			session.sessionToken.addCancelable(() => root.dispose());
 			root.attachToDom(dom, dom.childNodes.length);
 		} else {
 			dom.appendChild(content);
+			session.sessionToken.addCancelable(() => {
+				dom.removeChild(content);
+			});
 		}
 		for (let i = session.attachCalls.length - 1; i >= 0; i--) {
 			session.attachCalls[i]();
 		}
+
+		return session.sessionToken;
 	}
 
 	public static factory(
