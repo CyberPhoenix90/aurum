@@ -26,7 +26,7 @@ export class CancellationToken {
 
 		this.cancelables.push(delegate);
 
-		if (this.cancelables.length > 200) {
+		if (this.cancelables.length === 200) {
 			console.log('potential memory leak: cancellation token has over 200 clean up calls');
 		}
 

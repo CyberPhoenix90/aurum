@@ -454,7 +454,6 @@ export class ArrayAurumElement extends AurumElement {
 
 	private renderItem(item: any) {
 		const s = createRenderSession();
-		console.log('NEW SESSION');
 		const rendered = render(item, s);
 		for (const cb of s.attachCalls) {
 			cb();
@@ -503,7 +502,6 @@ export class SingularAurumElement extends AurumElement {
 		this.clearContent();
 		this.endSession();
 		this.renderSession = createRenderSession();
-		console.log('NEW SESSION');
 		let rendered = render(newValue, this.renderSession);
 		if (rendered === undefined) {
 			this.children = [];
@@ -529,7 +527,6 @@ export class SingularAurumElement extends AurumElement {
 
 	private endSession(): void {
 		if (this.renderSession) {
-			console.log('END SESSION');
 			this.renderSession.sessionToken.cancel();
 			this.renderSession = undefined;
 		}

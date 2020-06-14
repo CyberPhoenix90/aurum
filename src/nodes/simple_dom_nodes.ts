@@ -375,7 +375,7 @@ export const Svg = DomNodeCreator<SvgProps>('svg', ['width', 'height']);
 /**
  * @internal
  */
-export const Progress = DomNodeCreator<ProgressProps>('svg', ['max', 'value']);
+export const Progress = DomNodeCreator<ProgressProps>('progress', ['max', 'value']);
 /**
  * @internal
  */
