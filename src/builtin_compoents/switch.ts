@@ -7,6 +7,10 @@ export interface SwitchProps<T = boolean> {
 }
 
 export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[], api: AurumComponentAPI) {
+	children = [].concat.apply(
+		[],
+		children.filter((c) => !!c)
+	);
 	if (
 		children.some(
 			(c) =>

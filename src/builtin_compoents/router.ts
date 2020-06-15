@@ -2,6 +2,10 @@ import { DataSource } from '../stream/data_source';
 import { Renderable, AurumComponentAPI, aurumElementModelIdentitiy, AurumElementModel } from '../rendering/aurum_element';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
+	children = [].concat.apply(
+		[],
+		children.filter((c) => !!c)
+	);
 	if (
 		children.some(
 			(c) =>

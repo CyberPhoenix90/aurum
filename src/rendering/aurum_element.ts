@@ -57,14 +57,16 @@ export interface AurumElementModel<T> {
 export abstract class AurumElement {
 	public children: Rendered[];
 	protected api: AurumComponentAPI;
+	private static id: number = 1;
 
-	private contentStartMarker: Comment;
-	private contentEndMarker: Comment;
+	protected contentStartMarker: Comment;
+	protected contentEndMarker: Comment;
 	protected hostNode: HTMLElement;
 	private lastStartIndex: number;
 	private lastEndIndex: number;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
+		AurumElement.id++;
 		this.children = [];
 		this.api = api;
 		this.api.onAttach(() => {
@@ -83,10 +85,11 @@ export abstract class AurumElement {
 		if (this.hostNode) {
 			throw new Error('Aurum Element is already attached');
 		}
+		const id = AurumElement.id++;
 
 		this.hostNode = node;
-		this.contentStartMarker = document.createComment('START');
-		this.contentEndMarker = document.createComment('END');
+		this.contentStartMarker = document.createComment('START Aurum Node ' + id);
+		this.contentEndMarker = document.createComment('END Aurum Node ' + id);
 		if (index >= node.childNodes.length) {
 			node.appendChild(this.contentStartMarker);
 			node.appendChild(this.contentEndMarker);
@@ -234,7 +237,7 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 		}
 
 		const type = typeof element;
-		if (type === 'string' || type === 'number' || type === 'bigint') {
+		if (type === 'string' || type === 'number' || type === 'bigint' || type === 'boolean') {
 			return document.createTextNode(element.toString()) as any;
 		}
 	}
@@ -327,10 +330,20 @@ function recompute(fragments: TemplateStringsArray, input: any[]) {
 
 export class ArrayAurumElement extends AurumElement {
 	private renderSessions: WeakMap<any, RenderSession>;
+	private dataSource: ArrayDataSource<any>;
 
 	constructor(dataSource: ArrayDataSource<any>, api: AurumComponentAPI) {
 		super(dataSource, api);
 		this.renderSessions = new WeakMap();
+		this.dataSource = dataSource;
+	}
+
+	public attachToDom(node: HTMLElement, index: number): void {
+		super.attachToDom(node, index);
+		//@ts-ignore
+		this.contentStartMarker.dataSource = this.dataSource;
+		//@ts-ignore
+		this.contentEndMarker.dataSource = this.dataSource;
 	}
 
 	protected render(dataSource: ArrayDataSource<any>): void {
@@ -466,10 +479,20 @@ export class ArrayAurumElement extends AurumElement {
 export class SingularAurumElement extends AurumElement {
 	private renderSession: RenderSession;
 	private lastValue: any;
+	private dataSource: DataSource<any> | DuplexDataSource<any>;
 
 	constructor(dataSource: DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
 		super(dataSource, api);
 		this.api.cancellationToken.addCancelable(() => this.renderSession?.sessionToken.cancel());
+		this.dataSource = dataSource;
+	}
+
+	public attachToDom(node: HTMLElement, index: number): void {
+		super.attachToDom(node, index);
+		//@ts-ignore
+		this.contentStartMarker.dataSource = this.dataSource;
+		//@ts-ignore
+		this.contentEndMarker.dataSource = this.dataSource;
 	}
 
 	protected render(dataSource: DataSource<any> | DuplexDataSource<any>): void {

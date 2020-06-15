@@ -22,6 +22,8 @@ export interface GenericDataSource<T> {
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 	withInitial(value: T): this;
 	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
