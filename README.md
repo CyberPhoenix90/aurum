@@ -9,7 +9,7 @@
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/aurumjs)
 
 ## What is Aurum
-Aurumjs is a DOM rendering library inspired by react and angular.
+Aurum.js is a DOM rendering library inspired by react and angular.
 In Aurum you use stream based programing (Similar to rx.js) for data management. You link your streams directly to the DOM be it into attributes, inner text or inner html, you keep your UI up to date all through streams.
 Components in aurum never "rerender" react style, there is no reconciliation, no watching no dirty checking and no guesswork on what will and will cause things to render because all DOM changes are directly tied to a data stream.
 
@@ -18,8 +18,9 @@ Components in aurum never "rerender" react style, there is no reconciliation, no
 
 * Aurum does most of the data management overhead for you, saving time and allowing to focus on what matters: Implementing your business logic
 
-* Aurum.js has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
+* Aurum has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
 
+* Aurum is completely built around the stream pattern, pipe your data from the backend over adapters all the way into the DOM
 
 ## Browser support
 * All chromium based browsers

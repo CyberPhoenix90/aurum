@@ -66,7 +66,6 @@ export abstract class AurumElement {
 	private lastEndIndex: number;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
-		AurumElement.id++;
 		this.children = [];
 		this.api = api;
 		this.api.onAttach(() => {

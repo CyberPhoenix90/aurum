@@ -65,11 +65,11 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
-	static fromMultipleSources<T>(sources: DataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
+	static fromMultipleSources<T>(sources: ReadOnlyDataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
 		const result = new DataSource<T>();
 
 		for (const s of sources) {
-			s.pipe(result, cancellation);
+			s.listen((v) => result.update(v), cancellation);
 		}
 
 		return result;
@@ -91,7 +91,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.primed = true;
 		if (this.updating) {
 			throw new Error(
-				'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
+				'Problem in data source: Unstable value propagation. When updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
 			);
 		}
 		this.updating = true;

@@ -5,7 +5,7 @@ import { DataSource, ReadOnlyDataSource } from './data_source';
 /**
  * Lets you logically combine 2 data sources so that update calls go through the input source and listen goes to the output source
  */
-export class Stream<I, O> implements ReadOnlyDataSource<O> {
+export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 	private input: DataSource<I>;
 	private output: DataSource<O>;
 	/**
@@ -15,9 +15,9 @@ export class Stream<I, O> implements ReadOnlyDataSource<O> {
 		return this.output.value;
 	}
 
-	constructor(inputSource: DataSource<I>, outputSource: DataSource<O>) {
-		this.input = inputSource;
-		this.output = outputSource;
+	constructor(inputSource?: DataSource<I>, outputSource?: DataSource<O>) {
+		this.input = inputSource ?? new DataSource();
+		this.output = outputSource ?? (this.input as any);
 	}
 
 	public update(data: I): void {
@@ -65,5 +65,10 @@ export class Stream<I, O> implements ReadOnlyDataSource<O> {
 	}
 	public awaitOrdered<R extends ThenArg<O>>(cancellationToken?: CancellationToken): Stream<I, R> {
 		return new Stream(this.input, this.output.awaitOrdered(cancellationToken));
+	}
+
+	public cancelAll(): void {
+		this.input.cancelAll();
+		this.output.cancelAll();
 	}
 }

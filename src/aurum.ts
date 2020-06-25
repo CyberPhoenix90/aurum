@@ -5,6 +5,7 @@ export * from './builtin_compoents/switch';
 export * from './stream/data_source';
 export * from './stream/duplex_data_source';
 export * from './stream/object_data_source';
+export * from './stream/stream';
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
 export * from './rendering/classname';
