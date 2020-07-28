@@ -197,7 +197,9 @@ export class Aurum {
 		args: MapLike<any>,
 		...innerNodes: AurumElementModel<any>[]
 	): AurumElementModel<any> {
+		let name;
 		if (typeof node === 'string') {
+			name = node;
 			const type = node;
 			node = nodeMap[node];
 			if (node === undefined) {
@@ -207,6 +209,7 @@ export class Aurum {
 
 		return {
 			[aurumElementModelIdentitiy]: true,
+			name,
 			factory: node as (props: any, children: Renderable[], api: AurumComponentAPI) => Renderable,
 			props: args,
 			children: innerNodes

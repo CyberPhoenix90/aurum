@@ -29,8 +29,8 @@ export class ObjectDataSource<T> {
 	 * @param key
 	 * @param cancellationToken
 	 */
-	public pick(key: keyof T, cancellationToken?: CancellationToken): DataSource<T[typeof key]> {
-		const subDataSource: DataSource<T[typeof key]> = new DataSource(this.data?.[key]);
+	public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DataSource<T[K]> {
+		const subDataSource: DataSource<T[K]> = new DataSource(this.data?.[key]);
 
 		this.listenOnKey(
 			key,
@@ -70,12 +70,12 @@ export class ObjectDataSource<T> {
 	/**
 	 * Listen to changes of a single key of the object
 	 */
-	public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
+	public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void> {
 		if (!this.updateEventOnKey.has(key)) {
 			this.updateEventOnKey.set(key, new EventEmitter());
 		}
 		const event = this.updateEventOnKey.get(key);
-		return event.subscribe(callback, cancellationToken).cancel;
+		return event.subscribe(callback as any, cancellationToken).cancel;
 	}
 
 	/**

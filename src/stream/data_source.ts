@@ -1,6 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback, ThenArg, Predicate } from '../utilities/common';
+import { Callback, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
+import { DataSourceFilterOperator, DataSourceMapDelayFilterOperator, DataSourceMapOperator, DataSourceOperator, OperationType } from './data_source_operators';
 
 export interface ReadOnlyDataSource<T> {
 	readonly value: T;
@@ -12,9 +13,20 @@ export interface ReadOnlyDataSource<T> {
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
-	await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
-	awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
-	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): ReadOnlyDataSource<R>;
+	transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+		operationA: DataSourceOperator<T, A>,
+		operationB?: DataSourceOperator<A, B> | CancellationToken,
+		operationC?: DataSourceOperator<B, C> | CancellationToken,
+		operationD?: DataSourceOperator<C, D> | CancellationToken,
+		operationE?: DataSourceOperator<D, E> | CancellationToken,
+		operationF?: DataSourceOperator<E, F> | CancellationToken,
+		operationG?: DataSourceOperator<F, G> | CancellationToken,
+		operationH?: DataSourceOperator<G, H> | CancellationToken,
+		operationI?: DataSourceOperator<H, I> | CancellationToken,
+		operationJ?: DataSourceOperator<I, J> | CancellationToken,
+		operationK?: DataSourceOperator<J, K> | CancellationToken,
+		cancellationToken?: CancellationToken
+	): ReadOnlyDataSource<K>;
 }
 
 export interface GenericDataSource<T> {
@@ -28,9 +40,6 @@ export interface GenericDataSource<T> {
 	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
 	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
 	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
-	await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
-	awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
-	awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R>;
 	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
 	aggregateThree<D, E, F>(
 		second: ReadOnlyDataSource<D>,
@@ -45,6 +54,20 @@ export interface GenericDataSource<T> {
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
 	): GenericDataSource<G>;
+	transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+		operationA: DataSourceOperator<T, A>,
+		operationB?: DataSourceOperator<A, B> | CancellationToken,
+		operationC?: DataSourceOperator<B, C> | CancellationToken,
+		operationD?: DataSourceOperator<C, D> | CancellationToken,
+		operationE?: DataSourceOperator<D, E> | CancellationToken,
+		operationF?: DataSourceOperator<E, F> | CancellationToken,
+		operationG?: DataSourceOperator<F, G> | CancellationToken,
+		operationH?: DataSourceOperator<G, H> | CancellationToken,
+		operationI?: DataSourceOperator<H, I> | CancellationToken,
+		operationJ?: DataSourceOperator<I, J> | CancellationToken,
+		operationK?: DataSourceOperator<J, K> | CancellationToken,
+		cancellationToken?: CancellationToken
+	): DataSource<K>;
 }
 
 /**
@@ -191,6 +214,43 @@ export class DataSource<T> implements GenericDataSource<T> {
 		}, cancellationToken);
 	}
 
+	public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+		operationA: DataSourceOperator<T, A>,
+		operationB?: DataSourceOperator<A, B> | CancellationToken,
+		operationC?: DataSourceOperator<B, C> | CancellationToken,
+		operationD?: DataSourceOperator<C, D> | CancellationToken,
+		operationE?: DataSourceOperator<D, E> | CancellationToken,
+		operationF?: DataSourceOperator<E, F> | CancellationToken,
+		operationG?: DataSourceOperator<F, G> | CancellationToken,
+		operationH?: DataSourceOperator<G, H> | CancellationToken,
+		operationI?: DataSourceOperator<H, I> | CancellationToken,
+		operationJ?: DataSourceOperator<I, J> | CancellationToken,
+		operationK?: DataSourceOperator<J, K> | CancellationToken,
+		cancellationToken?: CancellationToken
+	): DataSource<K> {
+		let token;
+		const operations = [
+			operationA,
+			operationB,
+			operationC,
+			operationD,
+			operationE,
+			operationF,
+			operationG,
+			operationH,
+			operationI,
+			operationJ,
+			operationK
+		].filter((e) => (e && e instanceof CancellationToken ? ((token = e), false) : true));
+		if (cancellationToken) {
+			token = cancellationToken;
+		}
+		const result = new DataSource<K>();
+		this.listen(processTransform<T, A, B, C, D, E, F, G, H, I, J, K>(operations, operationA, result), token);
+
+		return result;
+	}
+
 	/**
 	 * Forwards all updates from this source to another
 	 * @param targetDataSource datasource to pipe the updates to
@@ -243,89 +303,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 				i = 0;
 			}
 		}, cancellation);
-	}
-
-	/**
-	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value
-	 * @param callback mapper function that transforms the updates of this source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		(this.primed ? this.listenAndRepeat : this.listen).call(
-			this,
-			async (value) => {
-				mappedSource.update(await (value as any));
-			},
-			cancellationToken
-		);
-		return mappedSource;
-	}
-
-	/**
-	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value while ensuring the order of updates is not disturbed
-	 * @param callback mapper function that transforms the updates of this source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const queue: Promise<any>[] = [];
-		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		(this.primed ? this.listenAndRepeat : this.listen).call(
-			this,
-			async (value) => {
-				let flushing = false;
-				async function flush() {
-					if (!flushing) {
-						flushing = true;
-					}
-
-					while (queue.length) {
-						const item = queue[0];
-						mappedSource.update(await item);
-						queue.shift();
-					}
-					flushing = false;
-				}
-
-				if (value instanceof Promise) {
-					queue.push(value);
-					flush();
-				} else {
-					mappedSource.update(await (value as any));
-				}
-			},
-			cancellationToken
-		);
-		return mappedSource;
-	}
-
-	/**
-	 * Creates a new datasource that is listening to updates from this datasource and awaits any promises before forwarding the value. In case of multiple pending promises only the latest value is forwarded
-	 * @param callback mapper function that transforms the updates of this source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): TransientDataSource<R> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		let freshnessToken: number;
-		const mappedSource = new TransientDataSource<R>(cancellationToken);
-		(this.primed ? this.listenAndRepeat : this.listen).call(
-			this,
-			async (value) => {
-				freshnessToken = Date.now();
-				const timestamp = freshnessToken;
-				const resolved = await (value as any);
-				if (freshnessToken === timestamp) {
-					mappedSource.update(resolved);
-				}
-			},
-			cancellationToken
-		);
-		return mappedSource;
 	}
 
 	/**
@@ -619,7 +596,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param key key to take from the object
 	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
 	 */
-	public pick(key: keyof T, cancellationToken?: CancellationToken): TransientDataSource<T[typeof key]> {
+	public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): TransientDataSource<T[K]> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 		const subDataSource: TransientDataSource<T[typeof key]> = new TransientDataSource(cancellationToken, this.value?.[key]);
 
@@ -1232,3 +1209,37 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 		this.merge((this.parent as FilteredArrayView<T>).data.filter(this.viewFilter));
 	}
 }
+
+export function processTransform<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(operations: (CancellationToken | DataSourceOperator<T, A> | DataSourceOperator<A, B> | DataSourceOperator<B, C> | DataSourceOperator<C, D> | DataSourceOperator<D, E> | DataSourceOperator<E, F> | DataSourceOperator<F, G> | DataSourceOperator<G, H> | DataSourceOperator<H, I> | DataSourceOperator<I, J> | DataSourceOperator<J, K>)[], operationA: DataSourceOperator<T, A>, result: DataSource<K>): Callback<T> {
+	return async (v: any) => {
+		for (const operation of operations) {
+			switch (operationA.operationType) {
+				case OperationType.NOOP:
+				case OperationType.MAP:
+					v = (operation as DataSourceMapOperator<A, B>).operation(v);
+					break;
+				case OperationType.MAP_DELAY_FILTER:
+				case OperationType.DELAY_FILTER:
+					const tmp = await (operation as DataSourceMapDelayFilterOperator<A, B>).operation(v);
+					if (tmp.cancelled) {
+						return;
+					}
+					else {
+						v = tmp.item;
+					}
+					break;
+				case OperationType.DELAY:
+				case OperationType.MAP_DELAY:
+					v = await (operation as DataSourceMapOperator<A, B>).operation(v);
+					break;
+				case OperationType.FILTER:
+					if (!(operation as DataSourceFilterOperator<any>).operation(v)) {
+						return;
+					}
+					break;
+			}
+		}
+		result.update(v);
+	};
+}
+

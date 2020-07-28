@@ -1,7 +1,8 @@
 import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback, ThenArg } from '../utilities/common';
+import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource, ReadOnlyDataSource, TransientDataSource, GenericDataSource } from './data_source';
+import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource, TransientDataSource } from './data_source';
+import { DataSourceOperator } from './data_source_operators';
 
 export enum DataFlow {
 	UPSTREAM,
@@ -284,6 +285,43 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		}
 	}
 
+	public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+		operationA: DataSourceOperator<T, A>,
+		operationB?: DataSourceOperator<A, B> | CancellationToken,
+		operationC?: DataSourceOperator<B, C> | CancellationToken,
+		operationD?: DataSourceOperator<C, D> | CancellationToken,
+		operationE?: DataSourceOperator<D, E> | CancellationToken,
+		operationF?: DataSourceOperator<E, F> | CancellationToken,
+		operationG?: DataSourceOperator<F, G> | CancellationToken,
+		operationH?: DataSourceOperator<G, H> | CancellationToken,
+		operationI?: DataSourceOperator<H, I> | CancellationToken,
+		operationJ?: DataSourceOperator<I, J> | CancellationToken,
+		operationK?: DataSourceOperator<J, K> | CancellationToken,
+		cancellationToken?: CancellationToken
+	): DataSource<K> {
+		let token;
+		const operations = [
+			operationA,
+			operationB,
+			operationC,
+			operationD,
+			operationE,
+			operationF,
+			operationG,
+			operationH,
+			operationI,
+			operationJ,
+			operationK
+		].filter((e) => (e && e instanceof CancellationToken ? ((token = e), false) : true));
+		if (cancellationToken) {
+			token = cancellationToken;
+		}
+		const result = new DataSource<K>();
+		this.listen(processTransform<T, A, B, C, D, E, F, G, H, I, J, K>(operations, operationA, result), token);
+
+		return result;
+	}
+
 	/**
 	 * Forwards all updates from this source to another
 	 * @param targetDataSource datasource to pipe the updates to
@@ -402,29 +440,6 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 			});
 		}, cancellationToken);
 		return diffingSource;
-	}
-
-	public await<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const mappedSource = new DuplexDataSource<R>(undefined, false);
-		(this.primed ? this.listenAndRepeat : this.listen).call(
-			this,
-			async (value) => {
-				mappedSource.updateDownstream(await (value as any));
-			},
-			cancellationToken
-		);
-		this.listenUpstream(async (value) => {
-			mappedSource.updateUpstream(await (value as any));
-		}, cancellationToken);
-		return mappedSource;
-	}
-	public awaitLatest<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
-		throw new Error('not implemented');
-	}
-	public awaitOrdered<R extends ThenArg<T>>(cancellationToken?: CancellationToken): GenericDataSource<R> {
-		throw new Error('not implemented');
 	}
 
 	/**

@@ -50,6 +50,7 @@ export interface AurumComponentAPI {
 export interface AurumElementModel<T> {
 	[aurumElementModelIdentitiy]: boolean;
 	props: T;
+	name?: string;
 	children: Renderable[];
 	factory(props: T, children: Renderable[], api: AurumComponentAPI): Renderable;
 }

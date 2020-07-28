@@ -44,7 +44,7 @@ export class EventEmitter<T> {
 		return facade;
 	}
 
-	subscribeOnce(callback: import('./common').Callback<T>, cancellationToken: CancellationToken) {
+	subscribeOnce(callback: import('./common').Callback<T>, cancellationToken?: CancellationToken) {
 		const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
 
 		return facade;
