@@ -9,6 +9,9 @@ import { DataSource, processTransform, ReadOnlyDataSource } from './data_source'
 export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 	private input: DataSource<I>;
 	private output: DataSource<O>;
+	public get name(): string {
+		return `IN:${this.input.name} OUT:${this.output.name}`;
+	}
 	/**
 	 * The current value of this data source, can be changed through update
 	 */
@@ -40,7 +43,7 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		cancellationToken?: CancellationToken
 	): Stream<I, K> {
 		let token;
-		const operations = [
+		const operations: DataSourceOperator<any, any>[] = [
 			operationA,
 			operationB,
 			operationC,
@@ -52,11 +55,11 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
-		const result = new DataSource<K>();
+		const result = new DataSource<K>(undefined, this.output.name + ' ' + operations.map((v) => v.name).join(' '));
 		this.listen(processTransform<O, K>(operations as any, result), token);
 
 		return new Stream(this.input, result);
@@ -72,22 +75,6 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 
 	public listenOnce(callback: Callback<O>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.output.listenOnce(callback, cancellationToken);
-	}
-
-	public filter(callback: (newValue: O, oldValue: O) => boolean, cancellationToken?: CancellationToken): Stream<I, O> {
-		return new Stream(this.input, this.output.filter(callback, cancellationToken));
-	}
-
-	public unique(cancellationToken?: CancellationToken): Stream<I, O> {
-		return new Stream(this.input, this.output.unique(cancellationToken));
-	}
-
-	public map<D>(callback: (value: O) => D, cancellationToken?: CancellationToken): Stream<I, D> {
-		return new Stream(this.input, this.output.map(callback, cancellationToken));
-	}
-
-	public reduce(reducer: (p: O, c: O) => O, initialValue: O, cancellationToken?: CancellationToken): Stream<I, O> {
-		return new Stream(this.input, this.output.reduce(reducer, initialValue, cancellationToken));
 	}
 
 	public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<O> {

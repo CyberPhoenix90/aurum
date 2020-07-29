@@ -11,6 +11,7 @@ export enum OperationType {
 export interface DataSourceOperator<T, M> {
 	operationType: OperationType;
 	typescriptBugWorkaround?: (value: T) => M;
+	name: string;
 }
 
 export interface DataSourceFilterOperator<T> extends DataSourceOperator<T, T> {
@@ -45,5 +46,5 @@ export interface DataSourceMapDelayFilterOperator<T, M> extends DataSourceOperat
 
 export interface DataSourceDelayFilterOperator<T> extends DataSourceOperator<T, T> {
 	operationType: OperationType.DELAY_FILTER;
-	operation: (value: T) => Promise<{ item: T; cancelled: boolean }>;
+	operation: (value: T) => Promise<boolean>;
 }

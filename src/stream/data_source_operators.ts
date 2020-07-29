@@ -16,7 +16,16 @@ import {
 
 export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M> {
 	return {
+		name: 'map',
 		operationType: OperationType.MAP,
+		operation: (v) => mapper(v)
+	};
+}
+
+export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMapDelayOperator<T, M> {
+	return {
+		name: 'mapAsync',
+		operationType: OperationType.MAP_DELAY,
 		operation: (v) => mapper(v)
 	};
 }
@@ -24,6 +33,7 @@ export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M
 export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T }> {
 	let lastValue = undefined;
 	return {
+		name: 'diff',
 		operationType: OperationType.MAP,
 		operation: (v) => {
 			let result = {
@@ -38,13 +48,23 @@ export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T
 
 export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterOperator<T> {
 	return {
+		name: 'filter',
 		operationType: OperationType.FILTER,
+		operation: (v) => predicate(v)
+	};
+}
+
+export function dsFilterAsync<T>(predicate: (value: T) => Promise<boolean>): DataSourceDelayFilterOperator<T> {
+	return {
+		name: 'filterAsync',
+		operationType: OperationType.DELAY_FILTER,
 		operation: (v) => predicate(v)
 	};
 }
 
 export function dsEven(): DataSourceFilterOperator<number> {
 	return {
+		name: 'even',
 		operationType: OperationType.FILTER,
 		operation: (v) => v % 2 === 0
 	};
@@ -52,14 +72,63 @@ export function dsEven(): DataSourceFilterOperator<number> {
 
 export function dsOdd(): DataSourceFilterOperator<number> {
 	return {
+		name: 'odd',
 		operationType: OperationType.FILTER,
 		operation: (v) => v % 2 !== 0
+	};
+}
+
+export function dsMin(): DataSourceFilterOperator<number> {
+	let last = Number.MAX_SAFE_INTEGER;
+	return {
+		name: 'min',
+		operationType: OperationType.FILTER,
+		operation: (v) => {
+			if (v < last) {
+				last = v;
+				return true;
+			} else {
+				return false;
+			}
+		}
+	};
+}
+
+export function dsMax(): DataSourceFilterOperator<number> {
+	let last = Number.MIN_SAFE_INTEGER;
+	return {
+		name: 'max',
+		operationType: OperationType.FILTER,
+		operation: (v) => {
+			if (v > last) {
+				last = v;
+				return true;
+			} else {
+				return false;
+			}
+		}
+	};
+}
+
+export function dsSkipDynamic<T>(amountLeft: DataSource<number>): DataSourceFilterOperator<T> {
+	return {
+		operationType: OperationType.FILTER,
+		name: 'skipDynamic',
+		operation: (v) => {
+			if (amountLeft.value === 0) {
+				return true;
+			} else {
+				amountLeft.update(amountLeft.value - 1);
+				return false;
+			}
+		}
 	};
 }
 
 export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
 	return {
 		operationType: OperationType.FILTER,
+		name: `skip ${amount}`,
 		operation: (v) => {
 			if (amount === 0) {
 				return true;
@@ -71,14 +140,30 @@ export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
 	};
 }
 
-export function cutOff<T>(amount: number): DataSourceFilterOperator<T> {
+export function dsCutOff<T>(amount: number): DataSourceFilterOperator<T> {
 	return {
+		name: `cutoff ${amount}`,
 		operationType: OperationType.FILTER,
 		operation: (v) => {
 			if (amount === 0) {
 				return false;
 			} else {
 				amount--;
+				return true;
+			}
+		}
+	};
+}
+
+export function dsCutOffDynamic<T>(amountLeft: DataSource<number>): DataSourceFilterOperator<T> {
+	return {
+		name: 'cutoffDynamic',
+		operationType: OperationType.FILTER,
+		operation: (v) => {
+			if (amountLeft.value === 0) {
+				return false;
+			} else {
+				amountLeft.update(amountLeft.value - 1);
 				return true;
 			}
 		}
@@ -88,6 +173,7 @@ export function cutOff<T>(amount: number): DataSourceFilterOperator<T> {
 export function dsUnique<T>(): DataSourceFilterOperator<T> {
 	let last: T;
 	return {
+		name: 'unique',
 		operationType: OperationType.FILTER,
 		operation: (v) => {
 			if (v === last) {
@@ -102,6 +188,7 @@ export function dsUnique<T>(): DataSourceFilterOperator<T> {
 
 export function dsAwait<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 	return {
+		name: 'await',
 		operationType: OperationType.MAP_DELAY,
 		operation: (v) => {
 			return v as any;
@@ -115,6 +202,7 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 
 	return {
 		operationType: OperationType.MAP_DELAY,
+		name: 'awaitOrdered',
 		operation: async (v) => {
 			queue.push(v);
 			if (queue.length === 1) {
@@ -143,6 +231,7 @@ export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<
 
 	return {
 		operationType: OperationType.MAP_DELAY_FILTER,
+		name: 'awaitLatest',
 		operation: async (v) => {
 			freshnessToken = Date.now();
 			const timestamp = freshnessToken;
@@ -165,6 +254,7 @@ export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<
 export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M): DataSourceMapOperator<T, M> {
 	let last = initialValue;
 	return {
+		name: 'reduce',
 		operationType: OperationType.MAP,
 		operation: (v) => {
 			last = reducer(last, v);
@@ -176,6 +266,7 @@ export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M):
 export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<string, string> {
 	let last: string;
 	return {
+		name: `stringJoin ${seperator}`,
 		operationType: OperationType.MAP,
 		operation: (v: string) => {
 			if (last) {
@@ -190,6 +281,7 @@ export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<st
 
 export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
 	return {
+		name: `delay ${time}ms`,
 		operationType: OperationType.DELAY,
 		operation: (v) => {
 			return new Promise((resolve) => {
@@ -206,22 +298,61 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 	let cancelled = new EventEmitter();
 	return {
 		operationType: OperationType.DELAY_FILTER,
+		name: `debounce ${time}ms`,
 		operation: (v) => {
 			return new Promise((resolve) => {
 				clearTimeout(timeout);
 				cancelled.fire();
 				cancelled.subscribeOnce(() => {
-					resolve({
-						item: undefined,
-						cancelled: true
-					});
+					resolve(true);
 				});
 				timeout = setTimeout(() => {
-					resolve({
-						cancelled: false,
-						item: v
-					});
+					resolve(false);
 				}, time);
+			});
+		}
+	};
+}
+
+export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
+	return {
+		operationType: OperationType.DELAY,
+		name: 'semaphore',
+		operation: (v) => {
+			return new Promise((resolve) => {
+				if (state.value > 0) {
+					state.update(state.value - 1);
+					resolve(v);
+				} else {
+					const cancel = state.listen(() => {
+						if (state.value > 0) {
+							cancel();
+							state.update(state.value - 1);
+							resolve(v);
+						}
+					});
+				}
+			});
+		}
+	};
+}
+
+export function dsLock<T>(state: DataSource<boolean>): DataSourceDelayOperator<T> {
+	return {
+		name: 'lock',
+		operationType: OperationType.DELAY,
+		operation: (v) => {
+			return new Promise((resolve) => {
+				if (state.value) {
+					resolve(v);
+				} else {
+					const cancel = state.listen(() => {
+						if (state.value) {
+							cancel();
+							resolve(v);
+						}
+					});
+				}
 			});
 		}
 	};
@@ -230,6 +361,7 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
 	let cooldown = false;
 	return {
+		name: `throttle ${time}ms`,
 		operationType: OperationType.FILTER,
 		operation: (v) => {
 			if (!cooldown) {
@@ -250,6 +382,7 @@ export function dsBuffer<T>(time: number): DataSourceMapDelayOperator<T, T[]> {
 	let promise;
 
 	return {
+		name: `buffer ${time}ms`,
 		operationType: OperationType.MAP_DELAY,
 		operation: (v) => {
 			buffer.push(v);
@@ -270,6 +403,7 @@ export function dsBuffer<T>(time: number): DataSourceMapDelayOperator<T, T[]> {
 
 export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T[K]> {
 	return {
+		name: `pick ${key}`,
 		operationType: OperationType.MAP,
 		operation: (v) => {
 			if (v !== undefined && v !== null) {
@@ -283,6 +417,7 @@ export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T
 
 export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any>): DataSourceNoopOperator<T> {
 	return {
+		name: `pipe ${target.name}`,
 		operationType: OperationType.NOOP,
 		operation: (v) => {
 			if (target instanceof DataSource || target instanceof Stream) {
@@ -297,6 +432,7 @@ export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T
 
 export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
 	return {
+		name: 'tap',
 		operationType: OperationType.NOOP,
 		operation: (v) => {
 			cb(v);
@@ -309,6 +445,7 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
 	let i = 0;
 
 	return {
+		name: `loadBalance [${targets.map((v) => v.name).join()}]`,
 		operationType: OperationType.NOOP,
 		operation: (v) => {
 			const target = targets[i++];

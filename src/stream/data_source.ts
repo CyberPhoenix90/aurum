@@ -5,13 +5,10 @@ import { DataSourceFilterOperator, DataSourceMapDelayFilterOperator, DataSourceM
 
 export interface ReadOnlyDataSource<T> {
 	readonly value: T;
+	readonly name: string;
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	unique(cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): ReadOnlyDataSource<D>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 	transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
 		operationA: DataSourceOperator<T, A>,
@@ -37,9 +34,6 @@ export interface GenericDataSource<T> {
 	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 	withInitial(value: T): this;
-	unique(cancellationToken?: CancellationToken): GenericDataSource<T>;
-	map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): GenericDataSource<D>;
-	reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): GenericDataSource<T>;
 	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
 	aggregateThree<D, E, F>(
 		second: ReadOnlyDataSource<D>,
@@ -80,9 +74,11 @@ export class DataSource<T> implements GenericDataSource<T> {
 	public value: T;
 	private primed: boolean;
 	private updating: boolean;
+	public name: string;
 	protected updateEvent: EventEmitter<T>;
 
-	constructor(initialValue?: T) {
+	constructor(initialValue?: T, name: string = 'RootDataSource') {
+		this.name = name;
 		this.value = initialValue;
 		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
@@ -94,6 +90,8 @@ export class DataSource<T> implements GenericDataSource<T> {
 		for (const s of sources) {
 			s.listen((v) => result.update(v), cancellation);
 		}
+
+		result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
 
 		return result;
 	}
@@ -173,7 +171,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 	public filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): TransientDataSource<T> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 
-		const filteredSource = new TransientDataSource<T>(cancellationToken);
+		const filteredSource = new TransientDataSource<T>(cancellationToken, undefined, this.name + ' filter');
 		this.listen((value) => {
 			if (callback(value, filteredSource.value)) {
 				filteredSource.update(value);
@@ -229,7 +227,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 		cancellationToken?: CancellationToken
 	): DataSource<K> {
 		let token;
-		const operations = [
+		const operations: DataSourceOperator<any, any>[] = [
 			operationA,
 			operationB,
 			operationC,
@@ -241,12 +239,12 @@ export class DataSource<T> implements GenericDataSource<T> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
-		const result = new DataSource<K>();
-		this.listen(processTransform<T, K>(operations as any, result), token);
+		const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
+		(this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
 
 		return result;
 	}
@@ -654,8 +652,8 @@ export class DataSource<T> implements GenericDataSource<T> {
 export class TransientDataSource<T> extends DataSource<T> {
 	private disposeToken: CancellationToken;
 
-	constructor(disposeToken: CancellationToken, initialValue?: T) {
-		super(initialValue);
+	constructor(disposeToken: CancellationToken, initialValue?: T, name?: string) {
+		super(initialValue, name);
 		this.disposeToken = disposeToken;
 		this.updateEvent.onEmpty = () => {
 			disposeToken.cancel();

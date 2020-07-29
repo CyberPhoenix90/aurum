@@ -24,13 +24,15 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 	private updateDownstreamEvent: EventEmitter<T>;
 	private updateUpstreamEvent: EventEmitter<T>;
 	private propagateWritesToReadStream: boolean;
+	public name: string;
 
 	/**
 	 *
 	 * @param initialValue
 	 * @param propagateWritesToReadStream If a write is done propagate this update back down to all the consumers. Useful at the root node
 	 */
-	constructor(initialValue?: T, propagateWritesToReadStream: boolean = true) {
+	constructor(initialValue?: T, propagateWritesToReadStream: boolean = true, name: string = 'RootDuplexDataSource') {
+		this.name = name;
 		this.value = initialValue;
 		this.primed = initialValue !== undefined;
 		this.updateDownstreamEvent = new EventEmitter();
@@ -300,7 +302,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		cancellationToken?: CancellationToken
 	): DataSource<K> {
 		let token;
-		const operations = [
+		const operations: DataSourceOperator<any, any>[] = [
 			operationA,
 			operationB,
 			operationC,
@@ -312,12 +314,12 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
-		const result = new DataSource<K>();
-		this.listen(processTransform<T, K>(operations as any, result), token);
+		const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
+		(this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
 
 		return result;
 	}
