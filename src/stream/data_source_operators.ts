@@ -83,6 +83,20 @@ export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterO
 	};
 }
 
+export function dsEven(): DataSourceFilterOperator<number> {
+	return {
+		operationType: OperationType.FILTER,
+		operation: (v) => v % 2 === 0
+	};
+}
+
+export function dsOdd(): DataSourceFilterOperator<number> {
+	return {
+		operationType: OperationType.FILTER,
+		operation: (v) => v % 2 !== 0
+	};
+}
+
 export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
 	return {
 		operationType: OperationType.FILTER,
@@ -194,6 +208,21 @@ export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M):
 		operationType: OperationType.MAP,
 		operation: (v) => {
 			last = reducer(last, v);
+			return last;
+		}
+	};
+}
+
+export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<string, string> {
+	let last: string;
+	return {
+		operationType: OperationType.MAP,
+		operation: (v: string) => {
+			if (last) {
+				last += seperator + v;
+			} else {
+				last = v;
+			}
 			return last;
 		}
 	};
@@ -336,3 +365,5 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
 		}
 	};
 }
+
+new DataSource('est').transform(dsMap(parseInt), dsOdd());

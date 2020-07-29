@@ -312,12 +312,12 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => (e && e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
 		const result = new DataSource<K>();
-		this.listen(processTransform<T, A, B, C, D, E, F, G, H, I, J, K>(operations, operationA, result), token);
+		this.listen(processTransform<T, K>(operations as any, result), token);
 
 		return result;
 	}

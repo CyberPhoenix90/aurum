@@ -241,12 +241,12 @@ export class DataSource<T> implements GenericDataSource<T> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => (e && e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
 		const result = new DataSource<K>();
-		this.listen(processTransform<T, A, B, C, D, E, F, G, H, I, J, K>(operations, operationA, result), token);
+		this.listen(processTransform<T, K>(operations as any, result), token);
 
 		return result;
 	}
@@ -421,6 +421,35 @@ export class DataSource<T> implements GenericDataSource<T> {
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 		fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
+
+		return aggregatedSource;
+	}
+
+	/**
+	 * Combines four sources into a fifth source that listens to updates from all parent sources.
+	 * @param second Second parent for the new source
+	 * @param third Third parent for the new source
+	 * @param fourth Fourth parent for the new source
+	 * @param fifth Fifth  parent for the new source
+	 * @param combinator Method allowing you to combine the data from all parents on update. Called each time a parent is updated with the latest values of all parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the parent datasources
+	 */
+	public aggregateFive<D, E, F, G, H>(
+		second: ReadOnlyDataSource<D>,
+		third: ReadOnlyDataSource<E>,
+		fourth: ReadOnlyDataSource<F>,
+		fifth: ReadOnlyDataSource<G>,
+		combinator: (self: T, second: D, third: E, fourth: F, fifth: G) => H,
+		cancellationToken?: CancellationToken
+	): TransientDataSource<H> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+		const aggregatedSource = new TransientDataSource<H>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value, fifth.value));
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
+		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
+		third.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
+		fourth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
+		fifth.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
 
 		return aggregatedSource;
 	}
@@ -1210,27 +1239,26 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	}
 }
 
-export function processTransform<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(operations: (CancellationToken | DataSourceOperator<T, A> | DataSourceOperator<A, B> | DataSourceOperator<B, C> | DataSourceOperator<C, D> | DataSourceOperator<D, E> | DataSourceOperator<E, F> | DataSourceOperator<F, G> | DataSourceOperator<G, H> | DataSourceOperator<H, I> | DataSourceOperator<I, J> | DataSourceOperator<J, K>)[], operationA: DataSourceOperator<T, A>, result: DataSource<K>): Callback<T> {
+export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): Callback<I> {
 	return async (v: any) => {
 		for (const operation of operations) {
-			switch (operationA.operationType) {
+			switch (operation.operationType) {
 				case OperationType.NOOP:
 				case OperationType.MAP:
-					v = (operation as DataSourceMapOperator<A, B>).operation(v);
+					v = (operation as DataSourceMapOperator<any, any>).operation(v);
 					break;
 				case OperationType.MAP_DELAY_FILTER:
 				case OperationType.DELAY_FILTER:
-					const tmp = await (operation as DataSourceMapDelayFilterOperator<A, B>).operation(v);
+					const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
 					if (tmp.cancelled) {
 						return;
-					}
-					else {
-						v = tmp.item;
+					} else {
+						v = await tmp.item;
 					}
 					break;
 				case OperationType.DELAY:
 				case OperationType.MAP_DELAY:
-					v = await (operation as DataSourceMapOperator<A, B>).operation(v);
+					v = await (operation as DataSourceMapOperator<any, any>).operation(v);
 					break;
 				case OperationType.FILTER:
 					if (!(operation as DataSourceFilterOperator<any>).operation(v)) {
@@ -1242,4 +1270,3 @@ export function processTransform<T, A, B = A, C = B, D = C, E = D, F = E, G = F,
 		result.update(v);
 	};
 }
-

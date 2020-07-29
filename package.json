@@ -1,7 +1,7 @@
 {
 	"name": "aurumjs",
-	"version": "0.5.7",
-	"description": "Fast and concise declarative DOM rendering library for javascript",
+	"version": "0.5.9",
+	"description": "Stream based declarative DOM rendering library for javascript",
 	"main": "prebuilt/aurumjs.js",
 	"typings": "dist/aurum.d.ts",
 	"scripts": {
@@ -22,6 +22,7 @@
 		"web-components",
 		"webcomponents",
 		"DOM",
+		"stream",
 		"rendering"
 	],
 	"author": "Joao Santos (CyberPhoenix)",

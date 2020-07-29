@@ -52,12 +52,12 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 			operationI,
 			operationJ,
 			operationK
-		].filter((e) => (e && e instanceof CancellationToken ? ((token = e), false) : true));
+		].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true));
 		if (cancellationToken) {
 			token = cancellationToken;
 		}
 		const result = new DataSource<K>();
-		this.listen(processTransform<O, A, B, C, D, E, F, G, H, Z, J, K>(operations, operationA, result), token);
+		this.listen(processTransform<O, K>(operations as any, result), token);
 
 		return new Stream(this.input, result);
 	}
