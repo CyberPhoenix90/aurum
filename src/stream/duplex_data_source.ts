@@ -2,7 +2,7 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
 import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource, TransientDataSource } from './data_source';
-import { DataSourceOperator } from './data_source_operators';
+import { DataSourceOperator } from './operator_model';
 
 export enum DataFlow {
 	UPSTREAM,

@@ -1,7 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSourceFilterOperator, DataSourceMapDelayFilterOperator, DataSourceMapOperator, DataSourceOperator, OperationType } from './data_source_operators';
+import { DataSourceFilterOperator, DataSourceMapDelayFilterOperator, DataSourceMapOperator, DataSourceOperator, OperationType } from './operator_model';
 
 export interface ReadOnlyDataSource<T> {
 	readonly value: T;

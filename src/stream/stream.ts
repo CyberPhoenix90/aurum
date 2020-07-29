@@ -1,4 +1,4 @@
-import { DataSourceOperator } from './data_source_operators';
+import { DataSourceOperator } from './operator_model';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { DataSource, processTransform, ReadOnlyDataSource } from './data_source';
