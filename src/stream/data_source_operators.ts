@@ -365,5 +365,3 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
 		}
 	};
 }
-
-new DataSource('est').transform(dsMap(parseInt), dsOdd());
