@@ -84,7 +84,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
-	static fromMultipleSources<T>(sources: ReadOnlyDataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
+	public static fromMultipleSources<T>(sources: ReadOnlyDataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
 		const result = new DataSource<T>();
 
 		for (const s of sources) {

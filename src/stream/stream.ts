@@ -24,6 +24,55 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		this.output = outputSource ?? (this.input as any);
 	}
 
+	public static fromFetchRaw(url: string): Stream<void | RequestInit, Promise<Response>> {
+		const input = new DataSource<void | RequestInit>();
+		const output = new DataSource<Promise<Response>>();
+
+		input.listen((value) => {
+			output.update(fetch(url, value as RequestInit));
+		});
+
+		return new Stream(input, output);
+	}
+
+	public static fromFetchPostJson<I, O>(url: string, baseRequestData: RequestInit): Stream<I, O> {
+		const input = new DataSource<I>();
+		const output = new DataSource<O>();
+
+		input.listen(async (value) => {
+			output.update(
+				await fetch(
+					url,
+					Object.assign(
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						} as RequestInit,
+						baseRequestData,
+						{
+							body: JSON.stringify(value)
+						} as RequestInit
+					)
+				).then((s) => s.json())
+			);
+		});
+
+		return new Stream(input, output);
+	}
+
+	public static fromFetchGetJson<O>(url: string, baseRequestData?: RequestInit): Stream<void, O> {
+		const input = new DataSource<void>();
+		const output = new DataSource<O>();
+
+		input.listen(async () => {
+			output.update(await fetch(url).then((s) => s.json()));
+		});
+
+		return new Stream(input, output);
+	}
+
 	public update(data: I): void {
 		this.input.update(data);
 	}
@@ -63,6 +112,10 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		this.listen(processTransform<O, K>(operations as any, result), token);
 
 		return new Stream(this.input, result);
+	}
+
+	public getOutput(): DataSource<O> {
+		return this.output;
 	}
 
 	public listen(callback: Callback<O>, cancellationToken?: CancellationToken): Callback<void> {
