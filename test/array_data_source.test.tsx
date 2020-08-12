@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, Aurum } from '../src/aurum';
+import { ArrayDataSource, DataSource, Aurum, CancellationToken } from '../src/aurum';
 
 describe('ArrayDatasource', () => {
 	it('should store values', () => {
@@ -11,6 +11,37 @@ describe('ArrayDatasource', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		ds.push(4, 5);
 		assert.deepEqual(ds.toArray(), [1, 2, 3, 4, 5]);
+	});
+
+	it('from multiple', () => {
+		const ds1 = new ArrayDataSource();
+		const ds2 = new ArrayDataSource();
+		const ds3 = new ArrayDataSource();
+		const ds4 = new ArrayDataSource();
+		let ds = ArrayDataSource.fromMultipleSources(new CancellationToken(), ds1, ds2, [1, 2, 3], ds3, ds4, [1, 2]);
+
+		assert.deepEqual(ds.toArray(), [1, 2, 3, 1, 2]);
+
+		ds3.push(9, 8);
+		assert.deepEqual(ds.toArray(), [1, 2, 3, 9, 8, 1, 2]);
+
+		ds1.push(1, 2, 3, 4);
+		assert.deepEqual(ds.toArray(), [1, 2, 3, 4, 1, 2, 3, 9, 8, 1, 2]);
+
+		ds1.removeLeft(2);
+		assert.deepEqual(ds.toArray(), [3, 4, 1, 2, 3, 9, 8, 1, 2]);
+
+		ds3.clear();
+		assert.deepEqual(ds.toArray(), [3, 4, 1, 2, 3, 1, 2]);
+
+		ds4.push(4, 4, 4);
+		assert.deepEqual(ds.toArray(), [3, 4, 1, 2, 3, 4, 4, 4, 1, 2]);
+
+		ds2.push(3, 3, 3);
+		assert.deepEqual(ds.toArray(), [3, 4, 3, 3, 3, 1, 2, 3, 4, 4, 4, 1, 2]);
+
+		ds2.insertAt(2, 5);
+		assert.deepEqual(ds.toArray(), [3, 4, 3, 3, 5, 3, 1, 2, 3, 4, 4, 4, 1, 2]);
 	});
 
 	it('merge', () => {

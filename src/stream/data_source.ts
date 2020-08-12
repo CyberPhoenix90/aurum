@@ -725,6 +725,52 @@ export class ArrayDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
+	public static fromMultipleSources<T>(cancellationToken: CancellationToken, ...sources: Array<ArrayDataSource<T> | T[]>): ArrayDataSource<T> {
+		const boundaries = [0];
+		const result = new ArrayDataSource<T>();
+
+		for (let i = 0; i < sources.length; i++) {
+			if (Array.isArray(sources[i])) {
+				result.appendArray(sources[i] as T[]);
+			} else {
+				result.appendArray((sources[i] as ArrayDataSource<T>).data ?? []);
+				let index = i;
+				(sources[i] as ArrayDataSource<T>).listen((change) => {
+					switch (change.operationDetailed) {
+						case 'append':
+						case 'prepend':
+						case 'insert':
+							result.insertAt(change.index + boundaries[index], ...change.items);
+							for (let i = index + 1; i < boundaries.length; i++) {
+								boundaries[i] += change.count;
+							}
+							break;
+						case 'remove':
+						case 'removeLeft':
+						case 'removeRight':
+						case 'clear':
+							result.removeRange(change.index + boundaries[index], change.index + boundaries[index] + change.count);
+							for (let i = index + 1; i < boundaries.length; i++) {
+								boundaries[i] -= change.count;
+							}
+							break;
+						case 'merge':
+							throw new Error('Not yet supported');
+						case 'replace':
+							result.set(change.index + boundaries[index], change.items[0]);
+							break;
+						case 'swap':
+							result.swap(change.index + boundaries[index], change.index2 + boundaries[index]);
+							break;
+					}
+				}, cancellationToken);
+			}
+			boundaries.push(result.length.value);
+		}
+
+		return result;
+	}
+
 	/**
 	 * Same as listen but will immediately call the callback with an append of all existing elements first
 	 */
@@ -738,6 +784,25 @@ export class ArrayDataSource<T> {
 			count: this.data.length
 		});
 		return this.listen(callback, cancellationToken);
+	}
+
+	public repeatCurrentState(): void {
+		this.update({
+			operation: 'remove',
+			operationDetailed: 'clear',
+			count: this.data.length,
+			index: 0,
+			items: this.data,
+			newState: []
+		});
+		this.update({
+			operation: 'add',
+			operationDetailed: 'append',
+			index: 0,
+			items: this.data,
+			newState: this.data,
+			count: this.data.length
+		});
 	}
 
 	public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
@@ -913,14 +978,27 @@ export class ArrayDataSource<T> {
 			this.lengthSource.update(this.data.length);
 		}
 	}
+
+	public removeAt(index: number): void {
+		const removed = this.data.splice(index, 1);
+		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index, items: removed, newState: this.data });
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
+	}
+
+	public removeRange(start: number, end): void {
+		const removed = this.data.splice(start, end - start);
+		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
+		if (this.lengthSource.value !== this.data.length) {
+			this.lengthSource.update(this.data.length);
+		}
+	}
+
 	public remove(item: T): void {
 		const index = this.data.indexOf(item);
 		if (index !== -1) {
-			this.data.splice(index, 1);
-			this.update({ operation: 'remove', operationDetailed: 'remove', count: 1, index, items: [item], newState: this.data });
-			if (this.lengthSource.value !== this.data.length) {
-				this.lengthSource.update(this.data.length);
-			}
+			this.removeAt(index);
 		}
 	}
 
