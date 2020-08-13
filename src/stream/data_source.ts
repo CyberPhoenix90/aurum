@@ -31,7 +31,6 @@ export interface GenericDataSource<T> {
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-	filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
 	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
 	withInitial(value: T): this;
 	aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): GenericDataSource<E>;
@@ -163,55 +162,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
 	}
 
-	/**
-	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they pass a predicate check
-	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public filter(callback: (newValue: T, oldValue: T) => boolean, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const filteredSource = new TransientDataSource<T>(cancellationToken, undefined, this.name + ' filter');
-		this.listen((value) => {
-			if (callback(value, filteredSource.value)) {
-				filteredSource.update(value);
-			}
-		}, cancellationToken);
-		return filteredSource;
-	}
-
-	/**
-	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they are larger than the previous value
-	 * In case of strings it checks alphabetical order when deciding what is bigger or smaller
-	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public max(cancellationToken?: CancellationToken): TransientDataSource<T> {
-		return this.filter((newValue, oldValue) => {
-			if (typeof newValue === 'string' && typeof oldValue === 'string') {
-				return newValue.localeCompare(oldValue) > 0;
-			} else {
-				return newValue > oldValue;
-			}
-		}, cancellationToken);
-	}
-
-	/**
-	 * Creates a new datasource that listenes to updates of this datasource but only propagates the updates from this source if they are smaller than the previous value
-	 * In case of strings it checks alphabetical order when deciding what is bigger or smaller
-	 * @param callback predicate check to decide if the update from the parent data source is passed down or not
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public min(cancellationToken?: CancellationToken): TransientDataSource<T> {
-		return this.filter((newValue, oldValue) => {
-			if (typeof newValue === 'string' && typeof oldValue === 'string') {
-				return newValue.localeCompare(oldValue) < 0;
-			} else {
-				return newValue < oldValue;
-			}
-		}, cancellationToken);
-	}
-
 	public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
 		operationA: DataSourceOperator<T, A>,
 		operationB?: DataSourceOperator<A, B> | CancellationToken,
@@ -288,19 +238,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 			callback(value);
 		}, cancellationToken);
 		return this;
-	}
-
-	/**
-	 * Connects this datasource to N other sources and forwards events to them in round robin fashion
-	 */
-	public loadBalance(targets: DataSource<T>[], cancellation?: CancellationToken): void {
-		let i = 0;
-		this.listen((v) => {
-			targets[i++].update(v);
-			if (i >= targets.length) {
-				i = 0;
-			}
-		}, cancellation);
 	}
 
 	/**
@@ -553,30 +490,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 		}, cancellationToken);
 
 		return debouncedDataSource;
-	}
-
-	/**
-	 * Creates a new source that listens to the updates of this source and forwards them to itself at most once per <time> milliseconds. In case many updates happen during the delay time only at most one update per delay will be taken into account,
-	 * effectively allowing to reduce load on the next stream. Useful for optimizations
-	 * @param time Milliseconds of cooldown after an update before another update can happen
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public throttle(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const throttledDataSource = new TransientDataSource<T>(cancellationToken, this.value);
-		let cooldown = false;
-
-		this.listen((v) => {
-			if (!cooldown) {
-				throttledDataSource.update(v);
-				cooldown = true;
-				setTimeout(() => {
-					cooldown = false;
-				}, time);
-			}
-		}, cancellationToken);
-
-		return throttledDataSource;
 	}
 
 	/**
@@ -1036,17 +949,18 @@ export class ArrayDataSource<T> {
 		return this.data.slice();
 	}
 
+	public reverse(cancellationToken?: CancellationToken): ReversedArrayView<T> {
+		const view = new ReversedArrayView<T>(this, cancellationToken);
+
+		return view;
+	}
+
 	public sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
 		const view = new SortedArrayView(this, comparator, cancellationToken);
 
-		const token = new CancellationToken();
-		if (cancellationToken) {
-			cancellationToken.addCancelable(() => token.cancel());
-		}
-
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
-		}, token);
+		}, cancellationToken);
 
 		return view;
 	}
@@ -1166,6 +1080,65 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 	}
 }
 
+export class ReversedArrayView<T> extends ArrayDataSource<T> {
+	private parent: ArrayDataSource<T>;
+
+	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken()) {
+		const initial = parent
+			.getData()
+			.slice()
+			.reverse();
+		super(initial);
+		this.parent = parent;
+
+		parent.listen((change) => {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+					this.removeRight(change.count);
+					break;
+				case 'removeRight':
+					this.removeLeft(change.count);
+					break;
+				case 'remove':
+					for (const item of change.items) {
+						this.remove(item);
+					}
+					break;
+				case 'clear':
+					this.clear();
+					break;
+				case 'prepend':
+					this.appendArray(change.items.reverse());
+					break;
+				case 'append':
+					this.unshift(...change.items.reverse());
+					break;
+				case 'insert':
+					this.merge(change.newState.slice().reverse());
+					break;
+				case 'merge':
+					this.merge(change.items.slice().reverse());
+					break;
+				case 'swap':
+					this.merge(change.newState.slice().reverse());
+					break;
+				case 'replace':
+					this.merge(change.newState.slice().reverse());
+					break;
+			}
+		}, cancellationToken);
+	}
+
+	public refresh() {
+		this.merge(
+			this.parent
+				.getData()
+				.slice()
+				.reverse()
+		);
+	}
+}
+
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;
@@ -1183,12 +1156,10 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 			switch (change.operationDetailed) {
 				case 'removeLeft':
 				case 'removeRight':
+				case 'remove':
 					for (const item of change.items) {
 						this.remove(item);
 					}
-					break;
-				case 'remove':
-					this.remove(change.items[0]);
 					break;
 				case 'clear':
 					this.clear();

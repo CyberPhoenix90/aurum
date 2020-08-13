@@ -44,6 +44,31 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(ds.toArray(), [3, 4, 3, 3, 5, 3, 1, 2, 3, 4, 4, 4, 1, 2]);
 	});
 
+	it('reverse', () => {
+		const ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		const reverse = ds.reverse();
+
+		assert.deepEqual(reverse.toArray(), [6, 5, 4, 3, 2, 1]);
+
+		ds.push(7);
+		assert.deepEqual(reverse.toArray(), [7, 6, 5, 4, 3, 2, 1]);
+
+		ds.push(8, 9);
+		assert.deepEqual(reverse.toArray(), [9, 8, 7, 6, 5, 4, 3, 2, 1]);
+
+		ds.insertAt(3, 0);
+		assert.deepEqual(reverse.toArray(), [9, 8, 7, 6, 5, 4, 0, 3, 2, 1]);
+
+		ds.removeAt(2);
+		assert.deepEqual(reverse.toArray(), [9, 8, 7, 6, 5, 4, 0, 2, 1]);
+
+		ds.removeLeft(2);
+		assert.deepEqual(reverse.toArray(), [9, 8, 7, 6, 5, 4, 0]);
+
+		ds.removeRight(2);
+		assert.deepEqual(reverse.toArray(), [7, 6, 5, 4, 0]);
+	});
+
 	it('merge', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		ds.merge([6, 7]);

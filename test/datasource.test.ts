@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { DataSource, CancellationToken } from '../src/aurum';
+import { DataSource, CancellationToken, dsFilter } from '../src/aurum';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
 
 describe('Datasource', () => {
@@ -47,7 +47,7 @@ describe('Datasource', () => {
 
 	it('should filter updates', () => {
 		let ds = new DataSource(123);
-		let filtered = ds.filter((v) => v > 200).persist();
+		let filtered = ds.transform(dsFilter((v) => v > 200));
 		assert(filtered.value === undefined);
 		ds.update(100);
 		assert(filtered.value === undefined);
