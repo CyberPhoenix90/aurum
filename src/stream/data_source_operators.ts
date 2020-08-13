@@ -377,26 +377,33 @@ export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
 	};
 }
 
-export function dsBuffer<T>(time: number): DataSourceMapDelayOperator<T, T[]> {
+export function dsBuffer<T>(time: number): DataSourceMapDelayFilterOperator<T, T[]> {
 	let buffer = [];
 	let promise;
 
 	return {
 		name: `buffer ${time}ms`,
-		operationType: OperationType.MAP_DELAY,
+		operationType: OperationType.MAP_DELAY_FILTER,
 		operation: (v) => {
 			buffer.push(v);
 			if (!promise) {
 				promise = new Promise((resolve) => {
 					setTimeout(() => {
 						promise = undefined;
-						resolve(buffer);
+						resolve({
+							cancelled: false,
+							item: buffer
+						});
 						buffer = [];
 					}, time);
 				});
+				return promise;
+			} else {
+				return Promise.resolve({
+					cancelled: true,
+					item: undefined
+				});
 			}
-
-			return promise;
 		}
 	};
 }

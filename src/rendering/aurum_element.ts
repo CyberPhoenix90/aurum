@@ -147,6 +147,9 @@ export abstract class AurumElement {
 		let offset: number = 0;
 		for (i = 0; i < this.children.length; i++) {
 			const child = this.children[i];
+			if (child === undefined || child === null) {
+				continue;
+			}
 			if (child instanceof AurumElement) {
 				offset += child.getLastIndex() - i - offset - workIndex;
 				continue;
