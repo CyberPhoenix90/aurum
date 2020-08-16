@@ -69,8 +69,8 @@ export class CancellationToken {
 
 	public animationLoop(cb: Callback<number>): void {
 		let id: number = requestAnimationFrame(function f(time: number) {
-			cb(time);
 			id = requestAnimationFrame(f);
+			cb(time);
 		});
 
 		this.addCancelable(() => cancelAnimationFrame(id));

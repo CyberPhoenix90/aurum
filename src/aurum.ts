@@ -15,3 +15,4 @@ export * from './stream/stream';
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
 export * from './utilities/event_emitter';
+export { debugMode } from './debug_mode';
