@@ -1,4 +1,4 @@
-import { DataSource } from './data_source';
+import { ArrayDataSource, DataSource } from './data_source';
 import { Callback } from '../utilities/common';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { EventEmitter } from '../utilities/event_emitter';
@@ -48,6 +48,44 @@ export class ObjectDataSource<T> {
 	 */
 	public listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+	}
+
+	public map<D>(mapper: (change: ObjectChange<T, keyof T>) => D): ArrayDataSource<D> {
+		const stateMap: Map<string | number | Symbol, D> = new Map<string | number | Symbol, D>();
+		const result = new ArrayDataSource<D>();
+		this.listenAndRepeat((change) => {
+			if (change.deleted && stateMap.has(change.key)) {
+				const item = stateMap.get(change.key);
+				result.remove(item);
+				stateMap.delete(change.key);
+			} else if (stateMap.has(change.key)) {
+				const newItem = mapper(change);
+				result.replace(stateMap.get(change.key), newItem);
+				stateMap.set(change.key, newItem);
+			} else if (!stateMap.has(change.key)) {
+				const newItem = mapper(change);
+				result.push(newItem);
+				stateMap.set(change.key, newItem);
+			}
+		});
+
+		return result;
+	}
+
+	/**
+	 * Same as listen but will immediately call the callback with the current value of each key
+	 */
+	public listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
+		const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+		for (const key in this.data) {
+			callback({
+				key,
+				newValue: this.data[key],
+				oldValue: undefined,
+				deleted: false
+			});
+		}
+		return c;
 	}
 
 	/**

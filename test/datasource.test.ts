@@ -111,7 +111,7 @@ describe('Datasource', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
 		let combined = ds.combine([ds2]).persist();
-		assert(combined.value === undefined);
+		assert(combined.value === 1);
 		ds.update(100);
 		assert(combined.value === 100);
 		ds2.update(200);

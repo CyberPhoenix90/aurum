@@ -397,7 +397,12 @@ export class DataSource<T> implements GenericDataSource<T> {
 	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): TransientDataSource<T> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 
-		const combinedDataSource = new TransientDataSource<T>(cancellationToken);
+		let combinedDataSource;
+		if (this.primed) {
+			combinedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
+		} else {
+			combinedDataSource = new TransientDataSource<T>(cancellationToken);
+		}
 		this.pipe(combinedDataSource, cancellationToken);
 		for (const otherSource of otherSources) {
 			otherSource.pipe(combinedDataSource, cancellationToken);
@@ -757,6 +762,25 @@ export class ArrayDataSource<T> {
 		this.update({ operation: 'replace', operationDetailed: 'replace', target: old, count: 1, index, items: [item], newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
+		}
+	}
+
+	public indexOf(item: T): number {
+		return this.data.indexOf(item);
+	}
+
+	public lastIndexOf(item: T): number {
+		return this.data.lastIndexOf(item);
+	}
+
+	public includes(item: T): boolean {
+		return this.data.includes(item);
+	}
+
+	public replace(item: T, newItem: T): void {
+		const index = this.indexOf(item);
+		if (index !== -1) {
+			this.set(index, newItem);
 		}
 	}
 
