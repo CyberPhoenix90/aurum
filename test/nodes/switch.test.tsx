@@ -13,9 +13,9 @@ describe('Switch', () => {
 			<div>
 				<Switch state={new DataSource()}></Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
 	});
 
 	it('Should not add anything to the DOM with empty cases', () => {
@@ -25,9 +25,9 @@ describe('Switch', () => {
 					<DefaultSwitchCase></DefaultSwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
 	});
 
 	it('Should pick none if no match', () => {
@@ -39,10 +39,10 @@ describe('Switch', () => {
 					</SwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
 
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
 	});
 
 	it('Should pick default', () => {
@@ -54,10 +54,10 @@ describe('Switch', () => {
 					</DefaultSwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[1].textContent === 'hello');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[1].textContent === 'hello');
 	});
 
 	it('Should pick correct', () => {
@@ -72,10 +72,10 @@ describe('Switch', () => {
 					</SwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[1].textContent === 'world');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[1].textContent === 'world');
 	});
 
 	it('Should update', () => {
@@ -91,17 +91,17 @@ describe('Switch', () => {
 					</SwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[1].textContent === 'hello');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[1].textContent === 'hello');
 
 		data.update('two');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[1].textContent === 'world');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[1].textContent === 'world');
 
 		data.update('three');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
 	});
 
 	it('Nested switches should work', () => {
@@ -133,25 +133,25 @@ describe('Switch', () => {
 					</SwitchCase>
 				</Switch>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[2].textContent === 'sub one');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub one');
 
 		data2.update('two');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[2].textContent === 'sub two');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub two');
 		data2.update('one');
 
 		data.update('two');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[2].textContent === 'sub hello');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub hello');
 
 		data2.update('two');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.body.firstChild.childNodes[2].textContent === 'sub world');
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub world');
 
 		data.update('three');
-		assert(Array.from(document.body.firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
 	});
 });

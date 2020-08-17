@@ -1,8 +1,63 @@
 import { assert } from 'chai';
-import { DataSource, CancellationToken, dsFilter } from '../src/aurum';
+import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum } from '../src/aurum';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
 
 describe('Datasource', () => {
+	let attachToken: CancellationToken;
+	afterEach(() => {
+		attachToken?.cancel();
+		attachToken = undefined;
+	});
+
+	it('should render the data source value', () => {
+		const ds = new DataSource<any>(12);
+		const ds2 = new DataSource<any>();
+		const ds3 = new ArrayDataSource<any>([]);
+
+		attachToken = Aurum.attach(
+			<div>
+				<div>{ds}</div>
+			</div>,
+			document.getElementById('target')
+		);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12');
+
+		ds.update(99);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '99');
+
+		ds.update([]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		ds.update('test');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, 'test');
+
+		ds.update([1, 2, 3]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '123');
+
+		ds.update([1, 'test', '8']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1test8');
+
+		ds.update([1, [2, [3, [4], 5]], 6]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '123456');
+
+		ds.update(undefined);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		ds.update(1);
+		ds.update(null);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		ds2.update(5);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		ds.update(ds2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '5');
+
+		ds.update(ds3);
+		ds3.push('2', 3, 4);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '234');
+	});
+
 	it('should allow omitting initial value', () => {
 		let ds = new DataSource();
 		assert(ds.value === undefined);

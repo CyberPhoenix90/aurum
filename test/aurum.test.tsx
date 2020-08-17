@@ -1,26 +1,29 @@
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { Aurum, DataSource, CancellationToken } from '../src/aurum';
 describe('Aurum', () => {
+	let clock: sinon.SinonFakeTimers;
 	beforeEach(() => {
-		jest.useFakeTimers();
+		clock = sinon.useFakeTimers();
 	});
 
 	let attachToken: CancellationToken;
 	afterEach(() => {
+		clock.uninstall();
 		attachToken?.cancel();
 		attachToken = undefined;
 	});
 
 	it('should attach dom node', () => {
-		assert(document.body.firstChild === null);
-		attachToken = Aurum.attach(<div></div>, document.body);
-		assert(document.body.firstChild !== null);
+		assert(document.getElementById('target').firstChild === null);
+		attachToken = Aurum.attach(<div></div>, document.getElementById('target'));
+		assert(document.getElementById('target').firstChild !== null);
 	});
 
 	it('Should set inner text', () => {
-		attachToken = Aurum.attach(<div>Hello World</div>, document.body);
-		jest.runAllTimers();
-		assert((document.body.firstChild as HTMLDivElement).textContent === 'Hello World');
+		attachToken = Aurum.attach(<div>Hello World</div>, document.getElementById('target'));
+		clock.tick(100);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
 
 	it('Should fire onAttach when connected to dom', () => {
@@ -34,9 +37,9 @@ describe('Aurum', () => {
 				>
 					Hello World
 				</div>,
-				document.body
+				document.getElementById('target')
 			);
-			jest.runAllTimers();
+			clock.tick(100);
 		});
 	});
 
@@ -51,9 +54,9 @@ describe('Aurum', () => {
 				>
 					Hello World
 				</div>,
-				document.body
+				document.getElementById('target')
 			);
-			jest.runAllTimers();
+			clock.tick(100);
 			attachToken.cancel();
 			attachToken = undefined;
 		});
@@ -64,11 +67,11 @@ describe('Aurum', () => {
 			<div>
 				<p>Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		jest.runAllTimers();
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).textContent === 'Hello World');
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).textContent === 'Hello World');
 	});
 
 	it('should accept booleans for attributes 1', () => {
@@ -76,10 +79,10 @@ describe('Aurum', () => {
 			<div>
 				<p id={false}>Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
 	});
 
 	it('should accept booleans for attributes 2', () => {
@@ -87,11 +90,11 @@ describe('Aurum', () => {
 			<div>
 				<p id={true}>Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
 	});
 
 	it('should accept booleans datasources for attributes', () => {
@@ -100,19 +103,19 @@ describe('Aurum', () => {
 			<div>
 				<p id={ds}>Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
 
 		ds.update(true);
 
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
 
 		ds.update(false);
 
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === false);
 	});
 
 	it('should accept text for attributes', () => {
@@ -120,11 +123,11 @@ describe('Aurum', () => {
 			<div>
 				<p id="test">Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
 	});
 
 	it('should accept string datasources for attributes', () => {
@@ -133,16 +136,16 @@ describe('Aurum', () => {
 			<div>
 				<p id={ds}>Hello World</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		assert(document.body.firstChild.firstChild instanceof HTMLParagraphElement);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+		assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
 
 		ds.update('test');
 
-		assert((document.body.firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
-		assert((document.body.firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
 	});
 
 	it('Should accept data sources', () => {
@@ -151,16 +154,16 @@ describe('Aurum', () => {
 			<div>
 				<p>{ds}</p>
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
-		jest.runAllTimers();
-		assert((document.body.firstChild.firstChild as HTMLDivElement).textContent === '123');
+		clock.tick(100);
+		assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).textContent === '123');
 	});
 
 	it('Should accept functional components', () => {
 		const FuncComp = () => <div>Functional</div>;
-		attachToken = Aurum.attach(<FuncComp></FuncComp>, document.body);
-		jest.runAllTimers();
-		assert((document.body.firstChild as HTMLDivElement).textContent === 'Functional');
+		attachToken = Aurum.attach(<FuncComp></FuncComp>, document.getElementById('target'));
+		clock.tick(100);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === 'Functional');
 	});
 });

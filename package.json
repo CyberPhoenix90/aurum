@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.5.17",
+	"version": "0.5.18",
 	"description": "Stream based declarative DOM rendering library for javascript",
 	"main": "prebuilt/aurumjs.js",
 	"typings": "dist/aurum.d.ts",
@@ -8,7 +8,7 @@
 		"build": "tsc",
 		"watch": "tsc -w",
 		"prepublish": "npm run deploy",
-		"test": "jest",
+		"test": "tsc -p tsconfig.test.json && http-server -o -c-1",
 		"generateDocs": "typedoc --json docs/docs.json --mode modules --excludePrivate --excludeProtected",
 		"deploy-test": "npm run build && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum",
 		"deploy": "npm run build && npm run generateDocs && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum && microbundle --entry dist/aurum.js --output prebuilt_minified --name aurum"
@@ -29,12 +29,15 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/chai": "^4.2.5",
-		"@types/jest": "^24.0.23",
+		"@types/mocha": "^8.0.2",
+		"@types/sinon": "^9.0.4",
 		"chai": "^4.2.0",
-		"jest": "^24.9.0",
+		"http-server": "^0.12.3",
 		"microbundle": "^0.12.0",
+		"mocha": "^8.1.1",
 		"prettier": "^1.19.1",
-		"ts-jest": "^24.1.0",
+		"requirejs": "^2.3.6",
+		"sinon": "^9.0.3",
 		"typedoc": "^0.15.4",
 		"typescript": "^3.7.2"
 	},

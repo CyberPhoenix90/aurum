@@ -1,9 +1,15 @@
 import { assert } from 'chai';
+import * as sinon from 'sinon';
+import { SinonFakeTimers } from 'sinon';
 import { CancellationToken } from '../src/aurum';
 
 describe('cancellation token', () => {
+	let clock: SinonFakeTimers;
 	beforeEach(() => {
-		jest.useFakeTimers();
+		clock = sinon.useFakeTimers();
+	});
+	afterEach(() => {
+		clock.uninstall();
 	});
 
 	it('setTimeout should not fire if cancel occurs first', () => {
@@ -12,7 +18,7 @@ describe('cancellation token', () => {
 			assert(false);
 		});
 		token.cancel();
-		jest.runAllTimers();
+		clock.tick(100);
 	});
 
 	it('setTimeout should fire if cancel occurs after', () => {
@@ -21,7 +27,7 @@ describe('cancellation token', () => {
 			token.setTimeout(() => {
 				resolve();
 			});
-			jest.runAllTimers();
+			clock.tick(100);
 			token.cancel();
 		});
 	});
@@ -34,7 +40,7 @@ describe('cancellation token', () => {
 		assert(token['cancelables'].length === 2);
 		token.setTimeout(() => {});
 		assert(token['cancelables'].length === 3);
-		jest.runAllTimers();
+		clock.tick(100);
 		assert(token['cancelables'].length === 0);
 		token.cancel();
 	});

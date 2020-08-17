@@ -1,14 +1,18 @@
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { Aurum, Switch, SwitchCase, DataSource, CancellationToken } from '../src/aurum';
 
 describe('Aurum Element', () => {
 	let attachToken: CancellationToken;
+
+	let clock: sinon.SinonFakeTimers;
+	beforeEach(() => {
+		clock = sinon.useFakeTimers();
+	});
 	afterEach(() => {
+		clock.uninstall();
 		attachToken?.cancel();
 		attachToken = undefined;
-	});
-	beforeEach(() => {
-		jest.useFakeTimers();
 	});
 
 	it('Should be in DOM at onAttach', () => {
@@ -20,7 +24,7 @@ describe('Aurum Element', () => {
 						resolve();
 					}}
 				></div>,
-				document.body
+				document.getElementById('target')
 			);
 		});
 	});
@@ -36,7 +40,7 @@ describe('Aurum Element', () => {
 						}}
 					></div>
 				</div>,
-				document.body
+				document.getElementById('target')
 			);
 		});
 	});
@@ -50,7 +54,7 @@ describe('Aurum Element', () => {
 						resolve();
 					}}
 				></div>,
-				document.body
+				document.getElementById('target')
 			);
 			attachToken.cancel();
 			attachToken = undefined;
@@ -74,7 +78,7 @@ describe('Aurum Element', () => {
 						<SwitchCase when={false}></SwitchCase>
 					</Switch>
 				</div>,
-				document.body
+				document.getElementById('target')
 			);
 
 			ds.update(false);

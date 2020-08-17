@@ -1,12 +1,15 @@
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { Aurum, DataSource } from '../../src/aurum';
 
 describe('Select', () => {
 	let attachToken;
+	let clock: sinon.SinonFakeTimers;
 	beforeEach(() => {
-		jest.useFakeTimers();
+		clock = sinon.useFakeTimers();
 	});
 	afterEach(() => {
+		clock.uninstall();
 		attachToken?.cancel();
 		attachToken = undefined;
 	});
@@ -17,9 +20,9 @@ describe('Select', () => {
 				<option>1</option>
 				<option>2</option>
 			</select>,
-			document.body
+			document.getElementById('target')
 		);
-		assert((document.body.firstChild as HTMLSelectElement).selectedIndex === 1);
+		assert((document.getElementById('target').firstChild as HTMLSelectElement).selectedIndex === 1);
 	});
 
 	it('Should apply selection source', () => {
@@ -30,11 +33,11 @@ describe('Select', () => {
 				<option>2</option>
 				<option>3</option>
 			</select>,
-			document.body
+			document.getElementById('target')
 		);
-		assert((document.body.firstChild as HTMLSelectElement).selectedIndex === 1);
+		assert((document.getElementById('target').firstChild as HTMLSelectElement).selectedIndex === 1);
 		source.update(2);
-		jest.runAllTimers();
-		assert((document.body.firstChild as HTMLSelectElement).selectedIndex === 2);
+		clock.tick(100);
+		assert((document.getElementById('target').firstChild as HTMLSelectElement).selectedIndex === 2);
 	});
 });

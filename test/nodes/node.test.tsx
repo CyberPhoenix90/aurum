@@ -67,9 +67,9 @@ describe('Nodes', () => {
 		'Hr'
 	].forEach((n) => {
 		it('should render node ' + n, () => {
-			let attachToken = Aurum.attach(Aurum.factory(n.toLowerCase(), {}, null), document.body);
+			let attachToken = Aurum.attach(Aurum.factory(n.toLowerCase(), {}, null), document.getElementById('target'));
 			try {
-				assert(document.body.firstChild.nodeName.toLowerCase() === n.toLowerCase());
+				assert(document.getElementById('target').firstChild.nodeName.toLowerCase() === n.toLowerCase());
 			} finally {
 				attachToken.cancel();
 			}
@@ -85,11 +85,11 @@ describe('Nodes', () => {
 					<div>{i}</div>
 				))}
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
 		try {
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '1234');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '1234');
 		} finally {
 			attachToken.cancel();
 		}
@@ -104,23 +104,23 @@ describe('Nodes', () => {
 					<div>{i}</div>
 				))}
 			</div>,
-			document.body
+			document.getElementById('target')
 		);
 		try {
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
+			assert((document.getElementById('target').firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
 			repeatModel.push(5);
-			assert((document.body.firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '12345');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).childElementCount === repeatModel.length.value);
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '12345');
 			repeatModel.swap(0, 2);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '32145');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '32145');
 			repeatModel.unshift(7);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '732145');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '732145');
 			repeatModel.removeRight(1);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '73214');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '73214');
 			repeatModel.removeLeft(2);
-			assert((document.body.firstChild as HTMLDivElement).textContent === '214');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '214');
 			repeatModel.clear();
-			assert((document.body.firstChild as HTMLDivElement).textContent === '');
+			assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === '');
 		} finally {
 			attachToken.cancel();
 		}

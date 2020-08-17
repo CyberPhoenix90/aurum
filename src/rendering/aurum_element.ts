@@ -131,9 +131,14 @@ export abstract class AurumElement {
 		if (this.hostNode === undefined) {
 			throw new Error('illegal state: Aurum element was not attched to anything');
 		}
-		const workIndex = this.getWorkIndex();
+
+		let workIndex = this.getWorkIndex();
 		while (this.hostNode.childNodes[workIndex] !== this.contentEndMarker) {
-			this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
+			if (!(this.hostNode.childNodes[workIndex] instanceof Comment)) {
+				this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
+			} else {
+				workIndex++;
+			}
 		}
 	}
 
@@ -148,16 +153,21 @@ export abstract class AurumElement {
 		for (i = 0; i < this.children.length; i++) {
 			const child = this.children[i];
 			if (child === undefined || child === null) {
+				offset--;
 				continue;
 			}
 			if (child instanceof AurumElement) {
+				if (!child.hostNode) {
+					child.attachToDom(this.hostNode, i + workIndex + offset);
+				}
 				offset += child.getLastIndex() - i - offset - workIndex;
 				continue;
 			}
 
 			if (
 				this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker &&
-				this.hostNode.childNodes[i + workIndex + offset] !== this.children[i]
+				this.hostNode.childNodes[i + workIndex + offset] !== this.children[i] &&
+				this.hostNode.childNodes[i + workIndex + offset] !== (this.children[i + 1] as SingularAurumElement)?.contentStartMarker
 			) {
 				if (child instanceof HTMLElement || child instanceof Text) {
 					this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
@@ -352,7 +362,6 @@ export class ArrayAurumElement extends AurumElement {
 	protected render(dataSource: ArrayDataSource<any>): void {
 		dataSource.listenAndRepeat((n) => {
 			this.handleNewContent(n);
-			this.updateDom();
 		}, this.api.cancellationToken);
 	}
 
@@ -369,15 +378,16 @@ export class ArrayAurumElement extends AurumElement {
 	}
 
 	private handleNewContent(change: CollectionChange<any>): void {
+		const ac = [];
 		switch (change.operationDetailed) {
 			case 'merge':
 				const source = change.previousState.slice();
 				for (let i = 0; i < change.newState.length; i++) {
 					if (this.children.length <= i) {
-						this.children.push(this.renderItem(change.newState[i]));
+						this.children.push(this.renderItem(change.newState[i], ac));
 					}
 					if (source[i] !== change.newState[i]) {
-						const index = source.indexOf(change.newState[i]);
+						const index = source.indexOf(change.newState[i], i);
 						if (index !== -1) {
 							const a = this.children[i];
 							const b = this.children[index];
@@ -388,7 +398,7 @@ export class ArrayAurumElement extends AurumElement {
 							source[i] = d;
 							source[index] = c;
 						} else {
-							this.spliceChildren(i, 0, this.renderItem(change.newState[i]));
+							this.spliceChildren(i, 0, this.renderItem(change.newState[i], ac));
 							source.splice(i, 0, change.newState[i]);
 						}
 					}
@@ -404,7 +414,7 @@ export class ArrayAurumElement extends AurumElement {
 				break;
 			case 'append':
 				for (const item of change.items) {
-					const rendered = this.renderItem(item);
+					const rendered = this.renderItem(item, ac);
 					if (Array.isArray(rendered)) {
 						this.children = this.children.concat(rendered);
 					} else {
@@ -413,7 +423,7 @@ export class ArrayAurumElement extends AurumElement {
 				}
 				break;
 			case 'replace':
-				const rendered = this.renderItem(change.items[0]);
+				const rendered = this.renderItem(change.items[0], ac);
 				if (Array.isArray(rendered)) {
 					throw new Error('illegal state');
 				} else {
@@ -428,7 +438,7 @@ export class ArrayAurumElement extends AurumElement {
 				break;
 			case 'prepend':
 				for (const item of change.items) {
-					const rendered = this.renderItem(item);
+					const rendered = this.renderItem(item, ac);
 					if (Array.isArray(rendered)) {
 						throw new Error('illegal state');
 					} else {
@@ -439,7 +449,7 @@ export class ArrayAurumElement extends AurumElement {
 			case 'insert':
 				let index = change.index;
 				for (const item of change.items) {
-					const rendered = this.renderItem(item);
+					const rendered = this.renderItem(item, ac);
 					if (Array.isArray(rendered)) {
 						throw new Error('illegal state');
 					} else {
@@ -450,7 +460,7 @@ export class ArrayAurumElement extends AurumElement {
 				break;
 			case 'remove':
 				for (const item of change.items) {
-					const rendered = this.renderItem(item);
+					const rendered = this.renderItem(item, ac);
 					if (Array.isArray(rendered)) {
 						throw new Error('illegal state');
 					} else {
@@ -466,15 +476,26 @@ export class ArrayAurumElement extends AurumElement {
 				throw new Error('not implemented');
 		}
 		this.updateDom();
+		for (const c of ac) {
+			c();
+		}
 	}
 
-	private renderItem(item: any) {
+	private renderItem(item: any, attachCalls: any[]) {
+		if (item === null || item === undefined) {
+			return;
+		}
+
 		const s = createRenderSession();
 		const rendered = render(item, s);
-		for (const cb of s.attachCalls) {
-			cb();
+		if (rendered === undefined || rendered === null) {
+			return;
+		}
+		if (rendered instanceof AurumElement) {
+			s.sessionToken.addCancelable(() => rendered.dispose());
 		}
 		this.renderSessions.set(rendered, s);
+		attachCalls.push(...s.attachCalls);
 		return rendered;
 	}
 }
@@ -501,7 +522,6 @@ export class SingularAurumElement extends AurumElement {
 	protected render(dataSource: DataSource<any> | DuplexDataSource<any>): void {
 		dataSource.listenAndRepeat((n) => {
 			this.handleNewContent(n);
-			this.updateDom();
 		}, this.api.cancellationToken);
 	}
 
@@ -512,13 +532,17 @@ export class SingularAurumElement extends AurumElement {
 		let optimized = false;
 		if (this.children.length === 1 && this.children[0] instanceof Text) {
 			const type = typeof newValue;
-			if (type === 'string' || type === 'bigint' || type === 'number') {
+			if (type === 'string' || type === 'bigint' || type === 'number' || type === 'boolean') {
 				this.children[0].nodeValue = newValue;
 				optimized = true;
 			}
 		}
 		if (!optimized) {
 			this.fullRebuild(newValue);
+		}
+		this.updateDom();
+		for (const cb of this.renderSession.attachCalls) {
+			cb();
 		}
 
 		this.lastValue = newValue;
@@ -540,12 +564,12 @@ export class SingularAurumElement extends AurumElement {
 		for (const item of rendered) {
 			if (item instanceof AurumElement) {
 				item.attachToDom(this.hostNode, this.getLastIndex());
+				this.renderSession.sessionToken.addCancelable(() => {
+					item.dispose();
+				});
 			}
 		}
 
-		for (const cb of this.renderSession.attachCalls) {
-			cb();
-		}
 		if (Array.isArray(rendered)) {
 			this.children = rendered;
 		}

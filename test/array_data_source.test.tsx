@@ -131,14 +131,86 @@ describe('ArrayDatasource', () => {
 			.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
 			.map((v) => <div>{v}</div>);
 
-		Aurum.attach(<div>{mapped}</div>, document.body);
+		const token = Aurum.attach(<div>{mapped}</div>, document.getElementById('target'));
 
-		assert.deepEqual((document.body.firstChild as HTMLDivElement).textContent, '2468');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '2468');
 		key.update(3);
-		assert.deepEqual((document.body.firstChild as HTMLDivElement).textContent, '369');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '369');
 		reverse.update(true);
-		assert.deepEqual((document.body.firstChild as HTMLDivElement).textContent, '963');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '963');
 		key.update(2);
-		assert.deepEqual((document.body.firstChild as HTMLDivElement).textContent, '8642');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '8642');
+
+		token.cancel();
+	});
+
+	it('render all types', () => {
+		const ads = new ArrayDataSource<any>([4, 5, 7]);
+		const ds = new DataSource(2);
+		const ads2 = new ArrayDataSource([1, 2, 3]);
+
+		const token = Aurum.attach(<div>{ads}</div>, document.getElementById('target'));
+
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '457');
+
+		ads.merge([1, 2, 3]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '123');
+
+		ads.merge(['0', '0']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '00');
+
+		ads.merge([1, '0', 2, 3, '0']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '10230');
+
+		ads.merge(['0', '0']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '00');
+
+		ads.clear();
+		ads.push('0', '0');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '00');
+
+		ads.push(undefined);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '00');
+
+		ads.push(3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '003');
+
+		ads.push(null);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '003');
+
+		ads.push(4);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '0034');
+
+		ads.set(2, 'test');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '00test34');
+
+		ads.clear();
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		ads.push(ds);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '2');
+
+		ds.update(3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '3');
+
+		ads.push(ads2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '3123');
+
+		ads2.push(4);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '31234');
+
+		ds.update(1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '11234');
+
+		ads2.removeLeft(2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '134');
+
+		ads.remove(ds);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '34');
+
+		ads.remove(ads2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+
+		token.cancel();
 	});
 });
