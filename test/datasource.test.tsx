@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum } from '../src/aurum';
+import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique } from '../src/aurum';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
 
 describe('Datasource', () => {
@@ -138,8 +138,9 @@ describe('Datasource', () => {
 	});
 
 	it('should reduce updates', () => {
-		let ds = new DataSource(123);
-		let reduced = ds.reduce((p, c) => p + c, ds.value).persist();
+		let ds = new DataSource<number>();
+		let reduced = ds.transform(dsReduce((p, c) => p + c, 0));
+		ds.update(123);
 		assert(reduced.value === 123);
 		ds.update(100);
 		assert(reduced.value === 223);
@@ -177,7 +178,7 @@ describe('Datasource', () => {
 
 	it('should pick keys from object updates', () => {
 		let ds = new DataSource({ someKey: 123 });
-		let pick = ds.pick('someKey').persist();
+		let pick = ds.transform(dsPick('someKey'));
 		assert(pick.value === 123);
 		ds.update({ someKey: 100 });
 		assert(pick.value === 100);
@@ -187,7 +188,7 @@ describe('Datasource', () => {
 		assert(pick.value === null);
 
 		ds = new DataSource();
-		pick = ds.pick('someKey');
+		pick = ds.transform(dsPick('someKey'));
 		assert(pick.value === undefined);
 	});
 
@@ -197,7 +198,7 @@ describe('Datasource', () => {
 			let asserts = [4, 0, 100, 200];
 			let ds = new DataSource(0);
 
-			ds.unique().listen((value) => {
+			ds.transform(dsUnique()).listen((value) => {
 				assert(value === asserts[i++]);
 				if (i === asserts.length) {
 					resolve();

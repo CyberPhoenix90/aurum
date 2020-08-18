@@ -241,57 +241,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
-	 * Creates a new datasource that listens to this one and forwards updates if they are not the same as the last update
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public unique(cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const uniqueSource = new TransientDataSource<T>(cancellationToken, this.value);
-		this.listen((value) => {
-			if (value !== uniqueSource.value) {
-				uniqueSource.update(value);
-			}
-		}, cancellationToken);
-		return uniqueSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to this one and forwards updates revealing the previous value on each update
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public diff(cancellationToken?: CancellationToken): TransientDataSource<{ new: T; old: T }> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const diffingSource = new TransientDataSource(cancellationToken, {
-			new: this.value,
-			old: undefined
-		});
-		this.listen((value) => {
-			diffingSource.update({
-				new: value,
-				old: diffingSource.value.new
-			});
-		}, cancellationToken);
-		return diffingSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to this source and combines all updates into a single value
-	 * @param reducer  function that aggregates an update with the previous result of aggregation
-	 * @param initialValue initial value given to the new source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public reduce(reducer: (p: T, c: T) => T, initialValue: T, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const reduceSource = new TransientDataSource<T>(cancellationToken, initialValue);
-		this.listen((v) => reduceSource.update(reducer(reduceSource.value, v)), cancellationToken);
-
-		return reduceSource;
-	}
-
-	/**
 	 * Combines two sources into a third source that listens to updates from both parent sources.
 	 * @param otherSource Second parent for the new source
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
@@ -412,62 +361,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
-	 * Creates a datasource that forwards all the updates after a certain time has passed, useful to introduce a delay before something triggers. Does not debounce
-	 * @param time
-	 * @param cancellationToken
-	 */
-	public delay(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
-
-		this.listen((v) => {
-			setTimeout(() => {
-				delayedDataSource.update(v);
-			}, time);
-		}, cancellationToken);
-
-		return delayedDataSource;
-	}
-
-	/**
-	 * Creates a datasource that forwards all the updates after a certain amount of updates have been ignored, Useful to create a stream that ignores some initialization noise
-	 * @param amount
-	 * @param cancellationToken
-	 */
-	public skip(amount: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
-
-		this.listen((v) => {
-			if (amount === 0) {
-				delayedDataSource.update(v);
-			} else {
-				amount--;
-			}
-		}, cancellationToken);
-
-		return delayedDataSource;
-	}
-
-	/**
-	 * Creates a datasource that forwards up to a certain amount of updates, Useful to create a stream that shuts down after a cap has been reached
-	 * @param amount
-	 * @param cancellationToken
-	 */
-	public cutoff(amount: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const delayedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
-
-		this.listen((v) => {
-			if (amount-- > 0) {
-				delayedDataSource.update(v);
-			}
-		}, cancellationToken);
-
-		return delayedDataSource;
-	}
-
-	/**
 	 * Returns a promise that resolves when the next update occurs
 	 * @param cancellationToken
 	 */
@@ -475,85 +368,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 		return new Promise((resolve) => {
 			this.listenOnce((value) => resolve(value), cancellationToken);
 		});
-	}
-
-	/**
-	 * Creates a new source that listens to the updates of this source and forwards them to itself with a delay, in case many updates happen during this delay only the last update will be taken into account, effectively allowing to skip short lived values. Useful for optimizations
-	 * @param time Milliseconds to wait before updating
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public debounce(time: number, cancellationToken?: CancellationToken): TransientDataSource<T> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const debouncedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
-		let timeout;
-
-		this.listen((v) => {
-			clearTimeout(timeout);
-			timeout = setTimeout(() => {
-				debouncedDataSource.update(v);
-			}, time);
-		}, cancellationToken);
-
-		return debouncedDataSource;
-	}
-
-	/**
-	 * Creates a new source that listens to the updates of this source. The updates are collected in an array for a period of time and then the new source updates with an array of all the updates collected in the timespan. Useful to take a rapidly changing source and process it a buffered manner. Can be used for things like batching network requests
-	 * @param time Milliseconds to wait before updating the returned source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public buffer(time: number, cancellationToken?: CancellationToken): TransientDataSource<T[]> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const bufferedDataSource = new TransientDataSource<T[]>(cancellationToken);
-		let timeout;
-		let buffer = [];
-
-		this.listen((v) => {
-			buffer.push(v);
-			if (!timeout) {
-				timeout = setTimeout(() => {
-					timeout = undefined;
-					bufferedDataSource.update(buffer);
-					buffer = [];
-				}, time);
-			}
-		}, cancellationToken);
-
-		return bufferedDataSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to the updates of this one. The datasource will accumulate all the updates from this source in form of an array data source. Useful to keep a history of all values from a source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public accumulate(cancellationToken?: CancellationToken): ArrayDataSource<T> {
-		const queueDataSource = new ArrayDataSource<T>();
-
-		this.listen((v) => {
-			queueDataSource.push(v);
-		}, cancellationToken);
-
-		return queueDataSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to the updates of this source and forwards only a single key from the object that is held by this data source
-	 * @param key key to take from the object
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): TransientDataSource<T[K]> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-		const subDataSource: TransientDataSource<T[typeof key]> = new TransientDataSource(cancellationToken, this.value?.[key]);
-
-		this.listen((v) => {
-			if (v !== undefined && v !== null) {
-				subDataSource.update(v[key]);
-			} else {
-				subDataSource.update(v as null | undefined);
-			}
-		}, cancellationToken);
-
-		return subDataSource;
 	}
 
 	/**

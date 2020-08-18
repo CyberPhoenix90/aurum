@@ -1,5 +1,6 @@
 import { DataSource } from '../stream/data_source';
 import { Renderable, AurumComponentAPI, aurumElementModelIdentitiy, AurumElementModel } from '../rendering/aurum_element';
+import { dsUnique } from '../stream/data_source_operators';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
 	children = [].concat.apply(
@@ -25,7 +26,7 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
 	});
 
 	return urlDataSource
-		.unique(api.cancellationToken)
+		.transform(dsUnique(), api.cancellationToken)
 		.withInitial(urlDataSource.value)
 		.map((p) => selectRoute(p, children as any));
 }

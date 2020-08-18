@@ -3,6 +3,7 @@ import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 import { Renderable, AurumComponentAPI, AurumElement, Rendered, render } from '../rendering/aurum_element';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { dsUnique } from '../stream/data_source_operators';
 
 export interface HTMLNodeProps<T> {
 	id?: AttributeValue;
@@ -140,9 +141,9 @@ export function processHTMLNode(
 	}
 
 	const dataProps = Object.keys(props).filter((e) => e.includes('-'));
-	bindProps(node, defaultAttributes, props, dataProps);
+	bindProps(node, defaultAttributes, props, cleanUp, dataProps);
 	if (extraAttributes) {
-		bindProps(node, extraAttributes, props);
+		bindProps(node, extraAttributes, props, cleanUp);
 	}
 
 	if (props.class) {
@@ -167,22 +168,22 @@ export function createEventHandlers(node: HTMLElement, events: MapLike<string>, 
 	}
 }
 
-function bindProps(node: HTMLElement, keys: string[], props: any, dynamicProps?: string[]) {
+function bindProps(node: HTMLElement, keys: string[], props: any, cleanUp: CancellationToken, dynamicProps?: string[]) {
 	for (const key of keys) {
 		if (props[key]) {
-			assignStringSourceToAttribute(node, props[key], key);
+			assignStringSourceToAttribute(node, props[key], key, cleanUp);
 		}
 	}
 	if (dynamicProps) {
 		for (const key of dynamicProps) {
 			if (props[key]) {
-				assignStringSourceToAttribute(node, props[key], key);
+				assignStringSourceToAttribute(node, props[key], key, cleanUp);
 			}
 		}
 	}
 }
 
-function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string) {
+function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string, cleanUp: CancellationToken) {
 	if (typeof data === 'string') {
 		node.setAttribute(key, data);
 	} else if (typeof data === 'boolean') {
@@ -197,7 +198,7 @@ function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, ke
 				node.setAttribute(key, '');
 			}
 		}
-		data.unique().listen((v) => {
+		data.transform(dsUnique(), cleanUp).listen((v) => {
 			if (typeof v === 'string') {
 				node.setAttribute(key, v);
 			} else if (typeof v === 'boolean') {
@@ -220,17 +221,17 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
 		if (data.value) {
 			if (Array.isArray(data.value)) {
 				node.className = data.value.join(' ');
-				data.unique(cleanUp).listen(() => {
+				data.transform(dsUnique(), cleanUp).listen(() => {
 					node.className = (data.value as string[]).join(' ');
 				});
 			} else {
 				node.className = data.value;
-				data.unique(cleanUp).listen(() => {
+				data.transform(dsUnique(), cleanUp).listen(() => {
 					node.className = data.value as string;
 				});
 			}
 		}
-		data.unique(cleanUp).listen((v) => ((node as HTMLElement).className = v));
+		data.transform(dsUnique(), cleanUp).listen((v) => ((node as HTMLElement).className = v));
 	} else {
 		const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
 			if (typeof c === 'string') {
@@ -246,7 +247,7 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
 		node.className = value;
 		for (const i of data as Array<string | ReadOnlyDataSource<string>>) {
 			if (i instanceof DataSource) {
-				i.unique(cleanUp).listen((v) => {
+				i.transform(dsUnique(), cleanUp).listen((v) => {
 					const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
 						if (typeof c === 'string') {
 							return `${p} ${c}`;
