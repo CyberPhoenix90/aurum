@@ -1004,6 +1004,10 @@ export class ArrayDataSource<T> {
 		return view;
 	}
 
+	public unique(cancellationToken?: CancellationToken): UniqueArrayView<T> {
+		return new UniqueArrayView(this, cancellationToken, this.name + '.unique()');
+	}
+
 	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
 		const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()');
 
@@ -1168,6 +1172,55 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
 	}
 }
 
+export class UniqueArrayView<T> extends ArrayDataSource<T> {
+	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+		const initial = Array.from(new Set(parent.getData()));
+		super(initial, name);
+		let filteredItems;
+
+		parent.listen((change) => {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+				case 'removeRight':
+				case 'remove':
+					for (const item of change.items) {
+						if (!change.newState.includes(item)) {
+							this.remove(item);
+						}
+					}
+					break;
+				case 'clear':
+					this.clear();
+					break;
+				case 'prepend':
+					filteredItems = change.items.filter((e) => !this.data.includes(e));
+					this.unshift(...filteredItems);
+					break;
+				case 'append':
+					filteredItems = change.items.filter((e) => !this.data.includes(e));
+					this.appendArray(filteredItems);
+					break;
+				case 'insert':
+					filteredItems = change.items.filter((e) => !this.data.includes(e));
+					this.insertAt(change.index, ...filteredItems);
+					break;
+				case 'merge':
+					this.merge(Array.from(new Set(parent.getData())));
+					break;
+				case 'swap':
+					this.swap(change.index, change.index2);
+					break;
+				case 'replace':
+					if (this.data.includes(change.items[0])) {
+						this.remove(change.target);
+					} else {
+						this.set(change.index, change.items[0]);
+					}
+					break;
+			}
+		}, cancellationToken);
+	}
+}
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;

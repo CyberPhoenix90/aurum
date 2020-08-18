@@ -69,6 +69,22 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(reverse.toArray(), [7, 6, 5, 4, 0]);
 	});
 
+	it('unique', () => {
+		const ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		const unique = ds.unique();
+
+		assert.deepEqual(unique.toArray(), [1, 2, 3, 4, 5, 6]);
+
+		ds.push(6);
+		assert.deepEqual(unique.toArray(), [1, 2, 3, 4, 5, 6]);
+
+		ds.insertAt(2, 1);
+		assert.deepEqual(unique.toArray(), [1, 2, 3, 4, 5, 6]);
+
+		ds.removeAt(0);
+		assert.deepEqual(unique.toArray(), [1, 2, 3, 4, 5, 6]);
+	});
+
 	it('merge', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		ds.merge([6, 7]);
