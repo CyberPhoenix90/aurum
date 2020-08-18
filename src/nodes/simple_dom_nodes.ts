@@ -41,6 +41,7 @@ export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
 }
 
 export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
+	type?: AttributeValue;
 	disabled?: AttributeValue;
 }
 
