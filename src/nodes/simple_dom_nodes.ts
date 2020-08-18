@@ -40,6 +40,15 @@ export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
 	src?: AttributeValue;
 }
 
+export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
+	action?: AttributeValue;
+	method?: AttributeValue;
+	rel?: AttributeValue;
+	enctype?: AttributeValue;
+	novalidate?: AttributeValue;
+	target?: AttributeValue;
+}
+
 export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
 	type?: AttributeValue;
 	disabled?: AttributeValue;
@@ -288,7 +297,7 @@ export const Footer = DomNodeCreator<HTMLNodeProps<HTMLElement>>('footer');
 /**
  * @internal
  */
-export const Form = DomNodeCreator<HTMLNodeProps<HTMLElement>>('form');
+export const Form = DomNodeCreator<FormProps>('form');
 /**
  * @internal
  */

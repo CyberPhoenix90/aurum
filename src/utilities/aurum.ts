@@ -82,7 +82,8 @@ import {
 	Slot,
 	SlotProps,
 	Code,
-	Hr
+	Hr,
+	FormProps
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
@@ -236,7 +237,7 @@ export namespace Aurum {
 			a: AProps;
 			article: HTMLNodeProps<HTMLElement>;
 			br: HTMLNodeProps<HTMLBRElement>;
-			form: HTMLNodeProps<HTMLElement>;
+			form: FormProps;
 			label: LabelProps;
 			ol: HTMLNodeProps<HTMLOListElement>;
 			pre: HTMLNodeProps<HTMLPreElement>;
