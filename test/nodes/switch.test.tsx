@@ -136,20 +136,20 @@ describe('Switch', () => {
 			document.getElementById('target')
 		);
 		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub one');
+		assert(document.getElementById('target').firstChild.textContent === 'sub one');
 
 		data2.update('two');
 		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub two');
+		assert(document.getElementById('target').firstChild.textContent === 'sub two');
 		data2.update('one');
 
 		data.update('two');
 		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub hello');
+		assert(document.getElementById('target').firstChild.textContent === 'sub hello');
 
 		data2.update('two');
 		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
-		assert(document.getElementById('target').firstChild.childNodes[2].textContent === 'sub world');
+		assert(document.getElementById('target').firstChild.textContent === 'sub world');
 
 		data.update('three');
 		assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);

@@ -632,20 +632,25 @@ export class ArrayDataSource<T> {
 	protected data: T[];
 	protected updateEvent: EventEmitter<CollectionChange<T>>;
 	private lengthSource: DataSource<number>;
+	private name: string;
 
-	constructor(initialData?: T[]) {
+	constructor(initialData?: T[], name: string = 'RootArrayDataSource') {
+		this.name = name;
 		if (initialData) {
 			this.data = initialData.slice();
 		} else {
 			this.data = [];
 		}
-		this.lengthSource = new DataSource(this.data.length);
+		this.lengthSource = new DataSource(this.data.length, this.name + '.length');
 		this.updateEvent = new EventEmitter();
 	}
 
 	public static fromMultipleSources<T>(cancellationToken: CancellationToken, ...sources: Array<ArrayDataSource<T> | T[]>): ArrayDataSource<T> {
 		const boundaries = [0];
-		const result = new ArrayDataSource<T>();
+		const result = new ArrayDataSource<T>(
+			undefined,
+			`ArrayDataSource of (${sources.reduce((p, c) => p + (c instanceof ArrayDataSource ? c.name + ' ' : ''), '')})`
+		);
 
 		for (let i = 0; i < sources.length; i++) {
 			if (Array.isArray(sources[i])) {
@@ -974,13 +979,13 @@ export class ArrayDataSource<T> {
 	}
 
 	public reverse(cancellationToken?: CancellationToken): ReversedArrayView<T> {
-		const view = new ReversedArrayView<T>(this, cancellationToken);
+		const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()');
 
 		return view;
 	}
 
 	public sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
-		const view = new SortedArrayView(this, comparator, cancellationToken);
+		const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()');
 
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
@@ -990,7 +995,7 @@ export class ArrayDataSource<T> {
 	}
 
 	public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
-		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken);
+		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()');
 
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh());
@@ -1000,7 +1005,7 @@ export class ArrayDataSource<T> {
 	}
 
 	public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
-		const view = new FilteredArrayView(this, callback, cancellationToken);
+		const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()');
 
 		dependencies.forEach((dep) => {
 			dep.listen(() => view.refresh(), cancellationToken);
@@ -1022,9 +1027,9 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 	private parent: ArrayDataSource<D>;
 	private mapper: (a: D) => T;
 
-	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken: CancellationToken = new CancellationToken()) {
+	constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
 		const initial = parent.getData().map(mapper);
-		super(initial);
+		super(initial, name);
 		this.parent = parent;
 		this.mapper = mapper;
 
@@ -1107,12 +1112,12 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 export class ReversedArrayView<T> extends ArrayDataSource<T> {
 	private parent: ArrayDataSource<T>;
 
-	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken()) {
+	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
 		const initial = parent
 			.getData()
 			.slice()
 			.reverse();
-		super(initial);
+		super(initial, name);
 		this.parent = parent;
 
 		parent.listen((change) => {
@@ -1167,12 +1172,12 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;
 
-	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken()) {
+	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
 		const initial = parent
 			.getData()
 			.slice()
 			.sort(comparator);
-		super(initial);
+		super(initial, name);
 		this.parent = parent;
 		this.comparator = comparator;
 
@@ -1228,13 +1233,13 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 export class FilteredArrayView<T> extends ArrayDataSource<T> {
 	private viewFilter: Predicate<T>;
 	private parent: ArrayDataSource<T>;
-	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken: CancellationToken = new CancellationToken()) {
+	constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
 		if (Array.isArray(parent)) {
 			parent = new ArrayDataSource(parent);
 		}
 		filter = filter ?? (() => true);
 		const initial = (parent as FilteredArrayView<T>).data.filter(filter);
-		super(initial);
+		super(initial, name);
 
 		this.parent = parent;
 		this.viewFilter = filter;
