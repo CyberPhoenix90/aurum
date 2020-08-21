@@ -304,10 +304,10 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 				clearTimeout(timeout);
 				cancelled.fire();
 				cancelled.subscribeOnce(() => {
-					resolve(true);
+					resolve(false);
 				});
 				timeout = setTimeout(() => {
-					resolve(false);
+					resolve(true);
 				}, time);
 			});
 		}

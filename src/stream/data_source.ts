@@ -459,7 +459,7 @@ export class ArrayDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
-	public static fromMultipleSources<T>(cancellationToken: CancellationToken, ...sources: Array<ArrayDataSource<T> | T[]>): ArrayDataSource<T> {
+	public static fromMultipleSources<T>(sources: Array<ArrayDataSource<T> | T[]>, cancellationToken?: CancellationToken): ArrayDataSource<T> {
 		const boundaries = [0];
 		const result = new ArrayDataSource<T>(
 			undefined,
@@ -1191,7 +1191,6 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
 					v = (operation as DataSourceMapOperator<any, any>).operation(v);
 					break;
 				case OperationType.MAP_DELAY_FILTER:
-				case OperationType.DELAY_FILTER:
 					const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
 					if (tmp.cancelled) {
 						return;
@@ -1202,6 +1201,11 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
 				case OperationType.DELAY:
 				case OperationType.MAP_DELAY:
 					v = await (operation as DataSourceMapOperator<any, any>).operation(v);
+					break;
+				case OperationType.DELAY_FILTER:
+					if (await !(operation as DataSourceFilterOperator<any>).operation(v)) {
+						return;
+					}
 					break;
 				case OperationType.FILTER:
 					if (!(operation as DataSourceFilterOperator<any>).operation(v)) {

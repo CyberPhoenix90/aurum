@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, Aurum, CancellationToken } from '../src/aurum';
+import { ArrayDataSource, DataSource, Aurum } from '../src/aurum';
 
 describe('ArrayDatasource', () => {
 	it('should store values', () => {
@@ -18,7 +18,7 @@ describe('ArrayDatasource', () => {
 		const ds2 = new ArrayDataSource();
 		const ds3 = new ArrayDataSource();
 		const ds4 = new ArrayDataSource();
-		let ds = ArrayDataSource.fromMultipleSources(new CancellationToken(), ds1, ds2, [1, 2, 3], ds3, ds4, [1, 2]);
+		let ds = ArrayDataSource.fromMultipleSources([ds1, ds2, [1, 2, 3], ds3, ds4, [1, 2]]);
 
 		assert.deepEqual(ds.toArray(), [1, 2, 3, 1, 2]);
 
