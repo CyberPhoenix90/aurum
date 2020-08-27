@@ -638,7 +638,12 @@ export class ArrayDataSource<T> {
 	}
 
 	public appendArray(items: T[]) {
-		this.data = this.data.concat(items);
+		if (items.length < 65000) {
+			this.data.push.apply(this.data, items);
+		} else {
+			console.warn('Appending over 65000 items in one go can lead to performance issues. Consider streaming your changes progressively');
+			this.data = this.data.concat(items);
+		}
 
 		this.update({
 			operation: 'add',
