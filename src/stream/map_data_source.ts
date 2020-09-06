@@ -1,4 +1,4 @@
-import { DataSource } from './data_source';
+import { ArrayDataSource, DataSource } from './data_source';
 import { Callback } from '../utilities/common';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { EventEmitter } from '../utilities/event_emitter';
@@ -48,6 +48,44 @@ export class MapDataSource<K, V> {
 	 */
 	public listen(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Same as listen but will immediately call the callback with the current value of each key
+	 */
+	public listenAndRepeat(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+		const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+		for (const key of this.data.keys()) {
+			callback({
+				key,
+				newValue: this.data.get(key),
+				oldValue: undefined,
+				deleted: false
+			});
+		}
+		return c;
+	}
+
+	public map<D>(mapper: (change: MapChange<K, V>) => D): ArrayDataSource<D> {
+		const stateMap: Map<K, D> = new Map<K, D>();
+		const result = new ArrayDataSource<D>();
+		this.listenAndRepeat((change) => {
+			if (change.deleted && stateMap.has(change.key)) {
+				const item = stateMap.get(change.key);
+				result.remove(item);
+				stateMap.delete(change.key);
+			} else if (stateMap.has(change.key)) {
+				const newItem = mapper(change);
+				result.replace(stateMap.get(change.key), newItem);
+				stateMap.set(change.key, newItem);
+			} else if (!stateMap.has(change.key) && !change.deleted) {
+				const newItem = mapper(change);
+				result.push(newItem);
+				stateMap.set(change.key, newItem);
+			}
+		});
+
+		return result;
 	}
 
 	/**

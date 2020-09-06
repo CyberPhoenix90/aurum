@@ -308,6 +308,7 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 				});
 				timeout = setTimeout(() => {
 					resolve(true);
+					cancelled.cancelAll();
 				}, time);
 			});
 		}
@@ -332,6 +333,7 @@ export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
 				});
 				timeout = requestAnimationFrame(() => {
 					resolve(true);
+					cancelled.cancelAll();
 				});
 			});
 		}

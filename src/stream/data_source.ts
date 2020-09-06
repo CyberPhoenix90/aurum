@@ -1,7 +1,14 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSourceFilterOperator, DataSourceMapDelayFilterOperator, DataSourceMapOperator, DataSourceOperator, OperationType } from './operator_model';
+import {
+	DataSourceDelayFilterOperator,
+	DataSourceFilterOperator,
+	DataSourceMapDelayFilterOperator,
+	DataSourceMapOperator,
+	DataSourceOperator,
+	OperationType
+} from './operator_model';
 
 export interface ReadOnlyDataSource<T> {
 	readonly value: T;
@@ -814,8 +821,8 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 					for (let i = 0; i < change.newState.length; i++) {
 						if (this.data.length <= i) {
 							this.data.push(this.mapper(change.newState[i]));
-						}
-						if (source[i] !== change.newState[i]) {
+							source.push(change.newState[i]);
+						} else if (source[i] !== change.newState[i]) {
 							const index = source.indexOf(change.newState[i]);
 							if (index !== -1) {
 								const a = this.data[i];
@@ -1131,7 +1138,7 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
 					v = await (operation as DataSourceMapOperator<any, any>).operation(v);
 					break;
 				case OperationType.DELAY_FILTER:
-					if (await !(operation as DataSourceFilterOperator<any>).operation(v)) {
+					if (!(await (operation as DataSourceDelayFilterOperator<any>).operation(v))) {
 						return;
 					}
 					break;

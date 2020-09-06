@@ -389,8 +389,8 @@ export class ArrayAurumElement extends AurumElement {
 				for (let i = 0; i < change.newState.length; i++) {
 					if (this.children.length <= i) {
 						this.children.push(this.renderItem(change.newState[i], ac));
-					}
-					if (source[i] !== change.newState[i]) {
+						source.push(change.newState[i]);
+					} else if (source[i] !== change.newState[i]) {
 						const index = source.indexOf(change.newState[i], i);
 						if (index !== -1) {
 							const a = this.children[i];

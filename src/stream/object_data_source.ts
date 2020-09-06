@@ -62,7 +62,7 @@ export class ObjectDataSource<T> {
 				const newItem = mapper(change);
 				result.replace(stateMap.get(change.key), newItem);
 				stateMap.set(change.key, newItem);
-			} else if (!stateMap.has(change.key)) {
+			} else if (!stateMap.has(change.key) && !change.deleted) {
 				const newItem = mapper(change);
 				result.push(newItem);
 				stateMap.set(change.key, newItem);
