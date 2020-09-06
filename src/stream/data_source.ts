@@ -211,26 +211,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
-	 * Creates a new datasource that is listening to updates from this datasource and transforms them with a mapper function before fowarding them to itself
-	 * @param callback mapper function that transforms the updates of this source
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public map<D>(callback: (value: T) => D, cancellationToken?: CancellationToken): TransientDataSource<D> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		let mappedSource;
-		if (this.primed) {
-			mappedSource = new TransientDataSource<D>(cancellationToken, callback(this.value));
-		} else {
-			mappedSource = new TransientDataSource<D>(cancellationToken);
-		}
-		this.listen((value) => {
-			mappedSource.update(callback(value));
-		}, cancellationToken);
-		return mappedSource;
-	}
-
-	/**
 	 * Allows tapping into the stream and calls a function for each value.
 	 */
 	public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
@@ -246,13 +226,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public aggregate<D, E>(
-		otherSource: ReadOnlyDataSource<D>,
-		combinator: (self: T, other: D) => E,
-		cancellationToken?: CancellationToken
-	): TransientDataSource<E> {
+	public aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
+		const aggregatedSource = new DataSource<E>(combinator(this.value, otherSource.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
 		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
@@ -272,9 +248,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 		third: ReadOnlyDataSource<E>,
 		combinator: (self: T, second: D, third: E) => F,
 		cancellationToken?: CancellationToken
-	): TransientDataSource<F> {
+	): DataSource<F> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<F>(cancellationToken, combinator(this.value, second.value, third.value));
+		const aggregatedSource = new DataSource<F>(combinator(this.value, second.value, third.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
@@ -297,9 +273,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 		fourth: ReadOnlyDataSource<F>,
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
-	): TransientDataSource<G> {
+	): DataSource<G> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<G>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value));
+		const aggregatedSource = new DataSource<G>(combinator(this.value, second.value, third.value, fourth.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
@@ -325,9 +301,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 		fifth: ReadOnlyDataSource<G>,
 		combinator: (self: T, second: D, third: E, fourth: F, fifth: G) => H,
 		cancellationToken?: CancellationToken
-	): TransientDataSource<H> {
+	): DataSource<H> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<H>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value, fifth.value));
+		const aggregatedSource = new DataSource<H>(combinator(this.value, second.value, third.value, fourth.value, fifth.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value, fifth.value)), cancellationToken);
@@ -343,14 +319,14 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param otherSource Second parent for the new source
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): TransientDataSource<T> {
+	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 
 		let combinedDataSource;
 		if (this.primed) {
-			combinedDataSource = new TransientDataSource<T>(cancellationToken, this.value);
+			combinedDataSource = new DataSource<T>(this.value);
 		} else {
-			combinedDataSource = new TransientDataSource<T>(cancellationToken);
+			combinedDataSource = new DataSource<T>();
 		}
 		this.pipe(combinedDataSource, cancellationToken);
 		for (const otherSource of otherSources) {
@@ -375,59 +351,6 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 */
 	public cancelAll(): void {
 		this.updateEvent.cancelAll();
-	}
-}
-
-/**
- * Same as data source except that once all listeners are gone this stream will self destruct. This prevents memory leaks
- */
-export class TransientDataSource<T> extends DataSource<T> {
-	private disposeToken: CancellationToken;
-
-	constructor(disposeToken: CancellationToken, initialValue?: T, name?: string) {
-		super(initialValue, name);
-		this.disposeToken = disposeToken;
-		this.updateEvent.onEmpty = () => {
-			disposeToken.cancel();
-			Object.defineProperty(this, 'value', {
-				get() {
-					throw new Error(
-						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
-					);
-				},
-				set() {
-					throw new Error(
-						'Transient data source has expired and can no longer be used if you wish to use it even after all listeners were removed "persist". Note that persisted data sources will not be garabge collected unless you remove the subscription they have on their parent source'
-					);
-				}
-			});
-		};
-	}
-
-	/**
-	 * Turns the transient data source into a regular data source
-	 * @returns self
-	 */
-	public persist(): this {
-		this.updateEvent.onEmpty = undefined;
-		return this;
-	}
-
-	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		return super.listen(callback, cancellationToken);
-	}
-
-	public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		return super.listenAndRepeat(callback, cancellationToken);
-	}
-
-	public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		this.disposeToken.throwIfCancelled('Transient data source has expired. Listening not possible');
-		if (cancellationToken) {
-		}
-		return super.listen(callback, cancellationToken);
 	}
 }
 

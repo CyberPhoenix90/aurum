@@ -25,6 +25,12 @@ export class EventEmitter<T> {
 	private onAfterFire: Array<() => void>;
 	public onEmpty: Callback<void>;
 
+	private static leakWarningThreshold;
+
+	public static setSubscriptionLeakWarningThreshold(limit: number) {
+		EventEmitter.leakWarningThreshold = limit;
+	}
+
 	public get subscriptions(): number {
 		return this.subscribeChannel.length + this.subscribeOnceChannel.length;
 	}
@@ -40,12 +46,19 @@ export class EventEmitter<T> {
 
 	public subscribe(callback: EventCallback<T>, cancellationToken?: CancellationToken): EventSubscriptionFacade {
 		const { facade } = this.createSubscription(callback, this.subscribeChannel, cancellationToken);
+		if (EventEmitter.leakWarningThreshold && this.subscribeChannel.length > EventEmitter.leakWarningThreshold) {
+			console.warn(`Observable has ${this.subscribeChannel.length} subscriptions. This could potentially indicate a memory leak`);
+		}
 
 		return facade;
 	}
 
 	subscribeOnce(callback: import('./common').Callback<T>, cancellationToken?: CancellationToken) {
 		const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
+
+		if (EventEmitter.leakWarningThreshold && this.subscribeOnceChannel.length > EventEmitter.leakWarningThreshold) {
+			console.warn(`Observable has ${this.subscribeOnceChannel.length} one time subscriptions. This could potentially indicate a memory leak`);
+		}
 
 		return facade;
 	}

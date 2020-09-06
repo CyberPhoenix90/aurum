@@ -1,7 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource, TransientDataSource } from './data_source';
+import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource } from './data_source';
 import { DataSourceOperator } from './operator_model';
 
 export enum DataFlow {
@@ -181,13 +181,9 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
 	 */
-	public aggregate<D, E>(
-		otherSource: ReadOnlyDataSource<D>,
-		combinator: (self: T, other: D) => E,
-		cancellationToken?: CancellationToken
-	): TransientDataSource<E> {
+	public aggregate<D, E>(otherSource: ReadOnlyDataSource<D>, combinator: (self: T, other: D) => E, cancellationToken?: CancellationToken): DataSource<E> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<E>(cancellationToken, combinator(this.value, otherSource.value));
+		const aggregatedSource = new DataSource<E>(combinator(this.value, otherSource.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
 		otherSource.listen(() => aggregatedSource.update(combinator(this.value, otherSource.value)), cancellationToken);
@@ -207,9 +203,9 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		third: ReadOnlyDataSource<E>,
 		combinator: (self: T, second: D, third: E) => F,
 		cancellationToken?: CancellationToken
-	): TransientDataSource<F> {
+	): DataSource<F> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<F>(cancellationToken, combinator(this.value, second.value, third.value));
+		const aggregatedSource = new DataSource<F>(combinator(this.value, second.value, third.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value)), cancellationToken);
@@ -232,9 +228,9 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		fourth: ReadOnlyDataSource<F>,
 		combinator: (self: T, second: D, third: E, fourth: F) => G,
 		cancellationToken?: CancellationToken
-	): TransientDataSource<G> {
+	): DataSource<G> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
-		const aggregatedSource = new TransientDataSource<G>(cancellationToken, combinator(this.value, second.value, third.value, fourth.value));
+		const aggregatedSource = new DataSource<G>(combinator(this.value, second.value, third.value, fourth.value));
 
 		this.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
 		second.listen(() => aggregatedSource.update(combinator(this.value, second.value, third.value, fourth.value)), cancellationToken);
@@ -422,26 +418,6 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		}, cancellationToken);
 
 		return debouncedDataSource;
-	}
-
-	/**
-	 * Creates a new datasource that listens to this one and forwards updates revealing the previous value on each update
-	 * @param cancellationToken  Cancellation token to cancel the subscription the new datasource has to this datasource
-	 */
-	public diff(cancellationToken?: CancellationToken): TransientDataSource<{ new: T; old: T }> {
-		cancellationToken = cancellationToken ?? new CancellationToken();
-
-		const diffingSource = new TransientDataSource(cancellationToken, {
-			new: this.value,
-			old: undefined
-		});
-		this.listen((value) => {
-			diffingSource.update({
-				new: value,
-				old: diffingSource.value.new
-			});
-		}, cancellationToken);
-		return diffingSource;
 	}
 
 	/**

@@ -1,6 +1,8 @@
-import { DataSource, ArrayDataSource, CollectionChange } from '../stream/data_source';
+import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+import { Stream } from '../stream/stream';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { aurumClassName } from './classname';
 
 export function createRenderSession(): RenderSession {
 	const session = {
@@ -44,7 +46,8 @@ export interface AurumComponentAPI {
 	cancellationToken: CancellationToken;
 	prerender(children: Renderable[], disposalToken?: CancellationToken): any[];
 	prerender(child: Renderable, disposalToken?: CancellationToken): any;
-	style(fragments: TemplateStringsArray, ...input: any[]);
+	style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string>;
+	className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>>;
 }
 
 export interface AurumElementModel<T> {
@@ -306,19 +309,20 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 			}
 			return result;
 		},
-		get style() {
-			return function aurumStyle(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {
-				const result = new DataSource<string>();
-				for (const ins of input) {
-					if (ins instanceof DataSource || ins instanceof DuplexDataSource) {
-						ins.listen(() => result.update(recompute(fragments, input)), api.cancellationToken);
-					}
+		style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {
+			const result = new DataSource<string>();
+			for (const ins of input) {
+				if (ins instanceof DataSource || ins instanceof DuplexDataSource || ins instanceof Stream) {
+					ins.listen(() => result.update(recompute(fragments, input)), api.cancellationToken);
 				}
+			}
 
-				result.update(recompute(fragments, input));
+			result.update(recompute(fragments, input));
 
-				return result;
-			};
+			return result;
+		},
+		className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>> {
+			return aurumClassName(data, api.cancellationToken);
 		}
 	};
 
@@ -330,10 +334,10 @@ function recompute(fragments: TemplateStringsArray, input: any[]) {
 	for (let i = 0; i < fragments.length; i++) {
 		result += fragments[i];
 		if (input[i]) {
-			if (typeof input[i] === 'string') {
-				result += input[i];
-			} else {
+			if (input[i] instanceof DataSource || input[i] instanceof DuplexDataSource || input[i] instanceof Stream) {
 				result += input[i].value;
+			} else {
+				result += input[i];
 			}
 		}
 	}
@@ -404,7 +408,7 @@ export class ArrayAurumElement extends AurumElement {
 					}
 				}
 				if (this.children.length > change.newState.length) {
-					this.children.length = change.newState.length;
+					this.spliceChildren(change.newState.length, this.children.length - change.newState.length);
 				}
 				break;
 			case 'remove':
@@ -437,7 +441,8 @@ export class ArrayAurumElement extends AurumElement {
 				this.children[change.index] = itemB;
 				break;
 			case 'prepend':
-				for (const item of change.items) {
+				for (let i = change.items.length - 1; i >= 0; i--) {
+					const item = change.items[i];
 					const rendered = this.renderItem(item, ac);
 					if (Array.isArray(rendered)) {
 						throw new Error('illegal state');

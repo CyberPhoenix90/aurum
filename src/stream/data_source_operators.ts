@@ -314,6 +314,30 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 	};
 }
 
+/**
+ * Debounce update to occur at most one per animation frame
+ */
+export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
+	let timeout;
+	let cancelled = new EventEmitter();
+	return {
+		operationType: OperationType.DELAY_FILTER,
+		name: `throttle frame`,
+		operation: (v) => {
+			return new Promise((resolve) => {
+				clearTimeout(timeout);
+				cancelled.fire();
+				cancelled.subscribeOnce(() => {
+					resolve(false);
+				});
+				timeout = requestAnimationFrame(() => {
+					resolve(true);
+				});
+			});
+		}
+	};
+}
+
 export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
 	return {
 		operationType: OperationType.DELAY,

@@ -1,7 +1,7 @@
 import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element';
 import { GenericDataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
-import { dsUnique } from '../stream/data_source_operators';
+import { dsMap, dsUnique } from '../stream/data_source_operators';
 
 export interface SwitchProps<T = boolean> {
 	state: GenericDataSource<T>;
@@ -31,7 +31,7 @@ export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[
 	});
 
 	const u = props.state.transform(dsUnique(), cleanUp);
-	return u.withInitial(props.state.value).map((state) => selectCase(state, children as AurumElementModel<SwitchCaseProps<any>>[]));
+	return u.withInitial(props.state.value).transform(dsMap((state) => selectCase(state, children as AurumElementModel<SwitchCaseProps<any>>[])));
 }
 
 function selectCase<T>(state: T, children: AurumElementModel<SwitchCaseProps<any>>[]) {
