@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique } from '../src/aurum';
+import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../src/aurum';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
 
 describe('Datasource', () => {
@@ -127,7 +127,7 @@ describe('Datasource', () => {
 
 	it('should map updates', () => {
 		let ds = new DataSource(123);
-		let mapped = ds.map((v) => v + 10).persist();
+		let mapped = ds.transform(dsMap((v) => v + 10));
 		assert(mapped.value === 133);
 		ds.update(100);
 		assert(mapped.value === 110);
@@ -153,7 +153,7 @@ describe('Datasource', () => {
 	it('should aggregate updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let aggregated = ds.aggregate(ds2, (valueA, valueB) => valueA + valueB).persist();
+		let aggregated = ds.aggregate(ds2, (valueA, valueB) => valueA + valueB);
 		assert(aggregated.value === 2);
 		ds.update(100);
 		assert(aggregated.value === 101);
@@ -166,7 +166,7 @@ describe('Datasource', () => {
 	it('should combine updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let combined = ds.combine([ds2]).persist();
+		let combined = ds.combine([ds2]);
 		assert(combined.value === 1);
 		ds.update(100);
 		assert(combined.value === 100);
