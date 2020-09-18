@@ -463,6 +463,24 @@ export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T
 	};
 }
 
+/**
+ * Same as pipe except for duplex data sources it pipes upstream
+ */
+export function dsPipeUp<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any>): DataSourceNoopOperator<T> {
+	return {
+		name: `pipeup ${target.name}`,
+		operationType: OperationType.NOOP,
+		operation: (v) => {
+			if (target instanceof DataSource || target instanceof Stream) {
+				target.update(v);
+			} else {
+				target.updateUpstream(v);
+			}
+			return v;
+		}
+	};
+}
+
 export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
 	return {
 		name: 'tap',

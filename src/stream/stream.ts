@@ -19,10 +19,7 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		return this.output.value;
 	}
 
-	constructor(inputSource?: DataSource<I>, outputSource?: DataSource<O>) {
-		this.input = inputSource ?? new DataSource();
-		this.output = outputSource ?? (this.input as any);
-	}
+	private constructor() {}
 
 	public static fromFetchRaw(url: string): Stream<void | RequestInit, Promise<Response>> {
 		const input = new DataSource<void | RequestInit>();
@@ -32,10 +29,27 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 			output.update(fetch(url, value as RequestInit));
 		});
 
-		return new Stream(input, output);
+		return Stream.fromPreconnectedSources(input, output);
 	}
 
-	public static fromFetchPostJson<I, O>(url: string, baseRequestData: RequestInit): Stream<I, O> {
+	public static fromPreconnectedSources<I, O>(inputSource?: DataSource<I>, outputSource?: DataSource<O>): Stream<I, O> {
+		const result = new Stream<I, O>();
+		result.input = inputSource ?? new DataSource();
+		result.output = outputSource ?? (result.input as any);
+
+		return result;
+	}
+
+	public static fromStreamTransformation<I, O>(callback: (data: DataSource<I>) => DataSource<O>): Stream<I, O> {
+		const result = new Stream<I, O>();
+
+		result.input = new DataSource<I>();
+		result.output = callback(result.input);
+
+		return result;
+	}
+
+	public static fromFetchPostJson<I, O>(url: string, baseRequestData?: RequestInit): Stream<I, O> {
 		const input = new DataSource<I>();
 		const output = new DataSource<O>();
 
@@ -59,7 +73,7 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 			);
 		});
 
-		return new Stream(input, output);
+		return Stream.fromPreconnectedSources(input, output);
 	}
 
 	public static fromFetchGetJson<O>(url: string, baseRequestData?: RequestInit): Stream<void, O> {
@@ -70,7 +84,7 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 			output.update(await fetch(url).then((s) => s.json()));
 		});
 
-		return new Stream(input, output);
+		return Stream.fromPreconnectedSources(input, output);
 	}
 
 	public update(data: I): void {
@@ -111,7 +125,7 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		const result = new DataSource<K>(undefined, this.output.name + ' ' + operations.map((v) => v.name).join(' '));
 		this.listen(processTransform<O, K>(operations as any, result), token);
 
-		return new Stream(this.input, result);
+		return Stream.fromPreconnectedSources(this.input, result);
 	}
 
 	public getOutput(): DataSource<O> {

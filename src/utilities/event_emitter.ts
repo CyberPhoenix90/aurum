@@ -136,7 +136,11 @@ export class EventEmitter<T> {
 		if (cancellationToken !== undefined) {
 			cancellationToken.addCancelable(() => that.cancel(subscription, channel));
 		}
-		channel.push(subscription);
+		if (this.isFiring) {
+			this.onAfterFire.push(() => channel.push(subscription));
+		} else {
+			channel.push(subscription);
+		}
 
 		return { subscription, facade };
 	}

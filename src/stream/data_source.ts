@@ -1,6 +1,8 @@
+import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
+import { DuplexDataSource } from './duplex_data_source';
 import {
 	DataSourceDelayFilterOperator,
 	DataSourceFilterOperator,
@@ -9,6 +11,7 @@ import {
 	DataSourceOperator,
 	OperationType
 } from './operator_model';
+import { Stream } from './stream';
 
 export interface ReadOnlyDataSource<T> {
 	readonly value: T;
@@ -86,6 +89,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 	constructor(initialValue?: T, name: string = 'RootDataSource') {
 		this.name = name;
 		this.value = initialValue;
+		if (debugMode) {
+			debugRegisterStream(this, new Error().stack);
+		}
 		this.primed = initialValue !== undefined;
 		this.updateEvent = new EventEmitter();
 	}
@@ -94,7 +100,10 @@ export class DataSource<T> implements GenericDataSource<T> {
 		const result = new DataSource<T>();
 
 		for (const s of sources) {
-			s.listen((v) => result.update(v), cancellation);
+			if (debugMode) {
+				debugRegisterLink(s as any, result);
+			}
+			(s as any).listenInternal((v) => result.update(v), cancellation);
 		}
 
 		result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
@@ -124,6 +133,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.updating = true;
 		this.value = newValue;
 		this.updateEvent.fire(newValue);
+		if (debugMode) {
+			debugDeclareUpdate(this, newValue, new Error().stack);
+		}
 		this.updating = false;
 	}
 
@@ -149,6 +161,11 @@ export class DataSource<T> implements GenericDataSource<T> {
 		return this.listen(callback, cancellationToken);
 	}
 
+	private listenAndRepeatInternal(callback: Callback<T>, cancellationToken?: CancellationToken, parent?: ReadOnlyDataSource<any>): Callback<void> {
+		callback(this.value);
+		return this.listenInternal(callback, cancellationToken, parent);
+	}
+
 	/**
 	 * Subscribes to the updates of the data stream
 	 * @param callback Callback to call when value is updated
@@ -156,7 +173,16 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+		if (debugMode) {
+			debugRegisterConsumer(this, callback.toString(), new Error().stack);
+		}
+		return this.listenInternal(callback, cancellationToken);
+	}
+
+	private listenInternal(callback: Callback<T>, cancellationToken?: CancellationToken, parent?: ReadOnlyDataSource<any>): Callback<void> {
+		const cancel = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+
+		return cancel;
 	}
 
 	/**
@@ -201,30 +227,12 @@ export class DataSource<T> implements GenericDataSource<T> {
 			token = cancellationToken;
 		}
 		const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
-		(this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
+		if (debugMode) {
+			debugRegisterLink(this, result);
+		}
+		(this.primed ? this.listenAndRepeatInternal : this.listenInternal).call(this, processTransform<T, K>(operations as any, result), token);
 
 		return result;
-	}
-
-	/**
-	 * Forwards all updates from this source to another
-	 * @param targetDataSource datasource to pipe the updates to
-	 * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
-	 */
-	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
-		this.listen((v) => targetDataSource.update(v), cancellationToken);
-
-		return this;
-	}
-
-	/**
-	 * Allows tapping into the stream and calls a function for each value.
-	 */
-	public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
-		this.listen((value) => {
-			callback(value);
-		}, cancellationToken);
-		return this;
 	}
 
 	/**
@@ -322,6 +330,16 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
+	 * Forwards all updates from this source to another
+	 * @param targetDataSource datasource to pipe the updates to
+	 * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
+	 */
+	public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
+		this.listen((v) => targetDataSource.update(v), cancellationToken);
+
+		return this;
+	}
+	/**
 	 * Like aggregate except that no combination method is needed as a result both parents must have the same type and the new stream just exposes the last update recieved from either parent
 	 * @param otherSource Second parent for the new source
 	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
@@ -329,7 +347,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 	public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
 		cancellationToken = cancellationToken ?? new CancellationToken();
 
-		let combinedDataSource;
+		let combinedDataSource: DataSource<T> | DuplexDataSource<T> | Stream<T, any>;
 		if (this.primed) {
 			combinedDataSource = new DataSource<T>(this.value);
 		} else {
