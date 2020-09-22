@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { Aurum, DataSource } from '../../src/aurum';
+import { Aurum, DataSource } from '../../src/aurumjs';
 
 describe('Select', () => {
 	let attachToken;

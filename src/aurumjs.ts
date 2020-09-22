@@ -15,5 +15,5 @@ export * from './stream/stream';
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
 export * from './utilities/event_emitter';
-export { debugMode, enableDebugMode } from './debug_mode';
+export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode';
 export { AttributeValue, ClassType, DataDrain } from './utilities/common';

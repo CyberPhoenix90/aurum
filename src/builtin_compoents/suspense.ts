@@ -1,4 +1,4 @@
-import { Renderable, AurumComponentAPI } from '../rendering/aurum_element';
+import { AurumComponentAPI, createLifeCycle, Renderable } from '../rendering/aurum_element';
 import { DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 export interface SuspenseProps {
@@ -8,18 +8,22 @@ export interface SuspenseProps {
 export function Suspense(props: SuspenseProps, children: Renderable[], api: AurumComponentAPI) {
 	const data = new DataSource<Renderable>(props?.fallback);
 	const cleanUp = new CancellationToken();
+
+	const lc = createLifeCycle();
+
 	api.onDetach(() => {
-		cleanUp.cancel();
+		lc.onDetach();
 	});
 
-	Promise.all(api.prerender(children, cleanUp)).then(
+	Promise.all(api.prerender(children, lc)).then(
 		(res) => {
 			if (!cleanUp.isCanceled) {
 				data.update(res);
+				lc.onAttach();
 			}
 		},
 		(e) => {
-			cleanUp.cancel();
+			lc.onDetach();
 			return Promise.reject(e);
 		}
 	);

@@ -1,7 +1,9 @@
+import { diagnosticMode } from '../debug_mode';
 import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 import { Stream } from '../stream/stream';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { EventEmitter } from '../utilities/event_emitter';
 import { aurumClassName } from './classname';
 
 export function createRenderSession(): RenderSession {
@@ -39,13 +41,24 @@ export type Renderable =
 
 export type Rendered = AurumElement | HTMLElement | Text;
 
+export interface ComponentLifeCycle {
+	onAttach(): void;
+	onDetach(): void;
+}
+
+export interface ComponentLifeCycleInternal extends ComponentLifeCycle {
+	attach: EventEmitter<void>;
+	detach: EventEmitter<void>;
+}
+
 export interface AurumComponentAPI {
+	synchronizeLifeCycle(lifeCycle: ComponentLifeCycleInternal): void;
 	onAttach(cb: () => void);
 	onDetach(cb: () => void);
 	onError(cb: (error: Error) => Renderable);
 	cancellationToken: CancellationToken;
-	prerender(children: Renderable[], disposalToken?: CancellationToken): any[];
-	prerender(child: Renderable, disposalToken?: CancellationToken): any;
+	prerender(children: Renderable[], lifeCycle: ComponentLifeCycle): any[];
+	prerender(child: Renderable, lifeCycle: ComponentLifeCycle): any;
 	style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string>;
 	className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>>;
 }
@@ -53,9 +66,25 @@ export interface AurumComponentAPI {
 export interface AurumElementModel<T> {
 	[aurumElementModelIdentitiy]: boolean;
 	props: T;
-	name?: string;
+	name: string;
+	isIntrinsic: boolean;
 	children: Renderable[];
 	factory(props: T, children: Renderable[], api: AurumComponentAPI): Renderable;
+}
+
+export function createLifeCycle(): ComponentLifeCycle {
+	const lc = {
+		attach: new EventEmitter<void>(),
+		detach: new EventEmitter<void>(),
+		onAttach() {
+			lc.attach.fire();
+		},
+		onDetach() {
+			lc.detach.fire();
+		}
+	} as ComponentLifeCycleInternal;
+
+	return lc;
 }
 
 export abstract class AurumElement {
@@ -217,17 +246,6 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 		return undefined;
 	}
 
-	if (pendingSessions.has(element)) {
-		const subSession = pendingSessions.get(element);
-		if (subSession.sessionToken) {
-			session.attachCalls.push(...subSession.attachCalls);
-			session.sessionToken.chain(subSession.sessionToken);
-			subSession.attachCalls = undefined;
-			subSession.sessionToken = undefined;
-		}
-		pendingSessions.delete(element);
-	}
-
 	if (Array.isArray(element)) {
 		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
 		return Array.prototype.concat.apply(
@@ -260,13 +278,22 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 
 	if (element[aurumElementModelIdentitiy]) {
 		const model: AurumElementModel<any> = (element as any) as AurumElementModel<any>;
-		return render(model.factory(model.props || {}, model.children, createAPI(session)), session, prerendering);
+		const api = createAPI(session);
+		if (!model.isIntrinsic && diagnosticMode) {
+			console.log(`Rendering ${model.name}`);
+			api.onAttach(() => {
+				console.log(`Attaching ${model.name}`);
+			});
+			api.onDetach(() => {
+				console.log(`Detaching ${model.name}`);
+			});
+		}
+		const componentResult = model.factory(model.props || {}, model.children, api);
+		return render(componentResult, session, prerendering);
 	}
 	// Unsupported types are returned as is in hope that a transclusion component will transform it into something compatible
 	return element as any;
 }
-
-export const pendingSessions: WeakMap<any, RenderSession> = new WeakMap();
 
 /**
  * @internal
@@ -275,6 +302,10 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 	let token: CancellationToken = undefined;
 	const api = {
 		renderSession: session,
+		synchronizeLifeCycle(lifeCycle: ComponentLifeCycleInternal): void {
+			api.onAttach(() => lifeCycle.onAttach());
+			api.onDetach(() => lifeCycle.onDetach());
+		},
 		onAttach: (cb) => {
 			session.attachCalls.push(cb);
 		},
@@ -295,18 +326,19 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 			}
 			return token;
 		},
-		prerender(target: Renderable | Renderable[]) {
+		prerender(target: Renderable | Renderable[], lifeCycle: ComponentLifeCycle) {
+			const lc = lifeCycle as ComponentLifeCycleInternal;
 			const subSession = createRenderSession();
 			const result = render(target, subSession, true);
-			if (Array.isArray(result)) {
-				for (const item of result) {
-					if (typeof item === 'object') {
-						pendingSessions.set(item, subSession);
-					}
-				}
-			} else {
-				pendingSessions.set(result, subSession);
-			}
+
+			lc.attach.subscribeOnce(() => {
+				subSession.attachCalls.forEach((cb) => cb());
+			});
+
+			lc.detach.subscribeOnce(() => {
+				lc.attach.cancelAll();
+				subSession.sessionToken.cancel();
+			});
 			return result;
 		},
 		style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {

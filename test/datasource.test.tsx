@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../src/aurum';
+import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../src/aurumjs';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
 
 describe('Datasource', () => {

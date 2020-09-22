@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum, DataSource, Switch, DefaultSwitchCase, SwitchCase } from '../../src/aurum';
+import { Aurum, DataSource, Switch, DefaultSwitchCase, SwitchCase } from '../../src/aurumjs';
 
 describe('Switch', () => {
 	let attachToken;

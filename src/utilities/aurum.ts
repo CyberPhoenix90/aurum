@@ -199,18 +199,23 @@ export class Aurum {
 		...innerNodes: AurumElementModel<any>[]
 	): AurumElementModel<any> {
 		let name;
+		let intrinsic = false;
 		if (typeof node === 'string') {
+			intrinsic = true;
 			name = node;
 			const type = node;
 			node = nodeMap[node];
 			if (node === undefined) {
 				throw new Error(`Node ${type} does not exist or is not supported`);
 			}
+		} else {
+			name = node.name;
 		}
 
 		return {
 			[aurumElementModelIdentitiy]: true,
 			name,
+			isIntrinsic: intrinsic,
 			factory: node as (props: any, children: Renderable[], api: AurumComponentAPI) => Renderable,
 			props: args,
 			children: innerNodes

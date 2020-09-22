@@ -10,7 +10,8 @@ export enum OperationType {
 
 export interface DataSourceOperator<T, M> {
 	operationType: OperationType;
-	typescriptBugWorkaround?: (value: T) => M;
+	//Inference only works if the types are used despite the fact that the generic types are only used to indicate what type goes in and what type comes out which cannot be described in a way that typescript understands
+	typescriptLimitationWorkaround?: (value: T) => M;
 	name: string;
 }
 

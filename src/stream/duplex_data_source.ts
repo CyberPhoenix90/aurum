@@ -133,6 +133,10 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+		return this.listenInternal(callback, cancellationToken);
+	}
+
+	private listenInternal(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateDownstreamEvent.subscribe(callback, cancellationToken).cancel;
 	}
 

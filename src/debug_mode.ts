@@ -2,6 +2,7 @@ import { DataSource } from './stream/data_source';
 import { EventEmitter } from './utilities/event_emitter';
 
 export let debugMode: boolean = false;
+export let diagnosticMode: boolean = false;
 
 declare global {
 	interface Window {
@@ -26,6 +27,10 @@ declare global {
 }
 
 let debugStreamData;
+
+export function enableDiagnosticMode(): void {
+	diagnosticMode = true;
+}
 
 /**
  * Initializes the debug features of aurum. Required for the use of aurum devtools

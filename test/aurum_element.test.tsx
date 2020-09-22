@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { Aurum, Switch, SwitchCase, DataSource, CancellationToken } from '../src/aurum';
+import { Aurum, Switch, SwitchCase, DataSource, CancellationToken } from '../src/aurumjs';
 
 describe('Aurum Element', () => {
 	let attachToken: CancellationToken;

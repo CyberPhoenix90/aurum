@@ -22,6 +22,21 @@ export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M
 	};
 }
 
+export function dsFork<T>(condition: (value: T) => boolean, truthyPath: DataSource<T>, falsyPath: DataSource<T>): DataSourceNoopOperator<T> {
+	return {
+		name: 'fork',
+		operationType: OperationType.NOOP,
+		operation: (v) => {
+			if (condition(v)) {
+				truthyPath.update(v);
+			} else {
+				falsyPath.update(v);
+			}
+			return v;
+		}
+	};
+}
+
 export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMapDelayOperator<T, M> {
 	return {
 		name: 'mapAsync',

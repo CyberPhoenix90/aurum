@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, Aurum } from '../src/aurum';
+import { ArrayDataSource, DataSource, Aurum } from '../src/aurumjs';
 
 describe('ArrayDatasource', () => {
 	it('should store values', () => {
