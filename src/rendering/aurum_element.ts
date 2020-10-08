@@ -52,7 +52,7 @@ export interface ComponentLifeCycleInternal extends ComponentLifeCycle {
 }
 
 export interface AurumComponentAPI {
-	synchronizeLifeCycle(lifeCycle: ComponentLifeCycleInternal): void;
+	synchronizeLifeCycle(lifeCycle: ComponentLifeCycle): void;
 	onAttach(cb: () => void);
 	onDetach(cb: () => void);
 	onError(cb: (error: Error) => Renderable);
@@ -321,7 +321,7 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 	let token: CancellationToken = undefined;
 	const api = {
 		renderSession: session,
-		synchronizeLifeCycle(lifeCycle: ComponentLifeCycleInternal): void {
+		synchronizeLifeCycle(lifeCycle: ComponentLifeCycle): void {
 			api.onAttach(() => lifeCycle.onAttach());
 			api.onDetach(() => lifeCycle.onDetach());
 		},
