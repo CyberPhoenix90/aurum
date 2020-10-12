@@ -2,9 +2,9 @@
 	"compilerOptions": {
 		"allowUnusedLabels": false,
 		"alwaysStrict": true,
-		"module": "esnext",
+		"module": "amd",
 		"newLine": "LF",
-		"target": "esnext",
+		"target": "es2017",
 		"noUnusedLocals": true,
 		"declarationMap": true,
 		"jsx": "react",
@@ -17,7 +17,7 @@
 		"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
 		"noEmitOnError": true,
-		"outDir": "prebuilt/esnext",
+		"outFile": "prebuilt/amd/aurumjs.js",
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"
 	},

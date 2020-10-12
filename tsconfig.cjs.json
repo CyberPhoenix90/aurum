@@ -2,9 +2,9 @@
 	"compilerOptions": {
 		"allowUnusedLabels": false,
 		"alwaysStrict": true,
-		"module": "esnext",
+		"module": "CommonJS",
 		"newLine": "LF",
-		"target": "esnext",
+		"target": "es2017",
 		"noUnusedLocals": true,
 		"declarationMap": true,
 		"jsx": "react",
@@ -17,7 +17,7 @@
 		"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
 		"noEmitOnError": true,
-		"outDir": "prebuilt/esnext",
+		"outDir": "prebuilt/cjs",
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"
 	},

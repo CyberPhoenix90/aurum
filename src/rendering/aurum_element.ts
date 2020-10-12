@@ -97,6 +97,7 @@ export abstract class AurumElement {
 	protected hostNode: HTMLElement;
 	private lastStartIndex: number;
 	private lastEndIndex: number;
+	protected disposed: boolean = false;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
 		this.children = [];
@@ -109,8 +110,15 @@ export abstract class AurumElement {
 		});
 	}
 
-	public dispose() {
+	public dispose(): void {
+		if (this.disposed) {
+			return;
+		}
+
 		this.clearContent();
+		this.contentStartMarker.remove();
+		this.contentEndMarker.remove();
+		this.disposed = true;
 	}
 
 	public attachToDom(node: HTMLElement, index: number): void {
@@ -121,6 +129,8 @@ export abstract class AurumElement {
 
 		this.hostNode = node;
 		this.contentStartMarker = document.createComment('START Aurum Node ' + id);
+		//@ts-ignore
+		this.contentStartMarker.owner = this;
 		this.contentEndMarker = document.createComment('END Aurum Node ' + id);
 		if (index >= node.childNodes.length) {
 			node.appendChild(this.contentStartMarker);
@@ -132,6 +142,10 @@ export abstract class AurumElement {
 	}
 
 	protected getWorkIndex(): number {
+		if (!this.contentStartMarker.isConnected) {
+			throw new Error('Illegal state: Content marker was unexpectedly removed from DOM');
+		}
+
 		if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
 			return this.lastStartIndex + 1;
 		}
@@ -145,6 +159,10 @@ export abstract class AurumElement {
 	}
 
 	protected getLastIndex(): number {
+		if (!this.contentEndMarker.isConnected) {
+			throw new Error('Illegal state: Content marker was unexpectedly removed from DOM');
+		}
+
 		if (this.lastEndIndex !== undefined && this.hostNode.childNodes[this.lastEndIndex] === this.contentEndMarker) {
 			return this.lastEndIndex;
 		}
@@ -169,7 +187,8 @@ export abstract class AurumElement {
 			if (!(this.hostNode.childNodes[workIndex] instanceof Comment)) {
 				this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
 			} else {
-				workIndex++;
+				//@ts-ignore
+				this.hostNode.childNodes[workIndex].owner.dispose();
 			}
 		}
 	}
@@ -387,6 +406,14 @@ export class ArrayAurumElement extends AurumElement {
 		this.dataSource = dataSource;
 	}
 
+	public dispose(): void {
+		if (this.disposed) {
+			return;
+		}
+		this.api.cancellationToken.cancel();
+		super.dispose();
+	}
+
 	public attachToDom(node: HTMLElement, index: number): void {
 		super.attachToDom(node, index);
 		//@ts-ignore
@@ -548,6 +575,14 @@ export class SingularAurumElement extends AurumElement {
 		this.dataSource = dataSource;
 	}
 
+	public dispose(): void {
+		if (this.disposed) {
+			return;
+		}
+		this.api.cancellationToken.cancel();
+		super.dispose();
+	}
+
 	public attachToDom(node: HTMLElement, index: number): void {
 		super.attachToDom(node, index);
 		//@ts-ignore
@@ -600,7 +635,6 @@ export class SingularAurumElement extends AurumElement {
 		}
 		for (const item of rendered) {
 			if (item instanceof AurumElement) {
-				item.attachToDom(this.hostNode, this.getLastIndex());
 				this.renderSession.sessionToken.addCancelable(() => {
 					item.dispose();
 				});

@@ -1,17 +1,17 @@
 {
 	"name": "aurumjs",
-	"version": "0.5.28",
+	"version": "0.5.32",
 	"description": "Stream based declarative DOM rendering library for javascript",
-	"main": "prebuilt/aurumjs.js",
-	"typings": "dist/aurum.d.ts",
+	"main": "prebuilt/cjs/aurumjs.js",
+	"typings": "prebuilt/esnext/aurumjs.d.ts",
 	"scripts": {
 		"build": "tsc",
 		"watch": "tsc -w",
 		"prepublish": "npm run deploy",
 		"test": "tsc -p tsconfig.test.json && http-server -o -c-1",
 		"generateDocs": "typedoc --json docs/docs.json --mode modules --excludePrivate --excludeProtected",
-		"deploy-test": "npm run build && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum",
-		"deploy": "npm run build && npm run generateDocs && microbundle --no-compress --entry dist/aurum.js --output prebuilt --name aurum && microbundle --entry dist/aurum.js --output prebuilt_minified --name aurum"
+		"deploy-test": "npm run build",
+		"deploy": "npm run build && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json && npm run generateDocs"
 	},
 	"homepage": "https://aurumjs.org/",
 	"repository": {
@@ -33,13 +33,12 @@
 		"@types/sinon": "^9.0.4",
 		"chai": "^4.2.0",
 		"http-server": "^0.12.3",
-		"microbundle": "^0.12.0",
 		"mocha": "^8.1.1",
 		"prettier": "^1.19.1",
 		"requirejs": "^2.3.6",
 		"sinon": "^9.0.3",
 		"typedoc": "^0.15.4",
-		"typescript": "^3.7.2"
+		"typescript": "^4.0.3"
 	},
 	"dependencies": {}
 }

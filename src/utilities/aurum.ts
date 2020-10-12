@@ -183,7 +183,9 @@ export class Aurum {
 		} else {
 			dom.appendChild(content);
 			session.sessionToken.addCancelable(() => {
-				dom.removeChild(content);
+				if (content.isConnected) {
+					dom.removeChild(content);
+				}
 			});
 		}
 		for (let i = session.attachCalls.length - 1; i >= 0; i--) {
