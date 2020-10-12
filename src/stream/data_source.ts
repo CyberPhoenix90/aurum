@@ -85,6 +85,8 @@ export class DataSource<T> implements GenericDataSource<T> {
 	private updating: boolean;
 	public name: string;
 	protected updateEvent: EventEmitter<T>;
+	protected errorHandler: (error: any) => T;
+	protected errorEvent: EventEmitter<Error>;
 
 	constructor(initialValue?: T, name: string = 'RootDataSource') {
 		this.name = name;
@@ -93,6 +95,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 			debugRegisterStream(this, new Error().stack);
 		}
 		this.primed = initialValue !== undefined;
+		this.errorEvent = new EventEmitter();
 		this.updateEvent = new EventEmitter();
 	}
 
@@ -109,6 +112,39 @@ export class DataSource<T> implements GenericDataSource<T> {
 		result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
 
 		return result;
+	}
+
+	/**
+	 * Allows tapping into the stream and calls a function for each value.
+	 */
+	public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
+		this.listen((value) => {
+			callback(value);
+		}, cancellationToken);
+		return this;
+	}
+	/**
+	 * Assign a function to handle errors and map them back to regular values. Rethrow the error in case you want to fallback to emitting error
+	 */
+	public handleErrors(callback: (error: any) => T): this {
+		this.errorHandler = callback;
+		return this;
+	}
+
+	public onError(callback: (error: any) => void, cancellationToken?: CancellationToken): this {
+		this.errorEvent.subscribe(callback, cancellationToken);
+		return this;
+	}
+
+	public emitError(e: Error): void {
+		if (this.errorHandler) {
+			try {
+				return this.update(this.errorHandler(e));
+			} catch (newError) {
+				e = newError;
+			}
+			this.errorEvent.fire(e);
+		}
 	}
 
 	/**
@@ -231,6 +267,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 			debugRegisterLink(this, result);
 		}
 		(this.primed ? this.listenAndRepeatInternal : this.listenInternal).call(this, processTransform<T, K>(operations as any, result), token);
+		this.onError((e) => result.emitError(e), token);
 
 		return result;
 	}
@@ -1137,36 +1174,40 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
 
 export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): Callback<I> {
 	return async (v: any) => {
-		for (const operation of operations) {
-			switch (operation.operationType) {
-				case OperationType.NOOP:
-				case OperationType.MAP:
-					v = (operation as DataSourceMapOperator<any, any>).operation(v);
-					break;
-				case OperationType.MAP_DELAY_FILTER:
-					const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
-					if (tmp.cancelled) {
-						return;
-					} else {
-						v = await tmp.item;
-					}
-					break;
-				case OperationType.DELAY:
-				case OperationType.MAP_DELAY:
-					v = await (operation as DataSourceMapOperator<any, any>).operation(v);
-					break;
-				case OperationType.DELAY_FILTER:
-					if (!(await (operation as DataSourceDelayFilterOperator<any>).operation(v))) {
-						return;
-					}
-					break;
-				case OperationType.FILTER:
-					if (!(operation as DataSourceFilterOperator<any>).operation(v)) {
-						return;
-					}
-					break;
+		try {
+			for (const operation of operations) {
+				switch (operation.operationType) {
+					case OperationType.NOOP:
+					case OperationType.MAP:
+						v = (operation as DataSourceMapOperator<any, any>).operation(v);
+						break;
+					case OperationType.MAP_DELAY_FILTER:
+						const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
+						if (tmp.cancelled) {
+							return;
+						} else {
+							v = await tmp.item;
+						}
+						break;
+					case OperationType.DELAY:
+					case OperationType.MAP_DELAY:
+						v = await (operation as DataSourceMapOperator<any, any>).operation(v);
+						break;
+					case OperationType.DELAY_FILTER:
+						if (!(await (operation as DataSourceDelayFilterOperator<any>).operation(v))) {
+							return;
+						}
+						break;
+					case OperationType.FILTER:
+						if (!(operation as DataSourceFilterOperator<any>).operation(v)) {
+							return;
+						}
+						break;
+				}
 			}
+			result.update(v);
+		} catch (e) {
+			result.emitError(e);
 		}
-		result.update(v);
 	};
 }
