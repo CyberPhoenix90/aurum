@@ -611,10 +611,10 @@ export class SingularAurumElement extends AurumElement {
 		}
 		if (!optimized) {
 			this.fullRebuild(newValue);
-		}
-		this.updateDom();
-		for (const cb of this.renderSession.attachCalls) {
-			cb();
+			this.updateDom();
+			for (const cb of this.renderSession.attachCalls) {
+				cb();
+			}
 		}
 
 		this.lastValue = newValue;

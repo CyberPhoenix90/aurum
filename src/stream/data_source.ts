@@ -143,7 +143,11 @@ export class DataSource<T> implements GenericDataSource<T> {
 			} catch (newError) {
 				e = newError;
 			}
+		}
+		if (this.errorEvent.hasSubscriptions()) {
 			this.errorEvent.fire(e);
+		} else {
+			throw e;
 		}
 	}
 
