@@ -53,7 +53,7 @@ export class EventEmitter<T> {
 		return facade;
 	}
 
-	subscribeOnce(callback: import('./common').Callback<T>, cancellationToken?: CancellationToken) {
+	public subscribeOnce(callback: import('./common').Callback<T>, cancellationToken?: CancellationToken) {
 		const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
 
 		if (EventEmitter.leakWarningThreshold && this.subscribeOnceChannel.length > EventEmitter.leakWarningThreshold) {
@@ -90,12 +90,14 @@ export class EventEmitter<T> {
 
 	public fire(data?: T): void {
 		this.isFiring = true;
+		let error = undefined;
 
 		let length = this.subscribeChannel.length;
 		for (let i = 0; i < length; i++) {
 			try {
 				this.subscribeChannel[i].callback(data);
 			} catch (e) {
+				error = e;
 				console.error(e);
 			}
 		}
@@ -106,6 +108,7 @@ export class EventEmitter<T> {
 				try {
 					this.subscribeOnceChannel[i].callback(data);
 				} catch (e) {
+					error = e;
 					console.error(e);
 				}
 			}
@@ -114,6 +117,10 @@ export class EventEmitter<T> {
 
 		this.isFiring = false;
 		this.afterFire();
+
+		if (error) {
+			throw error;
+		}
 	}
 
 	private createSubscription(
