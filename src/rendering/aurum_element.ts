@@ -115,9 +115,11 @@ export abstract class AurumElement {
 			return;
 		}
 
-		this.clearContent();
-		this.contentStartMarker.remove();
-		this.contentEndMarker.remove();
+		if (this.hostNode.isConnected) {
+			this.clearContent();
+			this.contentStartMarker.remove();
+			this.contentEndMarker.remove();
+		}
 		this.disposed = true;
 	}
 
