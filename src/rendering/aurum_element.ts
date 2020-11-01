@@ -95,8 +95,8 @@ export abstract class AurumElement {
 	protected contentStartMarker: Comment;
 	protected contentEndMarker: Comment;
 	protected hostNode: HTMLElement;
-	private lastStartIndex: number;
-	private lastEndIndex: number;
+	protected lastStartIndex: number;
+	protected lastEndIndex: number;
 	protected disposed: boolean = false;
 
 	constructor(dataSource: ArrayDataSource<any> | DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
@@ -196,10 +196,6 @@ export abstract class AurumElement {
 	}
 
 	protected updateDom(): void {
-		if (this.hostNode === undefined) {
-			throw new Error('illegal state: Aurum element was not attched to anything');
-		}
-
 		const workIndex = this.getWorkIndex();
 		let i: number;
 		let offset: number = 0;
@@ -225,8 +221,10 @@ export abstract class AurumElement {
 				if (child instanceof HTMLElement || child instanceof Text) {
 					this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
 					if (this.hostNode.childNodes[i + workIndex + offset]) {
+						this.lastEndIndex++;
 						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
 					} else {
+						this.lastEndIndex++;
 						this.hostNode.appendChild(child);
 					}
 				} else {
@@ -235,8 +233,10 @@ export abstract class AurumElement {
 			} else {
 				if (child instanceof HTMLElement || child instanceof Text) {
 					if (this.hostNode.childNodes[i + workIndex + offset]) {
+						this.lastEndIndex++;
 						this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
 					} else {
+						this.lastEndIndex++;
 						this.hostNode.appendChild(child);
 					}
 				} else {
@@ -245,6 +245,7 @@ export abstract class AurumElement {
 			}
 		}
 		while (this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker) {
+			this.lastEndIndex--;
 			this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
 		}
 	}
@@ -262,17 +263,14 @@ export interface RenderSession {
 /**
  * @internal
  */
-export function render<T extends Renderable>(element: T, session: RenderSession, prerendering: boolean = false): T extends Array<any> ? any[] : any {
+export function render<T extends Renderable>(element: T, session: RenderSession, prerendering: boolean = false): any {
 	if (element == undefined) {
 		return undefined;
 	}
 
 	if (Array.isArray(element)) {
 		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
-		return Array.prototype.concat.apply(
-			[],
-			element.map((e) => render(e, session, prerendering))
-		);
+		return element.flatMap((e) => render(e, session, prerendering));
 	}
 
 	if (!prerendering) {
@@ -443,6 +441,11 @@ export class ArrayAurumElement extends AurumElement {
 	}
 
 	private handleNewContent(change: CollectionChange<any>): void {
+		if (this.hostNode === undefined) {
+			throw new Error('illegal state: Aurum element was not attched to anything');
+		}
+
+		let optimized = false;
 		const ac = [];
 		switch (change.operationDetailed) {
 			case 'merge':
@@ -480,10 +483,28 @@ export class ArrayAurumElement extends AurumElement {
 			case 'append':
 				for (const item of change.items) {
 					const rendered = this.renderItem(item, ac);
+					const targetIndex = this.getLastIndex();
 					if (Array.isArray(rendered)) {
 						this.children = this.children.concat(rendered);
+
+						if (rendered.every((v) => v instanceof HTMLElement || !v)) {
+							optimized = true;
+							for (let i = rendered.length - 1; i >= 0; i++) {
+								if (rendered[i]) {
+									this.hostNode.insertBefore(rendered[i], this.hostNode.childNodes[targetIndex]);
+									this.lastEndIndex++;
+								}
+							}
+						}
 					} else {
 						this.children.push(rendered);
+						if (!rendered) {
+							optimized = true;
+						} else if (rendered instanceof HTMLElement) {
+							optimized = true;
+							this.lastEndIndex++;
+							this.hostNode.insertBefore(rendered, this.hostNode.childNodes[targetIndex]);
+						}
 					}
 				}
 				break;
@@ -541,7 +562,9 @@ export class ArrayAurumElement extends AurumElement {
 			default:
 				throw new Error('not implemented');
 		}
-		this.updateDom();
+		if (!optimized) {
+			this.updateDom();
+		}
 		for (const c of ac) {
 			c();
 		}

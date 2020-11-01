@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.5.38",
+	"version": "0.5.39",
 	"description": "Stream based declarative DOM rendering library for javascript",
 	"main": "prebuilt/cjs/aurumjs.js",
 	"typings": "prebuilt/esnext/aurumjs.d.ts",
@@ -38,7 +38,7 @@
 		"requirejs": "^2.3.6",
 		"sinon": "^9.0.3",
 		"typedoc": "^0.15.4",
-		"typescript": "^4.0.3"
+		"typescript": "^4.0.5"
 	},
 	"dependencies": {}
 }
