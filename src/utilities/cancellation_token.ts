@@ -1,3 +1,4 @@
+import { registerAnimationLoop } from './animation_scheduler';
 import { Delegate, Callback } from './common';
 
 export class CancellationToken {
@@ -68,12 +69,7 @@ export class CancellationToken {
 	}
 
 	public animationLoop(cb: Callback<number>): void {
-		let id: number = requestAnimationFrame(function f(time: number) {
-			id = requestAnimationFrame(f);
-			cb(time);
-		});
-
-		this.addCancelable(() => cancelAnimationFrame(id));
+		registerAnimationLoop(cb, this);
 	}
 
 	public throwIfCancelled(msg: string): void {
