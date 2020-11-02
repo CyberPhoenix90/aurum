@@ -9,6 +9,7 @@ export function registerAnimationLoop(callback: (time: number) => void, token: C
 		animationCbs.splice(animationCbs.indexOf(callback), 1);
 	});
 	if (!looping) {
+		looping = true;
 		requestAnimationFrame(loop);
 	}
 }
