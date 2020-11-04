@@ -1,8 +1,7 @@
 import { DataSource, ArrayDataSource } from './data_source';
 import { Stream } from './stream';
 import { DuplexDataSource } from './duplex_data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { registerAnimationLoop } from '../utilities/animation_scheduler';
+import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token';
 
 export function intervalEmitter<T = void>(
 	target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T>,

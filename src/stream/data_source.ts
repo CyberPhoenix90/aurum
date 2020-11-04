@@ -627,6 +627,10 @@ export class ArrayDataSource<T> {
 	}
 
 	public appendArray(items: T[]) {
+		if (!items || items.length === 0) {
+			return;
+		}
+
 		if (items.length < 65000) {
 			this.data.push.apply(this.data, items);
 		} else {

@@ -205,6 +205,11 @@ export abstract class AurumElement {
 				offset--;
 				continue;
 			}
+
+			if (child === this.hostNode.childNodes[i + workIndex + offset]) {
+				continue;
+			}
+
 			if (child instanceof AurumElement) {
 				if (!child.hostNode) {
 					child.attachToDom(this.hostNode, i + workIndex + offset);
