@@ -144,10 +144,6 @@ export abstract class AurumElement {
 	}
 
 	protected getWorkIndex(): number {
-		if (!this.contentStartMarker.isConnected) {
-			throw new Error('Illegal state: Content marker was unexpectedly removed from DOM');
-		}
-
 		if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
 			return this.lastStartIndex + 1;
 		}
@@ -161,10 +157,6 @@ export abstract class AurumElement {
 	}
 
 	protected getLastIndex(): number {
-		if (!this.contentEndMarker.isConnected) {
-			throw new Error('Illegal state: Content marker was unexpectedly removed from DOM');
-		}
-
 		if (this.lastEndIndex !== undefined && this.hostNode.childNodes[this.lastEndIndex] === this.contentEndMarker) {
 			return this.lastEndIndex;
 		}
@@ -489,13 +481,16 @@ export class ArrayAurumElement extends AurumElement {
 				for (const item of change.items) {
 					const rendered = this.renderItem(item, ac);
 					const targetIndex = this.getLastIndex();
+					optimized = true;
 					if (Array.isArray(rendered)) {
 						this.children = this.children.concat(rendered);
 
-						if (rendered.every((v) => v instanceof HTMLElement || !v)) {
-							optimized = true;
-							for (let i = rendered.length - 1; i >= 0; i++) {
-								if (rendered[i]) {
+						for (let i = rendered.length - 1; i >= 0; i--) {
+							if (rendered[i]) {
+								if (rendered[i] instanceof AurumElement) {
+									rendered[i].attachToDom(this.hostNode, targetIndex);
+									this.lastEndIndex = this.getLastIndex();
+								} else {
 									this.hostNode.insertBefore(rendered[i], this.hostNode.childNodes[targetIndex]);
 									this.lastEndIndex++;
 								}
@@ -504,11 +499,14 @@ export class ArrayAurumElement extends AurumElement {
 					} else {
 						this.children.push(rendered);
 						if (!rendered) {
-							optimized = true;
-						} else if (rendered instanceof HTMLElement) {
-							optimized = true;
-							this.lastEndIndex++;
-							this.hostNode.insertBefore(rendered, this.hostNode.childNodes[targetIndex]);
+						} else {
+							if (rendered instanceof AurumElement) {
+								rendered.attachToDom(this.hostNode, targetIndex);
+								this.lastEndIndex = this.getLastIndex();
+							} else {
+								this.hostNode.insertBefore(rendered, this.hostNode.childNodes[targetIndex]);
+								this.lastEndIndex++;
+							}
 						}
 					}
 				}
