@@ -73,14 +73,14 @@ export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents
 	if (props.value) {
 		if (props.value instanceof DataSource) {
 			props.value.listenAndRepeat((v) => {
-				input.value = v;
+				input.value = v ?? '';
 			}, cleanUp);
 			input.addEventListener('input', () => {
 				(props.value as DataSource<string>).update(input.value);
 			});
 		} else if (props.value instanceof DuplexDataSource) {
 			props.value.listenAndRepeat((v) => {
-				input.value = v;
+				input.value = v ?? '';
 			}, cleanUp);
 			input.addEventListener('input', () => {
 				(props.value as DuplexDataSource<string>).updateUpstream(input.value);
@@ -93,14 +93,14 @@ export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents
 	if (props.checked) {
 		if (props.checked instanceof DataSource) {
 			props.checked.listenAndRepeat((v) => {
-				input.checked = v;
+				input.checked = v ?? false;
 			}, cleanUp);
 			input.addEventListener('change', () => {
 				(props.checked as DataSource<boolean>).update(input.checked);
 			});
 		} else if (props.checked instanceof DuplexDataSource) {
 			props.checked.listenAndRepeat((v) => {
-				input.checked = v;
+				input.checked = v ?? false;
 			}, cleanUp);
 			input.addEventListener('change', () => {
 				(props.checked as DuplexDataSource<boolean>).updateUpstream(input.checked);
