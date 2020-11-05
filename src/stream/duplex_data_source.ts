@@ -489,4 +489,12 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		this.updateDownstreamEvent.cancelAll();
 		this.updateUpstreamEvent.cancelAll();
 	}
+
+	public cancelAllDownstream(): void {
+		this.updateDownstreamEvent.cancelAll();
+	}
+
+	public cancelAllUpstream(): void {
+		this.updateUpstreamEvent.cancelAll();
+	}
 }
