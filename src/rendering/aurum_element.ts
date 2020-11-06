@@ -266,8 +266,17 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 	}
 
 	if (Array.isArray(element)) {
-		// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
-		return element.flatMap((e) => render(e, session, prerendering));
+		const result = [];
+		for (const item of element) {
+			const rendered = render(item, session, prerendering);
+			// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
+			if (Array.isArray(rendered)) {
+				result.push(...rendered);
+			} else {
+				result.push(rendered);
+			}
+		}
+		return result;
 	}
 
 	if (!prerendering) {
@@ -294,7 +303,15 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 
 	if (element[aurumElementModelIdentitiy]) {
 		const model: AurumElementModel<any> = (element as any) as AurumElementModel<any>;
-		const api = createAPI(session);
+		let api: AurumComponentAPI;
+		//Optimization: skip creating API for no props basic html nodes because they are by far the most frequent and this can yield a noticable performance increase
+		if (!model.isIntrinsic || model.props) {
+			api = createAPI(session);
+		} else {
+			api = {
+				renderSession: session
+			} as any;
+		}
 		if (!model.isIntrinsic && diagnosticMode) {
 			console.log(`Rendering ${model.name}`);
 			api.onAttach(() => {
@@ -304,7 +321,12 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 				console.log(`Detaching ${model.name}`);
 			});
 		}
-		const componentResult = model.factory(model.props || {}, model.children, api);
+		let componentResult;
+		if (model.isIntrinsic) {
+			componentResult = model.factory(model.props, model.children, api);
+		} else {
+			componentResult = model.factory(model.props ?? {}, model.children, api);
+		}
 		return render(componentResult, session, prerendering);
 	}
 	// Unsupported types are returned as is in hope that a transclusion component will transform it into something compatible

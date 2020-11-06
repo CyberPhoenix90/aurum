@@ -89,16 +89,18 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 		//@ts-ignore
 		const renderedChildren = render(children, api.renderSession);
 		connectChildren(node, renderedChildren);
-		if (props.onAttach) {
-			api.onAttach(() => props.onAttach(node));
-		}
-		if (props.onDetach) {
-			api.onDetach(() => {
-				if (node.isConnected) {
-					node.parentElement.removeChild(node);
-				}
-				props.onDetach(node);
-			});
+		if (props) {
+			if (props.onAttach) {
+				api.onAttach(() => props.onAttach(node));
+			}
+			if (props.onDetach) {
+				api.onDetach(() => {
+					if (node.isConnected) {
+						node.parentElement.removeChild(node);
+					}
+					props.onDetach(node);
+				});
+			}
 		}
 
 		extraLogic?.(node, props, api.cancellationToken);
