@@ -48,6 +48,14 @@ export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
 	novalidate?: AttributeValue;
 	target?: AttributeValue;
 }
+export interface HtmlProps extends HTMLNodeProps<HTMLHtmlElement> {
+	lang?: string;
+}
+
+export interface MetaProps extends HTMLNodeProps<HTMLMetaElement> {
+	['http-equiv']?: string;
+	content?: string;
+}
 
 export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
 	type?: AttributeValue;
@@ -298,6 +306,15 @@ export const Footer = DomNodeCreator<HTMLNodeProps<HTMLElement>>('footer');
  * @internal
  */
 export const Form = DomNodeCreator<FormProps>('form');
+/**
+ * @internal
+ */
+export const Meta = DomNodeCreator<MetaProps>('meta');
+
+/**
+ * @internal
+ */
+export const Html = DomNodeCreator<HtmlProps>('html');
 /**
  * @internal
  */

@@ -83,7 +83,12 @@ import {
 	SlotProps,
 	Code,
 	Hr,
-	FormProps
+	FormProps,
+	Html,
+	Body,
+	Meta,
+	MetaProps,
+	HtmlProps
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
@@ -134,6 +139,7 @@ const nodeMap = {
 	h4: H4,
 	h5: H5,
 	h6: H6,
+	html: Html,
 	head: Head,
 	header: Header,
 	footer: Footer,
@@ -157,6 +163,8 @@ const nodeMap = {
 	video: Video,
 	tbody: TBody,
 	tfoot: TFoot,
+	meta: Meta,
+	body: Body,
 	thead: THead,
 	summary: Summary,
 	details: Details,
@@ -170,6 +178,12 @@ const nodeMap = {
 };
 
 export class Aurum {
+	public static rehydrate(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
+		const target = dom.parentElement;
+		dom.remove();
+		return Aurum.attach(aurumRenderable, target);
+	}
+
 	public static attach(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
 		const session = createRenderSession();
 		const content = render(aurumRenderable, session);
@@ -233,6 +247,7 @@ export namespace Aurum {
 			hr: HTMLNodeProps<HTMLHRElement>;
 			div: HTMLNodeProps<HTMLDivElement>;
 			input: InputProps;
+			meta: MetaProps;
 			li: HTMLNodeProps<HTMLLIElement>;
 			span: HTMLNodeProps<HTMLElement>;
 			style: StyleProps;
@@ -293,6 +308,7 @@ export namespace Aurum {
 			time: TimeProps;
 			body: HTMLNodeProps<HTMLBodyElement>;
 			head: HTMLNodeProps<HTMLHeadElement>;
+			html: HtmlProps;
 			template: HTMLNodeProps<HTMLTemplateElement>;
 		}
 	}

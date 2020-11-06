@@ -21,9 +21,11 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
 
 	const urlDataSource = new DataSource(getUrlPath());
 
-	api.cancellationToken.registerDomEvent(window, 'hashchange', () => {
-		urlDataSource.update(getUrlPath());
-	});
+	if (typeof window !== 'undefined') {
+		api.cancellationToken.registerDomEvent(window, 'hashchange', () => {
+			urlDataSource.update(getUrlPath());
+		});
+	}
 
 	return urlDataSource
 		.transform(dsUnique(), api.cancellationToken)
