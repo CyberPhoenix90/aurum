@@ -500,10 +500,10 @@ export class ArrayAurumElement extends AurumElement {
 				this.spliceChildren(change.index, change.count);
 				break;
 			case 'append':
+				let targetIndex = this.getLastIndex();
+				optimized = true;
 				for (const item of change.items) {
 					const rendered = this.renderItem(item, ac);
-					const targetIndex = this.getLastIndex();
-					optimized = true;
 					if (Array.isArray(rendered)) {
 						this.children = this.children.concat(rendered);
 
@@ -512,22 +512,25 @@ export class ArrayAurumElement extends AurumElement {
 								if (rendered[i] instanceof AurumElement) {
 									rendered[i].attachToDom(this.hostNode, targetIndex);
 									this.lastEndIndex = this.getLastIndex();
+									targetIndex = this.lastEndIndex;
 								} else {
 									this.hostNode.insertBefore(rendered[i], this.hostNode.childNodes[targetIndex]);
 									this.lastEndIndex++;
+									targetIndex++;
 								}
 							}
 						}
 					} else {
 						this.children.push(rendered);
-						if (!rendered) {
-						} else {
+						if (rendered) {
 							if (rendered instanceof AurumElement) {
 								rendered.attachToDom(this.hostNode, targetIndex);
 								this.lastEndIndex = this.getLastIndex();
+								targetIndex = this.lastEndIndex;
 							} else {
 								this.hostNode.insertBefore(rendered, this.hostNode.childNodes[targetIndex]);
 								this.lastEndIndex++;
+								targetIndex++;
 							}
 						}
 					}

@@ -501,14 +501,16 @@ export class ArrayDataSource<T> {
 	 * Same as listen but will immediately call the callback with an append of all existing elements first
 	 */
 	public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-		callback({
-			operation: 'add',
-			operationDetailed: 'append',
-			index: 0,
-			items: this.data,
-			newState: this.data,
-			count: this.data.length
-		});
+		if (this.data.length) {
+			callback({
+				operation: 'add',
+				operationDetailed: 'append',
+				index: 0,
+				items: this.data,
+				newState: this.data,
+				count: this.data.length
+			});
+		}
 		return this.listen(callback, cancellationToken);
 	}
 
