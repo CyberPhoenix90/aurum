@@ -1,21 +1,27 @@
-import { DomNodeCreator } from '../nodes/dom_adapter';
 import { Aurum } from '../utilities/aurum';
 import { AurumComponentAPI, createAPI, createRenderSession, Renderable, RenderSession } from './aurum_element';
 import { DataSource } from '../stream/data_source';
+import { DomNodeCreator } from '../builtin_compoents/dom_adapter';
 
+interface WebComponentProps {
+	/**
+	 * Name of the webcomponent, must be lower case kebab case and must have at least one hyphen as required by the spec
+	 * example: au-mycomponent
+	 */
+	name: string;
+	/**
+	 * List of attributes of the web component that will be transformed into a data source that reflects the exact state of the attribute in the DOM no matter what changes the attirbute
+	 */
+	observedAttributes?: string[];
+	shadowRootMode?: 'open' | 'closed';
+	shadowRootDelegatesFocus?: boolean;
+}
+
+/**
+ * Wrapper around native web components allows using aurum style component structure to create native components.
+ */
 export function Webcomponent<T>(
-	config: {
-		/**
-		 * Name of the webcomponent, must be  lower case kebab case as required by the spec
-		 */
-		name: string;
-		/**
-		 * List of attributes of the web component that will be transformed into a data source that reflects the exact state of the attribute in the DOM no matter what changes the attirbute
-		 */
-		observedAttributes?: string[];
-		shadowRootMode?: 'open' | 'closed';
-		shadowRootDelegatesFocus?: boolean;
-	},
+	config: WebComponentProps,
 	logic: (props: T, api: AurumComponentAPI) => Renderable
 ): (props: T, children: Renderable[], api: AurumComponentAPI) => Renderable {
 	customElements.define(

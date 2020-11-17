@@ -1,8 +1,8 @@
 import { GenericDataSource, DataSource } from '../stream/data_source';
 import { AttributeValue, DataDrain } from '../utilities/common';
-import { DomNodeCreator, HTMLNodeProps } from './dom_adapter';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { DuplexDataSource } from '../stream/duplex_data_source';
+import { HTMLNodeProps, DomNodeCreator } from '../builtin_compoents/dom_adapter';
 
 export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
 	placeholder?: AttributeValue;

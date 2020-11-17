@@ -153,7 +153,7 @@ describe('Datasource', () => {
 	it('should aggregate updates', () => {
 		let ds = new DataSource(1);
 		let ds2 = new DataSource(1);
-		let aggregated = ds.aggregate(ds2, (valueA, valueB) => valueA + valueB);
+		let aggregated = ds.aggregate([ds2], (valueA, valueB) => valueA + valueB);
 		assert(aggregated.value === 2);
 		ds.update(100);
 		assert(aggregated.value === 101);
@@ -161,6 +161,28 @@ describe('Datasource', () => {
 		assert(aggregated.value === 300);
 		ds.update(5);
 		assert(aggregated.value === 205);
+	});
+
+	it('should aggregate many sources', () => {
+		let ds = new DataSource(1);
+		let ds2 = new DataSource(1);
+		let ds3 = new DataSource(1);
+		let ds4 = new DataSource(1);
+		let ds5 = new DataSource(1);
+		let ds6 = new DataSource(1);
+		let aggregated = ds.aggregate(
+			[ds2, ds3, ds4, ds5, ds6],
+			(valueA, valueB, valueC, valueD, valueE, valueF) => valueA + valueB + valueC + valueD + valueE + valueF
+		);
+		assert(aggregated.value === 6);
+		ds.update(100);
+		assert(aggregated.value === 105);
+		ds2.update(200);
+		assert(aggregated.value === 304);
+		ds3.update(5);
+		assert(aggregated.value === 308);
+		ds6.update(-7);
+		assert(aggregated.value === 300);
 	});
 
 	it('should combine updates', () => {

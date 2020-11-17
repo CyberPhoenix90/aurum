@@ -1,7 +1,6 @@
 import { diagnosticMode } from '../debug_mode';
 import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
-import { Stream } from '../stream/stream';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { EventEmitter } from '../utilities/event_emitter';
 import { aurumClassName } from './classname';
@@ -59,7 +58,6 @@ export interface AurumComponentAPI {
 	cancellationToken: CancellationToken;
 	prerender(children: Renderable[], lifeCycle: ComponentLifeCycle): any[];
 	prerender(child: Renderable, lifeCycle: ComponentLifeCycle): any;
-	style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string>;
 	className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>>;
 }
 
@@ -379,40 +377,12 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
 			});
 			return result;
 		},
-		style(fragments: TemplateStringsArray, ...input: any[]): DataSource<string> {
-			const result = new DataSource<string>();
-			for (const ins of input) {
-				if (ins instanceof DataSource || ins instanceof DuplexDataSource || ins instanceof Stream) {
-					ins.listen(() => result.update(recompute(fragments, input)), api.cancellationToken);
-				}
-			}
-
-			result.update(recompute(fragments, input));
-
-			return result;
-		},
 		className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>> {
 			return aurumClassName(data, api.cancellationToken);
 		}
 	};
 
 	return api;
-}
-
-function recompute(fragments: TemplateStringsArray, input: any[]) {
-	let result = '';
-	for (let i = 0; i < fragments.length; i++) {
-		result += fragments[i];
-		if (input[i]) {
-			if (input[i] instanceof DataSource || input[i] instanceof DuplexDataSource || input[i] instanceof Stream) {
-				result += input[i].value;
-			} else {
-				result += input[i];
-			}
-		}
-	}
-
-	return result;
 }
 
 export class ArrayAurumElement extends AurumElement {

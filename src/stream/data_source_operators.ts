@@ -14,6 +14,9 @@ import {
 	DataSourceNoopOperator
 } from './operator_model';
 
+/**
+ * Mutates an update
+ */
 export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M> {
 	return {
 		name: 'map',
@@ -22,6 +25,9 @@ export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M
 	};
 }
 
+/**
+ * Forwards an update to one of two possible sources based on a condition
+ */
 export function dsFork<T>(condition: (value: T) => boolean, truthyPath: DataSource<T>, falsyPath: DataSource<T>): DataSourceNoopOperator<T> {
 	return {
 		name: 'fork',
@@ -37,6 +43,9 @@ export function dsFork<T>(condition: (value: T) => boolean, truthyPath: DataSour
 	};
 }
 
+/**
+ * Same as map but with an async mapper function
+ */
 export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMapDelayOperator<T, M> {
 	return {
 		name: 'mapAsync',
@@ -45,6 +54,9 @@ export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMa
 	};
 }
 
+/**
+ * Changes updates to contain the value of the previous update as well as the current
+ */
 export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T }> {
 	let lastValue = undefined;
 	return {
@@ -61,6 +73,9 @@ export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T
 	};
 }
 
+/**
+ * Blocks updates that don't pass the filter predicate
+ */
 export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterOperator<T> {
 	return {
 		name: 'filter',
@@ -69,6 +84,9 @@ export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterO
 	};
 }
 
+/**
+ * Same as filter but with an async predicate function
+ */
 export function dsFilterAsync<T>(predicate: (value: T) => Promise<boolean>): DataSourceDelayFilterOperator<T> {
 	return {
 		name: 'filterAsync',
@@ -77,6 +95,9 @@ export function dsFilterAsync<T>(predicate: (value: T) => Promise<boolean>): Dat
 	};
 }
 
+/**
+ * Only propagate an update if the value is even
+ */
 export function dsEven(): DataSourceFilterOperator<number> {
 	return {
 		name: 'even',
@@ -85,6 +106,9 @@ export function dsEven(): DataSourceFilterOperator<number> {
 	};
 }
 
+/**
+ * Only propagate an update if the value is odd
+ */
 export function dsOdd(): DataSourceFilterOperator<number> {
 	return {
 		name: 'odd',
@@ -93,6 +117,9 @@ export function dsOdd(): DataSourceFilterOperator<number> {
 	};
 }
 
+/**
+ * Only propagate an update if the value is lower than the previous update
+ */
 export function dsMin(): DataSourceFilterOperator<number> {
 	let last = Number.MAX_SAFE_INTEGER;
 	return {
@@ -109,6 +136,9 @@ export function dsMin(): DataSourceFilterOperator<number> {
 	};
 }
 
+/**
+ * Only propagate an update if the value is higher than the previous update
+ */
 export function dsMax(): DataSourceFilterOperator<number> {
 	let last = Number.MIN_SAFE_INTEGER;
 	return {
@@ -125,6 +155,9 @@ export function dsMax(): DataSourceFilterOperator<number> {
 	};
 }
 
+/**
+ * Ignore the first N updates where N depends on an external source
+ */
 export function dsSkipDynamic<T>(amountLeft: DataSource<number>): DataSourceFilterOperator<T> {
 	return {
 		operationType: OperationType.FILTER,
@@ -140,6 +173,9 @@ export function dsSkipDynamic<T>(amountLeft: DataSource<number>): DataSourceFilt
 	};
 }
 
+/**
+ * Ignore the first N updates
+ */
 export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
 	return {
 		operationType: OperationType.FILTER,
@@ -155,6 +191,10 @@ export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
 	};
 }
 
+/**
+ * Allows only a certain number of updates to pass decreasing a counter on each pass
+ * If the counter reaches 0 the updates are lost
+ */
 export function dsCutOff<T>(amount: number): DataSourceFilterOperator<T> {
 	return {
 		name: `cutoff ${amount}`,
@@ -170,6 +210,11 @@ export function dsCutOff<T>(amount: number): DataSourceFilterOperator<T> {
 	};
 }
 
+/**
+ * Allows only a certain number of updates to pass decreasing a counter on each pass, the counter being an external
+ * datasource can be changed externally.
+ * If the counter reaches 0 the updates are lost
+ */
 export function dsCutOffDynamic<T>(amountLeft: DataSource<number>): DataSourceFilterOperator<T> {
 	return {
 		name: 'cutoffDynamic',
@@ -185,13 +230,44 @@ export function dsCutOffDynamic<T>(amountLeft: DataSource<number>): DataSourceFi
 	};
 }
 
-export function dsUnique<T>(): DataSourceFilterOperator<T> {
+/**
+ * Allows only a certain number of updates to pass decreasing a counter on each pass, the counter being an external
+ * datasource can be changed externally.
+ * If the counter reaches 0 the updates are buffered until they are unlocked again
+ */
+export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
+	return {
+		operationType: OperationType.DELAY,
+		name: 'semaphore',
+		operation: (v) => {
+			return new Promise((resolve) => {
+				if (state.value > 0) {
+					state.update(state.value - 1);
+					resolve(v);
+				} else {
+					const cancel = state.listen(() => {
+						if (state.value > 0) {
+							cancel();
+							state.update(state.value - 1);
+							resolve(v);
+						}
+					});
+				}
+			});
+		}
+	};
+}
+
+/**
+ * Filters out updates if they have the same value as the previous update, uses reference equality by default
+ */
+export function dsUnique<T>(isEqual?: (valueA: T, valueB: T) => boolean): DataSourceFilterOperator<T> {
 	let last: T;
 	return {
 		name: 'unique',
 		operationType: OperationType.FILTER,
 		operation: (v) => {
-			if (v === last) {
+			if (isEqual ? isEqual(last, v) : v === last) {
 				return false;
 			} else {
 				last = v;
@@ -201,6 +277,9 @@ export function dsUnique<T>(): DataSourceFilterOperator<T> {
 	};
 }
 
+/**
+ * Takes promises and updates with the resolved value, if multiple promises come in processes updates as promises resolve in any order
+ */
 export function dsAwait<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 	return {
 		name: 'await',
@@ -211,6 +290,9 @@ export function dsAwait<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 	};
 }
 
+/**
+ * Takes promises and updates with the resolved value, if multiple promises come in makes sure the updates fire in the same order that the promises came in
+ */
 export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 	const queue: any[] = [];
 	const onDequeue = new EventEmitter();
@@ -241,6 +323,11 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
 	}
 }
 
+/**
+ * awaits promise and forwards the resolved value, if a new promise comes in while the first isn't resolved then the first
+ * promise will be ignored even if it resolves first and instead we focus on the newest promise. This is useful for cancellable
+ * async operations where we only care about the result if it's the latest action
+ */
 export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<T>> {
 	let freshnessToken: number;
 
@@ -266,6 +353,9 @@ export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<
 	};
 }
 
+/**
+ * Reduces all updates down to a value
+ */
 export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M): DataSourceMapOperator<T, M> {
 	let last = initialValue;
 	return {
@@ -278,6 +368,9 @@ export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M):
 	};
 }
 
+/**
+ * Builds a string where each update is appened to the string optionally with a seperator
+ */
 export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<string, string> {
 	let last: string;
 	return {
@@ -294,6 +387,9 @@ export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<st
 	};
 }
 
+/**
+ * Adds a fixed amount of lag to updates
+ */
 export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
 	return {
 		name: `delay ${time}ms`,
@@ -308,6 +404,10 @@ export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
 	};
 }
 
+/**
+ * Starts a timer when an update occurs, delays the update until the timer passed if a new update arrives the initial
+ * update is cancelled and the process starts again
+ */
 export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
 	let timeout;
 	let cancelled = new EventEmitter();
@@ -355,29 +455,13 @@ export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
 	};
 }
 
-export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
-	return {
-		operationType: OperationType.DELAY,
-		name: 'semaphore',
-		operation: (v) => {
-			return new Promise((resolve) => {
-				if (state.value > 0) {
-					state.update(state.value - 1);
-					resolve(v);
-				} else {
-					const cancel = state.listen(() => {
-						if (state.value > 0) {
-							cancel();
-							state.update(state.value - 1);
-							resolve(v);
-						}
-					});
-				}
-			});
-		}
-	};
-}
-
+/**
+ * May or may not block all updates based on the state provided by another source
+ * When unblocked the last value that was blocked is passed through
+ * lock state
+ * true => updates pass through
+ * false => latest update state is buffered and passes once unlocked
+ */
 export function dsLock<T>(state: DataSource<boolean>): DataSourceDelayOperator<T> {
 	return {
 		name: 'lock',
@@ -399,6 +483,9 @@ export function dsLock<T>(state: DataSource<boolean>): DataSourceDelayOperator<T
 	};
 }
 
+/**
+ * Allows at most one update per N milliseconds to pass through
+ */
 export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
 	let cooldown = false;
 	return {
@@ -418,6 +505,10 @@ export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
 	};
 }
 
+/**
+ * When an update occurs a timer is started, during that time all subsequent updates are collected in an array and then
+ * once the timer runs out an update is made with all updates collected so far as an array
+ */
 export function dsBuffer<T>(time: number): DataSourceMapDelayFilterOperator<T, T[]> {
 	let buffer = [];
 	let promise;
@@ -449,6 +540,9 @@ export function dsBuffer<T>(time: number): DataSourceMapDelayFilterOperator<T, T
 	};
 }
 
+/**
+ * Extracts only the value of a key of the update value
+ */
 export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T[K]> {
 	return {
 		name: `pick ${key}`,
@@ -463,6 +557,9 @@ export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T
 	};
 }
 
+/**
+ * Forwards an event to another source
+ */
 export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any>): DataSourceNoopOperator<T> {
 	return {
 		name: `pipe ${target.name}`,
@@ -496,6 +593,9 @@ export function dsPipeUp<T>(target: DataSource<T> | DuplexDataSource<T> | Stream
 	};
 }
 
+/**
+ * Allows inserting a callback that gets called with an update
+ */
 export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
 	return {
 		name: 'tap',
@@ -507,6 +607,9 @@ export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
 	};
 }
 
+/**
+ * Pipes updates to the targets in round-robin fashion
+ */
 export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource<T> | Stream<T, any>>): DataSourceNoopOperator<T> {
 	let i = 0;
 

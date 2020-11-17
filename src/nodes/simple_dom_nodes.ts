@@ -1,4 +1,4 @@
-import { DomNodeCreator, HTMLNodeProps } from './dom_adapter';
+import { DomNodeCreator, HTMLNodeProps } from '../builtin_compoents/dom_adapter';
 import { AttributeValue } from '../utilities/common';
 
 export interface AProps extends HTMLNodeProps<HTMLAnchorElement> {

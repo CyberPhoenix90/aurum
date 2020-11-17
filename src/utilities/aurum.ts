@@ -1,4 +1,3 @@
-import { HTMLNodeProps } from '../nodes/dom_adapter';
 import { Input, InputProps } from '../nodes/input';
 import { Select, SelectProps } from '../nodes/select';
 import {
@@ -102,9 +101,10 @@ import {
 	render,
 	Renderable
 } from '../rendering/aurum_element';
-import { ArrayDataSource } from '../stream/data_source';
+import { ArrayDataSource, DataSource } from '../stream/data_source';
 import { MapLike } from './common';
 import { CancellationToken } from './cancellation_token';
+import { HTMLNodeProps } from '../builtin_compoents/dom_adapter';
 
 const nodeMap = {
 	button: Button,
@@ -212,7 +212,7 @@ export class Aurum {
 	public static factory(
 		node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
 		args: MapLike<any>,
-		...innerNodes: AurumElementModel<any>[]
+		...innerNodes: Array<AurumElementModel<any> | DataSource<any> | ArrayDataSource<any>>
 	): AurumElementModel<any> {
 		let name;
 		let intrinsic = false;
