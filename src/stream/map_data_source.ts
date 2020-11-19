@@ -15,10 +15,8 @@ export class MapDataSource<K, V> {
 	private updateEvent: EventEmitter<MapChange<K, V>>;
 	private updateEventOnKey: Map<K, EventEmitter<MapChange<K, V>>>;
 
-	constructor(initialData: Map<K, V>) {
-		if (initialData) {
-			this.data = initialData;
-		}
+	constructor(initialData?: Map<K, V>) {
+		this.data = initialData ?? new Map();
 
 		this.updateEvent = new EventEmitter();
 		this.updateEventOnKey = new Map();

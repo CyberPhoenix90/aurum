@@ -268,16 +268,25 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 		for (const item of element) {
 			const rendered = render(item, session, prerendering);
 			// Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
-			if (Array.isArray(rendered)) {
-				result.push(...rendered);
-			} else {
-				result.push(rendered);
+			if (rendered !== undefined && rendered !== null) {
+				if (Array.isArray(rendered)) {
+					result.push(...rendered);
+				} else {
+					result.push(rendered);
+				}
 			}
 		}
 		return result;
 	}
 
 	if (!prerendering) {
+		const type = typeof element;
+		if (type === 'string') {
+			return document.createTextNode(element as string) as any;
+		} else if (type === 'number' || type === 'bigint' || type === 'boolean') {
+			return document.createTextNode(element.toString()) as any;
+		}
+
 		if (element instanceof Promise) {
 			const ds = new DataSource();
 			element.then((val) => {
@@ -291,11 +300,6 @@ export function render<T extends Renderable>(element: T, session: RenderSession,
 		} else if (element instanceof ArrayDataSource) {
 			const result = new ArrayAurumElement(element as any, createAPI(session));
 			return result as any;
-		}
-
-		const type = typeof element;
-		if (type === 'string' || type === 'number' || type === 'bigint' || type === 'boolean') {
-			return document.createTextNode(element.toString()) as any;
 		}
 	}
 

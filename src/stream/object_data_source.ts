@@ -16,10 +16,7 @@ export class ObjectDataSource<T> {
 	private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
 
 	constructor(initialData: T) {
-		if (initialData) {
-			this.data = initialData;
-		}
-
+		this.data = initialData;
 		this.updateEvent = new EventEmitter();
 		this.updateEventOnKey = new Map();
 	}

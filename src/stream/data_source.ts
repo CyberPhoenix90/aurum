@@ -38,6 +38,7 @@ export interface ReadOnlyDataSource<T> {
 
 export interface GenericDataSource<T> {
 	readonly value: T;
+	readonly name: string;
 	listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;

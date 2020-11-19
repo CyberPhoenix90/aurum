@@ -14,9 +14,7 @@ export class SetDataSource<K> {
 	private updateEventOnKey: Map<K, EventEmitter<boolean>>;
 
 	constructor(initialData: Set<K>) {
-		if (initialData) {
-			this.data = initialData;
-		}
+		this.data = initialData ?? new Set();
 
 		this.updateEvent = new EventEmitter();
 		this.updateEventOnKey = new Map();
