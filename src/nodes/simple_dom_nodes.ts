@@ -1,11 +1,16 @@
 import { DomNodeCreator, HTMLNodeProps } from '../builtin_compoents/dom_adapter';
 import { AttributeValue } from '../utilities/common';
 
+/**
+ * @internal
+ */
 export interface AProps extends HTMLNodeProps<HTMLAnchorElement> {
 	href?: AttributeValue;
 	target?: AttributeValue;
 }
-
+/**
+ * @internal
+ */
 export interface AreaProps extends HTMLNodeProps<HTMLAreaElement> {
 	alt?: AttributeValue;
 	coords?: AttributeValue;
@@ -19,6 +24,9 @@ export interface AreaProps extends HTMLNodeProps<HTMLAreaElement> {
 	type?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface VideoProps extends HTMLNodeProps<HTMLVideoElement> {
 	controls?: AttributeValue;
 	autoplay?: AttributeValue;
@@ -31,6 +39,9 @@ export interface VideoProps extends HTMLNodeProps<HTMLVideoElement> {
 	height?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
 	controls?: AttributeValue;
 	autoplay?: AttributeValue;
@@ -40,6 +51,9 @@ export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
 	src?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
 	action?: AttributeValue;
 	method?: AttributeValue;
@@ -48,29 +62,47 @@ export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
 	novalidate?: AttributeValue;
 	target?: AttributeValue;
 }
+/**
+ * @internal
+ */
 export interface HtmlProps extends HTMLNodeProps<HTMLHtmlElement> {
 	lang?: string;
 }
 
+/**
+ * @internal
+ */
 export interface MetaProps extends HTMLNodeProps<HTMLMetaElement> {
 	['http-equiv']?: string;
 	content?: string;
 }
 
+/**
+ * @internal
+ */
 export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
 	type?: AttributeValue;
 	disabled?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface CanvasProps extends HTMLNodeProps<HTMLCanvasElement> {
 	width?: AttributeValue;
 	height?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface DataProps extends HTMLNodeProps<HTMLDataElement> {
 	value?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
 	src?: AttributeValue;
 	allow?: AttributeValue;
@@ -81,6 +113,9 @@ export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
 	srcdoc?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ImgProps extends HTMLNodeProps<HTMLImageElement> {
 	src?: AttributeValue;
 	alt?: AttributeValue;
@@ -92,10 +127,16 @@ export interface ImgProps extends HTMLNodeProps<HTMLImageElement> {
 	useMap?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface LabelProps extends HTMLNodeProps<HTMLLabelElement> {
 	for?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface LinkProps extends HTMLNodeProps<HTMLLinkElement> {
 	href?: AttributeValue;
 	rel?: AttributeValue;
@@ -105,14 +146,23 @@ export interface LinkProps extends HTMLNodeProps<HTMLLinkElement> {
 	type?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface TimeProps extends HTMLNodeProps<HTMLTimeElement> {
 	datetime?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface StyleProps extends HTMLNodeProps<HTMLStyleElement> {
 	media?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface SourceProps extends HTMLNodeProps<HTMLSourceElement> {
 	src?: AttributeValue;
 	srcSet?: AttributeValue;
@@ -121,6 +171,9 @@ export interface SourceProps extends HTMLNodeProps<HTMLSourceElement> {
 	type?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
 	src?: AttributeValue;
 	async?: AttributeValue;
@@ -130,20 +183,32 @@ export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
 	type?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface SvgProps extends HTMLNodeProps<HTMLOrSVGElement> {
 	width?: AttributeValue;
 	height?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ProgressProps extends HTMLNodeProps<HTMLProgressElement> {
 	max?: AttributeValue;
 	value?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface OptionProps extends HTMLNodeProps<HTMLElement> {
 	value?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface SlotProps extends HTMLNodeProps<HTMLSlotElement> {}
 
 /**

@@ -47,7 +47,7 @@ export class ObjectDataSource<T> {
 		return this.updateEvent.subscribe(callback, cancellationToken).cancel;
 	}
 
-	public map<D>(mapper: (change: ObjectChange<T, keyof T>) => D): ArrayDataSource<D> {
+	public map<D>(mapper: (key: keyof T) => D): ArrayDataSource<D> {
 		const stateMap: Map<string | number | Symbol, D> = new Map<string | number | Symbol, D>();
 		const result = new ArrayDataSource<D>();
 		this.listenAndRepeat((change) => {
@@ -56,11 +56,11 @@ export class ObjectDataSource<T> {
 				result.remove(item);
 				stateMap.delete(change.key);
 			} else if (stateMap.has(change.key)) {
-				const newItem = mapper(change);
+				const newItem = mapper(change.key);
 				result.replace(stateMap.get(change.key), newItem);
 				stateMap.set(change.key, newItem);
 			} else if (!stateMap.has(change.key) && !change.deleted) {
-				const newItem = mapper(change);
+				const newItem = mapper(change.key);
 				result.push(newItem);
 				stateMap.set(change.key, newItem);
 			}

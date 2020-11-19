@@ -64,7 +64,7 @@ export class MapDataSource<K, V> {
 		return c;
 	}
 
-	public map<D>(mapper: (change: MapChange<K, V>) => D): ArrayDataSource<D> {
+	public map<D>(mapper: (key: K) => D): ArrayDataSource<D> {
 		const stateMap: Map<K, D> = new Map<K, D>();
 		const result = new ArrayDataSource<D>();
 		this.listenAndRepeat((change) => {
@@ -73,11 +73,11 @@ export class MapDataSource<K, V> {
 				result.remove(item);
 				stateMap.delete(change.key);
 			} else if (stateMap.has(change.key)) {
-				const newItem = mapper(change);
+				const newItem = mapper(change.key);
 				result.replace(stateMap.get(change.key), newItem);
 				stateMap.set(change.key, newItem);
 			} else if (!stateMap.has(change.key) && !change.deleted) {
-				const newItem = mapper(change);
+				const newItem = mapper(change.key);
 				result.push(newItem);
 				stateMap.set(change.key, newItem);
 			}

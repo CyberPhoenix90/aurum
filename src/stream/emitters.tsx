@@ -20,6 +20,10 @@ export function intervalEmitter<T = void>(
 	}, interval);
 }
 
+/**
+ * Calls the callback every animation frame with a number from 0 to 1 indicating how far along in the animation timeline it is.
+ *
+ */
 export function animate(cb: (progress: number) => void, time: number, cancellationToken: CancellationToken): Promise<void> {
 	return new Promise((resolve) => {
 		const animationToken = new CancellationToken();

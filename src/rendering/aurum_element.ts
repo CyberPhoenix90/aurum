@@ -52,9 +52,9 @@ export interface ComponentLifeCycleInternal extends ComponentLifeCycle {
 
 export interface AurumComponentAPI {
 	synchronizeLifeCycle(lifeCycle: ComponentLifeCycle): void;
-	onAttach(cb: () => void);
-	onDetach(cb: () => void);
-	onError(cb: (error: Error) => Renderable);
+	onAttach(cb: () => void): void;
+	onDetach(cb: () => void): void;
+	onError(cb: (error: Error) => Renderable): void;
 	cancellationToken: CancellationToken;
 	prerender(children: Renderable[], lifeCycle: ComponentLifeCycle): any[];
 	prerender(child: Renderable, lifeCycle: ComponentLifeCycle): any;
