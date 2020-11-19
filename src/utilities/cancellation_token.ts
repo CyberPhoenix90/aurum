@@ -126,7 +126,11 @@ export function registerAnimationLoop(callback: (time: number) => void, token: C
 
 function loop(time: number): void {
 	for (const cb of animationCbs) {
-		cb(time);
+		try {
+			cb(time);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	if (animationCbs.length === 0) {

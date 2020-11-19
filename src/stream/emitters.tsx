@@ -20,19 +20,22 @@ export function intervalEmitter<T = void>(
 	}, interval);
 }
 
-export function animate(cb: (progress: number) => void, time: number, cancellationToken: CancellationToken): void {
-	const animationToken = new CancellationToken();
-	if (cancellationToken) {
-		cancellationToken.chain(animationToken);
-	}
-	let start = Date.now();
-	registerAnimationLoop(() => {
-		const progress = Math.min(1, time / (Date.now() - start));
-		cb(progress);
-		if (progress === 1) {
-			animationToken.cancel();
+export function animate(cb: (progress: number) => void, time: number, cancellationToken: CancellationToken): Promise<void> {
+	return new Promise((resolve) => {
+		const animationToken = new CancellationToken();
+		if (cancellationToken) {
+			cancellationToken.chain(animationToken);
 		}
-	}, animationToken);
+		animationToken.addCancelable(resolve);
+		let start = Date.now();
+		registerAnimationLoop(() => {
+			const progress = Math.min(1, (Date.now() - start) / time);
+			cb(progress);
+			if (progress === 1) {
+				animationToken.cancel();
+			}
+		}, animationToken);
+	});
 }
 
 export function tweenEmitter(
@@ -40,10 +43,14 @@ export function tweenEmitter(
 	duration: number,
 	startValue: number,
 	endValue: number,
+	interpolation?: (v: number) => number,
 	cancellationToken?: CancellationToken
-): void {
-	animate(
+): Promise<void> {
+	return animate(
 		(progress) => {
+			if (interpolation) {
+				progress = interpolation(progress);
+			}
 			const value = startValue + (endValue - startValue) * progress;
 			if (target instanceof ArrayDataSource) {
 				target.push(value);
