@@ -6,7 +6,14 @@ import { AttributeValue } from '../utilities/common';
  */
 export interface AProps extends HTMLNodeProps<HTMLAnchorElement> {
 	href?: AttributeValue;
+	hreflang?: AttributeValue;
+	media?: AttributeValue;
+	download?: AttributeValue;
 	target?: AttributeValue;
+	ping?: AttributeValue;
+	referrerpolicy?: AttributeValue;
+	rel?: AttributeValue;
+	type?: AttributeValue;
 }
 /**
  * @internal
@@ -111,6 +118,8 @@ export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
 	width?: AttributeValue;
 	height?: AttributeValue;
 	srcdoc?: AttributeValue;
+	loading?: AttributeValue;
+	sandbox?: AttributeValue;
 }
 
 /**
@@ -158,6 +167,7 @@ export interface TimeProps extends HTMLNodeProps<HTMLTimeElement> {
  */
 export interface StyleProps extends HTMLNodeProps<HTMLStyleElement> {
 	media?: AttributeValue;
+	type?: AttributeValue;
 }
 
 /**
@@ -174,6 +184,18 @@ export interface SourceProps extends HTMLNodeProps<HTMLSourceElement> {
 /**
  * @internal
  */
+export interface TrackProps extends HTMLNodeProps<HTMLTrackElement> {
+	src?: AttributeValue;
+	srclang?: AttributeValue;
+	label?: AttributeValue;
+	kind?: AttributeValue;
+	default?: AttributeValue;
+}
+
+export interface ParamProps extends HTMLNodeProps<HTMLParamElement> {
+	value?: AttributeValue;
+}
+
 export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
 	src?: AttributeValue;
 	async?: AttributeValue;
@@ -204,6 +226,29 @@ export interface ProgressProps extends HTMLNodeProps<HTMLProgressElement> {
  */
 export interface OptionProps extends HTMLNodeProps<HTMLElement> {
 	value?: AttributeValue;
+	disabled?: AttributeValue;
+	label?: AttributeValue;
+	selected?: AttributeValue;
+}
+
+export interface OptGroupProps extends HTMLNodeProps<HTMLOptGroupElement> {
+	disabled?: AttributeValue;
+	label?: AttributeValue;
+}
+
+export interface OutputProps extends HTMLNodeProps<HTMLOutputElement> {
+	form?: AttributeValue;
+	for?: AttributeValue;
+}
+
+export interface ObjectProps extends HTMLNodeProps<HTMLObjectElement> {
+	data?: AttributeValue;
+	width?: AttributeValue;
+	height?: AttributeValue;
+	form?: AttributeValue;
+	type?: AttributeValue;
+	typemustmatch?: AttributeValue;
+	usemap?: AttributeValue;
 }
 
 /**
@@ -222,7 +267,7 @@ export const Div = DomNodeCreator<HTMLNodeProps<HTMLDivElement>>('div');
 /**
  * @internal
  */
-export const A = DomNodeCreator<AProps>('a', ['href', 'target']);
+export const A = DomNodeCreator<AProps>('a', ['href', 'target', 'hreflang', 'media', 'download', 'ping', 'referrerpolicy', 'rel', 'type']);
 /**
  * @internal
  */
@@ -379,7 +424,7 @@ export const Meta = DomNodeCreator<MetaProps>('meta');
 /**
  * @internal
  */
-export const Html = DomNodeCreator<HtmlProps>('html');
+export const Html = DomNodeCreator<HtmlProps>('html', ['lang']);
 /**
  * @internal
  */
@@ -399,7 +444,17 @@ export const I = DomNodeCreator<HTMLNodeProps<HTMLElement>>('i');
 /**
  * @internal
  */
-export const IFrame = DomNodeCreator<IFrameProps>('iframe', ['src', 'srcdoc', 'width', 'height', 'allow', 'allowFullscreen', 'allowPaymentRequest']);
+export const IFrame = DomNodeCreator<IFrameProps>('iframe', [
+	'src',
+	'srcdoc',
+	'width',
+	'height',
+	'allow',
+	'allowFullscreen',
+	'allowPaymentRequest',
+	'loading',
+	'sandbox'
+]);
 /**
  * @internal
  */
@@ -451,11 +506,19 @@ export const Time = DomNodeCreator<TimeProps>('time', ['datetime']);
 /**
  * @internal
  */
-export const Style = DomNodeCreator<StyleProps>('style', ['media']);
+export const Style = DomNodeCreator<StyleProps>('style', ['media', 'type']);
 /**
  * @internal
  */
 export const Source = DomNodeCreator<SourceProps>('source', ['src', 'srcSet', 'media', 'sizes', 'type']);
+/**
+ * @internal
+ */
+export const Track = DomNodeCreator<TrackProps>('track', ['src', 'srclang', 'label', 'kind', 'default']);
+/**
+ * @internal
+ */
+export const Param = DomNodeCreator<ParamProps>('param', ['value']);
 /**
  * @internal
  */
@@ -471,9 +534,46 @@ export const Progress = DomNodeCreator<ProgressProps>('progress', ['max', 'value
 /**
  * @internal
  */
-export const Option = DomNodeCreator<OptionProps>('option', ['value']);
+export const Option = DomNodeCreator<OptionProps>('option', ['value', 'label', 'disabled', 'selected']);
+/**
+ * @internal
+ */
+export const OptGroup = DomNodeCreator<OptGroupProps>('option', ['label', 'disabled']);
 
 /**
  * @internal
  */
 export const Slot = DomNodeCreator<SlotProps>('slot', ['name']);
+
+/**
+ * @internal
+ */
+export const Strong = DomNodeCreator<HTMLNodeProps<HTMLElement>>('strong');
+/**
+ * @internal
+ */
+export const Samp = DomNodeCreator<HTMLNodeProps<HTMLElement>>('samp');
+/**
+ * @internal
+ */
+export const Kbd = DomNodeCreator<HTMLNodeProps<HTMLElement>>('kbd');
+/**
+ * @internal
+ */
+export const Var = DomNodeCreator<HTMLNodeProps<HTMLElement>>('var');
+/**
+ * @internal
+ */
+export const Wbr = DomNodeCreator<HTMLNodeProps<HTMLElement>>('wbr');
+/**
+ * @internal
+ */
+export const Picture = DomNodeCreator<HTMLNodeProps<HTMLElement>>('picture');
+/**
+ * @internal
+ */
+export const Output = DomNodeCreator<OutputProps>('output', ['for', 'form']);
+/**
+ * @internal
+ */
+export const Object = DomNodeCreator<ObjectProps>('object', ['data', 'width', 'height', 'form', 'type', 'typemustmatch', 'usemap']);

@@ -87,7 +87,24 @@ import {
 	Body,
 	Meta,
 	MetaProps,
-	HtmlProps
+	HtmlProps,
+	ObjectProps,
+	OptGroupProps,
+	OutputProps,
+	ParamProps,
+	TrackProps,
+	Address,
+	Kbd,
+	Object,
+	OptGroup,
+	Output,
+	Param,
+	Picture,
+	Samp,
+	Strong,
+	Track,
+	Var,
+	Wbr
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
@@ -107,6 +124,18 @@ import { CancellationToken } from './cancellation_token';
 import { HTMLNodeProps } from '../builtin_compoents/dom_adapter';
 
 const nodeMap = {
+	address: Address,
+	kbd: Kbd,
+	samp: Samp,
+	object: Object,
+	optGroup: OptGroup,
+	picture: Picture,
+	output: Output,
+	param: Param,
+	strong: Strong,
+	track: Track,
+	var: Var,
+	wbr: Wbr,
 	button: Button,
 	code: Code,
 	hr: Hr,
@@ -242,6 +271,18 @@ export class Aurum {
 export namespace Aurum {
 	export namespace JSX {
 		export interface IntrinsicElements {
+			address: HTMLNodeProps<HTMLElement>;
+			wbr: HTMLNodeProps<HTMLElement>;
+			samp: HTMLNodeProps<HTMLElement>;
+			strong: HTMLNodeProps<HTMLElement>;
+			kbd: HTMLNodeProps<HTMLElement>;
+			var: HTMLNodeProps<HTMLElement>;
+			picture: HTMLNodeProps<HTMLElement>;
+			output: OutputProps;
+			object: ObjectProps;
+			optGroup: OptGroupProps;
+			track: TrackProps;
+			param: ParamProps;
 			code: HTMLNodeProps<HTMLElement>;
 			button: ButtonProps;
 			hr: HTMLNodeProps<HTMLHRElement>;
