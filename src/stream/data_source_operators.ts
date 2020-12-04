@@ -28,7 +28,11 @@ export function dsMap<T, M>(mapper: (value: T) => M): DataSourceMapOperator<T, M
 /**
  * Forwards an update to one of two possible sources based on a condition
  */
-export function dsFork<T>(condition: (value: T) => boolean, truthyPath: DataSource<T>, falsyPath: DataSource<T>): DataSourceNoopOperator<T> {
+export function dsFork<T>(
+	condition: (value: T) => boolean,
+	truthyPath: { update(value: T): void },
+	falsyPath: { update(value: T): void }
+): DataSourceNoopOperator<T> {
 	return {
 		name: 'fork',
 		operationType: OperationType.NOOP,

@@ -40,11 +40,33 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		return result;
 	}
 
-	public static fromStreamTransformation<I, O>(callback: (data: DataSource<I>) => DataSource<O>): Stream<I, O> {
-		const result = new Stream<I, O>();
+	public static fromStreamTransformation<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, Z = H, J = Z, K = J>(
+		operationA?: DataSourceOperator<A, B>,
+		operationB?: DataSourceOperator<B, C>,
+		operationC?: DataSourceOperator<C, D>,
+		operationD?: DataSourceOperator<D, E>,
+		operationE?: DataSourceOperator<E, F>,
+		operationF?: DataSourceOperator<F, G>,
+		operationG?: DataSourceOperator<G, H>,
+		operationH?: DataSourceOperator<H, Z>,
+		operationI?: DataSourceOperator<Z, J>,
+		operationJ?: DataSourceOperator<J, K>
+	): Stream<A, K> {
+		const result = new Stream<A, K>();
 
-		result.input = new DataSource<I>();
-		result.output = callback(result.input);
+		result.input = new DataSource<A>();
+		result.output = result.input.transform(
+			operationA,
+			operationB,
+			operationC,
+			operationD,
+			operationE,
+			operationF,
+			operationG,
+			operationH,
+			operationI,
+			operationJ
+		);
 
 		return result;
 	}
@@ -126,6 +148,10 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		this.listen(processTransform<O, K>(operations as any, result), token);
 
 		return Stream.fromPreconnectedSources(this.input, result);
+	}
+
+	public getInput(): DataSource<I> {
+		return this.input;
 	}
 
 	public getOutput(): DataSource<O> {
