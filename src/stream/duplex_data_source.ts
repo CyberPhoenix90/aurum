@@ -1,3 +1,4 @@
+import { AurumServerInfo, syncDuplexDataSource } from '../aurum_server/aurum_server_client';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
@@ -38,6 +39,20 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 		this.updateDownstreamEvent = new EventEmitter();
 		this.updateUpstreamEvent = new EventEmitter();
 		this.propagateWritesToReadStream = propagateWritesToReadStream;
+	}
+
+	/**
+	 * Connects to an aurum-server exposed datasource view https://github.com/CyberPhoenix90/aurum-server for more information
+	 * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
+	 * @param  {AurumServerInfo} aurumServerInfo
+	 * @returns DataSource
+	 */
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): DuplexDataSource<T> {
+		const result = new DuplexDataSource<T>(undefined, false);
+
+		syncDuplexDataSource(result, aurumServerInfo);
+
+		return result;
 	}
 
 	/**

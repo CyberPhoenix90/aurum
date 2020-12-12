@@ -1,3 +1,4 @@
+import { AurumServerInfo, syncDataSource } from '../aurum_server/aurum_server_client';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
@@ -174,6 +175,20 @@ export class DataSource<T> implements GenericDataSource<T> {
 		this.primed = initialValue !== undefined;
 		this.errorEvent = new EventEmitter();
 		this.updateEvent = new EventEmitter();
+	}
+
+	/**
+	 * Connects to an aurum-server exposed datasource view https://github.com/CyberPhoenix90/aurum-server for more information
+	 * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
+	 * @param  {AurumServerInfo} aurumServerInfo
+	 * @returns DataSource
+	 */
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): DataSource<T> {
+		const result = new DataSource<T>();
+
+		syncDataSource(result, aurumServerInfo);
+
+		return result;
 	}
 
 	public static fromMultipleSources<T>(sources: ReadOnlyDataSource<T>[], cancellation?: CancellationToken): DataSource<T> {
