@@ -1,4 +1,4 @@
-import { DataSource } from '../stream/data_source';
+import { ArrayDataSource, CollectionChange, DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 
 export enum RemoteProtocol {
@@ -29,6 +29,12 @@ export async function syncDataSource(source: DataSource<any>, aurumServerInfo: A
 	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken);
 }
 
+export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo): Promise<void> {
+	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
+	await ensureConnection(key, aurumServerInfo);
+	connections.get(key).syncArrayDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken);
+}
+
 export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumServerInfo: AurumServerInfo): Promise<void> {
 	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
 	await ensureConnection(key, aurumServerInfo);
@@ -37,15 +43,17 @@ export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumS
 
 const connections: Map<string, AurumServerClient> = new Map();
 
-export class AurumServerClient {
+class AurumServerClient {
 	private readonly connection: WebSocket;
 	private synchedDataSources: Map<string, DataSource<any>[]>;
 	private synchedDuplexDataSources: Map<string, DuplexDataSource<any>[]>;
+	private synchedArrayDataSources: Map<string, ArrayDataSource<any>[]>;
 
 	private constructor(connection: WebSocket) {
 		this.connection = connection;
 		this.synchedDataSources = new Map();
 		this.synchedDuplexDataSources = new Map();
+		this.synchedArrayDataSources = new Map();
 	}
 
 	public syncDataSource(dataSource: DataSource<any>, id: string, authenticationToken?: string): void {
@@ -60,6 +68,21 @@ export class AurumServerClient {
 			this.synchedDataSources.set(id, [dataSource]);
 		} else {
 			this.synchedDataSources.get(id).push(dataSource);
+		}
+	}
+
+	public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken?: string): void {
+		if (!this.synchedArrayDataSources.has(id)) {
+			this.connection.send(
+				JSON.stringify({
+					type: RemoteProtocol.LISTEN_ARRAY_DATASOURCE,
+					id,
+					token: authenticationToken
+				})
+			);
+			this.synchedArrayDataSources.set(id, [dataSource]);
+		} else {
+			this.synchedArrayDataSources.get(id).push(dataSource);
 		}
 	}
 
@@ -113,6 +136,46 @@ export class AurumServerClient {
 								const dss = client.synchedDataSources.get(msg.id);
 								for (const ds of dss) {
 									ds.update(msg.value);
+								}
+							}
+							break;
+						case RemoteProtocol.UPDATE_ARRAY_DATASOURCE:
+							if (client.synchedArrayDataSources.has(msg.id)) {
+								const dss = client.synchedArrayDataSources.get(msg.id);
+								const change: CollectionChange<any> = msg.change;
+								for (const ds of dss) {
+									switch (change.operationDetailed) {
+										case 'append':
+											ds.appendArray(change.items);
+											break;
+										case 'clear':
+											ds.clear();
+											break;
+										case 'insert':
+											ds.insertAt(change.index, ...change.items);
+											break;
+										case 'merge':
+											ds.merge(change.items);
+											break;
+										case 'prepend':
+											ds.unshift(change.items);
+											break;
+										case 'remove':
+											ds.removeRange(change.index, change.index + change.count);
+											break;
+										case 'removeLeft':
+											ds.removeLeft(change.count);
+											break;
+										case 'removeRight':
+											ds.removeRight(change.count);
+											break;
+										case 'replace':
+											ds.set(change.index, change.items[0]);
+											break;
+										case 'swap':
+											ds.swap(change.index, change.index2);
+											break;
+									}
 								}
 							}
 							break;

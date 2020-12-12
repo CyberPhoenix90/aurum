@@ -1,4 +1,4 @@
-import { AurumServerInfo, syncDataSource } from '../aurum_server/aurum_server_client';
+import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
@@ -178,7 +178,7 @@ export class DataSource<T> implements GenericDataSource<T> {
 	}
 
 	/**
-	 * Connects to an aurum-server exposed datasource view https://github.com/CyberPhoenix90/aurum-server for more information
+	 * Connects to an aurum-server exposed datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
 	 * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
 	 * @param  {AurumServerInfo} aurumServerInfo
 	 * @returns DataSource
@@ -557,6 +557,20 @@ export class ArrayDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
+	/**
+	 * Connects to an aurum-server exposed array datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+	 * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
+	 * @param  {AurumServerInfo} aurumServerInfo
+	 * @returns DataSource
+	 */
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): ArrayDataSource<T> {
+		const result = new ArrayDataSource<T>();
+
+		syncArrayDataSource(result, aurumServerInfo);
+
+		return result;
+	}
+
 	public static fromMultipleSources<T>(sources: Array<ArrayDataSource<T> | T[]>, cancellationToken?: CancellationToken): ArrayDataSource<T> {
 		const boundaries = [0];
 		const result = new ArrayDataSource<T>(
@@ -852,7 +866,7 @@ export class ArrayDataSource<T> {
 		}
 	}
 
-	public removeRange(start: number, end): void {
+	public removeRange(start: number, end:number): void {
 		const removed = this.data.splice(start, end - start);
 		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
