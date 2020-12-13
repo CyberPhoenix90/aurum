@@ -1,4 +1,6 @@
 src
+tsconfig.cjs.json
+tsconfig.amd.json
 tsconfig.json
 .prettierrc
 dist_test
