@@ -47,10 +47,10 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 	 * @param  {AurumServerInfo} aurumServerInfo
 	 * @returns DataSource
 	 */
-	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): DuplexDataSource<T> {
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): DuplexDataSource<T> {
 		const result = new DuplexDataSource<T>(undefined, false);
 
-		syncDuplexDataSource(result, aurumServerInfo);
+		syncDuplexDataSource(result, aurumServerInfo, cancellation);
 
 		return result;
 	}

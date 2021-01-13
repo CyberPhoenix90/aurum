@@ -13,18 +13,30 @@ export function Suspense(props: SuspenseProps, children: Renderable[], api: Auru
 		lc.onDetach();
 	});
 
-	Promise.all(api.prerender(children, lc)).then(
-		(res) => {
-			if (!api.cancellationToken.isCanceled) {
-				data.update(res);
-				lc.onAttach();
+	Promise.all(api.prerender(children, lc)).then(function result(res) {
+		if (res instanceof Promise) {
+			res.then(result, onError);
+		} else {
+			const nestedRendered = api.prerender(res, lc);
+			if (nestedRendered.some((s) => s instanceof Promise)) {
+				Promise.all(nestedRendered).then(result, onError);
+			} else {
+				onDone(nestedRendered);
 			}
-		},
-		(e) => {
-			lc.onDetach();
-			return Promise.reject(e);
 		}
-	);
+	}, onError);
 
 	return data;
+
+	function onDone(res: any[]) {
+		if (!api.cancellationToken.isCanceled) {
+			data.update(res);
+			lc.onAttach();
+		}
+	}
+
+	function onError(reason: any): Promise<never> {
+		lc.onDetach();
+		return Promise.reject(reason);
+	}
 }

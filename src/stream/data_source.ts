@@ -183,10 +183,10 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @param  {AurumServerInfo} aurumServerInfo
 	 * @returns DataSource
 	 */
-	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): DataSource<T> {
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): DataSource<T> {
 		const result = new DataSource<T>();
 
-		syncDataSource(result, aurumServerInfo);
+		syncDataSource(result, aurumServerInfo, cancellation);
 
 		return result;
 	}
@@ -563,10 +563,10 @@ export class ArrayDataSource<T> {
 	 * @param  {AurumServerInfo} aurumServerInfo
 	 * @returns DataSource
 	 */
-	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo): ArrayDataSource<T> {
+	public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): ArrayDataSource<T> {
 		const result = new ArrayDataSource<T>();
 
-		syncArrayDataSource(result, aurumServerInfo);
+		syncArrayDataSource(result, aurumServerInfo, cancellation);
 
 		return result;
 	}
@@ -866,7 +866,7 @@ export class ArrayDataSource<T> {
 		}
 	}
 
-	public removeRange(start: number, end:number): void {
+	public removeRange(start: number, end: number): void {
 		const removed = this.data.splice(start, end - start);
 		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {

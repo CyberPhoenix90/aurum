@@ -1,3 +1,4 @@
+import { CancellationToken } from '../aurumjs';
 import { ArrayDataSource, CollectionChange, DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 
@@ -13,7 +14,9 @@ export enum RemoteProtocol {
 	UPDATE_DATASOURCE,
 	UPDATE_DUPLEX_DATASOURCE,
 	UPDATE_ARRAY_DATASOURCE,
-	UPDATE_DUPLEX_DATASOURCE_ERR
+	UPDATE_DUPLEX_DATASOURCE_ERR,
+	CANCEL_ARRAY_DATASOURCE,
+	CANCEL_DUPLEX_DATASOURCE
 }
 
 export interface AurumServerInfo {
@@ -23,22 +26,22 @@ export interface AurumServerInfo {
 	authenticationToken?: string;
 }
 
-export async function syncDataSource(source: DataSource<any>, aurumServerInfo: AurumServerInfo): Promise<void> {
+export async function syncDataSource(source: DataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
 	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
 	await ensureConnection(key, aurumServerInfo);
-	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken);
+	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
-export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo): Promise<void> {
+export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
 	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
 	await ensureConnection(key, aurumServerInfo);
-	connections.get(key).syncArrayDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken);
+	connections.get(key).syncArrayDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
-export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumServerInfo: AurumServerInfo): Promise<void> {
+export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
 	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
 	await ensureConnection(key, aurumServerInfo);
-	connections.get(key).syncDuplexDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken);
+	connections.get(key).syncDuplexDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 const connections: Map<string, AurumServerClient> = new Map();
@@ -56,7 +59,21 @@ class AurumServerClient {
 		this.synchedArrayDataSources = new Map();
 	}
 
-	public syncDataSource(dataSource: DataSource<any>, id: string, authenticationToken?: string): void {
+	public syncDataSource(dataSource: DataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+		cancellation.addCancelable(() => {
+			const listeners = this.synchedDataSources.get(id);
+			listeners.splice(listeners.indexOf(dataSource));
+			if (listeners.length === 0) {
+				this.connection.send(
+					JSON.stringify({
+						type: RemoteProtocol.CANCEL_DATASOURCE,
+						id,
+						token: authenticationToken
+					})
+				);
+			}
+		});
+
 		if (!this.synchedDataSources.has(id)) {
 			this.connection.send(
 				JSON.stringify({
@@ -71,7 +88,21 @@ class AurumServerClient {
 		}
 	}
 
-	public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken?: string): void {
+	public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+		cancellation.addCancelable(() => {
+			const listeners = this.synchedArrayDataSources.get(id);
+			listeners.splice(listeners.indexOf(dataSource));
+			if (listeners.length === 0) {
+				this.connection.send(
+					JSON.stringify({
+						type: RemoteProtocol.CANCEL_ARRAY_DATASOURCE,
+						id,
+						token: authenticationToken
+					})
+				);
+			}
+		});
+
 		if (!this.synchedArrayDataSources.has(id)) {
 			this.connection.send(
 				JSON.stringify({
@@ -86,7 +117,21 @@ class AurumServerClient {
 		}
 	}
 
-	public syncDuplexDataSource(dataSource: DuplexDataSource<any>, id: string, authenticationToken?: string): void {
+	public syncDuplexDataSource(dataSource: DuplexDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+		cancellation.addCancelable(() => {
+			const listeners = this.synchedDuplexDataSources.get(id);
+			listeners.splice(listeners.indexOf(dataSource));
+			if (listeners.length === 0) {
+				this.connection.send(
+					JSON.stringify({
+						type: RemoteProtocol.CANCEL_DUPLEX_DATASOURCE,
+						id,
+						token: authenticationToken
+					})
+				);
+			}
+		});
+
 		dataSource.listenUpstream((v) => {
 			this.connection.send(
 				JSON.stringify({
