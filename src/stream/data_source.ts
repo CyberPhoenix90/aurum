@@ -797,17 +797,20 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		}
 	}
 
-	public splice(index: number, deleteCount: number, ...insertion: T[]) {
+	public splice(index: number, deleteCount: number, ...insertion: T[]): T[] {
+		let removed = [];
 		if (deleteCount > 0) {
-			this.removeAt(index, deleteCount);
+			removed = this.removeAt(index, deleteCount);
 		}
 
 		if (insertion && insertion.length > 0) {
 			this.insertAt(index, ...insertion);
 		}
+
+		return removed;
 	}
 
-	public insertAt(index: number, ...items: T[]) {
+	public insertAt(index: number, ...items: T[]): void {
 		if (items.length === 0) {
 			return;
 		}
@@ -872,13 +875,15 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		}
 	}
 
-	public removeRight(count: number): void {
+	public removeRight(count: number): T[] {
 		const length = this.data.length;
 		const result = this.data.splice(length - count, count);
 		this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
 		}
+
+		return result;
 	}
 
 	public removeLeft(count: number): void {
@@ -889,26 +894,30 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		}
 	}
 
-	public removeAt(index: number, count: number = 1): void {
+	public removeAt(index: number, count: number = 1): T[] {
 		const removed = this.data.splice(index, count);
 		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index, items: removed, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
 		}
+
+		return removed;
 	}
 
-	public removeRange(start: number, end: number): void {
+	public removeRange(start: number, end: number): T[] {
 		const removed = this.data.splice(start, end - start);
 		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
 		}
+
+		return removed;
 	}
 
-	public remove(item: T): void {
+	public remove(item: T): T {
 		const index = this.data.indexOf(item);
 		if (index !== -1) {
-			this.removeAt(index);
+			return this.removeAt(index)[0];
 		}
 	}
 
