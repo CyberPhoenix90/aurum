@@ -13,6 +13,26 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(ds.toArray(), [1, 2, 3, 4, 5]);
 	});
 
+	it('splice', () => {
+		let ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		let control = [1, 2, 3, 4, 5, 6];
+		ds.splice(2, 2);
+		control.splice(2, 2);
+		assert.deepEqual(ds.toArray(), control);
+
+		ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		control = [1, 2, 3, 4, 5, 6];
+		ds.splice(3, 0, 1, 2);
+		control.splice(3, 0, 1, 2);
+		assert.deepEqual(ds.toArray(), control);
+
+		ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		control = [1, 2, 3, 4, 5, 6];
+		ds.splice(4, 1, 4, 5);
+		control.splice(4, 1, 4, 5);
+		assert.deepEqual(ds.toArray(), control);
+	});
+
 	it('from multiple', () => {
 		const ds1 = new ArrayDataSource();
 		const ds2 = new ArrayDataSource();

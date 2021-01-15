@@ -540,7 +540,24 @@ export interface CollectionChange<T> {
 	newState: T[];
 	previousState?: T[];
 }
-export class ArrayDataSource<T> {
+
+export interface ReadOnlyArrayDataSource<T> {
+	listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
+	listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
+	listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
+	awaitNextUpdate(cancellationToken?: CancellationToken): Promise<CollectionChange<T>>;
+	length: ReadOnlyDataSource<number>;
+	getData(): ReadonlyArray<T>;
+	get(index: number): T;
+	indexOf(item: T): number;
+	findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any);
+	lastIndexOf(item: T): number;
+	includes(item: T): boolean;
+	toArray(): T[];
+	forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
+}
+
+export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 	protected data: T[];
 	protected updateEvent: EventEmitter<CollectionChange<T>>;
 	private lengthSource: DataSource<number>;
@@ -702,6 +719,10 @@ export class ArrayDataSource<T> {
 		return this.data.indexOf(item);
 	}
 
+	public findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number {
+		return this.data.findIndex(predicate, thisArg);
+	}
+
 	public lastIndexOf(item: T): number {
 		return this.data.lastIndexOf(item);
 	}
@@ -773,6 +794,16 @@ export class ArrayDataSource<T> {
 		});
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);
+		}
+	}
+
+	public splice(index: number, deleteCount: number, ...insertion: T[]) {
+		if (deleteCount > 0) {
+			this.removeAt(index, deleteCount);
+		}
+
+		if (insertion && insertion.length > 0) {
+			this.insertAt(index, ...insertion);
 		}
 	}
 
@@ -858,8 +889,8 @@ export class ArrayDataSource<T> {
 		}
 	}
 
-	public removeAt(index: number): void {
-		const removed = this.data.splice(index, 1);
+	public removeAt(index: number, count: number = 1): void {
+		const removed = this.data.splice(index, count);
 		this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index, items: removed, newState: this.data });
 		if (this.lengthSource.value !== this.data.length) {
 			this.lengthSource.update(this.data.length);

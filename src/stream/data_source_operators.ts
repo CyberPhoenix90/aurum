@@ -1,6 +1,6 @@
 import { ThenArg, Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource } from './data_source';
+import { ArrayDataSource, DataSource } from './data_source';
 import { DuplexDataSource } from './duplex_data_source';
 import { Stream } from './stream';
 import {
@@ -13,6 +13,7 @@ import {
 	DataSourceDelayFilterOperator,
 	DataSourceNoopOperator
 } from './operator_model';
+import { CancellationToken } from '../utilities/cancellation_token';
 
 /**
  * Mutates an update
@@ -592,6 +593,55 @@ export function dsPipeUp<T>(target: DataSource<T> | DuplexDataSource<T> | Stream
 			} else {
 				target.updateUpstream(v);
 			}
+			return v;
+		}
+	};
+}
+
+/**
+ * Lets you keep a history of the updates of a source by pushing it onto an array datasource
+ */
+export function dsHistory<T>(
+	reportTarget: ArrayDataSource<T>,
+	generations?: number,
+	cancellationToken: CancellationToken = new CancellationToken()
+): DataSourceNoopOperator<T> {
+	return {
+		operationType: OperationType.NOOP,
+		name: `history`,
+		operation: (v) => {
+			if (!cancellationToken.isCanceled) {
+				if (generations) {
+					if (reportTarget.length.value >= generations) {
+						reportTarget.removeLeft(reportTarget.length.value - generations);
+					}
+				}
+				reportTarget.push(v);
+			}
+			return v;
+		}
+	};
+}
+
+/**
+ * Monitors the number of events per interval
+ */
+export function dsThroughputMeter<T>(
+	reportTarget: DataSource<number>,
+	interval: number,
+	cancellationToken: CancellationToken = new CancellationToken()
+): DataSourceNoopOperator<T> {
+	let amount = 0;
+	cancellationToken.setInterval(() => {
+		reportTarget.update(amount);
+		amount = 0;
+	}, interval);
+
+	return {
+		operationType: OperationType.NOOP,
+		name: `throughput meter`,
+		operation: (v) => {
+			amount++;
 			return v;
 		}
 	};

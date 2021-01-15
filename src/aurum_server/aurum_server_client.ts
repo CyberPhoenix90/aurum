@@ -21,25 +21,25 @@ export enum RemoteProtocol {
 
 export interface AurumServerInfo {
 	protocol?: 'wss' | 'ws';
-	host: string;
+	host?: string;
 	id: string;
 	authenticationToken?: string;
 }
 
 export async function syncDataSource(source: DataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
+	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
 	await ensureConnection(key, aurumServerInfo);
 	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
+	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
 	await ensureConnection(key, aurumServerInfo);
 	connections.get(key).syncArrayDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host}`;
+	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
 	await ensureConnection(key, aurumServerInfo);
 	connections.get(key).syncDuplexDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
