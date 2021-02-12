@@ -1092,6 +1092,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 					if (this.data.length > change.newState.length) {
 						this.data.length = change.newState.length;
 					}
+					this.length.update(this.data.length);
 					this.update({
 						operation: 'merge',
 						operationDetailed: 'merge',

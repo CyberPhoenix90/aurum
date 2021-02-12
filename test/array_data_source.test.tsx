@@ -177,6 +177,20 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(mapped.toArray(), ['val:8', 'val:6', 'val:4', 'val:2']);
 	});
 
+	it('filter + map length', () => {
+		const ds = new ArrayDataSource([4, 5, 7, 3, 8, 6, 9, 1, 2]);
+		const key = new DataSource(2);
+		const mapped = ds.filter((v) => v % key.value === 0, [key]).map((v) => 'val:' + v);
+
+		assert.deepEqual(mapped.length.value, mapped.getData().length);
+		key.update(3);
+		assert.deepEqual(mapped.length.value, mapped.getData().length);
+		key.update(2);
+		assert.deepEqual(mapped.length.value, mapped.getData().length);
+		key.update(1);
+		assert.deepEqual(mapped.length.value, mapped.getData().length);
+	});
+
 	it('filter + sort + map + render', () => {
 		const ds = new ArrayDataSource([4, 5, 7, 3, 8, 6, 9, 1, 2]);
 		const key = new DataSource(2);
