@@ -80,8 +80,9 @@ export interface HtmlProps extends HTMLNodeProps<HTMLHtmlElement> {
  * @internal
  */
 export interface MetaProps extends HTMLNodeProps<HTMLMetaElement> {
-	['http-equiv']?: string;
-	content?: string;
+	['http-equiv']?: AttributeValue;
+	['charset']?: AttributeValue;
+	content?: AttributeValue;
 }
 
 /**
@@ -202,6 +203,7 @@ export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
 	defer?: AttributeValue;
 	integrity?: AttributeValue;
 	noModule?: AttributeValue;
+	crossorigin?: AttributeValue;
 	type?: AttributeValue;
 }
 
@@ -419,7 +421,7 @@ export const Form = DomNodeCreator<FormProps>('form');
 /**
  * @internal
  */
-export const Meta = DomNodeCreator<MetaProps>('meta');
+export const Meta = DomNodeCreator<MetaProps>('meta', ['http-equiv', 'charset']);
 
 /**
  * @internal
@@ -522,7 +524,7 @@ export const Param = DomNodeCreator<ParamProps>('param', ['value']);
 /**
  * @internal
  */
-export const Script = DomNodeCreator<ScriptProps>('script', ['src', 'async', 'defer', 'integrity', 'noModule', 'type']);
+export const Script = DomNodeCreator<ScriptProps>('script', ['src', 'async', 'defer', 'integrity', 'noModule', 'type', 'crossorigin']);
 /**
  * @internal
  */

@@ -555,6 +555,11 @@ export interface ReadOnlyArrayDataSource<T> {
 	includes(item: T): boolean;
 	toArray(): T[];
 	forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
+	reverse(cancellationToken?: CancellationToken): ReversedArrayView<T>;
+	sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): SortedArrayView<T>;
+	map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): MappedArrayView<T, D>;
+	unique(cancellationToken?: CancellationToken): UniqueArrayView<T>;
+	filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): FilteredArrayView<T>;
 }
 
 export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
@@ -971,6 +976,22 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		return view;
 	}
 
+	public slice(start: number | DataSource<number>, end?: number | DataSource<number>, cancellationToken?: CancellationToken): SlicedArrayView<T> {
+		if (typeof start === 'number') {
+			start = new DataSource(start);
+		}
+
+		if (typeof end === 'number') {
+			end = new DataSource(end);
+		}
+
+		if (end === undefined) {
+			end = this.length;
+		}
+
+		return new SlicedArrayView(this, start, end, cancellationToken, this.name + '.slice()');
+	}
+
 	public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
 		const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()');
 
@@ -1149,6 +1170,41 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
 	}
 }
 
+export class SlicedArrayView<T> extends ArrayDataSource<T> {
+	constructor(
+		parent: ArrayDataSource<T>,
+		start: DataSource<number>,
+		end: DataSource<number>,
+		cancellationToken: CancellationToken = new CancellationToken(),
+		name?: string
+	) {
+		const initial = parent.getData().slice(start.value, end.value);
+		super(initial, name);
+
+		start.listen(() => this.merge(parent.getData().slice(start.value, end.value)), cancellationToken);
+		end.listen(() => this.merge(parent.getData().slice(start.value, end.value)), cancellationToken);
+
+		parent.listen((change) => {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+				case 'removeRight':
+				case 'remove':
+				case 'append':
+				case 'prepend':
+				case 'insert':
+				case 'swap':
+				case 'replace':
+				case 'merge':
+					this.merge(parent.getData().slice(start.value, end.value));
+					break;
+				case 'clear':
+					this.clear();
+					break;
+			}
+		}, cancellationToken);
+	}
+}
+
 export class UniqueArrayView<T> extends ArrayDataSource<T> {
 	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
 		const initial = Array.from(new Set(parent.getData()));
@@ -1198,6 +1254,7 @@ export class UniqueArrayView<T> extends ArrayDataSource<T> {
 		}, cancellationToken);
 	}
 }
+
 export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private comparator: (a: T, b: T) => number;
 	private parent: ArrayDataSource<T>;

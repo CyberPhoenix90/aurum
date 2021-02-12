@@ -105,6 +105,25 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(unique.toArray(), [1, 2, 3, 4, 5, 6]);
 	});
 
+	it('slice', () => {
+		const ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+		const dsE = new DataSource(3);
+		const sliced = ds.slice(1, dsE);
+
+		assert.deepEqual(sliced.toArray(), [2, 3]);
+
+		ds.push(6);
+		assert.deepEqual(sliced.toArray(), [2, 3]);
+
+		ds.insertAt(2, 1);
+		assert.deepEqual(sliced.toArray(), [2, 1]);
+
+		ds.removeAt(0);
+		assert.deepEqual(sliced.toArray(), [1, 3]);
+		dsE.update(4);
+		assert.deepEqual(sliced.toArray(), [1, 3, 4]);
+	});
+
 	it('merge', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		ds.merge([6, 7]);
