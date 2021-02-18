@@ -208,7 +208,23 @@ export abstract class AurumElement {
 				if (!child.hostNode) {
 					child.attachToDom(this.hostNode, i + workIndex + offset);
 				}
-				offset += child.getLastIndex() - i - offset - workIndex;
+				if (child.getStartIndex() === i + workIndex + offset) {
+					offset += child.getLastIndex() - i - offset - workIndex;
+				} else {
+					let start = child.getStartIndex();
+					let end = child.getLastIndex();
+
+					for (let ptr = start, swapIteration = 0; ptr <= end; ptr++, swapIteration++) {
+						const itemA = this.hostNode.childNodes[i + workIndex + offset + swapIteration];
+						const itemB = this.hostNode.childNodes[ptr];
+						const parentA = itemA.parentNode;
+						const siblingA = itemA.nextSibling === itemB ? itemB : itemA.nextSibling;
+
+						itemB.parentNode.insertBefore(itemA, itemB);
+						parentA.insertBefore(itemB, siblingA);
+					}
+					offset += child.getLastIndex() - i - offset - workIndex;
+				}
 				continue;
 			}
 

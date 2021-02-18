@@ -246,27 +246,27 @@ describe('ArrayDatasource', () => {
 		token.cancel();
 	});
 
-	// it('filter + sort + map + datasource', () => {
-	// 	const ds = new ArrayDataSource([4, 5, 7, 3, 8, 6, 9, 1, 2]);
-	// 	const key = new DataSource(2);
-	// 	const reverse = new DataSource<boolean>(false);
-	// 	const mapped = ds
-	// 		.filter((v) => v % key.value === 0, [key])
-	// 		.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
-	// 		.map((v) => new DataSource(v));
+	it('filter + sort + map + datasource', () => {
+		const ds = new ArrayDataSource([4, 5, 7, 3, 8, 6, 9, 1, 2]);
+		const key = new DataSource(2);
+		const reverse = new DataSource<boolean>(false);
+		const mapped = ds
+			.filter((v) => v % key.value === 0, [key])
+			.sort((a, b) => (reverse.value ? b - a : a - b), [reverse])
+			.map((v) => new DataSource(v));
 
-	// 	const token = Aurum.attach(<div>{mapped}</div>, document.getElementById('target'));
+		const token = Aurum.attach(<div>{mapped}</div>, document.getElementById('target'));
 
-	// 	assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '2468');
-	// 	key.update(3);
-	// 	assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '369');
-	// 	reverse.update(true);
-	// 	assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '963');
-	// 	key.update(2);
-	// 	assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '8642');
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '2468');
+		key.update(3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '369');
+		reverse.update(true);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '963');
+		key.update(2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '8642');
 
-	// 	token.cancel();
-	// });
+		token.cancel();
+	});
 
 	it('render all types', () => {
 		const ads = new ArrayDataSource<any>([4, 5, 7]);
