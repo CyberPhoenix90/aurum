@@ -864,6 +864,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 	}
 
 	public merge(newData: T[]): void {
+		if (newData.length === 0) {
+			return this.clear();
+		}
+		if (newData === this.data) {
+			return;
+		}
+
 		const old = this.data;
 		this.data = newData.slice();
 
@@ -960,6 +967,12 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		return this.data.slice();
 	}
 
+	public flat(depth: number = 1, cancellationToken?: CancellationToken): FlattenedArrayView<FlatArray<T, typeof depth>> {
+		const view = new FlattenedArrayView<FlatArray<T, typeof depth>>(this as any, depth, cancellationToken, this.name + '.flat()');
+
+		return view;
+	}
+
 	public reverse(cancellationToken?: CancellationToken): ReversedArrayView<T> {
 		const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()');
 
@@ -1022,6 +1035,46 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
 	protected update(change: CollectionChange<T>) {
 		this.updateEvent.fire(change);
+	}
+}
+
+export class FlattenedArrayView<T> extends ArrayDataSource<T> {
+	private parent: ArrayDataSource<T[]>;
+	private depth: number;
+
+	constructor(parent: ArrayDataSource<T[]>, depth: number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+		const initial = parent.getData().flat(depth) as T[];
+		super(initial, name);
+		this.depth = depth;
+		this.parent = parent;
+
+		parent.listen((change) => {
+			switch (change.operationDetailed) {
+				case 'removeLeft':
+				case 'removeRight':
+				case 'remove':
+				case 'swap':
+				case 'replace':
+				case 'insert':
+				case 'merge':
+					this.refresh();
+					break;
+				case 'clear':
+					this.clear();
+					break;
+				case 'prepend':
+					this.unshift(...(change.items.flat(this.depth) as T[]));
+					break;
+				case 'append':
+					this.appendArray(change.items.flat(this.depth) as T[]);
+					break;
+					break;
+			}
+		}, cancellationToken);
+	}
+
+	public refresh() {
+		this.merge(this.parent.getData().flat(this.depth) as T[]);
 	}
 }
 
@@ -1107,8 +1160,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 	}
 
 	public refresh() {
-		//@ts-ignore
-		this.merge(this.parent.data.map(this.mapper));
+		this.merge(this.parent.getData().map(this.mapper));
 	}
 }
 

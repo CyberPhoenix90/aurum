@@ -64,6 +64,39 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(ds.toArray(), [3, 4, 3, 3, 5, 3, 1, 2, 3, 4, 4, 4, 1, 2]);
 	});
 
+	it('flat', () => {
+		const ds = new ArrayDataSource([[11, [12], 13], [21, 22, 23, 24], [31], [41, 42], [51, 52, 53, 54, 55], [61]]);
+		const flat = ds.flat();
+		const flat2 = ds.flat(2);
+
+		assert.deepEqual(flat.toArray(), [11, [12], 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61]);
+		assert.deepEqual(flat2.toArray(), [11, 12, 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61]);
+
+		ds.push([7]);
+		assert.deepEqual(flat.toArray(), [11, [12], 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61, 7]);
+		assert.deepEqual(flat2.toArray(), [11, 12, 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61, 7]);
+
+		ds.push([81, 82], [91, 92, [93]]);
+		assert.deepEqual(flat.toArray(), [11, [12], 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, [93]]);
+		assert.deepEqual(flat2.toArray(), [11, 12, 13, 21, 22, 23, 24, 31, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, 93]);
+
+		ds.insertAt(3, [0]);
+		assert.deepEqual(flat.toArray(), [11, [12], 13, 21, 22, 23, 24, 31, 0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, [93]]);
+		assert.deepEqual(flat2.toArray(), [11, 12, 13, 21, 22, 23, 24, 31, 0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, 93]);
+
+		ds.removeAt(2);
+		assert.deepEqual(flat.toArray(), [11, [12], 13, 21, 22, 23, 24, 0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, [93]]);
+		assert.deepEqual(flat2.toArray(), [11, 12, 13, 21, 22, 23, 24, 0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, 93]);
+
+		ds.removeLeft(2);
+		assert.deepEqual(flat.toArray(), [0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, [93]]);
+		assert.deepEqual(flat2.toArray(), [0, 41, 42, 51, 52, 53, 54, 55, 61, 7, 81, 82, 91, 92, 93]);
+
+		ds.removeRight(2);
+		assert.deepEqual(flat.toArray(), [0, 41, 42, 51, 52, 53, 54, 55, 61, 7]);
+		assert.deepEqual(flat2.toArray(), [0, 41, 42, 51, 52, 53, 54, 55, 61, 7]);
+	});
+
 	it('reverse', () => {
 		const ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
 		const reverse = ds.reverse();
