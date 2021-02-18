@@ -128,7 +128,7 @@ const nodeMap = {
 	kbd: Kbd,
 	samp: Samp,
 	object: Object,
-	optGroup: OptGroup,
+	optgroup: OptGroup,
 	picture: Picture,
 	output: Output,
 	param: Param,

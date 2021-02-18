@@ -540,7 +540,7 @@ export const Option = DomNodeCreator<OptionProps>('option', ['value', 'label', '
 /**
  * @internal
  */
-export const OptGroup = DomNodeCreator<OptGroupProps>('option', ['label', 'disabled']);
+export const OptGroup = DomNodeCreator<OptGroupProps>('optgroup', ['label', 'disabled']);
 
 /**
  * @internal
