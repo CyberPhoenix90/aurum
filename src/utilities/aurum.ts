@@ -238,11 +238,18 @@ export class Aurum {
 		return session.sessionToken;
 	}
 
+	public static fragment() {}
+
 	public static factory(
 		node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
 		args: MapLike<any>,
 		...innerNodes: Array<AurumElementModel<any> | DataSource<any> | ArrayDataSource<any>>
 	): AurumElementModel<any> {
+		//@ts-ignore
+		if (node === Aurum.fragment) {
+			return innerNodes as any;
+		}
+
 		let name;
 		let intrinsic = false;
 		if (typeof node === 'string') {

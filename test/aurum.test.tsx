@@ -62,6 +62,105 @@ describe('Aurum', () => {
 		});
 	});
 
+	it('Should support fragments', () => {
+		attachToken = Aurum.attach(
+			<div>
+				<>Hello World</>
+			</div>,
+			document.getElementById('target')
+		);
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.childNodes.length === 1);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerHTML === 'Hello World');
+	});
+
+	it('Should support nested fragments', () => {
+		attachToken = Aurum.attach(
+			<div>
+				<>
+					<>Hello World</>
+				</>
+			</div>,
+			document.getElementById('target')
+		);
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.childNodes.length === 1);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerHTML === 'Hello World');
+	});
+
+	it('Should support components in fragments', () => {
+		function TestComponent() {
+			return 'Hello World';
+		}
+
+		attachToken = Aurum.attach(
+			<div>
+				<>
+					<>
+						<TestComponent></TestComponent>
+					</>
+				</>
+			</div>,
+			document.getElementById('target')
+		);
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.childNodes.length === 1);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerHTML === 'Hello World');
+	});
+
+	it('Should support fragments in transclusion', () => {
+		function TestComponent(_, c) {
+			return c;
+		}
+
+		attachToken = Aurum.attach(
+			<div>
+				<>
+					<>
+						<TestComponent>
+							<>
+								<>Test1</>
+								<>Test2</>
+							</>
+						</TestComponent>
+					</>
+				</>
+			</div>,
+			document.getElementById('target')
+		);
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.childNodes.length === 2);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerHTML === 'Test1Test2');
+	});
+
+	it('Should support datasources in transclusion', () => {
+		const ds = new DataSource('State1');
+		function TestComponent(_, c) {
+			return c;
+		}
+
+		attachToken = Aurum.attach(
+			<div>
+				<>
+					<>
+						<TestComponent>
+							<>
+								<>{ds}</>
+								<>Test2</>
+							</>
+						</TestComponent>
+					</>
+				</>
+			</div>,
+			document.getElementById('target')
+		);
+		clock.tick(100);
+		assert(document.getElementById('target').firstChild.childNodes.length === 4);
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerText === 'State1Test2');
+		ds.update('State2');
+		assert((document.getElementById('target').firstChild as HTMLDivElement).innerText === 'State2Test2');
+	});
+
 	it('Should set child node', () => {
 		attachToken = Aurum.attach(
 			<div>

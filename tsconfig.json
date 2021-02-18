@@ -9,6 +9,7 @@
 		"declarationMap": true,
 		"jsx": "react",
 		"strictFunctionTypes": true,
+		"jsxFragmentFactory": "Aurum.fragment",
 		"jsxFactory": "Aurum.factory",
 		"declaration": true,
 		"inlineSources": true,
