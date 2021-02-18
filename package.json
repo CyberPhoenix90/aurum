@@ -9,9 +9,8 @@
 		"watch": "tsc -w",
 		"prepublish": "npm run deploy",
 		"test": "tsc -p tsconfig.test.json && http-server -o -c-1",
-		"generateDocs": "typedoc --json docs/docs.json --mode modules --excludePrivate --excludeProtected",
 		"deploy-test": "npm run build",
-		"deploy": "npm run build && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json && npm run generateDocs"
+		"deploy": "npm run build && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json"
 	},
 	"homepage": "https://aurumjs.org/",
 	"repository": {

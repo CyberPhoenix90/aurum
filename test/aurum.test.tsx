@@ -27,7 +27,7 @@ describe('Aurum', () => {
 	});
 
 	it('Should fire onAttach when connected to dom', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div
 					onAttach={(ele) => {
@@ -44,7 +44,7 @@ describe('Aurum', () => {
 	});
 
 	it('Should fire onDetach when disconnected from dom', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div
 					onDetach={(ele) => {

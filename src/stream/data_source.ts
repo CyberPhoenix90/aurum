@@ -1125,7 +1125,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 							this.data.push(this.mapper(change.newState[i]));
 							source.push(change.newState[i]);
 						} else if (source[i] !== change.newState[i]) {
-							const index = source.indexOf(change.newState[i]);
+							const index = source.indexOf(change.newState[i], i);
 							if (index !== -1) {
 								const a = this.data[i];
 								const b = this.data[index];
@@ -1168,10 +1168,7 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
 	private parent: ArrayDataSource<T>;
 
 	constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
-		const initial = parent
-			.getData()
-			.slice()
-			.reverse();
+		const initial = parent.getData().slice().reverse();
 		super(initial, name);
 		this.parent = parent;
 
@@ -1214,12 +1211,7 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
 	}
 
 	public refresh() {
-		this.merge(
-			this.parent
-				.getData()
-				.slice()
-				.reverse()
-		);
+		this.merge(this.parent.getData().slice().reverse());
 	}
 }
 
@@ -1313,10 +1305,7 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 	private parent: ArrayDataSource<T>;
 
 	constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
-		const initial = parent
-			.getData()
-			.slice()
-			.sort(comparator);
+		const initial = parent.getData().slice().sort(comparator);
 		super(initial, name);
 		this.parent = parent;
 		this.comparator = comparator;
@@ -1361,12 +1350,7 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 	}
 
 	public refresh() {
-		this.merge(
-			this.parent
-				.getData()
-				.slice()
-				.sort(this.comparator)
-		);
+		this.merge(this.parent.getData().slice().sort(this.comparator));
 	}
 }
 

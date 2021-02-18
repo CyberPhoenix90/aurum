@@ -22,7 +22,7 @@ describe('cancellation token', () => {
 	});
 
 	it('setTimeout should fire if cancel occurs after', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			const token = new CancellationToken();
 			token.setTimeout(() => {
 				resolve();

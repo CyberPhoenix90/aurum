@@ -76,7 +76,7 @@ describe('Datasource', () => {
 	});
 
 	it('should fire events', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			let ds = new DataSource(123);
 
 			assert(ds.value === 123);
@@ -215,7 +215,7 @@ describe('Datasource', () => {
 	});
 
 	it('should fire unique events', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			let i = 0;
 			let asserts = [4, 0, 100, 200];
 			let ds = new DataSource(0);
@@ -238,7 +238,7 @@ describe('Datasource', () => {
 	});
 
 	it('should fire unique events both ways', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			let i = 0;
 			let asserts = [200, 4, 0, 100, 200];
 			let ds = new DuplexDataSource(0);

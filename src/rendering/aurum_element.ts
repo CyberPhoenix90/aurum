@@ -141,6 +141,10 @@ export abstract class AurumElement {
 		}
 	}
 
+	protected getStartIndex(): number {
+		return this.getWorkIndex() - 1;
+	}
+
 	protected getWorkIndex(): number {
 		if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
 			return this.lastStartIndex + 1;
@@ -521,6 +525,15 @@ export class ArrayAurumElement extends AurumElement {
 			case 'swap':
 				const itemA = this.children[change.index];
 				const itemB = this.children[change.index2];
+
+				if (itemA instanceof HTMLElement && itemB instanceof HTMLElement) {
+					optimized = true;
+					const parentA = itemA.parentNode;
+					const siblingA = itemA.nextSibling === itemB ? itemB : itemA.nextSibling;
+
+					itemB.parentNode.insertBefore(itemA, itemB);
+					parentA.insertBefore(itemB, siblingA);
+				}
 				this.children[change.index2] = itemA;
 				this.children[change.index] = itemB;
 				break;
