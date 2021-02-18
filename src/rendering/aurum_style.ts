@@ -6,7 +6,7 @@ import { CancellationToken } from '../utilities/cancellation_token';
 import { Renderable } from './aurum_element';
 
 /**
- * Generates a style tag with the provided style as content, supports data sources duplex data sources and streams instead of strings in the template.
+ * Generates a style tag with the provided style as content, supports data sources, duplex data sources and streams instead of strings in the template.
  * Updates style content if any of the datasources used updates.
  */
 export function css(fragments: TemplateStringsArray, ...input: any[]): Renderable {

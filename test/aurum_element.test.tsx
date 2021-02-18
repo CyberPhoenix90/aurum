@@ -16,7 +16,7 @@ describe('Aurum Element', () => {
 	});
 
 	it('Should be in DOM at onAttach', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div
 					onAttach={(div) => {
@@ -30,7 +30,7 @@ describe('Aurum Element', () => {
 	});
 
 	it('Should be in DOM at onAttach nested', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div>
 					<div
@@ -46,7 +46,7 @@ describe('Aurum Element', () => {
 	});
 
 	it('Should not be in DOM at onDetach', () => {
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div
 					onDetach={(div) => {
@@ -64,7 +64,7 @@ describe('Aurum Element', () => {
 	it('Should detach on removal', () => {
 		const ds = new DataSource<boolean>(true);
 
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			attachToken = Aurum.attach(
 				<div>
 					<Switch state={ds}>

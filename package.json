@@ -34,11 +34,11 @@
 		"chai": "^4.2.0",
 		"http-server": "^0.12.3",
 		"mocha": "^8.1.1",
-		"prettier": "^1.19.1",
+		"prettier": "^2.2.1",
 		"requirejs": "^2.3.6",
 		"sinon": "^9.0.3",
 		"typedoc": "^0.15.4",
-		"typescript": "^4.0.5"
+		"typescript": "^4.1.5"
 	},
 	"dependencies": {}
 }
