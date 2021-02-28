@@ -289,7 +289,9 @@ export class DataSource<T> implements GenericDataSource<T> {
 	 * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
 	 */
 	public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-		callback(this.value);
+		if (this.primed) {
+			callback(this.value);
+		}
 		return this.listen(callback, cancellationToken);
 	}
 
@@ -1067,7 +1069,6 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
 					break;
 				case 'append':
 					this.appendArray(change.items.flat(this.depth) as T[]);
-					break;
 					break;
 			}
 		}, cancellationToken);

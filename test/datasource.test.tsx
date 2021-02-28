@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../src/aurumjs';
 import { DuplexDataSource } from '../src/stream/duplex_data_source';
+import { ddsFilter, ddsMap, ddsUnique } from '../src/stream/duplex_data_source_operators';
 
 describe('Datasource', () => {
 	let attachToken: CancellationToken;
@@ -244,7 +245,7 @@ describe('Datasource', () => {
 			let ds = new DuplexDataSource(0);
 			let validated = true;
 
-			const ud = ds.unique();
+			const ud = ds.transformDuplex(ddsUnique());
 			const token = new CancellationToken();
 			ud.listen((value) => {
 				assert(value === asserts[i++]);
@@ -279,9 +280,11 @@ describe('Datasource', () => {
 
 	it('should map updates both ways', () => {
 		let ds = new DuplexDataSource(123);
-		let mapped = ds.map(
-			(v) => v + 10,
-			(v) => v - 10
+		let mapped = ds.transformDuplex(
+			ddsMap(
+				(v) => v + 10,
+				(v) => v - 10
+			)
 		);
 		assert(mapped.value === 133);
 		ds.updateDownstream(100);
@@ -301,9 +304,11 @@ describe('Datasource', () => {
 
 	it('should filter updates both ways', () => {
 		let ds = new DuplexDataSource(123);
-		let filtered = ds.filter(
-			(v) => v > 200,
-			(v) => v > 200
+		let filtered = ds.transformDuplex(
+			ddsFilter(
+				(v) => v > 200,
+				(v) => v > 200
+			)
 		);
 
 		assert(filtered.value === undefined);

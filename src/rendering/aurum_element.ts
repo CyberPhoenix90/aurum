@@ -35,8 +35,7 @@ export type Renderable =
 	| Promise<Renderable>
 	| DataSource<Renderable>
 	| ArrayDataSource<Renderable>
-	| DuplexDataSource<Renderable>
-	| Renderable[];
+	| DuplexDataSource<Renderable>;
 
 export type Rendered = AurumElement | HTMLElement | Text;
 
@@ -278,7 +277,7 @@ export interface RenderSession {
 /**
  * @internal
  */
-export function render<T extends Renderable>(element: T, session: RenderSession, prerendering: boolean = false): any {
+export function render<T extends Renderable | Renderable[]>(element: T, session: RenderSession, prerendering: boolean = false): any {
 	if (element == undefined) {
 		return undefined;
 	}

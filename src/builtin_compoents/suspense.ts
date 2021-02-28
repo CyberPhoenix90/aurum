@@ -5,7 +5,7 @@ export interface SuspenseProps {
 }
 
 export function Suspense(props: SuspenseProps, children: Renderable[], api: AurumComponentAPI) {
-	const data = new DataSource<Renderable>(props?.fallback);
+	const data = new DataSource<Renderable | Renderable[]>(props?.fallback);
 
 	const lc = createLifeCycle();
 
