@@ -16,6 +16,7 @@ export * from './stream/stream';
 export * from './utilities/aurum';
 export * from './utilities/cancellation_token';
 export * from './utilities/event_emitter';
+export * from './rendering/classname';
 export * from './stream/emitters';
 export * from './nodes/string_adapter';
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode';

@@ -234,6 +234,9 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
 		data.transform(dsUnique(), cleanUp).listen((v) => ((node as HTMLElement).className = v));
 	} else {
 		const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
+			if(!c) {
+				return p;
+			}
 			if (typeof c === 'string') {
 				return `${p} ${c}`;
 			} else {

@@ -25,17 +25,19 @@ export const nodeData = new WeakMap<any, AurumNodeData>();
 
 export interface AurumNodeData {}
 
-export type Renderable =
+type ResolvedRenderable =
 	| AurumElement
 	| HTMLElement
 	| Text
 	| string
 	| number
 	| AurumElementModel<any>
-	| Promise<Renderable>
 	| DataSource<Renderable>
 	| ArrayDataSource<Renderable>
 	| DuplexDataSource<Renderable>;
+
+
+export type Renderable = ResolvedRenderable	| Promise<ResolvedRenderable>
 
 export type Rendered = AurumElement | HTMLElement | Text;
 
