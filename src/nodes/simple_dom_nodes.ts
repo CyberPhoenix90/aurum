@@ -121,6 +121,7 @@ export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
 	srcdoc?: AttributeValue;
 	loading?: AttributeValue;
 	sandbox?: AttributeValue;
+	frameborder?: AttributeValue;
 }
 
 /**

@@ -27,32 +27,39 @@ export interface AurumServerInfo {
 }
 
 export async function syncDataSource(source: DataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
-	await ensureConnection(key, aurumServerInfo);
+	const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+	await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
 	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
+function makeKey(protocol: string, host: string): string {
+	return `${protocol ?? ''}${host ?? location.host}`;
+}
+
 export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
-	await ensureConnection(key, aurumServerInfo);
+	const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+	await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
 	connections.get(key).syncArrayDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 export async function syncDuplexDataSource(source: DuplexDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
-	const key = `${aurumServerInfo.protocol}${aurumServerInfo.host ?? location.host}`;
-	await ensureConnection(key, aurumServerInfo);
+	const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+	await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
 	connections.get(key).syncDuplexDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 const connections: Map<string, AurumServerClient> = new Map();
+const pendingConnections = new Map<string, Promise<AurumServerClient>>();
 
 class AurumServerClient {
+	private masterToken: CancellationToken;
 	private readonly connection: WebSocket;
-	private synchedDataSources: Map<string, DataSource<any>[]>;
-	private synchedDuplexDataSources: Map<string, DuplexDataSource<any>[]>;
-	private synchedArrayDataSources: Map<string, ArrayDataSource<any>[]>;
+	private synchedDataSources: Map<string, Map<string, { source: DataSource<any>; token: CancellationToken }[]>>;
+	private synchedDuplexDataSources: Map<string, Map<string, { source: DuplexDataSource<any>; token: CancellationToken }[]>>;
+	private synchedArrayDataSources: Map<string, Map<string, { source: ArrayDataSource<any>; token: CancellationToken }[]>>;
 
 	private constructor(connection: WebSocket) {
+		this.masterToken = new CancellationToken();
 		this.connection = connection;
 		this.synchedDataSources = new Map();
 		this.synchedDuplexDataSources = new Map();
@@ -61,8 +68,9 @@ class AurumServerClient {
 
 	public syncDataSource(dataSource: DataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
 		cancellation.addCancelable(() => {
-			const listeners = this.synchedDataSources.get(id);
-			listeners.splice(listeners.indexOf(dataSource));
+			const listenersByAuth = this.synchedDataSources.get(id);
+			const listeners = listenersByAuth.get(authenticationToken);
+			listeners.splice(listeners.findIndex((s) => s.source === dataSource));
 			if (listeners.length === 0) {
 				this.connection.send(
 					JSON.stringify({
@@ -75,6 +83,9 @@ class AurumServerClient {
 		});
 
 		if (!this.synchedDataSources.has(id)) {
+			this.synchedDataSources.set(id, new Map());
+		}
+		if (!this.synchedDataSources.get(id).has(authenticationToken)) {
 			this.connection.send(
 				JSON.stringify({
 					type: RemoteProtocol.LISTEN_DATASOURCE,
@@ -82,16 +93,17 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedDataSources.set(id, [dataSource]);
+			this.synchedDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
 		} else {
-			this.synchedDataSources.get(id).push(dataSource);
+			this.synchedDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
 	}
 
 	public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
 		cancellation.addCancelable(() => {
-			const listeners = this.synchedArrayDataSources.get(id);
-			listeners.splice(listeners.indexOf(dataSource));
+			const listenersByAuth = this.synchedArrayDataSources.get(id);
+			const listeners = listenersByAuth.get(authenticationToken);
+			listeners.splice(listeners.findIndex((s) => s.source === dataSource));
 			if (listeners.length === 0) {
 				this.connection.send(
 					JSON.stringify({
@@ -104,6 +116,9 @@ class AurumServerClient {
 		});
 
 		if (!this.synchedArrayDataSources.has(id)) {
+			this.synchedArrayDataSources.set(id, new Map());
+		}
+		if (!this.synchedArrayDataSources.get(id).has(authenticationToken)) {
 			this.connection.send(
 				JSON.stringify({
 					type: RemoteProtocol.LISTEN_ARRAY_DATASOURCE,
@@ -111,16 +126,17 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedArrayDataSources.set(id, [dataSource]);
+			this.synchedArrayDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
 		} else {
-			this.synchedArrayDataSources.get(id).push(dataSource);
+			this.synchedArrayDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
 	}
 
 	public syncDuplexDataSource(dataSource: DuplexDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
 		cancellation.addCancelable(() => {
-			const listeners = this.synchedDuplexDataSources.get(id);
-			listeners.splice(listeners.indexOf(dataSource));
+			const listenersByAuth = this.synchedDuplexDataSources.get(id);
+			const listeners = listenersByAuth.get(authenticationToken);
+			listeners.splice(listeners.findIndex((s) => s.source === dataSource));
 			if (listeners.length === 0) {
 				this.connection.send(
 					JSON.stringify({
@@ -141,9 +157,12 @@ class AurumServerClient {
 					id
 				})
 			);
-		});
+		}, CancellationToken.fromMultiple([cancellation, this.masterToken]));
 
-		if (!this.synchedDataSources.has(id)) {
+		if (!this.synchedDuplexDataSources.has(id)) {
+			this.synchedDuplexDataSources.set(id, new Map());
+		}
+		if (!this.synchedDuplexDataSources.get(id).has(authenticationToken)) {
 			this.connection.send(
 				JSON.stringify({
 					type: RemoteProtocol.LISTEN_DUPLEX_DATASOURCE,
@@ -151,13 +170,18 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedDuplexDataSources.set(id, [dataSource]);
+			this.synchedDuplexDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
 		} else {
-			this.synchedDuplexDataSources.get(id).push(dataSource);
+			this.synchedDuplexDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
 	}
 
 	public static connect(host: string, protocol?: 'ws' | 'wss'): Promise<AurumServerClient> {
+		let pendingToken = new CancellationToken();
+		let started = false;
+		let latency = 0;
+		let latencyTs;
+		let lastBeat;
 		return new Promise((resolve, reject) => {
 			if (!protocol) {
 				if (typeof location === 'undefined') {
@@ -171,64 +195,53 @@ class AurumServerClient {
 			}
 			const connection = new WebSocket(`${protocol}://${host}`);
 			const client = new AurumServerClient(connection);
+			client.masterToken.addCancelable(() => {
+				connections.delete(makeKey(host, protocol));
+			});
+
+			pendingToken.setTimeout(() => {
+				connection.close(4001, 'no response');
+				reject();
+				client.masterToken.cancel();
+			}, 5000);
 
 			connection.addEventListener('message', (m) => {
+				lastBeat = Date.now();
 				try {
 					const msg = JSON.parse(m.data);
 					switch (msg.type) {
+						case RemoteProtocol.HEARTBEAT:
+							latency = Date.now() - latencyTs;
+							console.log(`AurumServer latency: ${latency}ms`);
+							break;
 						case RemoteProtocol.UPDATE_DATASOURCE:
 							if (client.synchedDataSources.has(msg.id)) {
-								const dss = client.synchedDataSources.get(msg.id);
-								for (const ds of dss) {
-									ds.update(msg.value);
+								const byAuth = client.synchedDataSources.get(msg.id);
+								for (const dss of byAuth.values()) {
+									for (const ds of dss) {
+										ds.source.update(msg.value);
+									}
 								}
 							}
 							break;
 						case RemoteProtocol.UPDATE_ARRAY_DATASOURCE:
 							if (client.synchedArrayDataSources.has(msg.id)) {
-								const dss = client.synchedArrayDataSources.get(msg.id);
-								const change: CollectionChange<any> = msg.change;
-								for (const ds of dss) {
-									switch (change.operationDetailed) {
-										case 'append':
-											ds.appendArray(change.items);
-											break;
-										case 'clear':
-											ds.clear();
-											break;
-										case 'insert':
-											ds.insertAt(change.index, ...change.items);
-											break;
-										case 'merge':
-											ds.merge(change.items);
-											break;
-										case 'prepend':
-											ds.unshift(change.items);
-											break;
-										case 'remove':
-											ds.removeRange(change.index, change.index + change.count);
-											break;
-										case 'removeLeft':
-											ds.removeLeft(change.count);
-											break;
-										case 'removeRight':
-											ds.removeRight(change.count);
-											break;
-										case 'replace':
-											ds.set(change.index, change.items[0]);
-											break;
-										case 'swap':
-											ds.swap(change.index, change.index2);
-											break;
+								const byAuth = client.synchedArrayDataSources.get(msg.id);
+								for (const dss of byAuth.values()) {
+									const change: CollectionChange<any> = msg.change;
+									for (const ds of dss) {
+										ds.source.applyCollectionChange(change);
 									}
 								}
 							}
 							break;
 						case RemoteProtocol.UPDATE_DUPLEX_DATASOURCE:
 							if (client.synchedDuplexDataSources.has(msg.id)) {
-								const dss = client.synchedDuplexDataSources.get(msg.id);
-								for (const ds of dss) {
-									ds.updateDownstream(msg.value);
+								const byAuth = client.synchedDuplexDataSources.get(msg.id);
+								for (const dss of byAuth.values()) {
+									for (const ds of dss) {
+										ds.source.updateDownstream(msg.value);
+									}
 								}
 							}
 							break;
@@ -238,22 +251,97 @@ class AurumServerClient {
 					console.warn(e);
 				}
 			});
-			connection.addEventListener('error', (e) => reject(e));
-			connection.addEventListener('open', () => resolve(client));
+			connection.addEventListener('error', (e) => {
+				client.masterToken.cancel();
+				reject(e);
+			});
+			connection.addEventListener('open', () => {
+				pendingToken.cancel();
+				pendingToken = undefined;
+				started = true;
+				lastBeat = Date.now();
+				client.masterToken.setInterval(() => {
+					if (Date.now() - lastBeat > 10000) {
+						connection.close(4000, 'timeout');
+						return;
+					}
+					latencyTs = Date.now();
+					connection.send(
+						JSON.stringify({
+							type: RemoteProtocol.HEARTBEAT
+						})
+					);
+				}, 2500);
+
+				resolve(client);
+			});
+			connection.addEventListener('close', () => {
+				client.masterToken.cancel();
+				if (started) {
+					ensureConnection(makeKey(host, protocol), protocol, host).then((newClient) => {
+						newClient.migrate(client);
+					});
+				} else {
+					reject();
+				}
+			});
 		});
 	}
-}
-const pendingConnections = new Map<string, Promise<AurumServerClient>>();
 
-async function ensureConnection(key: string, aurumServerInfo: AurumServerInfo): Promise<AurumServerClient> {
+	private migrate(client: AurumServerClient) {
+		for (const id of client.synchedDataSources.keys()) {
+			for (const auth of client.synchedDataSources.get(id).keys()) {
+				for (const { source, token } of client.synchedDataSources.get(id).get(auth)) {
+					this.syncDataSource(source, id, auth, token);
+				}
+			}
+		}
+		for (const id of client.synchedArrayDataSources.keys()) {
+			for (const auth of client.synchedArrayDataSources.get(id).keys()) {
+				for (const { source, token } of client.synchedArrayDataSources.get(id).get(auth)) {
+					this.syncArrayDataSource(source, id, auth, token);
+				}
+			}
+		}
+		for (const id of client.synchedDuplexDataSources.keys()) {
+			for (const auth of client.synchedDuplexDataSources.get(id).keys()) {
+				for (const { source, token } of client.synchedDuplexDataSources.get(id).get(auth)) {
+					this.syncDuplexDataSource(source, id, auth, token);
+				}
+			}
+		}
+		client.synchedDataSources = undefined;
+		client.synchedArrayDataSources = undefined;
+		client.synchedDuplexDataSources = undefined;
+	}
+}
+
+async function ensureConnection(key: string, protocol: 'ws' | 'wss', host: string): Promise<AurumServerClient> {
+	let backoff = 1000;
 	if (pendingConnections.has(key)) {
 		return pendingConnections.get(key);
 	}
 
 	if (!connections.has(key)) {
-		const p = AurumServerClient.connect(aurumServerInfo.host, aurumServerInfo.protocol);
-		pendingConnections.set(key, p);
-		connections.set(key, await p);
-		pendingConnections.delete(key);
+		const pendingConnection = new Promise<AurumServerClient>((resolve) => {
+			async function tryConnect() {
+				const p = AurumServerClient.connect(host, protocol);
+				try {
+					const client = await p;
+					connections.set(key, client);
+					pendingConnections.delete(key);
+					resolve(client);
+					backoff = 1000;
+				} catch (e) {
+					setTimeout(() => {
+						backoff += 1000;
+						tryConnect();
+					}, backoff);
+				}
+			}
+			tryConnect();
+		});
+		pendingConnections.set(key, pendingConnection);
+		return pendingConnection;
 	}
 }

@@ -661,6 +661,9 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		return this.listen(callback, cancellationToken);
 	}
 
+	/**
+	 * Sends a reset signal followed by an append with all items signal. This will force all the views of this source the synchronize can be useful in case your views rely on non pure transformation functions.
+	 */
 	public repeatCurrentState(): void {
 		this.update({
 			operation: 'remove',
@@ -686,6 +689,45 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
 	public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
 		return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+	}
+
+	/**
+	 * Applies the changes described in the colleciton change to the array. Useful for synchronizing array data sources over the network or workers by serializing the changes and sending them over
+	 * @param collectionChange
+	 */
+	public applyCollectionChange(collectionChange: CollectionChange<T>): void {
+		switch (collectionChange.operationDetailed) {
+			case 'append':
+				this.appendArray(collectionChange.items);
+				break;
+			case 'clear':
+				this.clear();
+				break;
+			case 'insert':
+				this.insertAt(collectionChange.index, ...collectionChange.items);
+				break;
+			case 'merge':
+				this.merge(collectionChange.items);
+				break;
+			case 'prepend':
+				this.unshift(...collectionChange.items);
+				break;
+			case 'remove':
+				this.removeRange(collectionChange.index, collectionChange.index + collectionChange.count);
+				break;
+			case 'removeLeft':
+				this.removeLeft(collectionChange.count);
+				break;
+			case 'removeRight':
+				this.removeRight(collectionChange.count);
+				break;
+			case 'replace':
+				this.set(collectionChange.index, collectionChange.items[0]);
+				break;
+			case 'swap':
+				this.swap(collectionChange.index, collectionChange.index2);
+				break;
+		}
 	}
 
 	/**

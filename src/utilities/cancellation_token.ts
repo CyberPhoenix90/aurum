@@ -13,6 +13,16 @@ export class CancellationToken {
 		this._isCancelled = false;
 	}
 
+	public static fromMultiple(tokens: CancellationToken[]): CancellationToken {
+		const result = new CancellationToken();
+
+		for (const token of tokens) {
+			token.chain(result);
+		}
+
+		return result;
+	}
+
 	public hasCancellables(): boolean {
 		return this.cancelables.length > 0;
 	}
