@@ -133,7 +133,7 @@ describe('Aurum', () => {
 		assert((document.getElementById('target').firstChild as HTMLDivElement).innerHTML === 'Test1Test2');
 	});
 
-	it('Should support datasources in transclusion', () => {
+	it('Should support datasources in fragments in transclusion', () => {
 		const ds = new DataSource('State1');
 		function TestComponent(_, c) {
 			return c;

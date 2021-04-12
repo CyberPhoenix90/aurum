@@ -93,7 +93,7 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
+			this.synchedDataSources.get(id).set(authenticationToken, [{ source: dataSource, token: cancellation }]);
 		} else {
 			this.synchedDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
@@ -126,7 +126,7 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedArrayDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
+			this.synchedArrayDataSources.get(id).set(authenticationToken, [{ source: dataSource, token: cancellation }]);
 		} else {
 			this.synchedArrayDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
@@ -170,7 +170,7 @@ class AurumServerClient {
 					token: authenticationToken
 				})
 			);
-			this.synchedDuplexDataSources.get(id).set(id, [{ source: dataSource, token: cancellation }]);
+			this.synchedDuplexDataSources.get(id).set(authenticationToken, [{ source: dataSource, token: cancellation }]);
 		} else {
 			this.synchedDuplexDataSources.get(id).get(authenticationToken).push({ source: dataSource, token: cancellation });
 		}
@@ -179,7 +179,8 @@ class AurumServerClient {
 	public static connect(host: string, protocol?: 'ws' | 'wss'): Promise<AurumServerClient> {
 		let pendingToken = new CancellationToken();
 		let started = false;
-		let latency = 0;
+		let latency = [0, 0, 0, 0];
+		let cycle = 0;
 		let latencyTs;
 		let lastBeat;
 		return new Promise((resolve, reject) => {
@@ -211,8 +212,13 @@ class AurumServerClient {
 					const msg = JSON.parse(m.data);
 					switch (msg.type) {
 						case RemoteProtocol.HEARTBEAT:
-							latency = Date.now() - latencyTs;
-							console.log(`AurumServer latency: ${latency}ms`);
+							latency[cycle] = Date.now() - latencyTs;
+							if ((cycle + 1) % latency.length === 0) {
+								console.log(`AurumServer latency: ${(latency.reduce((p, c) => p + c) / latency.length).toFixed(1)}ms`);
+								cycle = 0;
+							} else {
+								cycle++;
+							}
 							break;
 						case RemoteProtocol.UPDATE_DATASOURCE:
 							if (client.synchedDataSources.has(msg.id)) {

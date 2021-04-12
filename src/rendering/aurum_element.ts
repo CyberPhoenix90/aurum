@@ -36,8 +36,7 @@ type ResolvedRenderable =
 	| ArrayDataSource<Renderable>
 	| DuplexDataSource<Renderable>;
 
-
-export type Renderable = ResolvedRenderable	| Promise<ResolvedRenderable>
+export type Renderable = ResolvedRenderable | Promise<ResolvedRenderable>;
 
 export type Rendered = AurumElement | HTMLElement | Text;
 
@@ -184,6 +183,10 @@ export abstract class AurumElement {
 			if (!(this.hostNode.childNodes[workIndex] instanceof Comment)) {
 				this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
 			} else {
+				//@ts-ignore
+				if (this.hostNode.childNodes[workIndex].owner.disposed) {
+					break;
+				}
 				//@ts-ignore
 				this.hostNode.childNodes[workIndex].owner.dispose();
 			}

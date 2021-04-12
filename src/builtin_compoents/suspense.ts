@@ -5,26 +5,30 @@ export interface SuspenseProps {
 }
 
 export function Suspense(props: SuspenseProps, children: Renderable[], api: AurumComponentAPI) {
-	const data = new DataSource<Renderable | Renderable[]>(props?.fallback);
-
 	const lc = createLifeCycle();
 
 	api.onDetach(() => {
 		lc.onDetach();
 	});
 
-	Promise.all(api.prerender(children, lc)).then(function result(res) {
-		if (res instanceof Promise) {
-			res.then(result, onError);
-		} else {
-			const nestedRendered = api.prerender(res, lc);
-			if (nestedRendered.some((s) => s instanceof Promise)) {
-				Promise.all(nestedRendered).then(result, onError);
+	const rendered = api.prerender(children, lc);
+	if (rendered.some((r) => r instanceof Promise)) {
+		Promise.all(api.prerender(children, lc)).then(function result(res) {
+			if (res instanceof Promise) {
+				res.then(result, onError);
 			} else {
-				onDone(nestedRendered);
+				const nestedRendered = api.prerender(res, lc);
+				if (nestedRendered.some((s) => s instanceof Promise)) {
+					Promise.all(nestedRendered).then(result, onError);
+				} else {
+					onDone(nestedRendered);
+				}
 			}
-		}
-	}, onError);
+		}, onError);
+	} else {
+		return rendered;
+	}
+	const data = new DataSource<Renderable | Renderable[]>(props?.fallback);
 
 	return data;
 

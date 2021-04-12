@@ -23,8 +23,6 @@ export async function aurumToString(content: any): Promise<string> {
 	if (['number', 'string', 'bigint', 'boolean'].includes(typeof content)) {
 		return content
 			.toString()
-			.replace('<', '&lt;')
-			.replace('>', '&gt;');
 	} else if (content instanceof DataSource) {
 		return aurumToString(content.value);
 	} else if (content instanceof DuplexDataSource) {
