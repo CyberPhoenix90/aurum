@@ -580,18 +580,8 @@ export class ArrayAurumElement extends AurumElement {
 					}
 				}
 				break;
-			case 'remove':
-				for (const item of change.items) {
-					const rendered = this.renderItem(item, ac);
-					if (Array.isArray(rendered)) {
-						throw new Error('illegal state');
-					} else {
-						this.children.unshift(rendered);
-					}
-				}
-				break;
 			case 'clear':
-				this.children.length = 0;
+				this.spliceChildren(0, this.children.length);
 				this.renderSessions = new WeakMap();
 				break;
 			default:
