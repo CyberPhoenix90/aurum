@@ -146,6 +146,10 @@ export class MapDataSource<K, V> {
 	 * @param value
 	 */
 	public delete(key: K): void {
+		if (!this.has(key)) {
+			return;
+		}
+
 		const old = this.data.get(key);
 		this.data.delete(key);
 		this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
