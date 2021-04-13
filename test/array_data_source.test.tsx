@@ -1,7 +1,45 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, Aurum } from '../src/aurumjs';
+import { ArrayDataSource, DataSource, Aurum, CancellationToken } from '../src/aurumjs';
 
 describe('ArrayDatasource', () => {
+	let attachToken: CancellationToken;
+	afterEach(() => {
+		attachToken?.cancel();
+		attachToken = undefined;
+	});
+
+	it('should render the array data source value', () => {
+		const ads = new ArrayDataSource<any>();
+
+		attachToken = Aurum.attach(<div>{ads}</div>, document.getElementById('target'));
+
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+		ads.push(1, 2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12');
+		ads.push(7);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '127');
+		ads.removeAt(1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '17');
+	});
+
+	it('should render the array data source value 2', () => {
+		const ads = new ArrayDataSource<any>();
+
+		attachToken = Aurum.attach(<div>{ads}</div>, document.getElementById('target'));
+
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+		ads.push([1, 2]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12');
+		ads.push([5, 6, 7]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12567');
+		ads.push(['a', 'b', 'c']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12567abc');
+		ads.removeAt(1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12abc');
+		ads.push(['y', new ArrayDataSource([1, 2, 3, 4]), 'z']);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12abcy1234z');
+	});
+
 	it('should store values', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		assert.deepEqual(ds.toArray(), [1, 2, 3]);

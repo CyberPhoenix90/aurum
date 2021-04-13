@@ -3,7 +3,7 @@ import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource } fro
 import { DuplexDataSource } from '../stream/duplex_data_source';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { EventEmitter } from '../utilities/event_emitter';
-import { aurumClassName } from './classname';
+import { aurumClassName } from '../utilities/classname';
 
 export function createRenderSession(): RenderSession {
 	const session = {
@@ -453,7 +453,7 @@ export class ArrayAurumElement extends AurumElement {
 			removed = this.children.splice(index, amount);
 		}
 		for (const item of removed) {
-			this.renderSessions.get(item).sessionToken.cancel();
+			this.renderSessions.get(item)?.sessionToken.cancel();
 		}
 	}
 
@@ -495,7 +495,7 @@ export class ArrayAurumElement extends AurumElement {
 			case 'remove':
 			case 'removeLeft':
 			case 'removeRight':
-				this.spliceChildren(change.index, change.count);
+				this.spliceChildren(flattenIndex(change.newState, change.index), flattenIndex(change.items, change.items.length));
 				break;
 			case 'append':
 				let targetIndex = this.getLastIndex();
@@ -505,7 +505,7 @@ export class ArrayAurumElement extends AurumElement {
 					if (Array.isArray(rendered)) {
 						this.children = this.children.concat(rendered);
 
-						for (let i = rendered.length - 1; i >= 0; i--) {
+						for (let i = 0; i <= rendered.length; i++) {
 							if (rendered[i]) {
 								if (rendered[i] instanceof AurumElement) {
 									rendered[i].attachToDom(this.hostNode, targetIndex);
@@ -622,6 +622,19 @@ export class ArrayAurumElement extends AurumElement {
 		attachCalls.push(...s.attachCalls);
 		return rendered;
 	}
+}
+
+function flattenIndex(source: any[], index: number) {
+	let flatIndex = 0;
+	for (let i = 0; i < index; i++) {
+		if (Array.isArray(source[i])) {
+			flatIndex += flattenIndex(source[i], source[i].length);
+		} else {
+			flatIndex++;
+		}
+	}
+
+	return flatIndex;
 }
 
 export class SingularAurumElement extends AurumElement {

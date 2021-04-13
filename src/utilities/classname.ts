@@ -1,6 +1,6 @@
 import { ReadOnlyDataSource, DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
+import { CancellationToken } from './cancellation_token';
 
 export function aurumClassName(
 	data: { [key: string]: boolean | ReadOnlyDataSource<boolean> },

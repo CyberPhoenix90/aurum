@@ -16,6 +16,7 @@ export interface HTMLNodeProps<T> {
 	role?: AttributeValue;
 	slot?: AttributeValue;
 	contentEditable?: AttributeValue;
+	onContextMenu?: DataDrain<MouseEvent>;
 	onDblClick?: DataDrain<MouseEvent>;
 	onClick?: DataDrain<MouseEvent>;
 	onKeyDown?: DataDrain<KeyboardEvent>;
@@ -60,6 +61,7 @@ export const defaultEvents: MapLike<string> = {
 	keydown: 'onKeyDown',
 	keyhit: 'onKeyHit',
 	keyup: 'onKeyUp',
+	contextmenu: 'onContextMenu',
 	mousedown: 'onMouseDown',
 	mouseup: 'onMouseUp',
 	mousemove: 'onMouseMove',
@@ -81,7 +83,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 	extraEvents?: MapLike<string>,
 	extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void
 ) {
-	return function(props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
+	return function (props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
 		const node = document.createElement(nodeName);
 		if (props) {
 			processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
@@ -234,7 +236,7 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
 		data.transform(dsUnique(), cleanUp).listen((v) => ((node as HTMLElement).className = v));
 	} else {
 		const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
-			if(!c) {
+			if (!c) {
 				return p;
 			}
 			if (typeof c === 'string') {
