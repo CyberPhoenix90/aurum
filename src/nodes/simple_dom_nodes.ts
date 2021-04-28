@@ -194,10 +194,16 @@ export interface TrackProps extends HTMLNodeProps<HTMLTrackElement> {
 	default?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ParamProps extends HTMLNodeProps<HTMLParamElement> {
 	value?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
 	src?: AttributeValue;
 	async?: AttributeValue;
@@ -234,16 +240,25 @@ export interface OptionProps extends HTMLNodeProps<HTMLElement> {
 	selected?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface OptGroupProps extends HTMLNodeProps<HTMLOptGroupElement> {
 	disabled?: AttributeValue;
 	label?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface OutputProps extends HTMLNodeProps<HTMLOutputElement> {
 	form?: AttributeValue;
 	for?: AttributeValue;
 }
 
+/**
+ * @internal
+ */
 export interface ObjectProps extends HTMLNodeProps<HTMLObjectElement> {
 	data?: AttributeValue;
 	width?: AttributeValue;
@@ -252,6 +267,24 @@ export interface ObjectProps extends HTMLNodeProps<HTMLObjectElement> {
 	type?: AttributeValue;
 	typemustmatch?: AttributeValue;
 	usemap?: AttributeValue;
+}
+
+/**
+ * @internal
+ */
+export interface ColProps extends HTMLNodeProps<HTMLObjectElement> {
+	span?: AttributeValue;
+}
+
+/**
+ * @internal
+ */
+export interface TableCellProps extends HTMLNodeProps<HTMLObjectElement> {
+	abbr?: AttributeValue;
+	scope?: AttributeValue;
+	colspan?: AttributeValue;
+	headers?: AttributeValue;
+	rowspan?: AttributeValue;
 }
 
 /**
@@ -339,10 +372,6 @@ export const Ol = DomNodeCreator<HTMLNodeProps<HTMLOListElement>>('ol');
  * @internal
  */
 export const Li = DomNodeCreator<HTMLNodeProps<HTMLLIElement>>('li');
-/**
- * @internal
- */
-export const Tr = DomNodeCreator<HTMLNodeProps<HTMLTableRowElement>>('tr');
 /**
  * @internal
  */
@@ -497,11 +526,27 @@ export const TFoot = DomNodeCreator<HTMLNodeProps<HTMLElement>>('tfoot');
 /**
  * @internal
  */
-export const Td = DomNodeCreator<HTMLNodeProps<HTMLTableColElement>>('td');
+export const Col = DomNodeCreator<HTMLNodeProps<HTMLTableColElement>>('col', ['span']);
 /**
  * @internal
  */
-export const Th = DomNodeCreator<HTMLNodeProps<HTMLTableHeaderCellElement>>('th');
+export const Colgroup = DomNodeCreator<HTMLNodeProps<HTMLTableColElement>>('colgroup', ['span']);
+/**
+ * @internal
+ */
+export const Caption = DomNodeCreator<HTMLNodeProps<HTMLTableCaptionElement>>('caption');
+/**
+ * @internal
+ */
+export const Tr = DomNodeCreator<HTMLNodeProps<HTMLTableRowElement>>('tr');
+/**
+ * @internal
+ */
+export const Td = DomNodeCreator<HTMLNodeProps<HTMLTableCellElement>>('td', ['abbr', 'scope', 'colspan', 'headers', 'rowspan']);
+/**
+ * @internal
+ */
+export const Th = DomNodeCreator<HTMLNodeProps<HTMLTableHeaderCellElement>>('th', ['scope', 'abbr', 'colspan', 'headers', 'rowspan']);
 /**
  * @internal
  */

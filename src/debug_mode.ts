@@ -4,27 +4,25 @@ import { EventEmitter } from './utilities/event_emitter';
 export let debugMode: boolean = false;
 export let diagnosticMode: boolean = false;
 
-declare global {
-	interface Window {
-		__debugUpdates: EventEmitter<{
-			source: SerializedStreamData;
-			newValue: any;
-			stack: string;
-		}>;
-		__debugNewSource: EventEmitter<{
-			source: SerializedStreamData;
-		}>;
-		__debugLinked: EventEmitter<{
-			parent: SerializedStreamData;
-			child: SerializedStreamData;
-		}>;
-		__debugUnlinked: EventEmitter<{
-			parent: SerializedStreamData;
-			child: SerializedStreamData;
-		}>;
-		__debugGetStreamData: () => SerializedStreamData[];
-	}
-}
+const customWindow: Window & {
+	__debugUpdates: EventEmitter<{
+		source: SerializedStreamData;
+		newValue: any;
+		stack: string;
+	}>;
+	__debugNewSource: EventEmitter<{
+		source: SerializedStreamData;
+	}>;
+	__debugLinked: EventEmitter<{
+		parent: SerializedStreamData;
+		child: SerializedStreamData;
+	}>;
+	__debugUnlinked: EventEmitter<{
+		parent: SerializedStreamData;
+		child: SerializedStreamData;
+	}>;
+	__debugGetStreamData: () => SerializedStreamData[];
+} = globalThis as any;
 
 let debugStreamData;
 
@@ -42,11 +40,11 @@ export function enableDebugMode(): void {
 	debugStreamData = [];
 	debugMode = true;
 	setInterval(() => garbageCollect(), 60000);
-	window.__debugUpdates = new EventEmitter();
-	window.__debugNewSource = new EventEmitter();
-	window.__debugLinked = new EventEmitter();
-	window.__debugUnlinked = new EventEmitter();
-	window.__debugGetStreamData = () => debugStreamData.map(serializeStreamData);
+	customWindow.__debugUpdates = new EventEmitter();
+	customWindow.__debugNewSource = new EventEmitter();
+	customWindow.__debugLinked = new EventEmitter();
+	customWindow.__debugUnlinked = new EventEmitter();
+	customWindow.__debugGetStreamData = () => debugStreamData.map(serializeStreamData);
 }
 
 function serializeStreamData(ref: StreamData): SerializedStreamData {
@@ -83,7 +81,7 @@ export function debugRegisterStream(stream: DataSource<any>, stack: string) {
 		consumers: []
 	};
 	debugStreamData.push(ref);
-	window.__debugNewSource.fire({
+	customWindow.__debugNewSource.fire({
 		source: serializeStreamData(ref)
 	});
 }
@@ -101,7 +99,7 @@ export function debugRegisterLink(parent: DataSource<any>, child: DataSource<any
 
 	pref.children.push(cref.id);
 	cref.parents.push(pref.id);
-	window.__debugLinked.fire({
+	customWindow.__debugLinked.fire({
 		child: serializeStreamData(cref),
 		parent: serializeStreamData(pref)
 	});
@@ -130,7 +128,7 @@ export function debugRegisterUnlink(parent: DataSource<any>, child: DataSource<a
 	}
 	cref.parents.splice(cindex, 1);
 
-	window.__debugUnlinked.fire({
+	customWindow.__debugUnlinked.fire({
 		child: serializeStreamData(cref),
 		parent: serializeStreamData(pref)
 	});
@@ -143,7 +141,7 @@ export function debugDeclareUpdate(source: DataSource<any>, value: any, stack: s
 	}
 
 	ref.value = source.value;
-	window.__debugUpdates.fire({
+	customWindow.__debugUpdates.fire({
 		newValue: value,
 		source: serializeStreamData(ref),
 		stack

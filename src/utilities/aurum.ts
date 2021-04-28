@@ -104,7 +104,12 @@ import {
 	Strong,
 	Track,
 	Var,
-	Wbr
+	Wbr,
+	ColProps,
+	Col,
+	Colgroup,
+	Caption,
+	TableCellProps
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
@@ -203,7 +208,10 @@ const nodeMap = {
 	data: Data,
 	time: Time,
 	template: Template,
-	slot: Slot
+	slot: Slot,
+	col: Col,
+	colgroup: Colgroup,
+	caption: Caption
 };
 
 export class Aurum {
@@ -313,9 +321,9 @@ export namespace Aurum {
 			pre: HTMLNodeProps<HTMLPreElement>;
 			progress: ProgressProps;
 			table: HTMLNodeProps<HTMLTableElement>;
-			td: HTMLNodeProps<HTMLTableColElement>;
+			td: TableCellProps;
 			tr: HTMLNodeProps<HTMLTableRowElement>;
-			th: HTMLNodeProps<HTMLTableHeaderCellElement>;
+			th: TableCellProps;
 			textarea: TextAreaProps;
 			h1: HTMLNodeProps<HTMLElement>;
 			h2: HTMLNodeProps<HTMLElement>;
@@ -358,6 +366,9 @@ export namespace Aurum {
 			head: HTMLNodeProps<HTMLHeadElement>;
 			html: HtmlProps;
 			template: HTMLNodeProps<HTMLTemplateElement>;
+			col: ColProps;
+			colgroup: ColProps;
+			caption: HTMLNodeProps<HTMLTableCaptionElement>;
 		}
 	}
 }

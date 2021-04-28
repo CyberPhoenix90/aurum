@@ -82,7 +82,10 @@ describe('Nodes', () => {
 		'Data',
 		'Time',
 		'Template',
-		'Slot'
+		'Slot',
+		'Col',
+		'Colgroup',
+		'Caption'
 	].forEach((n) => {
 		it('should render node ' + n, () => {
 			let attachToken = Aurum.attach(Aurum.factory(n.toLowerCase(), {}, null), document.getElementById('target'));
