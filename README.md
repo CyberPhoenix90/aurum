@@ -80,7 +80,7 @@ Aurum.attach((<div>Hello Aurum</div>), document.body)
 ```
 
 ## Website with documentation and further explanations
-https://aurumjs.org/
+http://aurumjs.org/
 
 ## Live example
 TODO App with creation, deletion drag and drop, editing and marking as done of tasks all under 100 lines of code with aurum:
