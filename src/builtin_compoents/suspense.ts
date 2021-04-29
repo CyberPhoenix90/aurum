@@ -13,7 +13,7 @@ export function Suspense(props: SuspenseProps, children: Renderable[], api: Auru
 
 	const rendered = api.prerender(children, lc);
 	if (rendered.some((r) => r instanceof Promise)) {
-		Promise.all(api.prerender(children, lc)).then(function result(res) {
+		Promise.all(rendered).then(function result(res) {
 			if (res instanceof Promise) {
 				res.then(result, onError);
 			} else {
@@ -26,6 +26,7 @@ export function Suspense(props: SuspenseProps, children: Renderable[], api: Auru
 			}
 		}, onError);
 	} else {
+		api.synchronizeLifeCycle(lc);
 		return rendered;
 	}
 	const data = new DataSource<Renderable | Renderable[]>(props?.fallback);
