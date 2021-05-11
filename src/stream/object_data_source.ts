@@ -2,6 +2,7 @@ import { ArrayDataSource, DataSource } from './data_source';
 import { Callback } from '../utilities/common';
 import { CancellationToken } from '../utilities/cancellation_token';
 import { EventEmitter } from '../utilities/event_emitter';
+import { DuplexDataSource } from './duplex_data_source';
 
 export interface ObjectChange<T, K extends keyof T> {
 	key: K;
@@ -33,6 +34,30 @@ export class ObjectDataSource<T> {
 			key,
 			(v) => {
 				subDataSource.update(v.newValue);
+			},
+			cancellationToken
+		);
+
+		return subDataSource;
+	}
+
+	/**
+	 * Creates a duplexdatasource for a single key of the object
+	 * @param key
+	 * @param cancellationToken
+	 */
+	public pickDuplex<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DuplexDataSource<T[K]> {
+		const subDataSource: DuplexDataSource<T[K]> = new DuplexDataSource(this.data?.[key]);
+		subDataSource.listenUpstream((v) => {
+			this.set(key, v);
+		});
+
+		this.listenOnKey(
+			key,
+			(v) => {
+				if (subDataSource.value !== v.newValue) {
+					subDataSource.updateDownstream(v.newValue);
+				}
 			},
 			cancellationToken
 		);
