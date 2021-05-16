@@ -267,14 +267,16 @@ export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperat
  * Filters out updates if they have the same value as the previous update, uses reference equality by default
  */
 export function dsUnique<T>(isEqual?: (valueA: T, valueB: T) => boolean): DataSourceFilterOperator<T> {
+	let primed: boolean = false;
 	let last: T;
 	return {
 		name: 'unique',
 		operationType: OperationType.FILTER,
 		operation: (v) => {
-			if (isEqual ? isEqual(last, v) : v === last) {
+			if (primed && (isEqual ? isEqual(last, v) : v === last)) {
 				return false;
 			} else {
+				primed = true;
 				last = v;
 				return true;
 			}

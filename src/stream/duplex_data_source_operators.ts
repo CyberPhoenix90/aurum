@@ -75,15 +75,18 @@ export function ddsFilter<T>(predicateDown: (value: T) => boolean, predicateUp: 
 export function ddsUnique<T>(direction?: DataFlowBoth, isEqual?: (valueA: T, valueB: T) => boolean): DuplexDataSourceFilterOperator<T> {
 	let lastDown: T;
 	let lastUp: T;
+	let primedUp: boolean = false;
+	let primedDown: boolean = false;
 
 	return {
 		name: 'filter',
 		operationType: OperationType.FILTER,
 		operationDown: (v) => {
 			if (direction === undefined || direction === DataFlowBoth.DOWNSTREAM || direction === DataFlowBoth.BOTH) {
-				if (isEqual ? isEqual(lastDown, v) : v === lastDown) {
+				if (primedDown && (isEqual ? isEqual(lastDown, v) : v === lastDown)) {
 					return false;
 				} else {
+					primedDown = true;
 					lastDown = v;
 					return true;
 				}
@@ -93,10 +96,11 @@ export function ddsUnique<T>(direction?: DataFlowBoth, isEqual?: (valueA: T, val
 		},
 		operationUp: (v) => {
 			if (direction === undefined || direction === DataFlowBoth.UPSTREAM || direction === DataFlowBoth.BOTH) {
-				if (isEqual ? isEqual(lastUp, v) : v === lastUp) {
+				if (primedUp && (isEqual ? isEqual(lastUp, v) : v === lastUp)) {
 					return false;
 				} else {
 					lastUp = v;
+					primedUp = true;
 					return true;
 				}
 			} else {
