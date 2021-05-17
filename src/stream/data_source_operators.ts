@@ -79,6 +79,27 @@ export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T
 }
 
 /**
+ * Changes updates to contain the value of the previous update as well as the current
+ */
+export function dsUpdateToken<T>(): DataSourceMapOperator<T, { value: T; token: CancellationToken }> {
+	let token: CancellationToken;
+	return {
+		name: 'diff',
+		operationType: OperationType.MAP,
+		operation: (v) => {
+			if (token) {
+				token.cancel();
+			}
+			token = new CancellationToken();
+			return {
+				token,
+				value: v
+			};
+		}
+	};
+}
+
+/**
  * Blocks updates that don't pass the filter predicate
  */
 export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterOperator<T> {
