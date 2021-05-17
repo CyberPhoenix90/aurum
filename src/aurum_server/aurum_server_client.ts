@@ -32,8 +32,8 @@ export async function syncDataSource(source: DataSource<any>, aurumServerInfo: A
 	connections.get(key).syncDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
-function makeKey(protocol: string, host: string): string {
-	return `${protocol ?? ''}${host ?? location.host}`;
+function makeKey(protocol: 'wss' | 'ws', host: string): string {
+	return `${resolveProtocol(protocol)}://${resolveHost(host)}`;
 }
 
 export async function syncArrayDataSource(source: ArrayDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
@@ -184,20 +184,11 @@ class AurumServerClient {
 		let latencyTs;
 		let lastBeat;
 		return new Promise((resolve, reject) => {
-			if (!protocol) {
-				if (typeof location === 'undefined') {
-					throw new Error('Protocol is not optional in non browser environments');
-				}
-				if (location.protocol.startsWith('https')) {
-					protocol = 'wss';
-				} else {
-					protocol = 'ws';
-				}
-			}
+			protocol = resolveProtocol(protocol);
 			const connection = new WebSocket(`${protocol}://${host}`);
 			const client = new AurumServerClient(connection);
 			client.masterToken.addCancelable(() => {
-				connections.delete(makeKey(host, protocol));
+				connections.delete(makeKey(protocol, host));
 			});
 
 			pendingToken.setTimeout(() => {
@@ -284,7 +275,7 @@ class AurumServerClient {
 			connection.addEventListener('close', () => {
 				client.masterToken.cancel();
 				if (started) {
-					ensureConnection(makeKey(host, protocol), protocol, host).then((newClient) => {
+					ensureConnection(makeKey(protocol, host), protocol, host).then((newClient) => {
 						newClient.migrate(client);
 					});
 				} else {
@@ -316,10 +307,34 @@ class AurumServerClient {
 				}
 			}
 		}
-		client.synchedDataSources = undefined;
-		client.synchedArrayDataSources = undefined;
-		client.synchedDuplexDataSources = undefined;
+		this.synchedDataSources = new Map();
+		this.synchedDuplexDataSources = new Map();
+		this.synchedArrayDataSources = new Map();
 	}
+}
+
+function resolveProtocol(protocol: 'ws' | 'wss'): 'ws' | 'wss' {
+	if (!protocol) {
+		if (typeof location === 'undefined') {
+			throw new Error('Protocol is not optional in non browser environments');
+		}
+		if (location.protocol.startsWith('https')) {
+			protocol = 'wss';
+		} else {
+			protocol = 'ws';
+		}
+	}
+	return protocol;
+}
+
+function resolveHost(host: string): string {
+	if (!host) {
+		if (typeof location === 'undefined') {
+			throw new Error('Host is not optional in non browser environments');
+		}
+		return location.host;
+	}
+	return host;
 }
 
 async function ensureConnection(key: string, protocol: 'ws' | 'wss', host: string): Promise<AurumServerClient> {
