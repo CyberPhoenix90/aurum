@@ -45,6 +45,14 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual(ds.toArray(), [1, 2, 3]);
 	});
 
+	it('should be iterable', () => {
+		let ds = new ArrayDataSource([1, 2, 3]);
+		const test = [new Error('Should not get here'), 3, 2, 1];
+		for (const v of ds) {
+			assert.deepEqual(v, test.pop());
+		}
+	});
+
 	it('push', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		ds.push(4, 5);

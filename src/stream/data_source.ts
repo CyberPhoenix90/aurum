@@ -544,6 +544,7 @@ export interface CollectionChange<T> {
 }
 
 export interface ReadOnlyArrayDataSource<T> {
+	[Symbol.iterator](): IterableIterator<T>;
 	listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
 	listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
 	listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
@@ -581,6 +582,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		this.updateEvent = new EventEmitter();
 	}
 
+	*[Symbol.iterator](): IterableIterator<T> {
+		yield* this.getData();
+		return;
+	}
 	/**
 	 * Connects to an aurum-server exposed array datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
 	 * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
