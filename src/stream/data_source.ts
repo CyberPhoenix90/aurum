@@ -553,7 +553,8 @@ export interface ReadOnlyArrayDataSource<T> {
 	getData(): ReadonlyArray<T>;
 	get(index: number): T;
 	indexOf(item: T): number;
-	findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any);
+	find(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): T;
+	findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number;
 	lastIndexOf(item: T): number;
 	includes(item: T): boolean;
 	toArray(): T[];
@@ -771,6 +772,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
 	public indexOf(item: T): number {
 		return this.data.indexOf(item);
+	}
+
+	public find(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): T {
+		return this.data.find(predicate, thisArg);
 	}
 
 	public findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number {

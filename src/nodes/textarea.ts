@@ -11,14 +11,17 @@ export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
 	onChange?: DataDrain<InputEvent>;
 	onInput?: DataDrain<InputEvent>;
 	value?: GenericDataSource<string> | string;
+	cols?: AttributeValue;
 	rows?: AttributeValue;
 	wrap?: AttributeValue;
+	form?: AttributeValue;
 	autocomplete?: AttributeValue;
 	autofocus?: AttributeValue;
 	max?: AttributeValue;
 	maxLength?: AttributeValue;
 	min?: AttributeValue;
 	minLength?: AttributeValue;
+	spellcheck?: AttributeValue;
 	required?: AttributeValue;
 	type?: AttributeValue;
 }
@@ -35,6 +38,8 @@ const textAreaProps = [
 	'placeholder',
 	'readonly',
 	'disabled',
+	'form',
+	'cols',
 	'rows',
 	'wrap',
 	'autocomplete',
@@ -42,6 +47,7 @@ const textAreaProps = [
 	'max',
 	'maxLength',
 	'min',
+	'spellcheck',
 	'minLength',
 	'required',
 	'type'
