@@ -22,6 +22,8 @@ export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
 	formMethod?: AttributeValue;
 	formNoValidate?: AttributeValue;
 	formTarget?: AttributeValue;
+	step?: AttributeValue;
+	list?: AttributeValue;
 	max?: AttributeValue;
 	maxLength?: AttributeValue;
 	min?: AttributeValue;
@@ -62,7 +64,9 @@ const inputProps = [
 	'pattern',
 	'multiple',
 	'required',
-	'type'
+	'type',
+	'step',
+	'list'
 ];
 
 /**
