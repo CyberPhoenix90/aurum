@@ -40,6 +40,117 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 		return result;
 	}
 
+	/**
+	 * Combines two sources into a third source that listens to updates from both parent sources.
+	 * @param otherSource Second parent for the new source
+	 * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
+	 * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
+	 */
+	public aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: O, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
+	public aggregate<R, A, B>(
+		otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
+		combinator?: (self: O, second: A, third: B) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C>(
+		otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
+		combinator?: (self: O, second: A, third: B, fourth: C) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D>(
+		otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E>(
+		otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E, F>(
+		otherSources: [
+			ReadOnlyDataSource<A>,
+			ReadOnlyDataSource<B>,
+			ReadOnlyDataSource<C>,
+			ReadOnlyDataSource<D>,
+			ReadOnlyDataSource<E>,
+			ReadOnlyDataSource<F>
+		],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E, F, G>(
+		otherSources: [
+			ReadOnlyDataSource<A>,
+			ReadOnlyDataSource<B>,
+			ReadOnlyDataSource<C>,
+			ReadOnlyDataSource<D>,
+			ReadOnlyDataSource<E>,
+			ReadOnlyDataSource<F>,
+			ReadOnlyDataSource<G>
+		],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E, F, G, H>(
+		otherSources: [
+			ReadOnlyDataSource<A>,
+			ReadOnlyDataSource<B>,
+			ReadOnlyDataSource<C>,
+			ReadOnlyDataSource<D>,
+			ReadOnlyDataSource<E>,
+			ReadOnlyDataSource<F>,
+			ReadOnlyDataSource<G>,
+			ReadOnlyDataSource<H>
+		],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E, F, G, H, I>(
+		otherSources: [
+			ReadOnlyDataSource<A>,
+			ReadOnlyDataSource<B>,
+			ReadOnlyDataSource<C>,
+			ReadOnlyDataSource<D>,
+			ReadOnlyDataSource<E>,
+			ReadOnlyDataSource<F>,
+			ReadOnlyDataSource<G>,
+			ReadOnlyDataSource<H>
+		],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R, A, B, C, D, E, F, G, H, I>(
+		otherSources: [
+			ReadOnlyDataSource<A>,
+			ReadOnlyDataSource<B>,
+			ReadOnlyDataSource<C>,
+			ReadOnlyDataSource<D>,
+			ReadOnlyDataSource<E>,
+			ReadOnlyDataSource<F>,
+			ReadOnlyDataSource<G>,
+			ReadOnlyDataSource<H>,
+			ReadOnlyDataSource<I>
+		],
+		combinator?: (self: O, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
+		cancellationToken?: CancellationToken
+	): DataSource<R>;
+	public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
+		cancellationToken = cancellationToken ?? new CancellationToken();
+
+		const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s.value)));
+
+		for (let i = 0; i < otherSources.length; i++) {
+			otherSources[i].listen(() => {
+				aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s.value)));
+			}, cancellationToken);
+		}
+
+		this.listen(() => aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s.value))), cancellationToken);
+
+		return aggregatedSource;
+	}
+
 	public static fromStreamTransformation<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, Z = H, J = Z, K = J>(
 		operationA?: DataSourceOperator<A, B>,
 		operationB?: DataSourceOperator<B, C>,

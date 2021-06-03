@@ -83,6 +83,11 @@ export function tweenEmitter(
 	interpolation?: (v: number) => number,
 	cancellationToken?: CancellationToken
 ): Promise<void> {
+	if (target instanceof DataSource || target instanceof DuplexDataSource || target instanceof Stream) {
+		if (startValue === endValue) {
+			return new Promise((res) => setTimeout(res, duration));
+		}
+	}
 	return animate(
 		(progress) => {
 			if (interpolation) {
