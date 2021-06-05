@@ -36,6 +36,7 @@ export interface HTMLNodeProps<T> {
 	onDragLeave?: DataDrain<DragEvent>;
 	onDragOver?: DataDrain<DragEvent>;
 	onDragStart?: DataDrain<DragEvent>;
+	onDrop?: DataDrain<DragEvent>;
 	onLoad?: DataDrain<Event>;
 	onError?: DataDrain<ErrorEvent>;
 
@@ -54,6 +55,7 @@ export const defaultEvents: MapLike<string> = {
 	dragover: 'onDragOver',
 	dragenter: 'onDragEnter',
 	dragleave: 'onDragLeave',
+	drop: 'onDrop',
 	blur: 'onBlur',
 	focus: 'onFocus',
 	click: 'onClick',
