@@ -40,6 +40,30 @@ describe('ArrayDatasource', () => {
 		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12abcy1234z');
 	});
 
+	it('should sync dom when swapping', () => {
+		const ads = new ArrayDataSource<any>();
+
+		attachToken = Aurum.attach(
+			<div>
+				{ads.map((e) => (
+					<li>{e}</li>
+				))}
+			</div>,
+			document.getElementById('target')
+		);
+
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '');
+		ads.appendArray([1, 2]);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12');
+		ads.swap(0, 1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '21');
+		ads.swap(1, 0);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '12');
+		ads.appendArray([3, 4]);
+		ads.swap(1, 3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1432');
+	});
+
 	it('should store values', () => {
 		let ds = new ArrayDataSource([1, 2, 3]);
 		assert.deepEqual(ds.toArray(), [1, 2, 3]);

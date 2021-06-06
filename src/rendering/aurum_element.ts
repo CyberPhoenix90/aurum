@@ -548,6 +548,17 @@ export class ArrayAurumElement extends AurumElement {
 
 				if (itemA instanceof HTMLElement && itemB instanceof HTMLElement) {
 					optimized = true;
+					if (itemA.parentElement === itemB.parentElement) {
+						if (itemA.nextSibling === itemB) {
+							itemB.parentNode.insertBefore(itemB, itemA);
+							break;
+						}
+						if (itemB.nextSibling === itemA) {
+							itemB.parentNode.insertBefore(itemA, itemB);
+							break;
+						}
+					}
+
 					const parentA = itemA.parentNode;
 					const siblingA = itemA.nextSibling === itemB ? itemB : itemA.nextSibling;
 
