@@ -62,6 +62,17 @@ describe('ArrayDatasource', () => {
 		ads.appendArray([3, 4]);
 		ads.swap(1, 3);
 		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1432');
+		ads.appendArray([5, 6, 7]);
+		ads.swap(4, 1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1532467');
+		ads.swap(1, 1);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1532467');
+		ads.swap(1, 2);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1352467');
+		ads.swap(2, 3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1325467');
+		ads.swap(2, 3);
+		assert.deepEqual((document.getElementById('target').firstChild as HTMLDivElement).textContent, '1352467');
 	});
 
 	it('should store values', () => {

@@ -551,10 +551,14 @@ export class ArrayAurumElement extends AurumElement {
 					if (itemA.parentElement === itemB.parentElement) {
 						if (itemA.nextSibling === itemB) {
 							itemB.parentNode.insertBefore(itemB, itemA);
+							this.children[change.index2] = itemA;
+							this.children[change.index] = itemB;
 							break;
 						}
 						if (itemB.nextSibling === itemA) {
 							itemB.parentNode.insertBefore(itemA, itemB);
+							this.children[change.index2] = itemA;
+							this.children[change.index] = itemB;
 							break;
 						}
 					}
