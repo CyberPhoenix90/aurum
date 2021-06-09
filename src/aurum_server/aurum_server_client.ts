@@ -185,7 +185,7 @@ class AurumServerClient {
 		let lastBeat;
 		return new Promise((resolve, reject) => {
 			protocol = resolveProtocol(protocol);
-			host = resolveHost(protocol);
+			host = resolveHost(host);
 			const connection = new WebSocket(`${protocol}://${host}`);
 			const client = new AurumServerClient(connection);
 			client.masterToken.addCancelable(() => {
