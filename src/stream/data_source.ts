@@ -3,6 +3,7 @@ import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink
 import { CancellationToken } from '../utilities/cancellation_token';
 import { Callback, Predicate } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
+import { dsDiff, dsTap } from './data_source_operators';
 import { DuplexDataSource } from './duplex_data_source';
 import {
 	DataSourceDelayFilterOperator,
@@ -691,7 +692,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		return result;
 	}
 
-	public static fromMultipleSources<T>(sources: Array<ArrayDataSource<T> | T[]>, cancellationToken?: CancellationToken): ArrayDataSource<T> {
+	public static fromMultipleSources<T>(
+		sources: Array<ArrayDataSource<T> | T[] | ReadOnlyDataSource<T>>,
+		cancellationToken?: CancellationToken
+	): ArrayDataSource<T> {
 		const boundaries = [0];
 		const result = new ArrayDataSource<T>(
 			undefined,
@@ -699,8 +703,61 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		);
 
 		for (let i = 0; i < sources.length; i++) {
-			if (Array.isArray(sources[i])) {
-				result.appendArray(sources[i] as T[]);
+			const item = sources[i];
+			if (Array.isArray(item)) {
+				result.appendArray(item as T[]);
+			} else if (item instanceof DataSource || item instanceof DuplexDataSource || item instanceof Stream) {
+				if (item.value !== undefined) {
+					result.push(item.value);
+				}
+				let index = i;
+				item.transform(
+					dsDiff(),
+					dsTap(({ newValue, oldValue }) => {
+						let sizeDiff = 0;
+						let oldSize = 0;
+						let newSize = 0;
+						if (Array.isArray(oldValue)) {
+							oldSize = oldValue.length;
+							sizeDiff -= oldValue.length;
+						} else if (oldValue !== undefined) {
+							oldSize = 1;
+							sizeDiff--;
+						}
+
+						if (Array.isArray(newValue)) {
+							sizeDiff += newValue.length;
+							newSize = newValue.length;
+						} else if (newValue !== undefined) {
+							sizeDiff++;
+							newSize = 1;
+						}
+
+						if (Array.isArray(newValue)) {
+							for (let i = 0; i < newValue.length; i++) {
+								if (i < oldSize) {
+									result.set(boundaries[index] + i, newValue[i]);
+								} else {
+									result.insertAt(boundaries[index] + i, newValue[i]);
+								}
+							}
+						} else if (newValue !== undefined) {
+							if (newSize <= oldSize) {
+								result.set(boundaries[index], newValue);
+							} else {
+								result.insertAt(boundaries[index], newValue);
+							}
+						}
+						for (let i = 0; i < oldSize - newSize; i++) {
+							result.removeAt(boundaries[index] + newSize);
+						}
+
+						for (let i = index + 1; i < boundaries.length; i++) {
+							boundaries[i] += sizeDiff;
+						}
+					}),
+					cancellationToken
+				);
 			} else {
 				result.appendArray((sources[i] as ArrayDataSource<T>).data ?? []);
 				let index = i;
@@ -738,6 +795,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Remove all listeners
+	 */
+	public cancelAll(): void {
+		this.updateEvent.cancelAll();
 	}
 
 	/**

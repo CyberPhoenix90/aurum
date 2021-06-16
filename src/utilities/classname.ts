@@ -1,7 +1,7 @@
 import { ReadOnlyDataSource, DataSource } from '../stream/data_source';
 import { DuplexDataSource } from '../stream/duplex_data_source';
 import { CancellationToken } from './cancellation_token';
-import { ClassType } from './common';
+import { AttributeValue, ClassType } from './common';
 
 export function aurumClassName(
 	data: { [key: string]: boolean | ReadOnlyDataSource<boolean> },
@@ -62,5 +62,31 @@ export function combineClass(...args: ClassType[]): ClassType {
 		});
 	} else {
 		return constants;
+	}
+}
+
+export function combineAttribute(...args: AttributeValue[]): AttributeValue {
+	const constants: Array<string | boolean> = [];
+	const sources: ReadOnlyDataSource<string>[] = [];
+
+	for (const attr of args) {
+		if (typeof attr === 'string' || typeof attr === 'boolean') {
+			constants.push(attr);
+		}
+		if (attr instanceof DataSource || attr instanceof DuplexDataSource) {
+			sources.push(attr);
+		}
+	}
+
+	if (sources.length) {
+		return sources[0].aggregate(sources.slice(1), (...data) => {
+			if (constants.length) {
+				return data.concat(constants).join(' ');
+			} else {
+				return data.join(' ');
+			}
+		});
+	} else {
+		return constants.join(' ');
 	}
 }

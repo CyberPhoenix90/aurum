@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, Aurum, CancellationToken } from '../src/aurumjs';
+import { ArrayDataSource, Aurum, CancellationToken, DataSource, DuplexDataSource } from '../src/aurumjs';
 
 describe('ArrayDatasource', () => {
 	let attachToken: CancellationToken;
@@ -143,6 +143,53 @@ describe('ArrayDatasource', () => {
 
 		ds2.insertAt(2, 5);
 		assert.deepEqual(ds.toArray(), [3, 4, 3, 3, 5, 3, 1, 2, 3, 4, 4, 4, 1, 2]);
+	});
+
+	it('from multiple 2', () => {
+		const ds1 = new ArrayDataSource();
+		const ds2 = new ArrayDataSource();
+		const ds3 = new ArrayDataSource();
+		const ds4 = new ArrayDataSource();
+
+		const ds = new DataSource();
+		const dds = new DuplexDataSource();
+		let ads = ArrayDataSource.fromMultipleSources([ds1, ds, ds2, [1, 2, 3], ds3, ds4, [1, 2], dds]);
+
+		assert.deepEqual(ads.toArray(), [1, 2, 3, 1, 2]);
+		ds.update(10);
+		assert.deepEqual(ads.toArray(), [10, 1, 2, 3, 1, 2]);
+		ds.update(20);
+		assert.deepEqual(ads.toArray(), [20, 1, 2, 3, 1, 2]);
+		ds.update(undefined);
+		assert.deepEqual(ads.toArray(), [1, 2, 3, 1, 2]);
+		ds.update([10, 20]);
+		assert.deepEqual(ads.toArray(), [10, 20, 1, 2, 3, 1, 2]);
+
+		ds1.push(9);
+		ds2.push(8);
+
+		ds.update(10);
+		assert.deepEqual(ads.toArray(), [9, 10, 8, 1, 2, 3, 1, 2]);
+		ds.update(20);
+		assert.deepEqual(ads.toArray(), [9, 20, 8, 1, 2, 3, 1, 2]);
+		ds.update(undefined);
+		assert.deepEqual(ads.toArray(), [9, 8, 1, 2, 3, 1, 2]);
+		ds.update([10, 20]);
+		assert.deepEqual(ads.toArray(), [9, 10, 20, 8, 1, 2, 3, 1, 2]);
+
+		dds.updateDownstream(100);
+		assert.deepEqual(ads.toArray(), [9, 10, 20, 8, 1, 2, 3, 1, 2, 100]);
+		ds1.push(7);
+		assert.deepEqual(ads.toArray(), [9, 7, 10, 20, 8, 1, 2, 3, 1, 2, 100]);
+		dds.updateDownstream(200);
+		assert.deepEqual(ads.toArray(), [9, 7, 10, 20, 8, 1, 2, 3, 1, 2, 200]);
+
+		ds.update([4, 4, 4]);
+		assert.deepEqual(ads.toArray(), [9, 7, 4, 4, 4, 8, 1, 2, 3, 1, 2, 200]);
+		ds2.push(5);
+		assert.deepEqual(ads.toArray(), [9, 7, 4, 4, 4, 8, 5, 1, 2, 3, 1, 2, 200]);
+		ds.update(undefined);
+		assert.deepEqual(ads.toArray(), [9, 7, 8, 5, 1, 2, 3, 1, 2, 200]);
 	});
 
 	it('flat', () => {

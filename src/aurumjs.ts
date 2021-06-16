@@ -20,6 +20,8 @@ export * from './utilities/classname';
 export * from './utilities/sources';
 export * from './stream/emitters';
 export * from './nodes/string_adapter';
+export * from './utilities/transclusion';
+
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode';
 export { AttributeValue, ClassType, DataDrain } from './utilities/common';
 export { RemoteProtocol } from './aurum_server/aurum_server_client';
