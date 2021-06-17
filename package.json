@@ -1,6 +1,6 @@
 {
 	"name": "aurumjs",
-	"version": "0.6.21",
+	"version": "0.6.22",
 	"description": "Stream based declarative DOM rendering library for javascript",
 	"main": "prebuilt/cjs/aurumjs.js",
 	"typings": "prebuilt/esnext/aurumjs.d.ts",

@@ -441,7 +441,9 @@ export class ArrayAurumElement extends AurumElement {
 
 	protected render(dataSource: ArrayDataSource<any>): void {
 		dataSource.listenAndRepeat((n) => {
-			this.handleNewContent(n);
+			if (!this.disposed) {
+				this.handleNewContent(n);
+			}
 		}, this.api.cancellationToken);
 	}
 
@@ -671,7 +673,9 @@ export class SingularAurumElement extends AurumElement {
 
 	protected render(dataSource: DataSource<any> | DuplexDataSource<any>): void {
 		dataSource.listenAndRepeat((n) => {
-			this.handleNewContent(n);
+			if (!this.disposed) {
+				this.handleNewContent(n);
+			}
 		}, this.api.cancellationToken);
 	}
 
