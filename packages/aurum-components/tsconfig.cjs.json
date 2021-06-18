@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "CommonJS",
+		"newLine": "LF",
+		"target": "es2019",
+		"noUnusedLocals": true,
+		"declarationMap": true,
+		"jsx": "react",
+		"jsxFragmentFactory": "Aurum.fragment",
+		"jsxFactory": "Aurum.factory",
+		"declaration": true,
+		"inlineSources": true,
+		"sourceMap": true,
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"outDir": "prebuilt/cjs",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node",
+		"paths": {
+			"aurumjs": ["./node_modules/aurumjs"]
+		}
+	},
+	"extends": "../../tsconfig.common.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx"]
+}

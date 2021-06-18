@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "AMD",
+		"newLine": "LF",
+		"target": "es2019",
+		"noUnusedLocals": true,
+		"declarationMap": true,
+		"jsx": "react",
+		"strictFunctionTypes": true,
+		"jsxFragmentFactory": "Aurum.fragment",
+		"jsxFactory": "Aurum.factory",
+		"declaration": true,
+		"inlineSources": true,
+		"sourceMap": true,
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"outFile": "dist/test/aurum.test.js",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node"
+	},
+	"extends": "../../tsconfig.common.json",
+	"include": ["test/**/*.ts", "test/**/*.tsx"]
+}

@@ -1,0 +1,25 @@
+{
+    "name": "server",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@types/compression": "^1.7.0",
+        "@types/express": "^4.17.9",
+        "@types/less": "^3.0.2",
+        "@types/node": "^14.14.12",
+        "aurum-db": "^0.0.5",
+        "aurum-server": "0.0.1",
+        "compression": "^1.7.4",
+        "express": "^4.17.1",
+        "greenlock-express": "4.0.3",
+        "less": "^3.13.0"
+    }
+}

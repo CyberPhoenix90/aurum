@@ -1,0 +1,8 @@
+src
+tsconfig.json
+tsconfig.cjs.json
+.prettierrc
+dist_test
+coverage
+.history
+.vscode

@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "CommonJS",
+		"newLine": "LF",
+		"target": "esnext",
+		"noUnusedLocals": true,
+		"incremental": true,
+		"declarationMap": true,
+		"skipDefaultLibCheck": true,
+		"skipLibCheck": true,
+		"jsx": "react",
+		"jsxFragmentFactory": "Aurum.fragment",
+		"jsxFactory": "Aurum.factory",
+		"declaration": true,
+		"inlineSources": true,
+		"inlineSourceMap": true,
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"outDir": "dist",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node",
+		"paths": {
+			"aurum_game_engine_api": ["./sub_modules/aurum_game_engine_api/dist/aurum_game_engine_api.d.ts"],
+			"shared": ["./sub_modules/shared/dist/shared.d.ts"],
+			"aurumjs": ["./node_modules/aurumjs"]
+		}
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx"]
+}

@@ -1,10 +1,5 @@
-
-/node_modules
-dist_test
-coverage
-/.vscode/settings.json
+node_modules
+package-lock.json
 .history
 prebuilt
-prebuilt_minified
-docs
 dist

@@ -1,0 +1,20 @@
+{
+    "name": "aurum-pixijs-renderer",
+    "version": "0.0.0",
+    "description": "",
+    "main": "prebuilt/cjs/aurum-pixijs-renderer.js",
+    "typings": "prebuilt/cjs/aurum-pixijs-renderer.d.ts",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "scripts": {
+        "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
+        "watch": "tsc -p tsconfig.cjs.json -w",
+        "prepublish": "npm run build",
+        "test": "tsc -p tsconfig.test.json && http-server -o -c-1"
+    },
+    "dependencies": {
+        "@types/pixi.js": "^5.0.0",
+        "aurum-game-engine": "^0.0.0"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+		"allowUnusedLabels": false,
+		"noUnusedLocals": true,
+		"newLine": "LF",
+        "moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"noFallthroughCasesInSwitch": true,
+		"alwaysStrict": true,
+        "skipLibCheck": true,
+		"skipDefaultLibCheck": true,
+    }
+}

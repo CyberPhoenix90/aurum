@@ -1,0 +1,20 @@
+{
+    "name": "aurum-game-editor-play-test-client",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "aurum-pixijs-renderer": "0.0.0",
+        "aurum-game-engine": "0.0.0",
+        "aurum-game-editor-shared": "0.0.0",
+        "aurum-game-editor-api": "0.0.0",
+        "aurumjs": "0.6.22"
+    }
+}

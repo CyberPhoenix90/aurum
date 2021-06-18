@@ -1,0 +1,10 @@
+
+/node_modules
+dist_test
+coverage
+/.vscode/settings.json
+.history
+prebuilt
+prebuilt_minified
+docs
+dist

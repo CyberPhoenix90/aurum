@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"module": "esnext",
+		"target": "esnext",
+		"jsx": "react",
+		"strictFunctionTypes": true,
+		"jsxFragmentFactory": "Aurum.fragment",
+		"jsxFactory": "Aurum.factory",
+		"inlineSources": true,
+		"sourceMap": true,
+		"watch": false,
+		"outDir": "prebuilt/esnext",
+		"moduleResolution": "node"
+	},
+	"extends": "../../tsconfig.common.json",
+	"include": ["src/**/*.ts"]
+}
