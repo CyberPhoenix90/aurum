@@ -1,7 +1,13 @@
 import { Unit } from 'aurum-game-engine';
+import { DataSource } from 'aurumjs';
+import { Reactify } from '../../utils/types';
 
 export interface ObjectSchema {
 	[key: string]: SchemaField;
+}
+
+export interface ReactiveObjectSchema {
+	[key: string]: DataSource<Reactify<SchemaField>>;
 }
 
 export enum SchemaFieldType {
@@ -17,7 +23,9 @@ export enum SchemaFieldType {
 	CALLBACK,
 	ENTITY_REFERENCE,
 	COMPONENT,
-	MULTIPLE_CHOICE
+	MULTIPLE_CHOICE,
+	IMAGE,
+	SOUND
 }
 
 export interface SchemaFieldTypeDescriptor<T extends SchemaFieldType> {
@@ -44,7 +52,7 @@ export interface ArraySchemaFieldTypeDescriptor extends SchemaFieldTypeDescripto
 	validate?: (array: any[]) => boolean;
 	maxLength?: number;
 	minLength?: number;
-	allowedElementTypes: Array<TextSchemaFieldTypeDescriptor | SchemaFieldTypeDescriptor<any>>;
+	allowedElementTypes: Array<SchemaFieldTypeDescriptor<any>>;
 }
 
 export interface ObjectSchemaFieldTypeDescriptor extends SchemaFieldTypeDescriptor<SchemaFieldType.OBJECT> {

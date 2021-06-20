@@ -87,6 +87,8 @@ export function EntityEditor(props: {
 						case SchemaFieldType.COLOR:
 							return <ColorPicker {...commonProps}></ColorPicker>;
 						case SchemaFieldType.ASSETS_FILE_PATH:
+						case SchemaFieldType.IMAGE:
+						case SchemaFieldType.SOUND:
 							return <TextField {...commonProps}></TextField>;
 						case SchemaFieldType.NUMBER:
 							return <NumberField {...commonProps}></NumberField>;
@@ -108,6 +110,12 @@ function resolveInputType(allowedTypes: SchemaFieldTypeDescriptor<any>[]): Schem
 	}
 	if (allowedTypes.some((e) => e.type === SchemaFieldType.ASSETS_FILE_PATH)) {
 		return SchemaFieldType.ASSETS_FILE_PATH;
+	}
+	if (allowedTypes.some((e) => e.type === SchemaFieldType.IMAGE)) {
+		return SchemaFieldType.IMAGE;
+	}
+	if (allowedTypes.some((e) => e.type === SchemaFieldType.SOUND)) {
+		return SchemaFieldType.SOUND;
 	}
 	if (allowedTypes.every((e) => e.type === SchemaFieldType.NUMBER)) {
 		return SchemaFieldType.NUMBER;
@@ -185,6 +193,8 @@ function castValue(fieldSchema: SchemaField, value: string): any {
 				case SchemaFieldType.TEXT:
 				case SchemaFieldType.COLOR:
 				case SchemaFieldType.ASSETS_FILE_PATH:
+				case SchemaFieldType.IMAGE:
+				case SchemaFieldType.SOUND:
 					return value;
 				case SchemaFieldType.NUMBER:
 					if ((allowedType as NumberSchemaFieldTypeDescriptor).integerOnly) {

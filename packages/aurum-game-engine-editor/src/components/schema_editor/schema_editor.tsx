@@ -1,7 +1,8 @@
 import { css } from '@emotion/css';
-import { aurumify, Button, currentTheme, TreeEntry, TreeViewComponent, DropDownMenu, DropDownMenuOption } from 'aurum-components';
-import { ArrayDataSource, Aurum, DataSource, dsDiff, dsTap, getValueOf, Renderable } from 'aurumjs';
-import { ObjectSchema, SchemaField } from '../../models/schemas/abstract';
+import { aurumify, Button, currentTheme, DropDownMenu, DropDownMenuOption, NumberField, TextField, TreeEntry, TreeViewComponent } from 'aurum-components';
+import { ArrayDataSource, Aurum, DataSource, dsDiff, dsTap, getValueOf, Renderable, Switch, SwitchCase } from 'aurumjs';
+import { ObjectSchema, SchemaField, SchemaFieldType } from '../../models/schemas/abstract';
+import { Reactify } from '../../utils/types';
 import { dialogs } from '../dialogs/dialogs';
 
 export interface SchemaEditorProps {
@@ -20,6 +21,10 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 			font-size: ${size};
 			color: ${highlightFont};
 			background-color: ${color1};
+
+			label {
+				display: flex;
+			}
 		`,
 		lifecycleToken
 	)
@@ -51,7 +56,9 @@ export function SchemaEditor(props: SchemaEditorProps) {
 						};
 						const newFieldEntry: TreeEntry<SchemaField> = {
 							name,
-							renderable: <SchemaFieldEditor name={name} onDelete={() => root.children.remove(newFieldEntry)} field={field}></SchemaFieldEditor>,
+							renderable: (
+								<SchemaFieldEditor name={name} onDelete={() => root.children.remove(newFieldEntry)} field={undefined}></SchemaFieldEditor>
+							),
 							tag: field
 						};
 						schemaFields.push(newFieldEntry);
@@ -78,7 +85,7 @@ export function SchemaEditor(props: SchemaEditorProps) {
 
 interface SchemaFieldEditorProps {
 	name: DataSource<string>;
-	field: SchemaField;
+	field: Reactify<SchemaField>;
 	onDelete(): void;
 }
 
@@ -90,11 +97,42 @@ function SchemaFieldEditor(props: SchemaFieldEditorProps): Renderable {
 				<Button onClick={() => props.onDelete()}>×</Button>
 			</div>
 			Allowed Types:
-			<DropDownMenu dialogSource={dialogs}>
-				<DropDownMenuOption value={0}>None</DropDownMenuOption>
-				<DropDownMenuOption value={1}>Text</DropDownMenuOption>
-				<DropDownMenuOption value={2}>Number</DropDownMenuOption>
+			<DropDownMenu<SchemaFieldType> selectedValue={props.field.allowedTypes.get(0).type} dialogSource={dialogs}>
+				<DropDownMenuOption value={undefined}>None</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.TEXT}>Text</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.NUMBER}>Number</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.IMAGE}>Image</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.SOUND}>Sound</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.COLOR}>Color</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.COMPONENT}>Component</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.ARRAY}>Array</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.OBJECT}>Object</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.BOOL}>Boolean</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.CALLBACK}>Callback</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.ENTITY_REFERENCE}>Entity Reference</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.ENUM}>Enum</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.MULTIPLE_CHOICE}>One of</DropDownMenuOption>
+				<DropDownMenuOption value={SchemaFieldType.PERCENTAGE}>Percentage</DropDownMenuOption>
 			</DropDownMenu>
+			<Switch state={undefined}>
+				<SwitchCase when={SchemaFieldType.TEXT}>
+					<div>
+						<label>
+							DefaultValue:<TextField style="width:100%"></TextField>
+						</label>
+					</div>
+					<div>
+						<label>
+							MinLength:<NumberField style="width:100%"></NumberField>
+						</label>
+					</div>
+					<div>
+						<label>
+							MaxLength:<NumberField style="width:100%"></NumberField>
+						</label>
+					</div>
+				</SwitchCase>
+			</Switch>
 		</div>
 	);
 }

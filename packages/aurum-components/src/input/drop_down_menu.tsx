@@ -62,7 +62,7 @@ const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export interface DropDownMenuProps<T> {
 	dialogSource: ArrayDataSource<Renderable>;
-	selectedValue?: DuplexDataSource<T>;
+	selectedValue?: DuplexDataSource<T> | DataSource<T>;
 	selectedIndex?: DuplexDataSource<number>;
 	isOpen?: DataSource<boolean>;
 
@@ -83,6 +83,24 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
 	let root: HTMLDivElement;
 	let childContainer: HTMLOListElement;
 	let dialog;
+
+	if (props.selectedValue) {
+		selectedIndex.listen((index) => {
+			const value = childSource.get(index)?.props.value;
+			if (props.selectedValue.value !== value) {
+				if (props.selectedValue instanceof DataSource) {
+					props.selectedValue.update(value);
+				} else {
+					props.selectedValue.updateUpstream(value);
+				}
+			}
+		}, api.cancellationToken);
+		if (props.selectedValue instanceof DataSource) {
+			props.selectedValue.listen(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
+		} else {
+			props.selectedValue.listenDownstream(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
+		}
+	}
 
 	childSource.listen(() => selectedIndex.updateDownstream(selectedIndex.value));
 
@@ -115,9 +133,6 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
 								class={highlightIndex.transform(dsMap((v) => (childSource.indexOf(e) === v ? 'highlight' : '')))}
 								onClick={() => {
 									selectedIndex.updateUpstream(childSource.indexOf(e));
-									if (props.selectedValue) {
-										props.selectedValue.updateUpstream(e.props.value);
-									}
 								}}
 							>
 								{e.children}
@@ -212,10 +227,24 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
 			onAttach={(e) => (root = e)}
 			class={theme}
 		>
-			<div>{selectedIndex.transform(dsMap((s) => childSource.get(s).children))} </div>
+			<div>
+				{selectedIndex.transform(
+					dsMap((s) => childSource.get(s).children),
+					api.cancellationToken
+				)}
+			</div>
 			<div>˅</div>
 		</div>
 	);
+}
+
+function handleValueChange<T>(childSource: ArrayDataSource<AurumElementModel<{ value: T }>>, selectedIndex: DuplexDataSource<number>): any {
+	return (value) => {
+		const index = childSource.findIndex((c) => c.props.value === value);
+		if (selectedIndex.value !== index) {
+			selectedIndex.updateUpstream(index);
+		}
+	};
 }
 
 export function DropDownMenuOption<T>(props: { value: T }) {

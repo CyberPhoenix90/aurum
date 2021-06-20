@@ -17,7 +17,7 @@ export const spriteEntitySchema: ObjectSchema = {
 		optional: true,
 		allowedTypes: [
 			{
-				type: SchemaFieldType.ASSETS_FILE_PATH
+				type: SchemaFieldType.IMAGE
 			}
 		]
 	},
