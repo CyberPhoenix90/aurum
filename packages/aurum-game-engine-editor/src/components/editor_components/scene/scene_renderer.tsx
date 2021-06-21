@@ -1,6 +1,8 @@
-import { Canvas, Container, Label, MouseInteractionComponent, Panel, ReactiveRectangle, SceneGraphNode, Sprite } from 'aurum-game-engine';
+import { Canvas, Container, Label, MapLike, MouseInteractionComponent, Panel, ReactiveRectangle, SceneGraphNode, Sprite } from 'aurum-game-engine';
 import { ArrayDataSource, Aurum, DataSource, dsMap, Renderable } from 'aurumjs';
 import { join } from 'path';
+import { EntityTemplateModel } from '../../../../../aurum-game-editor-shared/prebuilt/cjs/entity_template';
+import { setParentsForSceneModel, reactifySceneModel } from '../../../models/scene_entities/reactive_entities_utils';
 import { currentProject } from '../../../session/session';
 import { fileUrl } from '../../../utils/url';
 import { SceneEntityDataReactive } from './scene_edit_model';
@@ -14,47 +16,49 @@ export interface DragSession {
 }
 
 export interface SceneRendererProps {
-	selected: DataSource<SceneEntityDataReactive>;
-	dragSession: DataSource<DragSession>;
+	selected?: DataSource<SceneEntityDataReactive>;
+	dragSession?: DataSource<DragSession>;
 	model: ArrayDataSource<SceneEntityDataReactive>;
 }
 
 export function SceneRenderer(props: SceneRendererProps) {
 	const renderableToEntity: Map<SceneEntityDataReactive, SceneGraphNode<any>> = new Map();
 	return (
-		<Container>
-			<Container>{props.model.map((renderable) => renderSceneEntity(renderable, renderableToEntity, props.selected, props.dragSession))}</Container>
-			<Container>
-				{props.selected.transform(
-					dsMap((selected) => {
-						if (selected) {
-							if (!renderableToEntity.has(props.selected.value)) {
-								return;
+		<Container name="SceneRendererWrapper" width="content" height="content">
+			{props.model.map((renderable) => renderSceneEntity(renderable, renderableToEntity, props.selected, props.dragSession))}
+			{props.selected ? (
+				<Container>
+					{props.selected.transform(
+						dsMap((selected) => {
+							if (selected) {
+								if (!renderableToEntity.has(props.selected.value)) {
+									return;
+								}
+								return (
+									<Canvas
+										paintOperations={[
+											{
+												strokeStyle: 'white',
+												strokeThickness: 1,
+												shape: new ReactiveRectangle(
+													{
+														x: renderableToEntity.get(props.selected.value)?.renderState.x as DataSource<number>,
+														y: renderableToEntity.get(props.selected.value)?.renderState.y as DataSource<number>
+													},
+													{
+														x: renderableToEntity.get(props.selected.value).renderState.width as DataSource<number>,
+														y: renderableToEntity.get(props.selected.value).renderState.height as DataSource<number>
+													}
+												)
+											}
+										]}
+									></Canvas>
+								);
 							}
-							return (
-								<Canvas
-									paintOperations={[
-										{
-											strokeStyle: 'white',
-											strokeThickness: 1,
-											shape: new ReactiveRectangle(
-												{
-													x: renderableToEntity.get(props.selected.value)?.renderState.x as DataSource<number>,
-													y: renderableToEntity.get(props.selected.value)?.renderState.y as DataSource<number>
-												},
-												{
-													x: renderableToEntity.get(props.selected.value).renderState.width as DataSource<number>,
-													y: renderableToEntity.get(props.selected.value).renderState.height as DataSource<number>
-												}
-											)
-										}
-									]}
-								></Canvas>
-							);
-						}
-					})
-				)}
-			</Container>
+						})
+					)}
+				</Container>
+			) : undefined}
 		</Container>
 	);
 }
@@ -62,8 +66,8 @@ export function SceneRenderer(props: SceneRendererProps) {
 function renderSceneEntity(
 	model: SceneEntityDataReactive,
 	renderableToEntity: Map<SceneEntityDataReactive, SceneGraphNode<any>>,
-	selected: DataSource<SceneEntityDataReactive>,
-	dragSession: DataSource<DragSession>
+	selected?: DataSource<SceneEntityDataReactive>,
+	dragSession?: DataSource<DragSession>
 ): Renderable {
 	const ctr = selectConstructor(model.namespace);
 	if (!ctr) {
@@ -75,19 +79,21 @@ function renderSceneEntity(
 		ctr,
 		{
 			components: [
-				new MouseInteractionComponent({
-					onMouseDown: (e) => {
-						e.e.stopPropagation();
-						selected.update(model);
-						dragSession.update({
-							target: model,
-							dragStartX: e.e.clientX,
-							dragStartY: e.e.clientY,
-							initPosX: model.properties.x.value,
-							initPosY: model.properties.y.value
-						});
-					}
-				})
+				dragSession
+					? new MouseInteractionComponent({
+							onMouseDown: (e) => {
+								e.e.stopPropagation();
+								selected?.update(model);
+								dragSession.update({
+									target: model,
+									dragStartX: e.e.clientX,
+									dragStartY: e.e.clientY,
+									initPosX: model.properties.x.value,
+									initPosY: model.properties.y.value
+								});
+							}
+					  })
+					: undefined
 			],
 			onAttach: (node) => {
 				renderableToEntity.set(model, node);
@@ -111,10 +117,17 @@ function selectConstructor(namespace: string): any {
 			case 'panel':
 				return Panel;
 		}
+	} else {
+		const model: EntityTemplateModel = JSON.parse(currentProject.value.getFileByPath(join(currentProject.value.folder, namespace)).content.value);
+		return (props) => (
+			<Container name="EntityTemplateWrapper" width="content" height="content" {...props}>
+				<SceneRenderer model={setParentsForSceneModel(reactifySceneModel(model.entities))}></SceneRenderer>
+			</Container>
+		);
 	}
 }
 
-function postProcessProperties(properties: { [key: string]: DataSource<any> }): import('aurumjs/prebuilt/esnext/utilities/common').MapLike<any> {
+function postProcessProperties(properties: { [key: string]: DataSource<any> }): MapLike<any> {
 	const result = { ...properties };
 
 	if (properties.texture) {

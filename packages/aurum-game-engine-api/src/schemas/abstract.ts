@@ -1,13 +1,7 @@
 import { Unit } from 'aurum-game-engine';
-import { DataSource } from 'aurumjs';
-import { Reactify } from '../../utils/types';
 
 export interface ObjectSchema {
 	[key: string]: SchemaField;
-}
-
-export interface ReactiveObjectSchema {
-	[key: string]: DataSource<Reactify<SchemaField>>;
 }
 
 export enum SchemaFieldType {
@@ -37,6 +31,12 @@ export interface NumberSchemaFieldTypeDescriptor extends SchemaFieldTypeDescript
 	allowedValues?: number[];
 	validate?: (value: string) => boolean;
 	integerOnly?: boolean;
+	maxValue?: number;
+	minValue?: number;
+}
+
+export interface PercentSchemaFieldTypeDescriptor extends SchemaFieldTypeDescriptor<SchemaFieldType.PERCENTAGE> {
+	validate?: (value: string) => boolean;
 	maxValue?: number;
 	minValue?: number;
 }
@@ -82,6 +82,7 @@ export interface SchemaField {
 		| ObjectSchemaFieldTypeDescriptor
 		| ArraySchemaFieldTypeDescriptor
 		| NumberSchemaFieldTypeDescriptor
+		| PercentSchemaFieldTypeDescriptor
 		| TextSchemaFieldTypeDescriptor
 		| SchemaFieldTypeDescriptor<any>
 	>;

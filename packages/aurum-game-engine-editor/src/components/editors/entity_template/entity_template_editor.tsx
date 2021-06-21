@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import { aurumify, currentTheme, PanelComponent, PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight } from 'aurum-components';
+import { EntityTemplateModel, SceneEntityData } from 'aurum-game-editor-shared';
 import {
 	ArrayDataSource,
 	Aurum,
@@ -9,17 +10,15 @@ import {
 	dsFilter,
 	dsMap,
 	DuplexDataSource,
-	EventEmitter,
 	Renderable,
 	Switch,
 	SwitchCase
 } from 'aurumjs';
-import { SceneEntityData, EntityTemplateModel } from 'aurum-game-editor-shared';
 import { ProjectFile } from '../../../models/project_file';
 import { reactifySceneModel, setParentsForSceneModel } from '../../../models/scene_entities/reactive_entities_utils';
-import { getSchema } from '../../../models/schemas/schema_utils';
 import { EntityPicker, EntityTypeTreeNode } from '../../editor_components/entity_picker/entity_picker';
 import { CameraControls } from '../../editor_components/scene/camera_controls';
+import { resolveSchema } from '../../editor_components/scene/entity_utils';
 import { SceneGrid } from '../../editor_components/scene/grid';
 import { GridControls } from '../../editor_components/scene/grid_controls';
 import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model';
@@ -27,7 +26,6 @@ import { SceneGraphView } from '../../editor_components/scene/scene_graph_view';
 import { ScenePreview } from '../../editor_components/scene/scene_preview';
 import { DragSession } from '../../editor_components/scene/scene_renderer';
 import { ProjectExplorerNodeType } from '../../project_explorer/model';
-import { SchemaEditor } from '../../schema_editor/schema_editor';
 import { AbstractEditorProps } from '../abstract';
 import { CodeEditor } from '../code/code_editor';
 import { EntityEditor, sceneEntityToEntityEditor } from '../scene/entity_editor';
@@ -83,11 +81,11 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 );
 
 export function EntityTemplateEditor(props: EntityTemplateEditorProps, children: Renderable[], api: AurumComponentAPI) {
-	props.onSuspend.subscribe(() => {
+	props.onSuspend?.subscribe(() => {
 		props.input.content.updateUpstream(JSON.stringify(save(modelReactive), undefined, 4));
 	}, api.cancellationToken);
 
-	props.onSaveRequested.subscribe(() => {
+	props.onSaveRequested?.subscribe(() => {
 		props.input.content.updateUpstream(JSON.stringify(save(modelReactive), undefined, 4));
 	}, api.cancellationToken);
 
@@ -145,10 +143,10 @@ export function EntityTemplateEditor(props: EntityTemplateEditorProps, children:
 						></SceneGraphView>
 					</PanelDockLeft>
 					<PanelDockBottom resizable size={300}>
-						<CodeEditor input={codeFile} onSaveRequested={new EventEmitter()} onSuspend={new EventEmitter()} openFile={props.openFile}></CodeEditor>
+						<CodeEditor input={codeFile} openFile={props.openFile}></CodeEditor>
 					</PanelDockBottom>
 					<PanelDockRight resizable size={300}>
-						<div class="entity-editor" style="height:50%">
+						<div class="entity-editor">
 							<Switch state={editTarget}>
 								<SwitchCase when={undefined}>No entity selected</SwitchCase>
 								<DefaultSwitchCase>
@@ -156,15 +154,12 @@ export function EntityTemplateEditor(props: EntityTemplateEditorProps, children:
 										editTarget={editTarget.transform(
 											dsFilter((e) => !!e),
 											dsMap((entity) => {
-												return sceneEntityToEntityEditor(entity, getSchema(entity.namespace));
+												return sceneEntityToEntityEditor(entity, resolveSchema(entity));
 											})
 										)}
 									></EntityEditor>
 								</DefaultSwitchCase>
 							</Switch>
-						</div>
-						<div style="height:50%">
-							<SchemaEditor schema={new DataSource()}></SchemaEditor>
 						</div>
 					</PanelDockRight>
 					<PanelContent>

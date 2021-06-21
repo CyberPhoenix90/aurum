@@ -426,8 +426,8 @@ export const dataSourceDefaultModel: ContainerEntity = {
 
 export const arrayDataSourceDefaultModel: ContainerEntity = {
 	spreadLayout: new DataSource(true),
-	width: new DataSource('100%'),
-	height: new DataSource('100%')
+	width: new DataSource('content'),
+	height: new DataSource('content')
 };
 
 export class ArrayDataSourceSceneGraphNode extends ContainerGraphNode {

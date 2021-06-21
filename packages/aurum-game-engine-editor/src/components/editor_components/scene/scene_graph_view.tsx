@@ -24,7 +24,9 @@ export function SceneGraphView(props: SceneGraphViewProps): Renderable {
 			allowDragAndDrop
 			canDrag={(e) => !rootEntries.includes(e)}
 			canDrop={(e, t) =>
-				rootEntries.includes(t) || (['@internal/panel', '@internal/container'].includes(t.tag?.namespace) && !isAncestorOf(e.tag, t.tag))
+				rootEntries.includes(t) ||
+				((['@internal/panel', '@internal/container'].includes(t.tag?.namespace) || t.tag?.namespace.startsWith('@internal/') === false) &&
+					!isAncestorOf(e.tag, t.tag))
 			}
 			onEntryDrop={(draggedEntry: TreeEntry<SceneEntityDataReactive>, targetEntry: TreeEntry<SceneEntityDataReactive>) => {
 				if (draggedEntry.tag.parent?.value) {

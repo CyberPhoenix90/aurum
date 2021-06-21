@@ -85,7 +85,12 @@ export function ProjectExplorerContextMenu(props: ProjectExplorerContextMenuProp
 			options.push(
 				<div
 					onClick={() => {
-						newNode(props, 'New Entity template', ProjectExplorerNodeType.EntityTemplate, '{ "entities": [], "code": ""}');
+						newNode(
+							props,
+							'New Entity template',
+							ProjectExplorerNodeType.EntityTemplate,
+							'{ "entities": [], "code": "import { ObjectSchema, InternalEntities } from "aurum-game-editor-api";\n						import { Renderable, AurumComponentAPI } from "aurumjs"\n						\n						export const schema:ObjectSchema = {}\n						\n						export function initialize(props:any, internalEntities:InternalEntities, children:Renderable[], api:AurumComponentAPI):void {\n						\n						}\n						"}'
+						);
 					}}
 				>
 					New Template
@@ -204,6 +209,7 @@ function newNode(props: ProjectExplorerContextMenuProps, defaultName: string, ne
 		type: newNodeType,
 		parent: new DataSource(props.node)
 	};
+
 	props.node.children.push(newNode);
 	setTimeout(async () => {
 		const name = await props.onRename(newNode);

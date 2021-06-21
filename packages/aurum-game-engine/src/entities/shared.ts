@@ -39,6 +39,6 @@ export function normalizeComponents(
 	return components
 		? components instanceof MapDataSource
 			? components
-			: new MapDataSource(new Map(components.map((v) => [Object.getPrototypeOf(v).constructor, v])))
+			: new MapDataSource(new Map(components.filter((e) => !!e).map((v) => [Object.getPrototypeOf(v).constructor, v])))
 		: new MapDataSource(new Map());
 }

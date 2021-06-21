@@ -36,6 +36,11 @@ export function closeFile(f: ProjectFile) {
 	}
 }
 
+/**
+ * Opens a project file, which means create a tab and by default focusing it
+ * @param file
+ * @param noFocus Open only don't switch focus
+ */
 export function openFile(file: ProjectFile, noFocus: boolean = false) {
 	if (!openDocuments.includes(file)) {
 		openDocuments.push(file);

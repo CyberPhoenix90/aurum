@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from 'fs';
 import { IncomingMessage, Server, ServerResponse } from 'http';
 import * as open from 'open';
 import { join } from 'path';
-import { ModuleKind, ScriptTarget, transpile } from 'typescript';
 import { rootFolder } from '../root';
+import { typescriptService } from '../services/typescript/typescript_service';
 import { currentProject } from '../session/session';
 
 class PlayTestSerer {
@@ -45,13 +45,10 @@ class PlayTestSerer {
 			}
 		} else if (url.pathname.startsWith('/api/scene_code/')) {
 			const path = url.pathname.substring('/api/scene_code/'.length) + 'on';
-			res.setHeader('content-type', 'application/javascript');
-			try {
-				res.end(this.transpile(JSON.parse(readFileSync(join(currentProject.value.folder, path), 'utf8')).code, url.pathname));
-			} catch {
-				res.statusCode = 404;
-				res.end('Not found');
-			}
+			serveCode(res, url, path);
+		} else if (url.pathname.startsWith('/api/entity_template_code/')) {
+			const path = url.pathname.substring('/api/entity_template_code/'.length) + 'on';
+			serveCode(res, url, path);
 		} else {
 			const file = join(rootFolder, '..', 'aurum-game-editor-play-test-client', 'dist', url.pathname);
 			if (existsSync(file)) {
@@ -61,23 +58,6 @@ class PlayTestSerer {
 				res.end('Not found');
 			}
 		}
-	}
-
-	private transpile(code: string, url: string): string {
-		let newName = url.split('/Scenes/')[1];
-		newName = newName.substring(0, newName.length - 3) + '.tsx';
-		return transpile(
-			code,
-			{
-				module: ModuleKind.AMD,
-				target: ScriptTarget.ESNext,
-				inlineSourceMap: true,
-				inlineSources: true
-			},
-			newName,
-			[],
-			url
-		);
 	}
 
 	public open(scene?: string) {
@@ -126,3 +106,23 @@ class PlayTestSerer {
 }
 
 export const playTestSerer: PlayTestSerer = new PlayTestSerer();
+function serveCode(res: ServerResponse, url: URL, path: string) {
+	path = decodeURIComponent(path);
+
+	res.setHeader('content-type', 'application/javascript');
+	try {
+		const newName = decodeURIComponent(url.pathname.substring(0, url.pathname.length - 3)) + '.tsx';
+
+		res.end(
+			typescriptService.transpile(
+				JSON.parse(readFileSync(join(currentProject.value.folder, path), 'utf8')).code,
+				decodeURIComponent(url.pathname),
+				newName
+			)
+		);
+	} catch (e) {
+		console.warn(e);
+		res.statusCode = 404;
+		res.end('Not found');
+	}
+}

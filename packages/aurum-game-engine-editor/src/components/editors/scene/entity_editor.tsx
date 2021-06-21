@@ -11,7 +11,7 @@ import {
 	SchemaFieldType,
 	SchemaFieldTypeDescriptor,
 	TextSchemaFieldTypeDescriptor
-} from '../../../models/schemas/abstract';
+} from 'aurum-game-editor-api';
 import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model';
 
 export function sceneEntityToEntityEditor(entity: SceneEntityDataReactive, schema: ObjectSchema) {
@@ -91,6 +91,7 @@ export function EntityEditor(props: {
 						case SchemaFieldType.SOUND:
 							return <TextField {...commonProps}></TextField>;
 						case SchemaFieldType.NUMBER:
+						case SchemaFieldType.PERCENTAGE:
 							return <NumberField {...commonProps}></NumberField>;
 						default:
 							return <TextField {...commonProps}></TextField>;
@@ -202,6 +203,8 @@ function castValue(fieldSchema: SchemaField, value: string): any {
 					} else {
 						return parseFloat(value);
 					}
+				case SchemaFieldType.PERCENTAGE:
+					return parseFloat(value);
 				case SchemaFieldType.BOOL:
 					return value.toLowerCase() === 'true';
 				default:

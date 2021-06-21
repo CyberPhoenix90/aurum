@@ -1,5 +1,8 @@
 import { TreeEntry, TreeViewComponent } from 'aurum-components';
-import { ArrayDataSource, Aurum, DataSource, Renderable } from 'aurumjs';
+import { ArrayDataSource, Aurum, AurumComponentAPI, DataSource, dsMap, Renderable } from 'aurumjs';
+import { join, parse, relative } from 'path';
+import { ProjectRootFolders } from '../../../models/project';
+import { currentProject } from '../../../session/session';
 import { SceneEntityDataReactive } from '../scene/scene_edit_model';
 
 export interface EntityTypeTreeNode {
@@ -10,7 +13,7 @@ export interface EntityPickerProps {
 	onEntryDoubleClicked(entry: EntityTypeTreeNode): void;
 }
 
-export function EntityPicker(props: EntityPickerProps): Renderable {
+export function EntityPicker(props: EntityPickerProps, children: Renderable[], api: AurumComponentAPI): Renderable {
 	return (
 		<TreeViewComponent<EntityTypeTreeNode>
 			onEntryDoubleClicked={(e, entry) => {
@@ -106,7 +109,23 @@ export function EntityPicker(props: EntityPickerProps): Renderable {
 					},
 					{
 						name: 'project entities',
-						children: new ArrayDataSource([]),
+						children: currentProject.value.watchFolderByPathRecursively(ProjectRootFolders.EntityTemplates, api.cancellationToken).map((e) => ({
+							name: e.diskPath.transform(dsMap((e) => relative(join(currentProject.value.folder, ProjectRootFolders.EntityTemplates), e))),
+							tag: {
+								entityFactory: () => ({
+									parent: new DataSource(),
+									name: new DataSource(parse(e.diskPath.value).name),
+									children: new ArrayDataSource(),
+									namespace: relative(currentProject.value.folder, e.diskPath.value),
+									properties: {
+										x: new DataSource(0),
+										y: new DataSource(0),
+										scaleX: new DataSource(1),
+										scaleY: new DataSource(1)
+									}
+								})
+							}
+						})),
 						open: new DataSource(true)
 					}
 				])

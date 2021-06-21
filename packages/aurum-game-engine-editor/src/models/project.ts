@@ -1,6 +1,6 @@
-import { ArrayDataSource, DataSource, dsMap, DuplexDataSource, getValueOf } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, DataSource, dsMap, DuplexDataSource, getValueOf } from 'aurumjs';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { join, relative, sep } from 'path';
+import { isAbsolute, join, relative, sep } from 'path';
 import { ProjectExplorerNode, ProjectExplorerNodeType } from '../components/project_explorer/model';
 import { ProjectFile } from './project_file';
 
@@ -30,6 +30,29 @@ function crawl(path: string, folderType: ProjectExplorerNodeType, fileType: Proj
 	return result;
 }
 
+export enum ProjectRootFolders {
+	Animation = 'Animation',
+	AnimationAnimations = 'Animation/Animations',
+	AnimationStatemachines = 'Animation/Statemachines',
+	Assets = 'Assets',
+	AssetsData = 'Assets/Data',
+	AssetsMusic = 'Assets/Music',
+	AssetsSound = 'Assets/Sound',
+	AssetsTextures = 'Assets/Textures',
+	Characters = 'Characters',
+	Code = 'Code',
+	Components = 'Components',
+	EntityTemplates = 'Entity Templates',
+	Models = 'Models',
+	ModelsCreatedModels = 'Models/Created Models',
+	ModelsSchemas = 'Models/Schemas',
+	Globals = 'Globals',
+	Style = 'Style',
+	Scenes = 'Scenes',
+	Tilemaps = 'Tilemaps',
+	Tilesets = 'Tilesets'
+}
+
 export class Project {
 	public readonly content: ArrayDataSource<ProjectExplorerNode>;
 	private projectFiles: Map<string, ProjectFile> = new Map();
@@ -55,29 +78,9 @@ export class Project {
 		this.folder = folder;
 		this.name = new DataSource(projectModel.name);
 
-		makeIfNotExist(join(folder, 'Animation'));
-		makeIfNotExist(join(folder, 'Animation/Animations'));
-		makeIfNotExist(join(folder, 'Animation/Statemachines'));
-
-		makeIfNotExist(join(folder, 'Assets'));
-		makeIfNotExist(join(folder, 'Assets/Data'));
-		makeIfNotExist(join(folder, 'Assets/Music'));
-		makeIfNotExist(join(folder, 'Assets/Sound'));
-		makeIfNotExist(join(folder, 'Assets/Textures'));
-
-		makeIfNotExist(join(folder, 'Characters'));
-		makeIfNotExist(join(folder, 'Code'));
-		makeIfNotExist(join(folder, 'Components'));
-		makeIfNotExist(join(folder, 'Entity Templates'));
-		makeIfNotExist(join(folder, 'Models'));
-		makeIfNotExist(join(folder, 'Models/Created Models'));
-		makeIfNotExist(join(folder, 'Models/Schemas'));
-
-		makeIfNotExist(join(folder, 'Globals'));
-		makeIfNotExist(join(folder, 'Style'));
-		makeIfNotExist(join(folder, 'Scenes'));
-		makeIfNotExist(join(folder, 'Tilemaps'));
-		makeIfNotExist(join(folder, 'Tilesets'));
+		for (const rootFolder of Object.values(ProjectRootFolders)) {
+			makeIfNotExist(join(folder, rootFolder));
+		}
 
 		this.content = new ArrayDataSource<ProjectExplorerNode>([
 			{
@@ -344,6 +347,61 @@ export class Project {
 		return path;
 	}
 
+	public watchFolderByPathRecursively(folder: string, cancellationToken: CancellationToken): ArrayDataSource<ProjectFile> {
+		if (!isAbsolute(folder)) {
+			folder = join(this.folder, folder);
+		}
+		const result = this.getNodeByPath(folder);
+
+		if (!result) {
+			return undefined;
+		}
+
+		if (Project.isFolder(result.type)) {
+			return this.watchFolderByNodeRecursively(result, new ArrayDataSource(), cancellationToken);
+		} else {
+			return new ArrayDataSource([this.getFileOrFolderByNode(result)]);
+		}
+	}
+
+	public watchFolderByNodeRecursively(
+		folder: ProjectExplorerNode,
+		source: ArrayDataSource<ProjectFile>,
+		cancellationToken: CancellationToken
+	): ArrayDataSource<ProjectFile> {
+		if (Array.isArray(folder.children)) {
+			for (const child of folder.children) {
+				if (Project.isFolder(child.type)) {
+					this.watchFolderByNodeRecursively(child, source, cancellationToken);
+				} else {
+					source.push(this.getFileOrFolderByNode(child));
+				}
+			}
+		} else {
+			folder.children.listenAndRepeat((c) => {
+				switch (c.operation) {
+					case 'add':
+						for (const child of c.items) {
+							if (Project.isFolder(child.type)) {
+								this.watchFolderByNodeRecursively(child, source, cancellationToken);
+							} else {
+								source.push(this.getFileOrFolderByNode(child));
+							}
+						}
+						break;
+					case 'remove':
+						for (const child of c.items) {
+							if (!child.children) {
+								source.remove(this.getFileOrFolderByNode(child));
+							}
+						}
+				}
+			});
+		}
+
+		return source;
+	}
+
 	public static isFolder(type: ProjectExplorerNodeType): boolean {
 		switch (type) {
 			case ProjectExplorerNodeType.CodeFolder:
@@ -404,7 +462,7 @@ export class Project {
 		return type;
 	}
 
-	public getFileByPath(path: string): ProjectFile {
+	public getNodeByPath(path: string): ProjectExplorerNode {
 		const relativePath = relative(this.folder, path);
 		if (relativePath.startsWith('.')) {
 			return undefined;
@@ -424,7 +482,15 @@ export class Project {
 			}
 		}
 
-		return this.projectFileFromPath(path, this.convertFolderTypeToRegularType(projectFolder.type));
+		return projectFolder;
+	}
+
+	public getFileByPath(path: string): ProjectFile {
+		const folder = this.getNodeByPath(path);
+		if (!folder) {
+			return;
+		}
+		return this.projectFileFromPath(path, this.convertFolderTypeToRegularType(folder.type));
 	}
 
 	private projectFileFromPath(path: string, nodeType: ProjectExplorerNodeType) {
