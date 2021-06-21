@@ -128,6 +128,7 @@ function EntityTemplateLoaderFactory(path: string) {
 		return (
 			<Container {...props}>
 				<SceneRenderer model={model.entities}></SceneRenderer>
+				{children}
 			</Container>
 		);
 	};

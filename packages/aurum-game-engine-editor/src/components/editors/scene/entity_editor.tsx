@@ -54,7 +54,7 @@ export function EntityEditor(props: {
 				inputComponent: (key: string, value: any, callbacks) => {
 					const fieldSchema: SchemaField = editTarget.value.schema[key];
 					const { onEditDone, onEditCancelled } = callbacks;
-					const applyValue = (valueToApply: string) => {
+					const applyValue = (valueToApply: any) => {
 						onEditDone(castValue(fieldSchema, valueToApply));
 					};
 					let lock = false;
@@ -84,6 +84,31 @@ export function EntityEditor(props: {
 					};
 
 					switch (resolveInputType(fieldSchema.allowedTypes)) {
+						case SchemaFieldType.BOOL:
+							return (
+								<TextField
+									checked={value}
+									type="checkbox"
+									{...commonProps}
+									onKeyDown={(e) => {
+										lock = true;
+										switch (e.key) {
+											case 'Enter':
+												applyValue((e.target as HTMLInputElement).checked);
+												break;
+											case 'Escape':
+												onEditCancelled();
+												break;
+										}
+										lock = false;
+									}}
+									onBlur={(e) => {
+										if (!lock) {
+											applyValue((e.target as HTMLInputElement).checked);
+										}
+									}}
+								></TextField>
+							);
 						case SchemaFieldType.COLOR:
 							return <ColorPicker {...commonProps}></ColorPicker>;
 						case SchemaFieldType.ASSETS_FILE_PATH:
@@ -106,6 +131,9 @@ export function EntityEditor(props: {
 }
 
 function resolveInputType(allowedTypes: SchemaFieldTypeDescriptor<any>[]): SchemaFieldType {
+	if (allowedTypes.some((e) => e.type === SchemaFieldType.BOOL)) {
+		return SchemaFieldType.BOOL;
+	}
 	if (allowedTypes.some((e) => e.type === SchemaFieldType.COLOR)) {
 		return SchemaFieldType.COLOR;
 	}
@@ -183,7 +211,7 @@ function validate(
 	return true;
 }
 
-function castValue(fieldSchema: SchemaField, value: string): any {
+function castValue(fieldSchema: SchemaField, value: any): any {
 	for (const allowedType of fieldSchema.allowedTypes) {
 		if (value === '' && fieldSchema.optional) {
 			return undefined;
@@ -206,7 +234,7 @@ function castValue(fieldSchema: SchemaField, value: string): any {
 				case SchemaFieldType.PERCENTAGE:
 					return parseFloat(value);
 				case SchemaFieldType.BOOL:
-					return value.toLowerCase() === 'true';
+					return Boolean(value);
 				default:
 					throw new Error(`Unhandled case`);
 			}

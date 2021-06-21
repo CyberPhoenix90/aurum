@@ -69,7 +69,7 @@ function renderSceneEntity(
 	selected?: DataSource<SceneEntityDataReactive>,
 	dragSession?: DataSource<DragSession>
 ): Renderable {
-	const ctr = selectConstructor(model.namespace);
+	const ctr = selectConstructor(model.namespace, model.children);
 	if (!ctr) {
 		console.warn(`Entity ${model.namespace} could not be resolved`);
 		return;
@@ -105,7 +105,7 @@ function renderSceneEntity(
 	);
 }
 
-function selectConstructor(namespace: string): any {
+function selectConstructor(namespace: string, children: ArrayDataSource<SceneEntityDataReactive>): any {
 	if (namespace.startsWith('@internal/')) {
 		switch (namespace.split('/')[1]) {
 			case 'container':
@@ -122,6 +122,7 @@ function selectConstructor(namespace: string): any {
 		return (props) => (
 			<Container name="EntityTemplateWrapper" width="content" height="content" {...props}>
 				<SceneRenderer model={setParentsForSceneModel(reactifySceneModel(model.entities))}></SceneRenderer>
+				<SceneRenderer model={children}></SceneRenderer>
 			</Container>
 		);
 	}

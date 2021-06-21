@@ -16,7 +16,6 @@ export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
 	autocomplete?: AttributeValue;
 	autofocus?: AttributeValue;
 	checked?: GenericDataSource<boolean> | boolean;
-	defaultChecked?: AttributeValue;
 	formAction?: AttributeValue;
 	formEnctype?: AttributeValue;
 	formMethod?: AttributeValue;
