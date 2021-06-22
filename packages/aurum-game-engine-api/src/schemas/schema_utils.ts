@@ -1,5 +1,6 @@
 import { ObjectSchema, baseEntitySchema } from './abstract';
 import { labelEntitySchema } from './label';
+import { panelEntitySchema } from './panel';
 import { spriteEntitySchema } from './sprite';
 
 export function getSchema(namespace: string): ObjectSchema {
@@ -12,7 +13,7 @@ export function getSchema(namespace: string): ObjectSchema {
 			case 'sprite':
 				return spriteEntitySchema;
 			case 'panel':
-				return baseEntitySchema;
+				return panelEntitySchema;
 		}
 	}
 }
