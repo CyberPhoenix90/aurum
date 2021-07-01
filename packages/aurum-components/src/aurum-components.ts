@@ -11,6 +11,9 @@ export * from './input/number_field';
 export * from './input/text_field';
 export * from './input/button';
 export * from './input/drop_down_menu';
+export * from './input/json_renderer';
+
+export * from './navigation/sidebar';
 
 export * from './theme/theme';
 
@@ -20,7 +23,5 @@ export * from './tab_bar/tab_bar';
 
 export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock';
 export * from './layout/panel_layout';
-
-export * from './input/json_renderer';
 
 export { aurumify } from './utils';

@@ -111,7 +111,7 @@ function generateStyle(props: PanelProps) {
                 width: 100%;
                 height: 100%;
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
 
                 .left-dock,
                 .top-dock,
