@@ -1,7 +1,7 @@
 {
-    "name": "aurum-game-engine",
+    "name": "aurum-layout-engine",
     "version": "0.0.0",
-    "description": "Stream based modular game engine for 2D Games",
+    "description": "Stream based layouting engine",
     "main": "prebuilt/cjs/aurum-game-engine.js",
     "typings": "prebuilt/cjs/aurum-game-engine.d.ts",
     "scripts": {
@@ -23,7 +23,6 @@
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT",
     "dependencies": {
-        "aurum-layout-engine": "0.0.0",
         "aurumjs": "0.6.22"
     },
     "devDependencies": {}

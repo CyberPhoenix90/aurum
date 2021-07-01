@@ -1,9 +1,9 @@
 import { ArrayDataSource, DataSource, MapDataSource } from 'aurumjs';
 import { AbstractComponent } from '../entities/components/abstract_component';
-import { Constructor, MapLike, Position, Size } from '../models/common';
+import { Constructor, MapLike } from '../models/common';
+import { AbstractLayout, Position, Size } from 'aurum-layout-engine';
 import { Data } from '../models/input_data';
 import { SceneGraphNode } from './scene_graph';
-import { AbstractLayout } from '../layouts/abstract_layout';
 
 export interface Shader {
     vertex?: string;
@@ -21,7 +21,7 @@ export interface CommonEntityProps {
     clip?: Data<boolean>;
     ignoreLayout?: Data<boolean>;
     spreadLayout?: Data<boolean>;
-    containerNode?: Data<boolean>;
+    wrapperNode?: Data<boolean>;
     zIndex?: Data<number>;
     shaders?: Shader[] | ArrayDataSource<Shader>;
     blendMode?: Data<BlendModes>;
@@ -49,7 +49,7 @@ export interface CommonEntity {
     layout?: DataSource<AbstractLayout>;
     ignoreLayout?: DataSource<boolean>;
     spreadLayout?: DataSource<boolean>;
-    containerNode?: DataSource<boolean>;
+    wrapperNode?: DataSource<boolean>;
     zIndex?: DataSource<number>;
     scaleX?: DataSource<number>;
     scaleY?: DataSource<number>;

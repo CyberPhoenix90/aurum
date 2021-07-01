@@ -12,7 +12,7 @@ import { _ } from '../utilities/other/streamline';
 import { Constructor } from './common';
 import { CommonEntity, RenderableType } from './entities';
 import { Data } from './input_data';
-import { PointLike } from './point';
+import { PointLike } from 'aurum-layout-engine';
 
 export interface SceneGraphNodeModel<T> {
     name?: Data<string>;
@@ -155,7 +155,7 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
 
     public recomputeLayout(): void {
         if (this.resolvedModel.layout.value && this.stageId) {
-            this.resolvedModel.layout.value.positionChildren(this.getLayoutNodes(), this);
+            // this.resolvedModel.layout.value.positionChildren(this.getLayoutNodes(), this);
         }
         if (this.parent.value && this.resolvedModel.spreadLayout.value) {
             this.parent.value.recomputeLayout();
@@ -320,6 +320,7 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
             scaleY: this.getModelSourceWithFallbackBase('scaleY'),
             shaders: this.getModelSourceWithFallbackBase('shaders'),
             spreadLayout: this.getModelSourceWithFallbackBase('spreadLayout'),
+            wrapperNode: this.getModelSourceWithFallbackBase('wrapperNode'),
             visible: this.getModelSourceWithFallbackBase('visible'),
             width: this.getModelSourceWithFallbackBase('width'),
             x: this.getModelSourceWithFallbackBase('x'),
@@ -419,11 +420,13 @@ export class ContainerGraphNode extends SceneGraphNode<ContainerEntity> {
 }
 
 export const dataSourceDefaultModel: ContainerEntity = {
-    containerNode: new DataSource(true)
+    wrapperNode: new DataSource(true),
+    spreadLayout: new DataSource(true)
 };
 
 export const arrayDataSourceDefaultModel: ContainerEntity = {
-    containerNode: new DataSource(true)
+    wrapperNode: new DataSource(true),
+    spreadLayout: new DataSource(true)
 };
 
 export class ArrayDataSourceSceneGraphNode extends ContainerGraphNode {

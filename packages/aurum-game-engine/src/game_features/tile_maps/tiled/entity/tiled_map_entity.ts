@@ -7,15 +7,15 @@ import { Polygon } from '../../../../math/shapes/polygon';
 import { Rectangle } from '../../../../math/shapes/rectangle';
 import { Vector2D } from '../../../../math/vectors/vector2d';
 import { CommonEntityProps } from '../../../../models/entities';
-import { PointLike } from '../../../../models/point';
+import { PointLike } from 'aurum-layout-engine';
 import { TiledLayer } from '../tiled_layer';
 import {
-	TiledMapCustomProperties,
-	TiledMapLayerModel,
-	TiledMapModel,
-	TiledMapObjectModel,
-	TiledMapTilesetModel,
-	TiledObjectShapeData
+    TiledMapCustomProperties,
+    TiledMapLayerModel,
+    TiledMapModel,
+    TiledMapObjectModel,
+    TiledMapTilesetModel,
+    TiledObjectShapeData
 } from '../tiled_map_format';
 import { Tileset } from '../tileset';
 import { TiledMapGraphNode } from './api';
@@ -23,106 +23,106 @@ import { toSourceIfDefined } from '../../../../utilities/data/to_source';
 import { TiledMapEntity } from './model';
 
 export interface EntityFactory {
-	[type: string]: (position: PointLike, props: TiledMapCustomProperties[], shape: AbstractShape) => Renderable;
+    [type: string]: (position: PointLike, props: TiledMapCustomProperties[], shape: AbstractShape) => Renderable;
 }
 
 export interface MapObject {
-	layer: number;
-	object: Renderable;
+    layer: number;
+    object: Renderable;
 }
 
 export interface TiledMapProps extends CommonEntityProps {
-	resourceRootUrl: string;
-	model: TiledMapModel;
-	tilesets?: Tileset[];
-	onAttach?(node: TiledMapGraphNode): void;
-	onDetach?(node: TiledMapGraphNode): void;
-	entityFactory?: Readonly<EntityFactory>;
-	class?: TiledMapEntity[] | ArrayDataSource<TiledMapEntity>;
+    resourceRootUrl: string;
+    model: TiledMapModel;
+    tilesets?: Tileset[];
+    onAttach?(node: TiledMapGraphNode): void;
+    onDetach?(node: TiledMapGraphNode): void;
+    entityFactory?: Readonly<EntityFactory>;
+    class?: TiledMapEntity[] | ArrayDataSource<TiledMapEntity>;
 }
 
 export function TiledMap(props: TiledMapProps, children: Renderable[], api: AurumComponentAPI): TiledMapGraphNode {
-	const mapObjects: MapObject[] = [];
-	const layers: TiledLayer[] = [];
+    const mapObjects: MapObject[] = [];
+    const layers: TiledLayer[] = [];
 
-	props.tilesets = props.tilesets ?? [];
-	props.model.tilesets.forEach((t: TiledMapTilesetModel) => {
-		props.tilesets.push(new Tileset(t, props.resourceRootUrl));
-	});
+    props.tilesets = props.tilesets ?? [];
+    props.model.tilesets.forEach((t: TiledMapTilesetModel) => {
+        props.tilesets.push(new Tileset(t, props.resourceRootUrl));
+    });
 
-	props.model.layers.forEach((t: TiledMapLayerModel, index: number) => {
-		const layer = new TiledLayer(t, props.model.width, props.model.height);
-		processLayer(layer, props, mapObjects, index);
-		layers.push(layer);
-	});
+    props.model.layers.forEach((t: TiledMapLayerModel, index: number) => {
+        const layer = new TiledLayer(t, props.model.width, props.model.height);
+        processLayer(layer, props, mapObjects, index);
+        layers.push(layer);
+    });
 
-	return new TiledMapGraphNode({
-		name: props.name ?? TiledMapGraphNode.name,
-		components: normalizeComponents(props.components),
-		children: undefined,
-		cancellationToken: api.cancellationToken,
-		models: {
-			coreDefault: entityDefaults,
-			appliedStyleClasses: props.class instanceof ArrayDataSource ? props.class : new ArrayDataSource(props.class),
-			entityTypeDefault: tilemapDefaultModel,
-			userSpecified: {
-				...propsToModel(props),
-				tilesets: new ArrayDataSource(props.tilesets),
-				resourceRootUrl: toSourceIfDefined(props.resourceRootUrl),
-				entityFactory: toSourceIfDefined(props.entityFactory),
-				mapObjects: new ArrayDataSource(mapObjects),
-				layers: new ArrayDataSource(layers),
-				mapData: toSourceIfDefined(props.model)
-			}
-		},
-		onAttach: props.onAttach,
-		onDetach: props.onDetach
-	});
+    return new TiledMapGraphNode({
+        name: props.name ?? TiledMapGraphNode.name,
+        components: normalizeComponents(props.components),
+        children: undefined,
+        cancellationToken: api.cancellationToken,
+        models: {
+            coreDefault: entityDefaults,
+            appliedStyleClasses: props.class instanceof ArrayDataSource ? props.class : new ArrayDataSource(props.class),
+            entityTypeDefault: tilemapDefaultModel,
+            userSpecified: {
+                ...propsToModel(props),
+                tilesets: new ArrayDataSource(props.tilesets),
+                resourceRootUrl: toSourceIfDefined(props.resourceRootUrl),
+                entityFactory: toSourceIfDefined(props.entityFactory),
+                mapObjects: new ArrayDataSource(mapObjects),
+                layers: new ArrayDataSource(layers),
+                mapData: toSourceIfDefined(props.model)
+            }
+        },
+        onAttach: props.onAttach,
+        onDetach: props.onDetach
+    });
 }
 
 function processLayer(layer: TiledLayer, props: TiledMapProps, mapObjects: MapObject[], index: number): void {
-	if (layer.objects && props.entityFactory !== undefined) {
-		layer.objects.forEach((o: TiledMapObjectModel) => {
-			if (props.entityFactory[o.type] === undefined) {
-				console.warn('No entity factory for entity of type' + o.type + ' defined');
-			} else {
-				const entity: Renderable = props.entityFactory[o.type](
-					o,
-					o.properties,
-					shapeFactory(
-						{ x: o.x, y: o.y },
-						{
-							ellipse: o.ellipse,
-							polyline: o.polyline,
-							width: o.width,
-							height: o.height,
-							rotation: o.rotation
-						}
-					)
-				);
+    if (layer.objects && props.entityFactory !== undefined) {
+        layer.objects.forEach((o: TiledMapObjectModel) => {
+            if (props.entityFactory[o.type] === undefined) {
+                console.warn('No entity factory for entity of type' + o.type + ' defined');
+            } else {
+                const entity: Renderable = props.entityFactory[o.type](
+                    o,
+                    o.properties,
+                    shapeFactory(
+                        { x: o.x, y: o.y },
+                        {
+                            ellipse: o.ellipse,
+                            polyline: o.polyline,
+                            width: o.width,
+                            height: o.height,
+                            rotation: o.rotation
+                        }
+                    )
+                );
 
-				if (entity !== undefined) {
-					mapObjects.push({
-						layer: index,
-						object: entity
-					});
-				}
-			}
-		});
-	}
+                if (entity !== undefined) {
+                    mapObjects.push({
+                        layer: index,
+                        object: entity
+                    });
+                }
+            }
+        });
+    }
 }
 
 function shapeFactory(position: PointLike, shapeData: TiledObjectShapeData): AbstractShape {
-	if (shapeData.polyline) {
-		return new Polygon(
-			position,
-			shapeData.polyline.map((p) => Vector2D.fromPointLike(p))
-		);
-	} else if (shapeData.ellipse) {
-		return new Circle(Vector2D.fromPointLike({ x: position.x + shapeData.width / 2, y: position.y + shapeData.width / 2 }), shapeData.width / 2);
-	} else {
-		return new Rectangle(position, new Vector2D(shapeData.width, shapeData.height));
-	}
+    if (shapeData.polyline) {
+        return new Polygon(
+            position,
+            shapeData.polyline.map((p) => Vector2D.fromPointLike(p))
+        );
+    } else if (shapeData.ellipse) {
+        return new Circle(Vector2D.fromPointLike({ x: position.x + shapeData.width / 2, y: position.y + shapeData.width / 2 }), shapeData.width / 2);
+    } else {
+        return new Rectangle(position, new Vector2D(shapeData.width, shapeData.height));
+    }
 }
 
 // export class _TiledMap extends ContainerEntity {
@@ -216,7 +216,7 @@ function shapeFactory(position: PointLike, shapeData: TiledObjectShapeData): Abs
 // }
 
 export const tilemapDefaultModel: TiledMapEntity = {
-	resourceRootUrl: new DataSource('/'),
-	tilesets: new ArrayDataSource([]),
-	entityFactory: new DataSource(undefined)
+    resourceRootUrl: new DataSource('/'),
+    tilesets: new ArrayDataSource([]),
+    entityFactory: new DataSource(undefined)
 };

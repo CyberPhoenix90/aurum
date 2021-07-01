@@ -35,7 +35,6 @@ export * from './math/vectors/abstract_vector';
 export * from './math/vectors/vector2d';
 export * from './math/vectors/vector3d';
 export * from './math/vectors/vector4d';
-export * from './math/vectors/point_utils';
 
 export * from './math/reactive_shapes/abstract_reactive_shape';
 export * from './math/reactive_shapes/reactive_rectangle';
@@ -52,7 +51,6 @@ export * from './math/shapes/rounded_rectangle';
 
 export * from './models/common';
 export * from './models/input_data';
-export * from './models/point';
 export * from './models/entities';
 export * from './models/scene_graph';
 
@@ -82,13 +80,6 @@ export * from './sound/sound';
 
 export * from './resources/abstract_resource_manager';
 export * from './resources/texture_manager';
-
-export * from './layouts/abstract_layout';
-export * from './layouts/grid_layout';
-export * from './layouts/linear_layout';
-export * from './layouts/stack_layout';
-export * from './layouts/space_around_layout';
-export * from './layouts/tabular_layout';
 
 export * from './game_features/building/construction_grid';
 export * from './game_features/number_formatter';

@@ -1,29 +1,29 @@
-import { PointLike } from '../../../models/point';
+import { PointLike } from 'aurum-layout-engine';
 import { MouseButtons } from '../../../input/mouse/mouse';
 
 export interface AbstractGridToolConfig {
-	onClearPreview();
-	onSetPreview(coordinates: PointLike, size: PointLike, button: MouseButtons);
-	onApply(coordinates: PointLike, size: PointLike, button: MouseButtons);
+    onClearPreview();
+    onSetPreview(coordinates: PointLike, size: PointLike, button: MouseButtons);
+    onApply(coordinates: PointLike, size: PointLike, button: MouseButtons);
 }
 
 export abstract class AbstractGridTool {
-	public mouseDown: boolean;
-	protected startPosition: { x: number; y: number };
-	protected config: AbstractGridToolConfig;
+    public mouseDown: boolean;
+    protected startPosition: { x: number; y: number };
+    protected config: AbstractGridToolConfig;
 
-	constructor(config: AbstractGridToolConfig) {
-		this.mouseDown = false;
-	}
+    constructor(config: AbstractGridToolConfig) {
+        this.mouseDown = false;
+    }
 
-	public onMouseDown(coordinates: PointLike, button: MouseButtons) {
-		this.mouseDown = true;
-		this.startPosition = coordinates;
-	}
+    public onMouseDown(coordinates: PointLike, button: MouseButtons) {
+        this.mouseDown = true;
+        this.startPosition = coordinates;
+    }
 
-	public onMouseUp(coordinates: PointLike, button: MouseButtons) {
-		this.mouseDown = false;
-	}
+    public onMouseUp(coordinates: PointLike, button: MouseButtons) {
+        this.mouseDown = false;
+    }
 
-	public onMouseMove(coordinates: PointLike, button: MouseButtons) {}
+    public onMouseMove(coordinates: PointLike, button: MouseButtons) {}
 }

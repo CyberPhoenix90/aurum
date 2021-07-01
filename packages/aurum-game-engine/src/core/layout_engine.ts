@@ -1,10 +1,10 @@
 import { CancellationToken, DataSource, dsMap, dsUnique } from 'aurumjs';
+import { Position, Size } from 'aurum-layout-engine';
 import { CanvasGraphNode } from '../entities/types/canvas/api';
 import { LabelGraphNode } from '../entities/types/label/api';
 import { SpriteGraphNode } from '../entities/types/sprite/api';
 import { Calculation } from '../math/calculation';
 import { Unit } from '../math/unit';
-import { Position, Size } from '../models/common';
 import { CommonEntity } from '../models/entities';
 import { SceneGraphNode } from '../models/scene_graph';
 import { ScreenHelper } from '../utilities/other/screen_helper';
@@ -62,6 +62,7 @@ export function layoutAlgorithm(node: SceneGraphNode<CommonEntity>): LayoutData 
 
     let parentToken: CancellationToken;
     node.parent.listen((p) => {
+        p = getLayoutParent(node);
         if (parentToken) {
             parentToken.cancel();
             parentToken = undefined;
@@ -92,12 +93,21 @@ export function layoutAlgorithm(node: SceneGraphNode<CommonEntity>): LayoutData 
     return result;
 }
 
+function getLayoutParent(node: SceneGraphNode<CommonEntity>): SceneGraphNode<CommonEntity> {
+    let ptr = node.parent.value;
+    while (ptr && ptr.resolvedModel.wrapperNode.value) {
+        ptr = ptr.parent.value;
+    }
+
+    return ptr;
+}
+
 function getParentWidth(node: SceneGraphNode<CommonEntity>): number {
-    return node.parent.value?.resolvedModel.width.value === 'content' ? 0 : node.parent.value?.renderState?.width.value ?? 0;
+    return getLayoutParent(node)?.resolvedModel.width.value === 'content' ? 0 : node.parent.value?.renderState?.width.value ?? 0;
 }
 
 function getParentHeight(node: SceneGraphNode<CommonEntity>): number {
-    return node.parent.value?.resolvedModel.height.value === 'content' ? 0 : node.parent.value?.renderState?.height.value ?? 0;
+    return getLayoutParent(node)?.resolvedModel.height.value === 'content' ? 0 : node.parent.value?.renderState?.height.value ?? 0;
 }
 
 function computeSize(
