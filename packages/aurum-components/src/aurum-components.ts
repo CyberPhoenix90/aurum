@@ -13,13 +13,19 @@ export * from './input/button';
 export * from './input/drop_down_menu';
 export * from './input/json_renderer';
 
+export * from './charts/barchart';
+
 export * from './navigation/sidebar';
+
+export * from './card/card';
 
 export * from './theme/theme';
 
 export * from './menu_strip/menu_strip';
 
 export * from './tab_bar/tab_bar';
+
+export * from './misc/currency';
 
 export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock';
 export * from './layout/panel_layout';

@@ -117,7 +117,7 @@ export class EventEmitter<T> {
      */
     public fire(data?: T): void {
         const length = this.subscribeChannel.length;
-        const lengthOnce = this.subscribeChannel.length;
+        const lengthOnce = this.subscribeOnceChannel.length;
         if (length === 0 && lengthOnce === 0) {
             //Cut some overhead in the case nothing is listening
             return;

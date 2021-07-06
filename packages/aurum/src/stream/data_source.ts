@@ -268,6 +268,12 @@ export class DataSource<T> implements GenericDataSource<T> {
         this.updateEvent = new EventEmitter();
     }
 
+    public static fromEvent<T>(event: EventEmitter<T>, cancellation: CancellationToken): DataSource<T> {
+        const result = new DataSource<T>();
+        event.subscribe((v) => result.update(v), cancellation);
+        return result;
+    }
+
     /**
      * Connects to an aurum-server exposed datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
