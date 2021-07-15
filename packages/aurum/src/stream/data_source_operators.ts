@@ -729,3 +729,34 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
         }
     };
 }
+
+/**
+ * Logs updates to the console
+ */
+export function dsLog(prefix: string = '', suffix: string = ''): DataSourceNoopOperator<T> {
+    return {
+        name: `log`,
+        operationType: OperationType.NOOP,
+        operation: (v) => {
+            console.log(`${prefix}${v}${suffix}`);
+            return v;
+        }
+    };
+}
+
+export function dsPipeAll<T>(...sources: Array<DataSource<T> | DuplexDataSource<T> | Stream<T, any>>): DataSourceNoopOperator<T> {
+    return {
+        name: `pipeAll [${sources.map((v) => v.name).join()}]`,
+        operationType: OperationType.NOOP,
+        operation: (v) => {
+            sources.forEach((source) => {
+                if (source instanceof DataSource || source instanceof Stream) {
+                    source.update(v);
+                } else {
+                    source.updateDownstream(v);
+                }
+            });
+            return v;
+        }
+    };
+}
