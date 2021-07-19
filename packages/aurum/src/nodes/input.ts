@@ -1,4 +1,4 @@
-import { HTMLNodeProps, DomNodeCreator } from '../builtin_compoents/dom_adapter';
+import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter';
 import { AttributeValue, DataDrain } from '../utilities/common';
 import { GenericDataSource, DataSource } from '../stream/data_source';
 import { CancellationToken } from '../utilities/cancellation_token';

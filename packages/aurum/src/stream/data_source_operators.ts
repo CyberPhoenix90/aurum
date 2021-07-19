@@ -733,7 +733,7 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
 /**
  * Logs updates to the console
  */
-export function dsLog(prefix: string = '', suffix: string = ''): DataSourceNoopOperator<T> {
+export function dsLog<T>(prefix: string = '', suffix: string = ''): DataSourceNoopOperator<T> {
     return {
         name: `log`,
         operationType: OperationType.NOOP,

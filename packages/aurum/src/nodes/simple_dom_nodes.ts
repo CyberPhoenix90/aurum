@@ -1,4 +1,4 @@
-import { DomNodeCreator, HTMLNodeProps } from '../builtin_compoents/dom_adapter';
+import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter';
 import { AttributeValue } from '../utilities/common';
 
 /**
