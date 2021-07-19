@@ -1,5 +1,17 @@
 import { css } from '@emotion/css';
-import { Aurum, AurumComponentAPI, AurumElementModel, DataSource, dsMap, DuplexDataSource, Renderable } from 'aurumjs';
+import {
+    AttributeValue,
+    Aurum,
+    AurumComponentAPI,
+    AurumElementModel,
+    ClassType,
+    combineAttribute,
+    combineClass,
+    DataSource,
+    dsMap,
+    DuplexDataSource,
+    Renderable
+} from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 import {
@@ -28,7 +40,7 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
     let right: AurumElementModel<PanelElementProps>;
     let top: AurumElementModel<PanelElementProps>;
     let bottom: AurumElementModel<PanelElementProps>;
-    let content: AurumElementModel<{ style?: string }>;
+    let content: AurumElementModel<{ style?: AttributeValue; class?: ClassType }>;
 
     for (const child of children) {
         if (child.factory === PanelDockLeft) {
@@ -82,13 +94,14 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
             {left ? renderLeftDock(left, leftDockSize, className, props.dragHandleThickness) : undefined}
             {top ? renderTopDock(top, topDockSize, leftDockSize, rightDockSize, className, props.dragHandleThickness) : undefined}
             <div
-                class="content"
+                class={combineClass('content', content.props?.class)}
                 style={topDockSize.aggregate(
                     [leftDockSize, rightDockSize, bottomDockSize],
                     (topSize, leftSize, rightSize, bottomSize) =>
-                        `float:left;;width:calc(100% - ${leftSize}px - ${rightSize}px); height:calc(100% - ${topSize}px - ${bottomSize}px); ${
-                            content.props?.style ?? ''
-                        }`
+                        combineAttribute(
+                            `float:left;;width:calc(100% - ${leftSize}px - ${rightSize}px); height:calc(100% - ${topSize}px - ${bottomSize}px);`,
+                            content.props?.style
+                        ) as any
                 )}
             >
                 {content.children}

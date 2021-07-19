@@ -10,16 +10,17 @@ export interface SidebarProps {
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.highlightColor1],
-        (fontFamily, size, fontColor, color1, highlight) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.highlightColor1, theme.boxShadow],
+        (fontFamily, size, fontColor, color1, highlight, boxShadow) => css`
             height: 100%;
-            width: 64px;
+            width: 62px;
             display: flex;
             flex-direction: column;
             background: ${color1};
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
+            box-shadow: ${boxShadow};
 
             > ul {
                 list-style: none;

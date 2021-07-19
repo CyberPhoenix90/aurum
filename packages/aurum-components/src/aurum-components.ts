@@ -5,6 +5,7 @@ export * from './dialog/dialog';
 export * from './dialog/context_menu';
 export * from './dialog/floating_window';
 export * from './dialog/window_manager';
+export * from './dialog/toaster';
 
 export * from './input/color_picker';
 export * from './input/number_field';

@@ -5,13 +5,13 @@ import { aurumify } from '../utils';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.themeColor2],
-        (color2) => css`
+        [theme.themeColor2, theme.boxShadow],
+        (color2, boxShadow) => css`
             margin: 8px;
             padding: 8px;
             border-radius: 4px;
             background-color: ${color2};
-            box-shadow: 0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%);
+            box-shadow: ${boxShadow};
             box-sizing: border-box;
 
             h1:first-child,
