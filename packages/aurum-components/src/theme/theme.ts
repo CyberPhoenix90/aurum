@@ -56,7 +56,7 @@ export const lightTheme: Theme = {
     heading2FontSize: new DataSource('28px'),
     heading3FontSize: new DataSource('21px'),
     baseFontColor: new DataSource('#37474f'),
-    highContrastFontColor: new DataSource('#FFFFFF'),
+    highContrastFontColor: new DataSource('#000000'),
     disabledFontColor: new DataSource('#AFAFAF'),
     highlightFontColor: new DataSource('#E2E2E2'),
     themeColor0: new DataSource('#EEEEF4'),

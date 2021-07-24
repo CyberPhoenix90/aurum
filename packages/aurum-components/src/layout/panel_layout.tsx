@@ -89,25 +89,74 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
             ? bottom.props.size
             : new DataSource(bottom?.props.size ?? 0);
 
+    const leftDockminSize =
+        left?.props.minSize instanceof DuplexDataSource || left?.props.minSize instanceof DataSource
+            ? left.props.minSize
+            : new DataSource(left?.props.minSize ?? 0);
+    const topDockminSize =
+        top?.props.minSize instanceof DuplexDataSource || top?.props.minSize instanceof DataSource
+            ? top.props.minSize
+            : new DataSource(top?.props.minSize ?? 0);
+    const rightDockminSize =
+        right?.props.minSize instanceof DataSource || right?.props.minSize instanceof DuplexDataSource
+            ? right.props.minSize
+            : new DataSource(right?.props.minSize ?? 0);
+    const bottomDockminSize =
+        bottom?.props.minSize instanceof DataSource || bottom?.props.minSize instanceof DuplexDataSource
+            ? bottom.props.minSize
+            : new DataSource(bottom?.props.minSize ?? 0);
+
+    const leftDockmaxSize =
+        left?.props.maxSize instanceof DuplexDataSource || left?.props.maxSize instanceof DataSource
+            ? left.props.maxSize
+            : new DataSource(left?.props.maxSize ?? Number.MAX_SAFE_INTEGER);
+    const topDockmaxSize =
+        top?.props.maxSize instanceof DuplexDataSource || top?.props.maxSize instanceof DataSource
+            ? top.props.maxSize
+            : new DataSource(top?.props.maxSize ?? Number.MAX_SAFE_INTEGER);
+    const rightDockmaxSize =
+        right?.props.maxSize instanceof DataSource || right?.props.maxSize instanceof DuplexDataSource
+            ? right.props.maxSize
+            : new DataSource(right?.props.maxSize ?? Number.MAX_SAFE_INTEGER);
+    const bottomDockmaxSize =
+        bottom?.props.maxSize instanceof DataSource || bottom?.props.maxSize instanceof DuplexDataSource
+            ? bottom.props.maxSize
+            : new DataSource(bottom?.props.maxSize ?? Number.MAX_SAFE_INTEGER);
+
     return (
         <div style={props.style} class={style.transform(dsMap((e) => `${e} ${props.class ?? ''}`)) as DataSource<string>}>
-            {left ? renderLeftDock(left, leftDockSize, className, props.dragHandleThickness) : undefined}
-            {top ? renderTopDock(top, topDockSize, leftDockSize, rightDockSize, className, props.dragHandleThickness) : undefined}
-            <div
-                class={combineClass('content', content.props?.class)}
-                style={topDockSize.aggregate(
-                    [leftDockSize, rightDockSize, bottomDockSize],
-                    (topSize, leftSize, rightSize, bottomSize) =>
-                        combineAttribute(
-                            `float:left;;width:calc(100% - ${leftSize}px - ${rightSize}px); height:calc(100% - ${topSize}px - ${bottomSize}px);`,
-                            content.props?.style
-                        ) as any
-                )}
-            >
-                {content.children}
+            {left ? renderLeftDock(left, leftDockSize, leftDockminSize, leftDockmaxSize, className, props.dragHandleThickness) : undefined}
+            <div style="width:100%; height:100%;">
+                {top
+                    ? renderTopDock(top, topDockSize, topDockminSize, topDockmaxSize, leftDockSize, rightDockSize, className, props.dragHandleThickness)
+                    : undefined}
+                <div
+                    class={combineClass('content', content.props?.class)}
+                    style={topDockSize.aggregate(
+                        [leftDockSize, rightDockSize, bottomDockSize],
+                        (topSize, leftSize, rightSize, bottomSize) =>
+                            combineAttribute(
+                                `float:left;;width:calc(100% - ${leftSize}px - ${rightSize}px); height:calc(100% - ${topSize}px - ${bottomSize}px);`,
+                                content.props?.style
+                            ) as any
+                    )}
+                >
+                    {content.children}
+                </div>
+                {bottom
+                    ? renderBottomDock(
+                          bottom,
+                          bottomDockSize,
+                          bottomDockminSize,
+                          bottomDockmaxSize,
+                          leftDockSize,
+                          rightDockSize,
+                          className,
+                          props.dragHandleThickness
+                      )
+                    : undefined}
             </div>
-            {right ? renderRightDock(right, rightDockSize, className, props.dragHandleThickness) : undefined}
-            {bottom ? renderBottomDock(bottom, bottomDockSize, leftDockSize, rightDockSize, className, props.dragHandleThickness) : undefined}
+            {right ? renderRightDock(right, rightDockSize, rightDockminSize, rightDockmaxSize, className, props.dragHandleThickness) : undefined}
         </div>
     );
 }

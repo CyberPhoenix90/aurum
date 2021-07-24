@@ -1,14 +1,19 @@
-import { AttributeValue, Aurum, AurumElementModel, CancellationToken, ClassType, DataSource, dsMap, DuplexDataSource, Renderable } from 'aurumjs';
+import { AttributeValue, Aurum, AurumElementModel, CancellationToken, ClassType, combineClass, DataSource, dsMap, DuplexDataSource, Renderable } from 'aurumjs';
 
 export type SizeTypes = DataSource<number> | DuplexDataSource<number> | number;
 export interface PanelElementProps {
+    class?: ClassType;
     size?: SizeTypes;
+    minSize?: SizeTypes;
+    maxSize?: SizeTypes;
     resizable?: boolean;
 }
 
 export function renderBottomDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
     leftDockSize: DataSource<number> | DuplexDataSource<number>,
     rightDockSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
@@ -16,17 +21,20 @@ export function renderBottomDock(
 ) {
     return (
         <div
-            class={className({
-                ['bottom-dock']: true,
-                resizable: model.props.resizable
-            })}
+            class={combineClass(
+                model.props.class,
+                className({
+                    ['bottom-dock']: true,
+                    resizable: model.props.resizable
+                })
+            )}
             style={size.aggregate(
                 [leftDockSize, rightDockSize],
                 (size, leftSize, rightSize) => `width:calc(100% - ${leftSize}px - ${rightSize}px); height:${size}px`
             )}
         >
             {model.props.resizable ? (
-                <div onMouseDown={(e) => horizontalDragStart(e, size, -1, dragHandleThickness)} class="horizontal-handle"></div>
+                <div onMouseDown={(e) => horizontalDragStart(e, size, minSize, maxSize, -1, dragHandleThickness)} class="horizontal-handle"></div>
             ) : undefined}
 
             {model.children}
@@ -37,6 +45,8 @@ export function renderBottomDock(
 export function renderTopDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
     leftDockSize: DataSource<number> | DuplexDataSource<number>,
     rightDockSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
@@ -44,10 +54,13 @@ export function renderTopDock(
 ) {
     return (
         <div
-            class={className({
-                ['top-dock']: true,
-                resizable: model.props.resizable
-            })}
+            class={combineClass(
+                model.props.class,
+                className({
+                    ['top-dock']: true,
+                    resizable: model.props.resizable
+                })
+            )}
             style={size.aggregate(
                 [leftDockSize, rightDockSize],
                 (topSize, leftSize, rightSize) => `width:calc(100% - ${leftSize}px - ${rightSize}px); height:${topSize}px`
@@ -61,6 +74,8 @@ export function renderTopDock(
 export function renderLeftDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -68,10 +83,13 @@ export function renderLeftDock(
 
     result.push(
         <div
-            class={className({
-                ['left-dock']: true,
-                resizable: model.props.resizable
-            })}
+            class={combineClass(
+                model.props.class,
+                className({
+                    ['left-dock']: true,
+                    resizable: model.props.resizable
+                })
+            )}
             style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`)) as DataSource<string>}
         >
             {model.children}
@@ -79,7 +97,9 @@ export function renderLeftDock(
     );
 
     if (model.props.resizable) {
-        result.push(<div onMouseDown={(e) => verticalDragStart(e, size, 1, dragHandleThickness)} class="vertical-handle" style="float:left"></div>);
+        result.push(
+            <div onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, 1, dragHandleThickness)} class="vertical-handle" style="float:left"></div>
+        );
     }
 
     return result;
@@ -88,6 +108,8 @@ export function renderLeftDock(
 export function renderRightDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -95,10 +117,13 @@ export function renderRightDock(
 
     result.push(
         <div
-            class={className({
-                ['right-dock']: true,
-                resizable: model.props.resizable
-            })}
+            class={combineClass(
+                model.props.class,
+                className({
+                    ['right-dock']: true,
+                    resizable: model.props.resizable
+                })
+            )}
             style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`)) as DataSource<string>}
         >
             {model.children}
@@ -106,7 +131,7 @@ export function renderRightDock(
     );
 
     if (model.props.resizable) {
-        result.push(<div onMouseDown={(e) => verticalDragStart(e, size, -1)} class="vertical-handle" style="float:right"></div>);
+        result.push(<div onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, -1)} class="vertical-handle" style="float:right"></div>);
     }
 
     return result;
@@ -132,7 +157,14 @@ let dragStartPos: number;
 let dragSizeInitial: number;
 let dragToken: CancellationToken;
 
-function verticalDragStart(e: MouseEvent, size: DataSource<number> | DuplexDataSource<number>, orientation: number, dragHandleThickness: number = 2): void {
+function verticalDragStart(
+    e: MouseEvent,
+    size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
+    orientation: number,
+    dragHandleThickness: number = 2
+): void {
     if (dragToken && !dragToken.isCanceled) {
         dragEnd();
     }
@@ -142,9 +174,11 @@ function verticalDragStart(e: MouseEvent, size: DataSource<number> | DuplexDataS
     dragToken.registerDomEvent(window, 'mousemove', (event: MouseEvent) => {
         event.preventDefault();
         if (size instanceof DuplexDataSource) {
-            size.updateUpstream(Math.max(dragHandleThickness, dragSizeInitial + orientation * (event.pageX - dragStartPos)));
+            size.updateUpstream(
+                Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageX - dragStartPos)))
+            );
         } else {
-            size.update(Math.max(dragHandleThickness, dragSizeInitial + orientation * (event.pageX - dragStartPos)));
+            size.update(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageX - dragStartPos))));
         }
     });
     dragToken.registerDomEvent(window, 'mouseup', (event: MouseEvent) => {
@@ -156,7 +190,14 @@ function dragEnd(): void {
     dragToken.cancel();
 }
 
-function horizontalDragStart(e: MouseEvent, size: DataSource<number> | DuplexDataSource<number>, orientation: number, dragHandleThickness: number = 2): void {
+function horizontalDragStart(
+    e: MouseEvent,
+    size: DataSource<number> | DuplexDataSource<number>,
+    minSize: DataSource<number> | DuplexDataSource<number>,
+    maxSize: DataSource<number> | DuplexDataSource<number>,
+    orientation: number,
+    dragHandleThickness: number = 2
+): void {
     if (dragToken && !dragToken.isCanceled) {
         dragEnd();
     }
@@ -166,9 +207,11 @@ function horizontalDragStart(e: MouseEvent, size: DataSource<number> | DuplexDat
     dragToken.registerDomEvent(window, 'mousemove', (event: MouseEvent) => {
         event.preventDefault();
         if (size instanceof DuplexDataSource) {
-            size.updateUpstream(Math.max(dragHandleThickness, dragSizeInitial + orientation * (event.pageY - dragStartPos)));
+            size.updateUpstream(
+                Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageY - dragStartPos)))
+            );
         } else {
-            size.update(Math.max(dragHandleThickness, dragSizeInitial + orientation * (event.pageY - dragStartPos)));
+            size.update(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageY - dragStartPos))));
         }
     });
     dragToken.registerDomEvent(window, 'mouseup', (event: MouseEvent) => {
