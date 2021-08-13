@@ -666,9 +666,11 @@ export class DataSource<T> implements GenericDataSource<T> {
     }
 }
 
+type DetailedOperations = 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge' | 'insert';
+
 export interface CollectionChange<T> {
     operation: 'replace' | 'swap' | 'add' | 'remove' | 'merge';
-    operationDetailed: 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge' | 'insert';
+    operationDetailed: DetailedOperations;
     count?: number;
     index: number;
     index2?: number;
@@ -694,11 +696,26 @@ export interface ReadOnlyArrayDataSource<T> {
     includes(item: T): boolean;
     toArray(): T[];
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
-    reverse(cancellationToken?: CancellationToken): ReversedArrayView<T>;
-    sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): SortedArrayView<T>;
-    map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): MappedArrayView<T, D>;
-    unique(cancellationToken?: CancellationToken): UniqueArrayView<T>;
-    filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[], cancellationToken?: CancellationToken): FilteredArrayView<T>;
+    reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
+    sort(
+        comparator: (a: T, b: T) => number,
+        dependencies?: ReadOnlyDataSource<any>[],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T>;
+    map<D>(
+        mapper: (data: T) => D,
+        dependencies?: ReadOnlyDataSource<any>[],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<D>;
+    unique(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
+    filter(
+        callback: Predicate<T>,
+        dependencies?: ReadOnlyDataSource<any>[],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T>;
 }
 
 export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
@@ -1240,20 +1257,25 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return this.data.slice();
     }
 
-    public flat(depth: number = 1, cancellationToken?: CancellationToken): FlattenedArrayView<FlatArray<T, typeof depth>> {
-        const view = new FlattenedArrayView<FlatArray<T, typeof depth>>(this as any, depth, cancellationToken, this.name + '.flat()');
+    public flat(depth: number = 1, cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<FlatArray<T, typeof depth>> {
+        const view = new FlattenedArrayView<FlatArray<T, typeof depth>>(this as any, depth, cancellationToken, this.name + '.flat()', config);
 
         return view;
     }
 
-    public reverse(cancellationToken?: CancellationToken): ReversedArrayView<T> {
-        const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()');
+    public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReversedArrayView<T> {
+        const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()', config);
 
         return view;
     }
 
-    public sort(comparator: (a: T, b: T) => number, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): SortedArrayView<T> {
-        const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()');
+    public sort(
+        comparator: (a: T, b: T) => number,
+        dependencies: ReadOnlyDataSource<any>[] = [],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T> {
+        const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()', config);
 
         dependencies.forEach((dep) => {
             dep.listen(() => view.refresh());
@@ -1262,7 +1284,12 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return view;
     }
 
-    public slice(start: number | DataSource<number>, end?: number | DataSource<number>, cancellationToken?: CancellationToken): SlicedArrayView<T> {
+    public slice(
+        start: number | DataSource<number>,
+        end?: number | DataSource<number>,
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T> {
         if (typeof start === 'number') {
             start = new DataSource(start);
         }
@@ -1275,11 +1302,16 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             end = this.length;
         }
 
-        return new SlicedArrayView(this, start, end, cancellationToken, this.name + '.slice()');
+        return new SlicedArrayView(this, start, end, cancellationToken, this.name + '.slice()', config);
     }
 
-    public map<D>(mapper: (data: T) => D, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): MappedArrayView<T, D> {
-        const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()');
+    public map<D>(
+        mapper: (data: T) => D,
+        dependencies: ReadOnlyDataSource<any>[] = [],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<D> {
+        const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()', config);
 
         dependencies.forEach((dep) => {
             dep.listen(() => view.refresh());
@@ -1288,12 +1320,17 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return view;
     }
 
-    public unique(cancellationToken?: CancellationToken): UniqueArrayView<T> {
-        return new UniqueArrayView(this, cancellationToken, this.name + '.unique()');
+    public unique(cancellationToken?: CancellationToken, config?: ViewConfig): UniqueArrayView<T> {
+        return new UniqueArrayView(this, cancellationToken, this.name + '.unique()', config);
     }
 
-    public filter(callback: Predicate<T>, dependencies: ReadOnlyDataSource<any>[] = [], cancellationToken?: CancellationToken): FilteredArrayView<T> {
-        const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()');
+    public filter(
+        callback: Predicate<T>,
+        dependencies: ReadOnlyDataSource<any>[] = [],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T> {
+        const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()', config);
 
         dependencies.forEach((dep) => {
             dep.listen(() => view.refresh(), cancellationToken);
@@ -1311,17 +1348,31 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 }
 
+export interface ViewConfig {
+    ignoredOperations?: DetailedOperations[];
+}
+
 export class FlattenedArrayView<T> extends ArrayDataSource<T> {
     private parent: ArrayDataSource<T[]>;
     private depth: number;
 
-    constructor(parent: ArrayDataSource<T[]>, depth: number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(
+        parent: ArrayDataSource<T[]>,
+        depth: number,
+        cancellationToken: CancellationToken = new CancellationToken(),
+        name?: string,
+        config?: ViewConfig
+    ) {
         const initial = parent.getData().flat(depth) as T[];
         super(initial, name);
         this.depth = depth;
         this.parent = parent;
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                 case 'removeRight':
@@ -1354,13 +1405,23 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
     private parent: ArrayDataSource<D>;
     private mapper: (a: D) => T;
 
-    constructor(parent: ArrayDataSource<D>, mapper: (a: D) => T, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(
+        parent: ArrayDataSource<D>,
+        mapper: (a: D) => T,
+        cancellationToken: CancellationToken = new CancellationToken(),
+        name?: string,
+        config?: ViewConfig
+    ) {
         const initial = parent.getData().map(mapper);
         super(initial, name);
         this.parent = parent;
         this.mapper = mapper;
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                     this.removeLeft(change.count);
@@ -1439,12 +1500,16 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
 export class ReversedArrayView<T> extends ArrayDataSource<T> {
     private parent: ArrayDataSource<T>;
 
-    constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string, config?: ViewConfig) {
         const initial = parent.getData().slice().reverse();
         super(initial, name);
         this.parent = parent;
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                     this.removeRight(change.count);
@@ -1493,7 +1558,8 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
         start: DataSource<number>,
         end: DataSource<number>,
         cancellationToken: CancellationToken = new CancellationToken(),
-        name?: string
+        name?: string,
+        config?: ViewConfig
     ) {
         const initial = parent.getData().slice(start.value, end.value);
         super(initial, name);
@@ -1502,6 +1568,10 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
         end.listen(() => this.merge(parent.getData().slice(start.value, end.value)), cancellationToken);
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                 case 'removeRight':
@@ -1523,12 +1593,16 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
 }
 
 export class UniqueArrayView<T> extends ArrayDataSource<T> {
-    constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string, config?: ViewConfig) {
         const initial = Array.from(new Set(parent.getData()));
         super(initial, name);
         let filteredItems;
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                 case 'removeRight':
@@ -1576,13 +1650,23 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
     private comparator: (a: T, b: T) => number;
     private parent: ArrayDataSource<T>;
 
-    constructor(parent: ArrayDataSource<T>, comparator: (a: T, b: T) => number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(
+        parent: ArrayDataSource<T>,
+        comparator: (a: T, b: T) => number,
+        cancellationToken: CancellationToken = new CancellationToken(),
+        name?: string,
+        config?: ViewConfig
+    ) {
         const initial = parent.getData().slice().sort(comparator);
         super(initial, name);
         this.parent = parent;
         this.comparator = comparator;
 
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             switch (change.operationDetailed) {
                 case 'removeLeft':
                 case 'removeRight':
@@ -1629,7 +1713,13 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
 export class FilteredArrayView<T> extends ArrayDataSource<T> {
     private viewFilter: Predicate<T>;
     private parent: ArrayDataSource<T>;
-    constructor(parent: ArrayDataSource<T> | T[], filter?: Predicate<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+    constructor(
+        parent: ArrayDataSource<T> | T[],
+        filter?: Predicate<T>,
+        cancellationToken: CancellationToken = new CancellationToken(),
+        name?: string,
+        config?: ViewConfig
+    ) {
         if (Array.isArray(parent)) {
             parent = new ArrayDataSource(parent);
         }
@@ -1640,6 +1730,10 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
         this.parent = parent;
         this.viewFilter = filter;
         parent.listen((change) => {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                return;
+            }
+
             let filteredItems;
             switch (change.operationDetailed) {
                 case 'clear':

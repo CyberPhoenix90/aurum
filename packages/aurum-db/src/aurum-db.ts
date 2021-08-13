@@ -29,13 +29,19 @@ export async function initializeDatabase(config: AurumDBConfig): Promise<AurumDB
     return new AurumDB(
         db,
         config.integrity ?? {
-            autoDeleteOnSetUndefined: false,
+            autoDeleteOnSetUndefined: false
         }
     );
 }
 
 function makeSubDbId(subDbName: string, id: string): string {
     return `!${subDbName}!${id}`;
+}
+
+export interface BatchOperation {
+    type: 'put' | 'del';
+    key: string;
+    value: any;
 }
 
 export class AurumDB {
@@ -56,7 +62,7 @@ export class AurumDB {
     }
 
     public async deleteIndex(name: string): Promise<void> {
-        const index = await this.getIndex(name);
+        const index = await this.getIndex(name, undefined);
         await index.db.clear();
     }
 
@@ -66,6 +72,18 @@ export class AurumDB {
 
     public async deletedLinkedCollection(name: string): Promise<void> {
         return ((await this.getLinkedCollection(name)) as any).db.clear();
+    }
+
+    public batch(batchOperations: BatchOperation[]): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.db.batch(batchOperations, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 
     public hasIndex(name: string): Promise<boolean> {
@@ -93,9 +111,14 @@ export class AurumDB {
         return true;
     }
 
-    public async getIndex<T>(name: string): Promise<AurumDBIndex<T>> {
+    public async getIndex<T>(name: string, encoding: Encodings): Promise<AurumDBIndex<T>> {
         if (await this.hasIndex(name)) {
-            return new AurumDBIndex<T>(sub(this.db, name + DataTypeKeyPrefix.index), this.config);
+            return new AurumDBIndex<T>(
+                sub(this.db, name + DataTypeKeyPrefix.index, {
+                    valueEncoding: encoding
+                }),
+                this.config
+            );
         } else {
             throw new Error(`Index ${name} does not exist`);
         }
@@ -105,7 +128,7 @@ export class AurumDB {
         if (await this.hasIndex(name)) {
             return new AurumDBIndex<T>(
                 sub(this.db, name + DataTypeKeyPrefix.index, {
-                    valueEncoding: defaultEncoding,
+                    valueEncoding: defaultEncoding
                 }),
                 this.config
             );
@@ -151,7 +174,7 @@ export class AurumDB {
         }
         name += DataTypeKeyPrefix.streamableIndex;
         await this.db.put(makeSubDbId(name, META_KEY), new Date().toJSON(), {
-            valueEncoding: 'json',
+            valueEncoding: 'json'
         });
         return new AurumDBStreamableIndex(sub(this.db, name));
     }
@@ -168,7 +191,7 @@ export class AurumDB {
         if (await this.hasOrderedCollection(name)) {
             return new AurumDBOrderedCollection<T>(
                 sub(this.db, name + DataTypeKeyPrefix.orderedCollection, {
-                    valueEncoding: defaultEncoding,
+                    valueEncoding: defaultEncoding
                 })
             );
         } else {
@@ -203,11 +226,11 @@ export class AurumDB {
         }
         name += DataTypeKeyPrefix.index;
         await this.db.put(makeSubDbId(name, META_KEY), new Date().toJSON(), {
-            valueEncoding: 'json',
+            valueEncoding: 'json'
         });
         return new AurumDBIndex<T>(
             sub(this.db, name, {
-                valueEncoding: defaultEncoding,
+                valueEncoding: defaultEncoding
             }),
             this.config
         );
@@ -224,11 +247,11 @@ export class AurumDB {
         }
         name += DataTypeKeyPrefix.orderedCollection;
         await this.db.put(makeSubDbId(name, META_KEY), 0, {
-            valueEncoding: 'json',
+            valueEncoding: 'json'
         });
         return new AurumDBOrderedCollection<T>(
             sub(this.db, name, {
-                valueEncoding: defaultEncoding,
+                valueEncoding: defaultEncoding
             })
         );
     }
@@ -244,7 +267,7 @@ export class AurumDB {
         }
         name += DataTypeKeyPrefix.linkedCollection;
         await this.db.put(makeSubDbId(name, META_KEY), 0, {
-            valueEncoding: 'json',
+            valueEncoding: 'json'
         });
         return new AurumDBLinkedCollection<T>(sub(this.db, name));
     }
@@ -379,7 +402,7 @@ export class AurumDBIndex<T> extends AurumDB {
 
     public get(key: string, overrideEncoding?: Encodings): Promise<T> {
         return this.db.get(key, {
-            valueEncoding: overrideEncoding,
+            valueEncoding: overrideEncoding
         });
     }
 
@@ -406,5 +429,5 @@ enum DataTypeKeyPrefix {
     index = 'index',
     streamableIndex = 'streamableIndex',
     orderedCollection = 'ordered',
-    linkedCollection = 'linked',
+    linkedCollection = 'linked'
 }
