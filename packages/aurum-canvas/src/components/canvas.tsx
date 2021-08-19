@@ -136,8 +136,8 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             }}
             style={props.style}
             class={props.class}
-            width={typeof props.width !== 'object' ? props.width.toString() : (props.width.transform(dsMap((v) => v.toString())) as DataSource<string>)}
-            height={typeof props.height !== 'object' ? props.height.toString() : (props.height.transform(dsMap((v) => v.toString())) as DataSource<string>)}
+            width={typeof props.width !== 'object' ? props.width?.toString() : (props.width.transform(dsMap((v) => v.toString())) as DataSource<string>)}
+            height={typeof props.height !== 'object' ? props.height?.toString() : (props.height.transform(dsMap((v) => v.toString())) as DataSource<string>)}
         ></canvas>
     );
 
@@ -339,6 +339,10 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             const lc = createLifeCycle();
             const renderResult = [];
             for (const piece of arrayedValue) {
+                if (!piece) {
+                    continue;
+                }
+
                 if (!renderCache.has(piece)) {
                     renderCache.set(piece, api.prerender(piece, lc));
                 }
