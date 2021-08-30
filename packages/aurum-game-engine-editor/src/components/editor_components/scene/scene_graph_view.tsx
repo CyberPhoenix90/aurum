@@ -1,5 +1,5 @@
 import { ContextMenu, currentTheme, Dialog, TreeEntry, TreeViewComponent } from 'aurum-components';
-import { ArrayDataSource, Aurum, DataSource, Renderable } from 'aurumjs';
+import { ArrayDataSource, Aurum, DataSource, ReadOnlyArrayDataSource, Renderable } from 'aurumjs';
 import { dialogs } from '../../dialogs/dialogs';
 import { SceneEntityDataReactive } from './scene_edit_model';
 
@@ -114,7 +114,7 @@ function isAncestorOf(potentialAncestor: SceneEntityDataReactive, node: SceneEnt
     }
 }
 
-function toTreeViewEntries(entities: ArrayDataSource<SceneEntityDataReactive>): ArrayDataSource<TreeEntry<SceneEntityDataReactive>> {
+function toTreeViewEntries(entities: ArrayDataSource<SceneEntityDataReactive>): ReadOnlyArrayDataSource<TreeEntry<SceneEntityDataReactive>> {
     return entities.map((e) => ({
         name: e.name,
         open: new DataSource(false),

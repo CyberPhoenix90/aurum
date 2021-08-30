@@ -1,4 +1,4 @@
-import { ArrayDataSource, CancellationToken, DataSource, dsUnique, MapDataSource, Renderable, SingularAurumElement } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, DataSource, dsUnique, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
 import { render } from '../core/custom_aurum_renderer';
 import { layoutAlgorithm } from '../core/layout_engine';
 import { AbstractComponent } from '../entities/components/abstract_component';
@@ -44,7 +44,7 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
     };
     public readonly cancellationToken: CancellationToken;
     public readonly children: ArrayDataSource<ArrayDataSource<Renderable> | DataSource<Renderable> | SceneGraphNode<CommonEntity>>;
-    public readonly processedChildren: ArrayDataSource<SceneGraphNode<CommonEntity>>;
+    public readonly processedChildren: ReadOnlyArrayDataSource<SceneGraphNode<CommonEntity>>;
     private stageId: number;
     private renderPlugin: AbstractRenderPlugin;
     onAttach?(entity: SceneGraphNode<T>);

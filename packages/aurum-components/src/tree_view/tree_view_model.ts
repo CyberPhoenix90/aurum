@@ -1,9 +1,9 @@
-import { ArrayDataSource, DataSource, Renderable } from 'aurumjs';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, Renderable } from 'aurumjs';
 
 export interface TreeEntry<T> {
-	tag?: T;
-	name: string | DataSource<string>;
-	renderable?: DataSource<Renderable>;
-	children?: ArrayDataSource<TreeEntry<T>> | TreeEntry<T>[];
-	open?: DataSource<boolean>;
+    tag?: T;
+    name: string | DataSource<string>;
+    renderable?: DataSource<Renderable>;
+    children?: ArrayDataSource<TreeEntry<T>> | ReadOnlyArrayDataSource<TreeEntry<T>> | TreeEntry<T>[];
+    open?: DataSource<boolean>;
 }

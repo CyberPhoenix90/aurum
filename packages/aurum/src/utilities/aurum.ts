@@ -123,7 +123,7 @@ import {
     render,
     Renderable
 } from '../rendering/aurum_element';
-import { ArrayDataSource, DataSource } from '../stream/data_source';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '../stream/data_source';
 import { MapLike } from './common';
 import { CancellationToken } from './cancellation_token';
 import { HTMLNodeProps } from '../builtin_components/dom_adapter';
@@ -251,7 +251,7 @@ export class Aurum {
     public static factory(
         node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
         args: MapLike<any>,
-        ...innerNodes: Array<AurumElementModel<any> | DataSource<any> | ArrayDataSource<any>>
+        ...innerNodes: Array<AurumElementModel<any> | DataSource<any> | ArrayDataSource<any> | ReadOnlyArrayDataSource<any>>
     ): AurumElementModel<any> {
         //@ts-ignore
         if (node === Aurum.fragment) {

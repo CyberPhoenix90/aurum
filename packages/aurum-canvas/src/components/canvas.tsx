@@ -58,8 +58,8 @@ export interface AurumCanvasProps {
     onDetach?(): void;
     class?: ClassType;
     style?: AttributeValue;
-    width?: ReadOnlyDataSource<string | number> | string | number;
-    height?: ReadOnlyDataSource<string | number> | string | number;
+    width?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
+    height?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
     features?: AurumnCanvasFeatures;
