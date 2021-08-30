@@ -22,6 +22,7 @@ export interface RenderData {
     lines: string[];
     x: number;
     y: number;
+    realWidth?:number;
     width?: number;
     height?: number;
     tx?: number;
