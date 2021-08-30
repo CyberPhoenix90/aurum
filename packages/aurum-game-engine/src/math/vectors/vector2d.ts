@@ -1,6 +1,5 @@
 import { AbstractVector } from './abstract_vector';
-import { PointLike } from 'aurum-layout-engine';
-import { Radian } from '../../models/common';
+import { Radian, PointLike } from 'aurum-layout-engine';
 
 /**
  * Extension of point, used for vector based math

@@ -2,6 +2,9 @@ import { ArrayDataSource, DataSource } from 'aurumjs';
 import { AbstractContentLayout } from './layouts/abstract_content_layout';
 import { AbstractLayout } from './layouts/abstract_layout';
 
+export type Radian = number;
+export type Degrees = number;
+
 export enum DIRECTION2 {
     HORIZONTAL = 'HORIZONTAL',
     VERTICAL = 'VERTICAL'

@@ -14,8 +14,6 @@ export function renderBottomDock(
     size: DataSource<number> | DuplexDataSource<number>,
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
-    leftDockSize: DataSource<number> | DuplexDataSource<number>,
-    rightDockSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
     dragHandleThickness: number = 2
 ) {
@@ -28,10 +26,7 @@ export function renderBottomDock(
                     resizable: model.props.resizable
                 })
             )}
-            style={size.aggregate(
-                [leftDockSize, rightDockSize],
-                (size, leftSize, rightSize) => `width:calc(100% - ${leftSize}px - ${rightSize}px); height:${size}px`
-            )}
+            style={size.transform(dsMap((size) => `width:100%; height:${size}px`))}
         >
             {model.props.resizable ? (
                 <div onMouseDown={(e) => horizontalDragStart(e, size, minSize, maxSize, -1, dragHandleThickness)} class="horizontal-handle"></div>
@@ -47,8 +42,6 @@ export function renderTopDock(
     size: DataSource<number> | DuplexDataSource<number>,
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
-    leftDockSize: DataSource<number> | DuplexDataSource<number>,
-    rightDockSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
     dragHandleThickness: number = 2
 ) {
@@ -61,10 +54,7 @@ export function renderTopDock(
                     resizable: model.props.resizable
                 })
             )}
-            style={size.aggregate(
-                [leftDockSize, rightDockSize],
-                (topSize, leftSize, rightSize) => `width:calc(100% - ${leftSize}px - ${rightSize}px); height:${topSize}px`
-            )}
+            style={size.transform(dsMap((topSize) => `width:100%; height:${topSize}px`))}
         >
             {model.children}
         </div>

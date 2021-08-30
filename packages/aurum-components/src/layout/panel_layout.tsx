@@ -126,35 +126,24 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
     return (
         <div style={props.style} class={style.transform(dsMap((e) => `${e} ${props.class ?? ''}`)) as DataSource<string>}>
             {left ? renderLeftDock(left, leftDockSize, leftDockminSize, leftDockmaxSize, className, props.dragHandleThickness) : undefined}
-            <div style="width:100%; height:100%;">
-                {top
-                    ? renderTopDock(top, topDockSize, topDockminSize, topDockmaxSize, leftDockSize, rightDockSize, className, props.dragHandleThickness)
-                    : undefined}
+            <div
+                style={leftDockSize.aggregate(
+                    [rightDockSize],
+                    (leftSize, rightSize) => `float:left;width:calc(100% - ${leftSize}px - ${rightSize}px); height:100%;`
+                )}
+            >
+                {top ? renderTopDock(top, topDockSize, topDockminSize, topDockmaxSize, className, props.dragHandleThickness) : undefined}
                 <div
                     class={combineClass('content', content.props?.class)}
                     style={topDockSize.aggregate(
                         [leftDockSize, rightDockSize, bottomDockSize],
                         (topSize, leftSize, rightSize, bottomSize) =>
-                            combineAttribute(
-                                `float:left;;width:calc(100% - ${leftSize}px - ${rightSize}px); height:calc(100% - ${topSize}px - ${bottomSize}px);`,
-                                content.props?.style
-                            ) as any
+                            combineAttribute(`float:left; width:100%;height:calc(100% - ${topSize}px - ${bottomSize}px);`, content.props?.style) as any
                     )}
                 >
                     {content.children}
                 </div>
-                {bottom
-                    ? renderBottomDock(
-                          bottom,
-                          bottomDockSize,
-                          bottomDockminSize,
-                          bottomDockmaxSize,
-                          leftDockSize,
-                          rightDockSize,
-                          className,
-                          props.dragHandleThickness
-                      )
-                    : undefined}
+                {bottom ? renderBottomDock(bottom, bottomDockSize, bottomDockminSize, bottomDockmaxSize, className, props.dragHandleThickness) : undefined}
             </div>
             {right ? renderRightDock(right, rightDockSize, rightDockminSize, rightDockmaxSize, className, props.dragHandleThickness) : undefined}
         </div>
@@ -166,14 +155,11 @@ function generateStyle(props: PanelProps) {
         aurumify(
             [theme.baseFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2],
             (fontColor, color1, color3, color2) => css`
-                background-color: ${color1};
                 color: ${fontColor};
                 border-color: ${color3};
                 background-color: ${color2};
                 width: 100%;
                 height: 100%;
-                display: flex;
-                flex-direction: row;
 
                 .left-dock,
                 .top-dock,

@@ -2,8 +2,8 @@
     "name": "aurum-layout-engine",
     "version": "0.0.0",
     "description": "Stream based layouting engine",
-    "main": "prebuilt/cjs/aurum-game-engine.js",
-    "typings": "prebuilt/cjs/aurum-game-engine.d.ts",
+    "main": "prebuilt/cjs/aurum-layout-engine.js",
+    "typings": "prebuilt/cjs/aurum-layout-engine.d.ts",
     "scripts": {
         "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
         "watch": "tsc -p tsconfig.cjs.json -w",

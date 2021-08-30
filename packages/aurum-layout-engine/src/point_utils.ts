@@ -1,5 +1,5 @@
+import { Radian } from './model';
 import { PointLike } from './point';
-import { Radian } from '../../aurum-game-engine/src/models/common';
 
 export const pointUtils = {
     clone(point: PointLike): PointLike {

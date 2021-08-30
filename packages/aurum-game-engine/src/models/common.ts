@@ -1,7 +1,5 @@
 import { PointLike } from 'aurum-layout-engine';
 
-export type Radian = number;
-export type Degrees = number;
 export type MapLike<T> = { [key: string]: T };
 export type Constructor<T> = new (...args: any[]) => T;
 export type Projector = (p: PointLike) => PointLike;

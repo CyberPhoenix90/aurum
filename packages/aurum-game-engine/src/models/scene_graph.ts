@@ -125,14 +125,14 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
             this.recomputeLayout();
         });
 
-        DataSource.fromMultipleSources([this.renderState.width.transform(dsUnique()), this.renderState.height.transform(dsUnique())]).listen(() => {
-            if (this.resolvedModel.layout?.value?.isSizeSensitive()) {
-                this.recomputeLayout();
-            }
-            if (this.parent.value && this.parent.value.resolvedModel.layout.value && this.parent.value.resolvedModel.layout.value.isSizeSensitive()) {
-                this.parent.value.recomputeLayout();
-            }
-        });
+        // DataSource.fromMultipleSources([this.renderState.width.transform(dsUnique()), this.renderState.height.transform(dsUnique())]).listen(() => {
+        //     if (this.resolvedModel.layout?.value?.isSizeSensitive()) {
+        //         this.recomputeLayout();
+        //     }
+        //     if (this.parent.value && this.parent.value.resolvedModel.layout.value && this.parent.value.resolvedModel.layout.value.isSizeSensitive()) {
+        //         this.parent.value.recomputeLayout();
+        //     }
+        // });
         this.renderState.width.repeatLast();
         this.renderState.height.repeatLast();
     }
