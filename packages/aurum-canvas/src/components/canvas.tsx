@@ -162,8 +162,12 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
         if (!target.renderedState) {
             return;
         }
-        const x = e.offsetX - (props.translate?.value.x ?? 0);
-        let y = e.offsetY - (props.translate?.value.y ?? 0);
+        let x = e.offsetX - (props.translate?.value.x ? props.translate?.value.x * (props.scale?.value?.x ?? 1) : 0);
+        let y = e.offsetY - (props.translate?.value.y ? props.translate?.value.y * (props.scale?.value?.x ?? 1) : 0);
+        if (props.scale) {
+            x /= props.scale.value.x;
+            y /= props.scale.value.y;
+        }
 
         if (target.type === ComponentType.TEXT) {
             const label = target as TextComponentModel;
@@ -375,6 +379,20 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             context.fillStyle = deref(props.backgroundColor);
             context.fillRect(0, 0, canvas.width, canvas.height);
         }
+        applyContextTransformation(context);
+        for (const child of components) {
+            renderChild(context, child, 0, 0);
+        }
+        unapplyContextTransformation(context);
+    }
+
+    function unapplyContextTransformation(context: CanvasRenderingContext2D) {
+        if (props.scale || props.translate) {
+            context.restore();
+        }
+    }
+
+    function applyContextTransformation(context: CanvasRenderingContext2D) {
         if (props.scale || props.translate) {
             context.save();
             if (props.scale?.value) {
@@ -383,12 +401,6 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             if (props.translate?.value) {
                 context.translate(props.translate.value.x, props.translate.value.y);
             }
-        }
-        for (const child of components) {
-            renderChild(context, child, 0, 0);
-        }
-        if (props.scale || props.translate) {
-            context.restore();
         }
     }
 
