@@ -1,9 +1,9 @@
 import { Unit, UnitType } from './unit';
 
-const CALCULATION_PARSER = /(content|distanceToEdge|inherit|[0-9]+px|[0-9]+%|[0-9]+mm|[0-9]+cm|[0-9]+in)+/gi;
+const CALCULATION_PARSER = /(content|inherit|[0-9]+px|[0-9]+%|[0-9]+mm|[0-9]+cm|[0-9]+in)+/gi;
 
 export class Calculation {
-    private optimizedCalculation: (dpi: number, parentSize: number, distanceToEdge: number, computeContentSize?: () => number) => number;
+    private optimizedCalculation: (dpi: number, parentSize: number, computeContentSize?: () => number) => number;
 
     constructor(value: string) {
         this.parse(value);
@@ -29,13 +29,10 @@ export class Calculation {
             this.optimizedCalculation = new Function(
                 'dpi',
                 'parentSize',
-                'distanceToEdge',
                 'computeContentSize',
                 `return ${value.replace(CALCULATION_PARSER, (op) => {
                     if (op === 'inherit') {
                         return 'parentSize';
-                    } else if (op === 'remainder') {
-                        return 'distanceToEdge';
                     } else if (op === 'content') {
                         return 'computeContentSize()';
                     } else {
@@ -61,7 +58,7 @@ export class Calculation {
         }
     }
 
-    public toPixels(dpi: number, parentSize: number, distanceToEdge: number, computeContentSize?: () => number): number {
-        return this.optimizedCalculation(dpi, parentSize, distanceToEdge, computeContentSize);
+    public toPixels(dpi: number, parentSize: number, computeContentSize?: () => number): number {
+        return this.optimizedCalculation(dpi, parentSize, computeContentSize);
     }
 }

@@ -268,6 +268,14 @@ export class DataSource<T> implements GenericDataSource<T> {
         this.updateEvent = new EventEmitter();
     }
 
+    public static toDataSource<T>(value: T | DataSource<T>): DataSource<T> {
+        if (value instanceof DataSource) {
+            return value;
+        } else {
+            return new DataSource(value);
+        }
+    }
+
     public static fromEvent<T>(event: EventEmitter<T>, cancellation: CancellationToken): DataSource<T> {
         const result = new DataSource<T>();
         event.subscribe((v) => result.update(v), cancellation);
@@ -697,6 +705,10 @@ export interface ReadOnlyArrayDataSource<T> {
     toArray(): T[];
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
     reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
+    flat(
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): T extends ArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>>;
     sort(
         comparator: (a: T, b: T) => number,
         dependencies?: ReadOnlyDataSource<any>[],
@@ -709,7 +721,22 @@ export interface ReadOnlyArrayDataSource<T> {
         cancellationToken?: CancellationToken,
         config?: ViewConfig
     ): ReadOnlyArrayDataSource<D>;
+    slice(
+        start: number | DataSource<number>,
+        end?: number | DataSource<number>,
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): ReadOnlyArrayDataSource<T>;
     unique(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
+    indexBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], T>;
+    indexByProvider<K>(provider: (item: T) => K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<K, T>;
+    groupBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], ReadOnlyArrayDataSource<T>>;
+    groupByProvider<K>(provider: (item: T) => K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<K, ReadOnlyArrayDataSource<T>>;
+    groupByMultiProvider<K>(
+        provider: (item: T) => K[],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): MapDataSource<K, ReadOnlyArrayDataSource<T>>;
     filter(
         callback: Predicate<T>,
         dependencies?: ReadOnlyDataSource<any>[],
@@ -858,6 +885,14 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
 
         return result;
+    }
+
+    public static toArrayDataSource<T>(value: T[] | ArrayDataSource<T>): ArrayDataSource<T> {
+        if (value instanceof ArrayDataSource) {
+            return value;
+        } else {
+            return new ArrayDataSource(value);
+        }
     }
 
     /**
@@ -1257,10 +1292,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return this.data.slice();
     }
 
-    public flat(depth: number = 1, cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<FlatArray<T, typeof depth>> {
-        const view = new FlattenedArrayView<FlatArray<T, typeof depth>>(this as any, depth, cancellationToken, this.name + '.flat()', config);
+    public flat(
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): T extends ArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
+        const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
 
-        return view;
+        return view as any;
     }
 
     public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReversedArrayView<T> {
@@ -1324,6 +1362,282 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return new UniqueArrayView(this, cancellationToken, this.name + '.unique()', config);
     }
 
+    public indexBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], T> {
+        const view = new MapDataSource<T[K], T>();
+
+        this.listenAndRepeat((change) => {
+            if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
+                switch (change.operation) {
+                    case 'add':
+                        for (const item of change.items) {
+                            view.set(item[key], item);
+                        }
+                        break;
+                    case 'remove':
+                        for (const item of change.items) {
+                            view.delete(item[key]);
+                        }
+                        break;
+                    case 'replace':
+                        view.delete(change.target[key]);
+                        view.set(change.items[0][key], change.items[0]);
+                        break;
+                    case 'merge':
+                        const oldKeys = new Set(view.keys());
+                        const newKeys = new Set(change.items.map((item) => item[key]));
+                        for (const oldKey of oldKeys) {
+                            if (!newKeys.has(oldKey)) {
+                                view.delete(oldKey);
+                            }
+                        }
+                        for (const newKey of newKeys) {
+                            if (!oldKeys.has(newKey)) {
+                                view.set(
+                                    newKey,
+                                    change.items.find((item) => item[key] === newKey)
+                                );
+                            }
+                        }
+                        break;
+                }
+            }
+        }, cancellationToken);
+        return view;
+    }
+
+    public indexByProvider<K>(provider: (item: T) => K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<K, T> {
+        const view = new MapDataSource<K, T>();
+
+        this.listenAndRepeat((change) => {
+            if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
+                switch (change.operation) {
+                    case 'add':
+                        for (const item of change.items) {
+                            view.set(provider(item), item);
+                        }
+                        break;
+                    case 'remove':
+                        for (const item of change.items) {
+                            view.delete(provider(item));
+                        }
+                        break;
+                    case 'replace':
+                        view.delete(provider(change.target));
+                        view.set(provider(change.items[0]), change.items[0]);
+                        break;
+                    case 'merge':
+                        const oldKeys = new Set(view.keys());
+                        const newKeys = new Set(change.items.map((item) => provider(item)));
+                        for (const oldKey of oldKeys) {
+                            if (!newKeys.has(oldKey)) {
+                                view.delete(oldKey);
+                            }
+                        }
+                        for (const newKey of newKeys) {
+                            if (!oldKeys.has(newKey)) {
+                                view.set(
+                                    newKey,
+                                    change.items.find((item) => provider(item) === newKey)
+                                );
+                            }
+                        }
+                        break;
+                }
+            }
+        }, cancellationToken);
+        return view;
+    }
+
+    public groupBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], ReadOnlyArrayDataSource<T>> {
+        const view = new MapDataSource<T[K], ArrayDataSource<T>>();
+
+        function handleRemove(item: T) {
+            const list = view.get(item[key]);
+            list.splice(list.indexOf(item), 1);
+            if (list.length.value === 0) {
+                view.delete(item[key]);
+            }
+        }
+
+        function handleAdd(item: T) {
+            if (!view.has(item[key])) {
+                view.set(item[key], new ArrayDataSource());
+            }
+            view.get(item[key]).push(item);
+        }
+
+        this.listenAndRepeat((change) => {
+            if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
+                switch (change.operation) {
+                    case 'add':
+                        for (const item of change.items) {
+                            handleAdd(item);
+                        }
+                        break;
+                    case 'remove':
+                        for (const item of change.items) {
+                            handleRemove(item);
+                        }
+                        break;
+                    case 'replace':
+                        handleRemove(change.target);
+                        handleAdd(change.items[0]);
+                        break;
+                    case 'merge':
+                        const diff = change.previousState.filter((item) => !change.newState.includes(item));
+                        for (const item of diff) {
+                            if (view.has(item[key]) && view.get(item[key]).includes(item)) {
+                                handleRemove(item);
+                            }
+                        }
+                        for (const item of change.items) {
+                            if (!view.has(item[key])) {
+                                handleAdd(item);
+                            } else {
+                                if (!view.get(item[key]).includes(item)) {
+                                    handleAdd(item);
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+        }, cancellationToken);
+        return view as any as MapDataSource<T[K], ReadOnlyArrayDataSource<T>>;
+    }
+
+    public groupByProvider<K>(
+        provider: (item: T) => K,
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): MapDataSource<K, ReadOnlyArrayDataSource<T>> {
+        const view = new MapDataSource<K, ArrayDataSource<T>>();
+
+        function handleRemove(item: T) {
+            const list = view.get(provider(item));
+            list.splice(list.indexOf(item), 1);
+            if (list.length.value === 0) {
+                view.delete(provider(item));
+            }
+        }
+
+        function handleAdd(item: T) {
+            if (!view.has(provider(item))) {
+                view.set(provider(item), new ArrayDataSource());
+            }
+            view.get(provider(item)).push(item);
+        }
+
+        this.listenAndRepeat((change) => {
+            if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
+                switch (change.operation) {
+                    case 'add':
+                        for (const item of change.items) {
+                            handleAdd(item);
+                        }
+                        break;
+                    case 'remove':
+                        for (const item of change.items) {
+                            handleRemove(item);
+                        }
+                        break;
+                    case 'replace':
+                        handleRemove(change.target);
+                        handleAdd(change.items[0]);
+                        break;
+                    case 'merge':
+                        const diff = change.previousState.filter((item) => !change.newState.includes(item));
+                        for (const item of diff) {
+                            if (view.has(provider(item)) && view.get(provider(item)).includes(item)) {
+                                handleRemove(item);
+                            }
+                        }
+                        for (const item of change.items) {
+                            if (!view.has(provider(item))) {
+                                handleAdd(item);
+                            } else {
+                                if (!view.get(provider(item)).includes(item)) {
+                                    handleAdd(item);
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+        }, cancellationToken);
+        return view as any as MapDataSource<K, ReadOnlyArrayDataSource<T>>;
+    }
+
+    public groupByMultiProvider<K>(
+        provider: (item: T) => K[],
+        cancellationToken?: CancellationToken,
+        config?: ViewConfig
+    ): MapDataSource<K, ReadOnlyArrayDataSource<T>> {
+        const view = new MapDataSource<K, ArrayDataSource<T>>();
+
+        function handleRemove(item: T) {
+            for (const i of provider(item)) {
+                const list = view.get(i);
+                list.splice(list.indexOf(item), 1);
+                if (list.length.value === 0) {
+                    view.delete(i);
+                }
+            }
+        }
+
+        function handleAdd(item: T) {
+            for (const i of provider(item)) {
+                if (!view.has(i)) {
+                    view.set(i, new ArrayDataSource());
+                }
+                view.get(i).push(item);
+            }
+        }
+
+        this.listenAndRepeat((change) => {
+            if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
+                switch (change.operation) {
+                    case 'add':
+                        for (const item of change.items) {
+                            handleAdd(item);
+                        }
+                        break;
+                    case 'remove':
+                        for (const item of change.items) {
+                            handleRemove(item);
+                        }
+                        break;
+                    case 'replace':
+                        handleRemove(change.target);
+                        handleAdd(change.items[0]);
+                        break;
+                    case 'merge':
+                        const diff = change.previousState.filter((item) => !change.newState.includes(item));
+                        for (const item of diff) {
+                            for (const i of provider(item)) {
+                                if (view.has(i) && view.get(i).includes(item)) {
+                                    handleRemove(item);
+                                }
+                            }
+                        }
+                        for (const item of change.items) {
+                            for (const i of provider(item)) {
+                                if (!view.has(i)) {
+                                    handleAdd(item);
+                                } else {
+                                    if (!view.get(i).includes(item)) {
+                                        handleAdd(item);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+        }, cancellationToken);
+        return view as any as MapDataSource<K, ReadOnlyArrayDataSource<T>>;
+    }
+
     public filter(
         callback: Predicate<T>,
         dependencies: ReadOnlyDataSource<any>[] = [],
@@ -1355,6 +1669,7 @@ export interface ViewConfig {
 export class FlattenedArrayView<T> extends ArrayDataSource<T> {
     private parent: ArrayDataSource<T[]>;
     private depth: number;
+    private sessionToken: CancellationToken;
 
     constructor(
         parent: ArrayDataSource<T[]>,
@@ -1363,10 +1678,10 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
         name?: string,
         config?: ViewConfig
     ) {
-        const initial = parent.getData().flat(depth) as T[];
-        super(initial, name);
+        super([], name);
         this.depth = depth;
         this.parent = parent;
+        this.refresh();
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -1381,23 +1696,36 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
                 case 'replace':
                 case 'insert':
                 case 'merge':
+                case 'prepend':
+                case 'append':
                     this.refresh();
                     break;
                 case 'clear':
                     this.clear();
-                    break;
-                case 'prepend':
-                    this.unshift(...(change.items.flat(this.depth) as T[]));
-                    break;
-                case 'append':
-                    this.appendArray(change.items.flat(this.depth) as T[]);
                     break;
             }
         }, cancellationToken);
     }
 
     public refresh() {
-        this.merge(this.parent.getData().flat(this.depth) as T[]);
+        if (this.sessionToken) {
+            this.sessionToken.cancel();
+            this.sessionToken = undefined;
+        }
+
+        const data = this.parent.getData();
+        if (data.length > 0) {
+            if (data[0] instanceof ArrayDataSource) {
+                this.sessionToken = new CancellationToken();
+                const combination = ArrayDataSource.fromMultipleSources(data as any as ArrayDataSource<T>[]);
+                combination.listen((change) => {
+                    this.applyCollectionChange(change);
+                }, this.sessionToken);
+                this.merge(combination.getData() as any);
+            } else {
+                this.merge(data.flat(this.depth) as T[]);
+            }
+        }
     }
 }
 
@@ -1843,4 +2171,230 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
             result.emitError(e);
         }
     };
+}
+
+export interface MapChange<K, V> {
+    key: K;
+    oldValue: V;
+    newValue: V;
+    deleted?: boolean;
+}
+
+export class MapDataSource<K, V> {
+    protected data: Map<K, V>;
+    private updateEvent: EventEmitter<MapChange<K, V>>;
+    private updateEventOnKey: Map<K, EventEmitter<MapChange<K, V>>>;
+
+    constructor(initialData?: Map<K, V>) {
+        this.data = initialData ?? new Map();
+
+        this.updateEvent = new EventEmitter();
+        this.updateEventOnKey = new Map();
+    }
+
+    public static fromMultipleMaps<K, V>(maps: MapDataSource<K, V>[], cancellationToken?: CancellationToken): MapDataSource<K, V> {
+        const result = new MapDataSource<K, V>();
+        let i = 0;
+        for (const map of maps) {
+            let index = i;
+            result.assign(map);
+            map.listen((change) => {
+                let isOverwritten = false;
+                for (let j = index + 1; j < maps.length; j++) {
+                    if (maps[j].has(change.key)) {
+                        isOverwritten = true;
+                        break;
+                    }
+                }
+                if (!isOverwritten) {
+                    if (change.deleted) {
+                        result.delete(change.key);
+                    } else {
+                        result.set(change.key, change.newValue);
+                    }
+                }
+            }, cancellationToken);
+        }
+
+        return result;
+    }
+
+    public static toMapDataSource<K, V>(value: Map<K, V> | MapDataSource<K, V>): MapDataSource<K, V> {
+        if (value instanceof MapDataSource) {
+            return value;
+        } else {
+            return new MapDataSource(value);
+        }
+    }
+
+    /**
+     * Creates a datasource for a single key of the object
+     * @param key
+     * @param cancellationToken
+     */
+    public pick(key: K, cancellationToken?: CancellationToken): DataSource<V> {
+        const subDataSource: DataSource<V> = new DataSource(this.data.get(key));
+
+        this.listenOnKey(
+            key,
+            (v) => {
+                subDataSource.update(v.newValue);
+            },
+            cancellationToken
+        );
+
+        return subDataSource;
+    }
+
+    /**
+     * Listen to changes of the object
+     */
+    public listen(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    }
+
+    /**
+     * Same as listen but will immediately call the callback with the current value of each key
+     */
+    public listenAndRepeat(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+        const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+        for (const key of this.data.keys()) {
+            callback({
+                key,
+                newValue: this.data.get(key),
+                oldValue: undefined,
+                deleted: false
+            });
+        }
+        return c;
+    }
+
+    public map<D>(mapper: (key: K, value: V) => D): ArrayDataSource<D> {
+        const stateMap: Map<K, D> = new Map<K, D>();
+        const result = new ArrayDataSource<D>();
+        this.listenAndRepeat((change) => {
+            if (change.deleted && stateMap.has(change.key)) {
+                const item = stateMap.get(change.key);
+                result.remove(item);
+                stateMap.delete(change.key);
+            } else if (stateMap.has(change.key)) {
+                const newItem = mapper(change.key, change.newValue);
+                result.replace(stateMap.get(change.key), newItem);
+                stateMap.set(change.key, newItem);
+            } else if (!stateMap.has(change.key) && !change.deleted) {
+                const newItem = mapper(change.key, change.newValue);
+                result.push(newItem);
+                stateMap.set(change.key, newItem);
+            }
+        });
+
+        return result;
+    }
+
+    /**
+     * Same as listenOnKey but will immediately call the callback with the current value first
+     */
+    public listenOnKeyAndRepeat(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+        callback({
+            key,
+            newValue: this.data.get(key),
+            oldValue: undefined
+        });
+
+        return this.listenOnKey(key, callback, cancellationToken);
+    }
+
+    /**
+     * Listen to changes of a single key of the object
+     */
+    public listenOnKey(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+        if (!this.updateEventOnKey.has(key)) {
+            this.updateEventOnKey.set(key, new EventEmitter());
+        }
+        const event = this.updateEventOnKey.get(key);
+        return event.subscribe(callback, cancellationToken).cancel;
+    }
+
+    /**
+     * Returns all the keys of the object in the source
+     */
+    public keys(): IterableIterator<K> {
+        return this.data.keys();
+    }
+
+    /**
+     * Returns all the values of the object in the source
+     */
+    public values(): IterableIterator<V> {
+        return this.data.values();
+    }
+
+    /**
+     * get the current value of a key of the object
+     * @param key
+     */
+    public get(key: K): V {
+        return this.data.get(key);
+    }
+
+    /**
+     * check if map has a key
+     * @param key
+     */
+    public has(key: K): boolean {
+        return this.data.has(key);
+    }
+
+    /**
+     * delete a key from the object
+     * @param key
+     * @param value
+     */
+    public delete(key: K): void {
+        if (!this.has(key)) {
+            return;
+        }
+
+        const old = this.data.get(key);
+        this.data.delete(key);
+        this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
+        if (this.updateEventOnKey.has(key)) {
+            this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
+        }
+    }
+
+    /**
+     * set the value for a key of the object
+     * @param key
+     * @param value
+     */
+    public set(key: K, value: V): void {
+        if (this.data.get(key) === value) {
+            return;
+        }
+
+        const old = this.data.get(key);
+        this.data.set(key, value);
+        this.updateEvent.fire({ oldValue: old, key, newValue: this.data.get(key) });
+        if (this.updateEventOnKey.has(key)) {
+            this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: this.data.get(key) });
+        }
+    }
+
+    /**
+     * Merge the key value pairs of an object into this object non recursively
+     * @param newData
+     */
+    public assign(newData: Map<K, V> | MapDataSource<K, V>): void {
+        for (const key of newData.keys()) {
+            this.set(key, newData.get(key));
+        }
+    }
+
+    /**
+     * Returns a shallow copy of the map
+     */
+    public toMap(): Map<K, V> {
+        return new Map(this.data.entries());
+    }
 }

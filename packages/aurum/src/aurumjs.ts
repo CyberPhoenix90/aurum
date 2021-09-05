@@ -7,7 +7,7 @@ export * from './builtin_components/switch';
 export * from './stream/data_source';
 export * from './stream/duplex_data_source';
 export * from './stream/object_data_source';
-export * from './stream/map_data_source';
+export * from './stream/tree_data_source';
 export * from './stream/set_data_source';
 export * from './stream/data_source_operators';
 export * from './stream/duplex_data_source_operators';

@@ -1,6 +1,6 @@
-import { CancellationToken, DataSource } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, DataSource } from 'aurumjs';
 import { NodeChange } from '../layout_engine';
-import { LayoutData, LayoutElementTreeNode } from '../model';
+import { LayoutData, LayoutElementTreeNode, ReflowEvents } from '../model';
 
 export abstract class AbstractLayout {
     protected token: CancellationToken;
@@ -16,22 +16,32 @@ export abstract class AbstractLayout {
             innerWidth: new DataSource(0),
             innerHeight: new DataSource(0),
             outerWidth: new DataSource(0),
-            outerHeight: new DataSource(0)
+            outerHeight: new DataSource(0),
+            reflowEventListener: new Set()
         };
     }
 
-    public link(data: LayoutData, owner: LayoutElementTreeNode): void {
+    public reflowTriggers(owner: LayoutElementTreeNode): ReflowEvents[] {
+        return [];
+    }
+
+    public link(data: LayoutData, owner: LayoutElementTreeNode, layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>): void {
         if (this.token) {
             throw new Error('Same layout linked twice');
         }
 
         this.token = new CancellationToken();
-        this.onLink(data, owner, this.token);
+        this.onLink(data, owner, layoutDataByNode, this.token);
     }
     public unlink(): void {
         this.token.cancel();
         this.token = undefined;
     }
 
-    public abstract onLink(layout: LayoutData, owner: LayoutElementTreeNode, sessionToken: CancellationToken): void;
+    public abstract onLink(
+        layout: LayoutData,
+        owner: LayoutElementTreeNode,
+        layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
+        sessionToken: CancellationToken
+    ): void;
 }

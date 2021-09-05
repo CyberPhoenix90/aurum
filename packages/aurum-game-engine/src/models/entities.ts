@@ -19,8 +19,6 @@ export interface CommonEntityProps {
     originX?: Data<number>;
     originY?: Data<number>;
     clip?: Data<boolean>;
-    ignoreLayout?: Data<boolean>;
-    spreadLayout?: Data<boolean>;
     wrapperNode?: Data<boolean>;
     zIndex?: Data<number>;
     shaders?: Shader[] | ArrayDataSource<Shader>;
@@ -47,8 +45,6 @@ export interface CommonEntity {
     originY?: DataSource<number>;
     clip?: DataSource<boolean>;
     layout?: DataSource<AbstractLayout>;
-    ignoreLayout?: DataSource<boolean>;
-    spreadLayout?: DataSource<boolean>;
     wrapperNode?: DataSource<boolean>;
     zIndex?: DataSource<number>;
     scaleX?: DataSource<number>;

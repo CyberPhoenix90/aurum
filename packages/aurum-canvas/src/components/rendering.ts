@@ -44,7 +44,7 @@ export function renderElipse(context: CanvasRenderingContext2D, child: ElipseCom
     context.globalAlpha = opacity;
     const path2d = new Path2D();
 
-    if (fillColor || strokeColor) {
+    if ((fillColor || strokeColor) && rx > 0.01 && ry > 0.01 && (startAngle ?? 0 !== endAngle)) {
         path2d.ellipse(x, y, rx, ry, rotation ?? 0, startAngle ?? 0, endAngle ?? Math.PI * 2);
         child.renderedState.path = path2d;
     } else {

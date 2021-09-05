@@ -17,7 +17,7 @@
 		"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
 		"noEmitOnError": true,
-		"outFile": "prebuilt/amd/aurum-game-engine.js",
+		"outFile": "prebuilt/amd/aurum-layout-engine.js",
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node"
 	},

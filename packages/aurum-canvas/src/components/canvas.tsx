@@ -218,6 +218,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
     function bind(canvas: HTMLCanvasElement, children: ComponentModel[], parent: ComponentModel, cancellationToken: CancellationToken): void {
         for (const child of children) {
             if (child instanceof ArrayDataSource) {
+                child.listen(() => invalidate(canvas), cancellationToken);
                 const tokenMap = new Map<any, CancellationToken>();
                 child.listenAndRepeat((change) => {
                     switch (change.operation) {
@@ -240,6 +241,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             }
 
             if (child instanceof DataSource || child instanceof DuplexDataSource) {
+                child.listen(() => invalidate(canvas), cancellationToken);
                 let bindToken: CancellationToken;
                 let value;
                 child.listenAndRepeat((newValue) => {
@@ -430,13 +432,11 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             for (const node of child.getData()) {
                 renderChild(context, node, offsetX, offsetY);
             }
-            child.listen(() => invalidate(context.canvas));
             return;
         }
 
         if (child instanceof DataSource || child instanceof DuplexDataSource) {
             renderChild(context, child.value, offsetX, offsetY);
-            child.listen(() => invalidate(context.canvas));
             return;
         }
 

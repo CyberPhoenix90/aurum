@@ -46,7 +46,16 @@ export function SceneSettingsPopup(props: SceneSettingsPopupProps) {
     const music = new DataSource(sceneSettings.backgroundMusic?.track ?? '');
 
     return (
-        <FloatingWindow closable draggable onClose={() => popups.remove(this)} x={window.innerWidth / 2 - 250} y={window.innerHeight / 2 - 200} w={500} h={300}>
+        <FloatingWindow
+            closable
+            maximizable
+            draggable
+            onClose={() => popups.remove(this)}
+            x={window.innerWidth / 2 - 250}
+            y={window.innerHeight / 2 - 200}
+            w={500}
+            h={300}
+        >
             <WindowTitle>Scene Settings</WindowTitle>
             <WindowContent>
                 <div class={style}>

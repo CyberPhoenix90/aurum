@@ -1,11 +1,11 @@
-import { CancellationToken, EventEmitter } from 'aurumjs';
+import { CancellationToken, DataSource, EventEmitter } from 'aurumjs';
 import { AbstractContentLayout } from './layouts/abstract_content_layout';
 import { AbstractLayout } from './layouts/abstract_layout';
-import { DefaultLayout } from './layouts/default_layout';
+import { BasicLayout } from './layouts/basic_layout';
 import { LayoutData, LayoutElementTreeNode, REFOWDIRECTION } from './model';
 import { ReflowWorkList } from './reflow_work_list';
 
-const defaultLayout = new DefaultLayout();
+const defaultLayout = new BasicLayout();
 
 export interface NodeChange {
     source: LayoutElementTreeNode;
@@ -16,13 +16,14 @@ export interface NodeChange {
 }
 
 export class LayoutEngine {
-    private layoutData: Map<LayoutElementTreeNode, LayoutData>;
+    private layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>;
     private reflowWork: ReflowWorkList<NodeChange> = new ReflowWorkList();
     private reflowQueued: boolean;
 
     public onReflow: EventEmitter<void> = new EventEmitter();
     public onReflowEnd: EventEmitter<{ nodesRecomputed: number; timeTaken: number }> = new EventEmitter();
     public onNodeChange: EventEmitter<NodeChange> = new EventEmitter();
+    private layoutCache: WeakMap<LayoutElementTreeNode, DataSource<AbstractLayout>> = new WeakMap();
 
     constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken) {
         rootNode.children.listenAndRepeat((c) => {});
@@ -37,6 +38,7 @@ export class LayoutEngine {
     }
 
     private reflow(): void {
+        this.reflowQueued = false;
         this.onReflow.fire();
         let changes = 0;
         const t = performance.now();
@@ -68,13 +70,18 @@ export class LayoutEngine {
     }
 
     private pickLayout(node: LayoutElementTreeNode): AbstractLayout | AbstractContentLayout {
-        if (node.layout.value) {
-            return node.layout.value;
-        }
-
-        const parent = this.getRelevantParent(node);
-        if (parent.contentLayout.value) {
-            return parent.contentLayout.value;
+        if (this.layoutCache.has(node)) {
+            return this.layoutCache.get(node).value;
+        } else {
+            let ptr = node.parent.value;
+            while (ptr) {
+                if (ptr.layout.value) {
+                    this.layoutCache.set(node, ptr.layout);
+                    return ptr.layout.value;
+                } else {
+                    ptr = ptr.parent.value;
+                }
+            }
         }
 
         return defaultLayout;
@@ -82,25 +89,12 @@ export class LayoutEngine {
 
     private *iterateChildren(node: LayoutElementTreeNode): IterableIterator<LayoutElementTreeNode> {
         for (const child of node.children) {
-            if (child.spreadLayout.value) {
-                yield* this.iterateChildren(child);
-            } else {
-                yield child;
-            }
+            yield child;
         }
         return;
     }
 
-    public getRelevantParent(node: LayoutElementTreeNode): LayoutElementTreeNode {
-        let ptr = node.parent.value;
-        while (ptr && ptr.spreadLayout.value) {
-            ptr = ptr.parent.value;
-        }
-
-        return ptr;
-    }
-
     public getLayoutDataFor(node: LayoutElementTreeNode): LayoutData {
-        return this.layoutData.get(node);
+        return this.layoutDataByNode.get(node);
     }
 }

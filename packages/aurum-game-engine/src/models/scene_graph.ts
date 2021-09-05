@@ -1,4 +1,5 @@
-import { ArrayDataSource, CancellationToken, DataSource, dsUnique, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
+import { PointLike } from 'aurum-layout-engine';
+import { ArrayDataSource, CancellationToken, DataSource, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
 import { render } from '../core/custom_aurum_renderer';
 import { layoutAlgorithm } from '../core/layout_engine';
 import { AbstractComponent } from '../entities/components/abstract_component';
@@ -12,7 +13,6 @@ import { _ } from '../utilities/other/streamline';
 import { Constructor } from './common';
 import { CommonEntity, RenderableType } from './entities';
 import { Data } from './input_data';
-import { PointLike } from 'aurum-layout-engine';
 
 export interface SceneGraphNodeModel<T> {
     name?: Data<string>;
@@ -49,12 +49,10 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
     private renderPlugin: AbstractRenderPlugin;
     onAttach?(entity: SceneGraphNode<T>);
     onDetach?(entity: SceneGraphNode<T>);
-    public onRequestNodeLayoutRefresh: DataSource<void>;
 
     constructor(config: SceneGraphNodeModel<T>) {
         this.onAttach = config.onAttach;
         this.onDetach = config.onDetach;
-        this.onRequestNodeLayoutRefresh = new DataSource();
         this.name = toSourceIfDefined(config.name);
         this.children = config.children ?? new ArrayDataSource([]);
         this.cancellationToken = config.cancellationToken;
@@ -65,17 +63,6 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
         this.processedChildren = this.children.map(this.processChild);
         this.resolvedModel = this.createResolvedModel();
         this.renderState = this.createRenderModel();
-        this.renderState.x.transform(dsUnique()).listen(() => {
-            if (this.parent.value && this.parent.value.resolvedModel.width.value === 'content') {
-                this.parent.value.refreshNodeLayout();
-            }
-        });
-
-        this.renderState.y.transform(dsUnique()).listen(() => {
-            if (this.parent.value && this.parent.value.resolvedModel.height.value === 'content') {
-                this.parent.value.refreshNodeLayout();
-            }
-        });
         this.cancellationToken.addCancelable(() => {
             this.parent?.value?.children.remove(this);
             config.onDetach?.(this);
@@ -105,7 +92,6 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
                 case 'swap':
                     if (this.stageId) {
                         this.renderPlugin.swapNodes(this.processedChildren.get(change.index).uid, this.processedChildren.get(change.index2).uid);
-                        this.refreshNodeLayoutIfContent();
                     }
                     break;
                 case 'remove':
@@ -115,66 +101,9 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
                     for (const item of change.items) {
                         item.dispose();
                     }
-                    this.refreshNodeLayoutIfContent();
                     break;
             }
-            this.recomputeLayout();
         });
-
-        this.resolvedModel.layout.listen(() => {
-            this.recomputeLayout();
-        });
-
-        // DataSource.fromMultipleSources([this.renderState.width.transform(dsUnique()), this.renderState.height.transform(dsUnique())]).listen(() => {
-        //     if (this.resolvedModel.layout?.value?.isSizeSensitive()) {
-        //         this.recomputeLayout();
-        //     }
-        //     if (this.parent.value && this.parent.value.resolvedModel.layout.value && this.parent.value.resolvedModel.layout.value.isSizeSensitive()) {
-        //         this.parent.value.recomputeLayout();
-        //     }
-        // });
-        this.renderState.width.repeatLast();
-        this.renderState.height.repeatLast();
-    }
-
-    public isWidthRelative(): boolean {
-        return (
-            this.resolvedModel.width.value === 'inherit' ||
-            this.resolvedModel.width.value === 'remainder' ||
-            (typeof this.resolvedModel.width.value === 'string' && this.resolvedModel.width.value.includes('%'))
-        );
-    }
-
-    public isHeightRelative(): boolean {
-        return (
-            this.resolvedModel.height.value === 'inherit' ||
-            this.resolvedModel.height.value === 'remainder' ||
-            (typeof this.resolvedModel.height.value === 'string' && this.resolvedModel.height.value.includes('%'))
-        );
-    }
-
-    public recomputeLayout(): void {
-        if (this.resolvedModel.layout.value && this.stageId) {
-            // this.resolvedModel.layout.value.positionChildren(this.getLayoutNodes(), this);
-        }
-        if (this.parent.value && this.resolvedModel.spreadLayout.value) {
-            this.parent.value.recomputeLayout();
-        }
-    }
-
-    private getLayoutNodes(): SceneGraphNode<CommonEntity>[] {
-        const result = [];
-        for (const child of this.processedChildren.getData()) {
-            if (child.resolvedModel.ignoreLayout.value) {
-                continue;
-            } else if (child.resolvedModel.spreadLayout.value) {
-                result.push(...child.getLayoutNodes());
-            } else {
-                result.push(child);
-            }
-        }
-
-        return result;
     }
 
     protected processChild(c: SceneGraphNode<CommonEntity> | DataSource<Renderable> | ArrayDataSource<Renderable>): SceneGraphNode<CommonEntity> {
@@ -205,7 +134,6 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
         }
         this.renderPlugin = renderPlugin;
         this.stageId = stageId;
-        this.recomputeLayout();
         for (const component of this.components.values()) {
             component.triggerOnAttach(this);
         }
@@ -273,30 +201,6 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
         throw new Error('Could not resolve source for key ' + key);
     }
 
-    public refreshNodeLayoutIfRelative(): void {
-        if (
-            (this.isWidthRelative() && (!this.parent.value || this.parent.value.resolvedModel.width.value !== 'content')) ||
-            (this.isHeightRelative() && (!this.parent.value || this.parent.value.resolvedModel.height.value !== 'content')) ||
-            (typeof this.resolvedModel.x.value === 'string' && this.resolvedModel.x.value.includes('%')) ||
-            (typeof this.resolvedModel.y.value === 'string' && this.resolvedModel.y.value.includes('%'))
-        ) {
-            this.refreshNodeLayout();
-        }
-    }
-
-    public refreshNodeLayoutIfContent(): void {
-        if (
-            (typeof this.resolvedModel.width.value === 'string' && this.resolvedModel.width.value.includes('content')) ||
-            (typeof this.resolvedModel.height.value === 'string' && this.resolvedModel.height.value.includes('content'))
-        ) {
-            this.refreshNodeLayout();
-        }
-    }
-
-    public refreshNodeLayout(): void {
-        this.onRequestNodeLayoutRefresh.update();
-    }
-
     /**
      * Hack for typescript to properly infer the types of the datasources by allowing it to assume that they are unchanged between base and extended class
      */
@@ -313,13 +217,11 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
             blendMode: this.getModelSourceWithFallbackBase('blendMode'),
             clip: this.getModelSourceWithFallbackBase('clip'),
             height: this.getModelSourceWithFallbackBase('height'),
-            ignoreLayout: this.getModelSourceWithFallbackBase('ignoreLayout'),
             originX: this.getModelSourceWithFallbackBase('originX'),
             originY: this.getModelSourceWithFallbackBase('originY'),
             scaleX: this.getModelSourceWithFallbackBase('scaleX'),
             scaleY: this.getModelSourceWithFallbackBase('scaleY'),
             shaders: this.getModelSourceWithFallbackBase('shaders'),
-            spreadLayout: this.getModelSourceWithFallbackBase('spreadLayout'),
             wrapperNode: this.getModelSourceWithFallbackBase('wrapperNode'),
             visible: this.getModelSourceWithFallbackBase('visible'),
             width: this.getModelSourceWithFallbackBase('width'),
@@ -421,12 +323,10 @@ export class ContainerGraphNode extends SceneGraphNode<ContainerEntity> {
 
 export const dataSourceDefaultModel: ContainerEntity = {
     wrapperNode: new DataSource(true),
-    spreadLayout: new DataSource(true)
 };
 
 export const arrayDataSourceDefaultModel: ContainerEntity = {
     wrapperNode: new DataSource(true),
-    spreadLayout: new DataSource(true)
 };
 
 export class ArrayDataSourceSceneGraphNode extends ContainerGraphNode {
