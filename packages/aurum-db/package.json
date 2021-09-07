@@ -6,7 +6,7 @@
     "typings": "prebuilt/cjs/aurum-db.d.ts",
     "dependencies": {
         "@types/node": "^14.14.41",
-        "aurumjs": "0.6.23",
+        "aurumjs": "0.6.32",
         "level": "^6.0.1",
         "level-stream-access": "^2.3.0",
         "subleveldown": "^5.0.1"

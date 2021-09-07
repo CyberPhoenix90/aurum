@@ -1,5 +1,4 @@
-import { CancellationToken, DataSource, EventEmitter } from 'aurumjs';
-import { AbstractContentLayout } from './layouts/abstract_content_layout';
+import { CancellationToken, DataSource, EventEmitter, TreeDataSource } from 'aurumjs';
 import { AbstractLayout } from './layouts/abstract_layout';
 import { BasicLayout } from './layouts/basic_layout';
 import { LayoutData, LayoutElementTreeNode, REFOWDIRECTION } from './model';
@@ -26,7 +25,9 @@ export class LayoutEngine {
     private layoutCache: WeakMap<LayoutElementTreeNode, DataSource<AbstractLayout>> = new WeakMap();
 
     constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken) {
-        rootNode.children.listenAndRepeat((c) => {});
+        const layoutTree = new TreeDataSource('children', [rootNode]);
+        layoutTree.createArrayDataSourceOfNodes(cancellationToken);
+        layoutTree;
     }
 
     public emitChange(change: NodeChange): void {
@@ -69,7 +70,7 @@ export class LayoutEngine {
         }
     }
 
-    private pickLayout(node: LayoutElementTreeNode): AbstractLayout | AbstractContentLayout {
+    private pickLayout(node: LayoutElementTreeNode): AbstractLayout {
         if (this.layoutCache.has(node)) {
             return this.layoutCache.get(node).value;
         } else {

@@ -32,7 +32,7 @@ type ResolvedRenderable =
     | string
     | number
     | AurumElementModel<any>
-    | DataSource<Renderable>
+    | ReadOnlyDataSource<Renderable>
     | ReadOnlyArrayDataSource<Renderable>
     | DuplexDataSource<Renderable>;
 

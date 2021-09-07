@@ -1,7 +1,6 @@
 export * from './model';
 
 export * from './layouts/abstract_layout';
-export * from './layouts/abstract_content_layout';
 export * from './layouts/basic_layout';
 export * from './layouts/dynamic_layout';
 

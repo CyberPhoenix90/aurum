@@ -38,6 +38,10 @@ describe('TreeDatasource', () => {
         }
     ];
 
+    beforeEach(() => {
+        attachToken = new CancellationToken();
+    });
+
     afterEach(() => {
         attachToken?.cancel();
         attachToken = undefined;
@@ -79,5 +83,55 @@ describe('TreeDatasource', () => {
             Array.from(mapped).map((e) => e.n),
             ['1', '1.1', '3', '5', '2', '4', '6']
         );
+    });
+
+    it('should allow listening to changes', () => {
+        const a = new TreeDataSource<Tree, 'children'>('children', tree);
+        const changes = [];
+
+        a.listen(
+            (e) =>
+                changes.push({
+                    operation: e.operation,
+                    id: e.changedNode.id
+                }),
+            attachToken
+        );
+
+        const dynamicNode2 = new ArrayDataSource<Tree>([]);
+        const dynamicNode3 = new ArrayDataSource<Tree>([]);
+
+        dynamicNode.push({
+            id: '7',
+            children: []
+        });
+        dynamicNode.push({
+            id: '8',
+            children: dynamicNode2
+        });
+        dynamicNode.removeAt(1);
+        dynamicNode2.push({
+            id: '9',
+            children: dynamicNode3
+        });
+
+        dynamicNode3.push({
+            id: '10',
+            children: []
+        });
+        dynamicNode2.clear();
+        dynamicNode3.push({
+            id: '11',
+            children: []
+        });
+
+        assert.deepEqual(changes, [
+            { operation: 'added', id: '7' },
+            { operation: 'added', id: '8' },
+            { operation: 'deleted', id: '6' },
+            { operation: 'added', id: '9' },
+            { operation: 'added', id: '10' },
+            { operation: 'deleted', id: '9' }
+        ]);
     });
 });

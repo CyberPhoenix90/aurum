@@ -54,7 +54,8 @@ export interface LayoutElementTreeNode {
     marginRight: DataSource<number>;
     marginBottom: DataSource<number>;
     marginLeft: DataSource<number>;
-
+    originX: DataSource<number>;
+    originY: DataSource<number>;
     parent: DataSource<LayoutElementTreeNode>;
     children: ArrayDataSource<LayoutElementTreeNode>;
 }

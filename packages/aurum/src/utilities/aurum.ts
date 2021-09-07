@@ -1,8 +1,10 @@
+import { HTMLNodeProps } from '../builtin_components/dom_adapter';
 import { Input, InputProps } from '../nodes/input';
 import { Select, SelectProps } from '../nodes/select';
 import {
     A,
     Abbr,
+    Address,
     AProps,
     Area,
     AreaProps,
@@ -11,11 +13,17 @@ import {
     Audio,
     AudioProps,
     B,
+    Body,
     Br,
     Button,
     ButtonProps,
     Canvas,
     CanvasProps,
+    Caption,
+    Code,
+    Col,
+    Colgroup,
+    ColProps,
     Data,
     DataProps,
     Details,
@@ -23,6 +31,7 @@ import {
     Em,
     Footer,
     Form,
+    FormProps,
     H1,
     H2,
     H3,
@@ -32,31 +41,50 @@ import {
     Head,
     Header,
     Heading,
+    Hr,
+    Html,
+    HtmlProps,
     I,
     IFrame,
     IFrameProps,
     Img,
     ImgProps,
+    Kbd,
     Label,
     LabelProps,
     Li,
     Link,
     LinkProps,
+    Meta,
+    MetaProps,
     Nav,
     NoScript,
+    Object,
+    ObjectProps,
     Ol,
+    OptGroup,
+    OptGroupProps,
     Option,
     OptionProps,
+    Output,
+    OutputProps,
     P,
+    Param,
+    ParamProps,
+    Picture,
     Pre,
     Progress,
     ProgressProps,
     Q,
+    Samp,
     Script,
     ScriptProps,
+    Slot,
+    SlotProps,
     Source,
     SourceProps,
     Span,
+    Strong,
     Style,
     StyleProps,
     Sub,
@@ -65,6 +93,7 @@ import {
     Svg,
     SvgProps,
     Table,
+    TableCellProps,
     TBody,
     Td,
     Template,
@@ -75,41 +104,13 @@ import {
     TimeProps,
     Title,
     Tr,
+    Track,
+    TrackProps,
     Ul,
+    Var,
     Video,
     VideoProps,
-    Slot,
-    SlotProps,
-    Code,
-    Hr,
-    FormProps,
-    Html,
-    Body,
-    Meta,
-    MetaProps,
-    HtmlProps,
-    ObjectProps,
-    OptGroupProps,
-    OutputProps,
-    ParamProps,
-    TrackProps,
-    Address,
-    Kbd,
-    Object,
-    OptGroup,
-    Output,
-    Param,
-    Picture,
-    Samp,
-    Strong,
-    Track,
-    Var,
-    Wbr,
-    ColProps,
-    Col,
-    Colgroup,
-    Caption,
-    TableCellProps
+    Wbr
 } from '../nodes/simple_dom_nodes';
 import { TextArea, TextAreaProps } from '../nodes/textarea';
 import {
@@ -123,10 +124,9 @@ import {
     render,
     Renderable
 } from '../rendering/aurum_element';
-import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '../stream/data_source';
-import { MapLike } from './common';
+import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source';
 import { CancellationToken } from './cancellation_token';
-import { HTMLNodeProps } from '../builtin_components/dom_adapter';
+import { MapLike } from './common';
 
 const nodeMap = {
     address: Address,
@@ -251,7 +251,7 @@ export class Aurum {
     public static factory(
         node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
         args: MapLike<any>,
-        ...innerNodes: Array<AurumElementModel<any> | DataSource<any> | ArrayDataSource<any> | ReadOnlyArrayDataSource<any>>
+        ...innerNodes: Array<AurumElementModel<any> | ReadOnlyDataSource<any> | ReadOnlyArrayDataSource<any>>
     ): AurumElementModel<any> {
         //@ts-ignore
         if (node === Aurum.fragment) {

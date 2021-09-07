@@ -708,7 +708,7 @@ export interface ReadOnlyArrayDataSource<T> {
     flat(
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): T extends ArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>>;
+    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>>;
     sort(
         comparator: (a: T, b: T) => number,
         dependencies?: ReadOnlyDataSource<any>[],
@@ -1295,7 +1295,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     public flat(
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): T extends ArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
+    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
         const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
 
         return view as any;
@@ -2269,26 +2269,53 @@ export class MapDataSource<K, V> {
         return c;
     }
 
-    public map<D>(mapper: (key: K, value: V) => D): ArrayDataSource<D> {
-        const stateMap: Map<K, D> = new Map<K, D>();
-        const result = new ArrayDataSource<D>();
+    public map<D>(mapper: (key: K, value: V, valueLifetimeToken: CancellationToken) => D, cancellation: CancellationToken): MapDataSource<K, D> {
+        const result = new MapDataSource<K, D>();
+        const lifeTimeMap = new Map<K, CancellationToken>();
+        this.listenAndRepeat((change) => {
+            if (change.deleted) {
+                lifeTimeMap.get(change.key).cancel();
+                lifeTimeMap.delete(change.key);
+                result.delete(change.key);
+            } else {
+                const lifeTimeToken = new CancellationToken();
+                if (lifeTimeMap.has(change.key)) {
+                    lifeTimeMap.get(change.key).cancel();
+                }
+                lifeTimeMap.set(change.key, lifeTimeToken);
+                const newItem = mapper(change.key, change.newValue, lifeTimeToken);
+                result.set(change.key, newItem);
+            }
+        }, cancellation);
+        return result;
+    }
+
+    public toArrayDataSource(cancellation: CancellationToken): ArrayDataSource<V> {
+        const stateMap: Map<K, V> = new Map<K, V>();
+        const result = new ArrayDataSource<V>();
         this.listenAndRepeat((change) => {
             if (change.deleted && stateMap.has(change.key)) {
                 const item = stateMap.get(change.key);
                 result.remove(item);
                 stateMap.delete(change.key);
             } else if (stateMap.has(change.key)) {
-                const newItem = mapper(change.key, change.newValue);
+                const newItem = change.newValue;
                 result.replace(stateMap.get(change.key), newItem);
                 stateMap.set(change.key, newItem);
             } else if (!stateMap.has(change.key) && !change.deleted) {
-                const newItem = mapper(change.key, change.newValue);
+                const newItem = change.newValue;
                 result.push(newItem);
                 stateMap.set(change.key, newItem);
             }
-        });
+        }, cancellation);
 
         return result;
+    }
+
+    public clear() {
+        for (const key of this.data.keys()) {
+            this.delete(key);
+        }
     }
 
     /**

@@ -1,7 +1,8 @@
 import { CancellationToken } from 'aurumjs';
 import { Calculation } from '../math/calculation';
 import { Unit } from '../math/unit';
-import { LayoutData, LayoutElementTreeNode, ReflowEvents, Size } from '../model';
+import { LayoutData, LayoutElementTreeNode, Position, ReflowEvents, Size } from '../model';
+import { ScreenHelper } from '../screen_helper';
 import { AbstractLayout } from './abstract_layout';
 
 /**
@@ -59,7 +60,35 @@ export class DynamicLayout extends AbstractLayout {
                 )
             );
             layout.outerHeight.update(layout.innerHeight.value + owner.marginTop.value + owner.marginBottom.value);
+
+            layout.x.update(
+                this.computePosition(owner.x.value, layout.outerWidth.value, owner.originX.value, layoutDataByNode.get(owner.parent.value).innerWidth.value)
+            );
+            layout.y.update(
+                this.computePosition(owner.y.value, layout.outerHeight.value, owner.originY.value, layoutDataByNode.get(owner.parent.value).innerHeight.value)
+            );
         }
+    }
+
+    private computePosition(value: Position, size: number, origin: number, parentSize: number): number {
+        if (value === undefined) {
+            return 0;
+        }
+
+        let computedValue;
+        if (typeof value === 'function') {
+            computedValue = value(parentSize);
+        } else if (typeof value === 'number') {
+            computedValue = value;
+        } else {
+            if (Calculation.isCalculation(value)) {
+                computedValue = new Calculation(value).toPixels(ScreenHelper.PPI, parentSize, 0);
+            } else {
+                computedValue = new Unit(value).toPixels(ScreenHelper.PPI, parentSize);
+            }
+        }
+
+        return computedValue - origin * (size ?? 0);
     }
 
     private computeSize(
