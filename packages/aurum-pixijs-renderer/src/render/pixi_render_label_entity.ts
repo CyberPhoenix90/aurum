@@ -1,6 +1,6 @@
-import { Color, LabelGraphNode } from "aurum-game-engine";
-import { Text } from "pixi.js";
-import { NoRenderEntity } from "./pixi_no_render_entity";
+import { Color, LabelGraphNode } from 'aurum-game-engine';
+import { Text } from 'pixi.js';
+import { NoRenderEntity } from './pixi_no_render_entity';
 
 export class RenderLabelEntity extends NoRenderEntity {
     public declare displayObject: Text;
@@ -10,17 +10,14 @@ export class RenderLabelEntity extends NoRenderEntity {
     }
 
     protected createDisplayObject(model: LabelGraphNode) {
-        const result = new Text("");
+        const result = new Text('');
         result.resolution = 2;
         return result;
     }
 
     public bind(model: LabelGraphNode) {
         model.renderState.text.listenAndRepeat((v) => {
-            updateText.call(
-                this,
-                v.substring(0, model.renderState.renderCharCount.value)
-            );
+            updateText.call(this, v.substring(0, model.renderState.renderCharCount.value));
             this.updateSize(model);
         }, this.token);
 
@@ -30,9 +27,7 @@ export class RenderLabelEntity extends NoRenderEntity {
         }, this.token);
 
         model.renderState.color.listenAndRepeat((v) => {
-            this.displayObject.style.fill = Color.fromString(
-                v ?? "white"
-            ).toRGBNumber();
+            this.displayObject.style.fill = Color.fromString(v ?? 'white').toRGBNumber();
         }, this.token);
 
         model.renderState.fontSize.listenAndRepeat((v) => {
@@ -41,17 +36,17 @@ export class RenderLabelEntity extends NoRenderEntity {
         }, this.token);
 
         model.renderState.fontFamily.listenAndRepeat((v) => {
-            this.displayObject.style.fontFamily = v === undefined ? "Arial" : v;
+            this.displayObject.style.fontFamily = v === undefined ? 'Arial' : v;
             this.updateSize(model);
         }, this.token);
 
         model.renderState.fontWeight.listenAndRepeat((v) => {
-            this.displayObject.style.fontWeight = v ? v : ("" as any);
+            this.displayObject.style.fontWeight = v ? v : ('' as any);
             this.updateSize(model);
         }, this.token);
 
         model.renderState.fontStyle.listenAndRepeat((v) => {
-            this.displayObject.style.fontStyle = v ? v : ("" as any);
+            this.displayObject.style.fontStyle = v ? v : ('' as any);
             this.updateSize(model);
         }, this.token);
 
@@ -64,9 +59,7 @@ export class RenderLabelEntity extends NoRenderEntity {
         }, this.token);
 
         model.renderState.dropShadowColor.listenAndRepeat((v) => {
-            this.displayObject.style.dropShadowColor = v
-                ? Color.fromString(v).toRGBANumber()
-                : undefined;
+            this.displayObject.style.dropShadowColor = v ? Color.fromString(v).toRGBANumber() : undefined;
         }, this.token);
 
         model.renderState.dropShadowDistance.listenAndRepeat((v) => {
@@ -113,26 +106,5 @@ export class RenderLabelEntity extends NoRenderEntity {
         }
     }
 
-    private updateSize(model: LabelGraphNode) {
-        let dirty = false;
-        if (
-            model.resolvedModel.width.value === "auto" &&
-            model.renderState.width.value !== this.displayObject.width
-        ) {
-            model.renderState.width.update(this.displayObject.width);
-            dirty = true;
-        }
-
-        if (
-            model.resolvedModel.height.value === "auto" &&
-            model.renderState.height.value !== this.displayObject.height
-        ) {
-            model.renderState.height.update(this.displayObject.height);
-            dirty = true;
-        }
-
-        if (dirty) {
-            model.onRequestNodeLayoutRefresh.update();
-        }
-    }
+    private updateSize(model: LabelGraphNode) {}
 }

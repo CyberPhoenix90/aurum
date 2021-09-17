@@ -11,14 +11,12 @@ export const entityDefaults: CommonEntity = {
     width: new DataSource(0),
     height: new DataSource(0),
     layout: new DataSource(undefined),
-    ignoreLayout: new DataSource(false),
     originX: new DataSource(0),
     originY: new DataSource(0),
     scaleX: new DataSource(1),
     scaleY: new DataSource(1),
     shaders: new ArrayDataSource([]),
     visible: new DataSource(true),
-    spreadLayout: new DataSource(false),
     wrapperNode: new DataSource(false),
     zIndex: new DataSource(undefined)
 };

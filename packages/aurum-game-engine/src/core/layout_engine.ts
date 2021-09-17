@@ -1,13 +1,6 @@
-import { CancellationToken, DataSource, dsMap, dsUnique } from 'aurumjs';
-import { Position, Size } from 'aurum-layout-engine';
-import { CanvasGraphNode } from '../entities/types/canvas/api';
-import { LabelGraphNode } from '../entities/types/label/api';
-import { SpriteGraphNode } from '../entities/types/sprite/api';
-import { Calculation } from '../math/calculation';
-import { Unit } from '../math/unit';
+import { DataSource } from 'aurumjs';
 import { CommonEntity } from '../models/entities';
 import { SceneGraphNode } from '../models/scene_graph';
-import { ScreenHelper } from '../utilities/other/screen_helper';
 
 export interface LayoutData {
     x: DataSource<number>;
@@ -21,7 +14,7 @@ export function layoutAlgorithm(node: SceneGraphNode<CommonEntity>): LayoutData 
     let height: DataSource<number>;
     let x: DataSource<number>;
     let y: DataSource<number>;
-
+    /*
     if (node instanceof SpriteGraphNode || node instanceof CanvasGraphNode) {
         width = node.resolvedModel.width.aggregate([node.onRequestNodeLayoutRefresh, node.processedChildren?.length ?? new DataSource(0)], (v) =>
             v === 'auto' ? undefined : computeSize(v, getParentWidth(node), 0, 'x', node.processedChildren?.getData() ?? [])
@@ -53,12 +46,6 @@ export function layoutAlgorithm(node: SceneGraphNode<CommonEntity>): LayoutData 
         return computePosition(v, height.value, node.resolvedModel.originY.value, node.resolvedModel.scaleY.value, getParentHeight(node));
     });
 
-    const result: LayoutData = {
-        x,
-        y,
-        width,
-        height
-    };
 
     let parentToken: CancellationToken;
     node.parent.listen((p) => {
@@ -89,23 +76,29 @@ export function layoutAlgorithm(node: SceneGraphNode<CommonEntity>): LayoutData 
     node.resolvedModel.originY.listen(() => node.refreshNodeLayout());
     node.resolvedModel.scaleX.listen(() => node.refreshNodeLayout());
     node.resolvedModel.scaleY.listen(() => node.refreshNodeLayout());
-
+*/
+    const result: LayoutData = {
+        x,
+        y,
+        width,
+        height
+    };
     return result;
 }
 
-function getLayoutParent(node: SceneGraphNode<CommonEntity>): SceneGraphNode<CommonEntity> {
-    let ptr = node.parent.value;
-    while (ptr && ptr.resolvedModel.wrapperNode.value) {
-        ptr = ptr.parent.value;
-    }
+// function getLayoutParent(node: SceneGraphNode<CommonEntity>): SceneGraphNode<CommonEntity> {
+//     let ptr = node.parent.value;
+//     while (ptr && ptr.resolvedModel.wrapperNode.value) {
+//         ptr = ptr.parent.value;
+//     }
 
-    return ptr;
-}
+//     return ptr;
+// }
 
-function getParentWidth(node: SceneGraphNode<CommonEntity>): number {
-    return getLayoutParent(node)?.resolvedModel.width.value === 'content' ? 0 : node.parent.value?.renderState?.width.value ?? 0;
-}
+// function getParentWidth(node: SceneGraphNode<CommonEntity>): number {
+//     return getLayoutParent(node)?.resolvedModel.width.value === 'content' ? 0 : node.parent.value?.renderState?.width.value ?? 0;
+// }
 
-function getParentHeight(node: SceneGraphNode<CommonEntity>): number {
-    return getLayoutParent(node)?.resolvedModel.height.value === 'content' ? 0 : node.parent.value?.renderState?.height.value ?? 0;
-}
+// function getParentHeight(node: SceneGraphNode<CommonEntity>): number {
+//     return getLayoutParent(node)?.resolvedModel.height.value === 'content' ? 0 : node.parent.value?.renderState?.height.value ?? 0;
+// }

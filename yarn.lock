@@ -2192,18 +2192,6 @@ aurum-canvas@0.0.19:
   dependencies:
     aurumjs "^0.5.50"
 
-aurum-canvas@0.0.22:
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/aurum-canvas/-/aurum-canvas-0.0.22.tgz#7e2851cce8f973577fcaa34c5e1e32e28b231125"
-  integrity sha512-2Djt2RsEqdJKuDUYSp4HErZwFSTuda166EmxDob4+czvdTSSYhelQA9fllr8n8rBv68RGw3S+L0+rVoP+Ku8Jg==
-  dependencies:
-    aurumjs "0.6.22"
-
-aurumjs@0.6.22:
-  version "0.6.22"
-  resolved "https://registry.yarnpkg.com/aurumjs/-/aurumjs-0.6.22.tgz#6929318107b4c11d9cf5c0f315ac3dcc92c31ee7"
-  integrity sha512-MqqzucDJd3/gIPv6kILt+7rI3JP984gbyXXLym6CqgjxJWgGexXrAywqNgeM2DwlWBwO/wPhzB+InqLxhf8h/g==
-
 aurumjs@^0.5.50:
   version "0.5.56"
   resolved "https://registry.yarnpkg.com/aurumjs/-/aurumjs-0.5.56.tgz#bbfb408b525c425c52566f2b2a4628d5037d932f"

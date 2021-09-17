@@ -27,8 +27,6 @@ export * from './entities/components/path_following_component';
 export * from './entities/components/follow_component';
 export * from './entities/components/mouse_interaction_component';
 
-export * from './math/calculation';
-export * from './math/unit';
 export * from './math/math_utils';
 export * from './math/aspect_ratio_calculator';
 export * from './math/vectors/abstract_vector';
@@ -56,7 +54,6 @@ export * from './models/scene_graph';
 
 export * from './utilities/other/save_state_helper';
 export * from './utilities/other/streamline';
-export * from './utilities/other/screen_helper';
 export * from './utilities/data/to_source';
 export * from './utilities/data_structures/squared_array';
 export * from './utilities/data_structures/virtual_union_array';

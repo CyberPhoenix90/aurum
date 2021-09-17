@@ -20,9 +20,6 @@
 		"outFile": "prebuilt/amd/aurum-components.js",
 		"noFallthroughCasesInSwitch": true,
 		"moduleResolution": "node",
-		"paths": {
-			"aurumjs": ["./node_modules/aurumjs"]
-		}
 	},
 	"extends": "../../tsconfig.common.json",
 	"include": ["src/**/*.ts", "src/**/*.tsx"]

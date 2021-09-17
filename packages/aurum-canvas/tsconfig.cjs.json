@@ -19,7 +19,7 @@
 		"noEmitOnError": true,
 		"outDir": "prebuilt/cjs",
 		"noFallthroughCasesInSwitch": true,
-		"moduleResolution": "node"
+		"moduleResolution": "node",
 	},
 	"extends": "../../tsconfig.common.json",
 	"include": ["src/**/*.ts"]

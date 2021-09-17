@@ -25,8 +25,6 @@ export function propsToModel(props: CommonEntityProps): CommonEntity {
         rotation: toSourceIfDefined(props.rotation),
         clip: toSourceIfDefined(props.clip),
         shaders: props.shaders ? (props.shaders instanceof ArrayDataSource ? props.shaders : new ArrayDataSource(props.shaders)) : new ArrayDataSource([]),
-        ignoreLayout: toSourceIfDefined(props.ignoreLayout),
-        spreadLayout: toSourceIfDefined(props.spreadLayout),
         wrapperNode: toSourceIfDefined(props.wrapperNode),
         visible: toSourceIfDefined(props.visible),
         blendMode: toSourceIfDefined(props.blendMode),
