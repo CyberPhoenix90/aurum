@@ -1,6 +1,6 @@
 {
     "name": "aurum-canvas",
-    "version": "0.0.24",
+    "version": "0.0.25",
     "description": "Aurum style scene graph management for rendering in canvas",
     "main": "prebuilt/cjs/aurum-canvas.js",
     "typings": "prebuilt/cjs/aurum-canvas.d.ts",

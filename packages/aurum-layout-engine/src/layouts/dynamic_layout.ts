@@ -82,7 +82,7 @@ export class DynamicLayout extends AbstractLayout {
             computedValue = value;
         } else {
             if (Calculation.isCalculation(value)) {
-                computedValue = new Calculation(value).toPixels(ScreenHelper.PPI, parentSize, 0);
+                computedValue = new Calculation(value).toPixels(ScreenHelper.PPI, parentSize);
             } else {
                 computedValue = new Unit(value).toPixels(ScreenHelper.PPI, parentSize);
             }

@@ -1,4 +1,4 @@
-import { ArrayDataSource, CancellationToken, DataSource } from 'aurumjs';
+import { CancellationToken, DataSource } from 'aurumjs';
 import { NodeChange } from '../layout_engine';
 import { LayoutData, LayoutElementTreeNode, ReflowEvents } from '../model';
 

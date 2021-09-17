@@ -27,7 +27,6 @@ export class LayoutEngine {
     constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken) {
         const layoutTree = new TreeDataSource('children', [rootNode]);
         layoutTree.createArrayDataSourceOfNodes(cancellationToken);
-        layoutTree;
     }
 
     public emitChange(change: NodeChange): void {
@@ -58,10 +57,10 @@ export class LayoutEngine {
     private processNodeChange(change: NodeChange) {
         this.onNodeChange.fire(change);
         if (change.changeFlowDirection === REFOWDIRECTION.UPWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
-            const parent = this.getRelevantParent(change.source);
-            if (parent) {
-                this.pickLayout(parent).onChildChange(change, parent);
-            }
+            // const parent = this.getRelevantParent(change.source);
+            // if (parent) {
+            //     this.pickLayout(parent).onChildChange(change, parent);
+            // }
         }
         if (change.changeFlowDirection === REFOWDIRECTION.DOWNWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
             for (const child of this.iterateChildren(change.source)) {

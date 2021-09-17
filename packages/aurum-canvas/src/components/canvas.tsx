@@ -228,13 +228,23 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                                 bindDynamicEntity(item, child, tokenMap.get(item));
                             }
                             break;
-                        case 'remove': {
+                        case 'remove':
                             for (const item of change.items) {
                                 tokenMap.get(item).cancel();
                                 tokenMap.delete(item);
                             }
                             break;
-                        }
+
+                        case 'replace':
+                            tokenMap.get(change.target).cancel();
+                            tokenMap.delete(change.target);
+                            tokenMap.set(change.items[0], new CancellationToken());
+                            bindDynamicEntity(change.items[0], child, tokenMap.get(change.items[0]));
+                            break;
+                        case 'swap':
+                            break;
+                        case 'merge':
+                            throw new Error('Operation not supported');
                     }
                 });
                 continue;
