@@ -4,7 +4,6 @@
     "description": "Official website for aurum.js",
     "private": true,
     "scripts": {
-        "postinstall": "cd server;npm install",
         "build": "webpack --config webpack.config.js && cd server; tsc",
         "watchclient": "webpack --config webpack.config.js -w",
         "watchserver": "cd ./server; tsc -w",
