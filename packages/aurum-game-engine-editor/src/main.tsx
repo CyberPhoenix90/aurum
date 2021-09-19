@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { Dialog, MenuStrip, MenuStripMenu, MenuStripMenuContent, PanelComponent, PanelContent, PanelDockLeft, TabBar, WindowManager } from 'aurum-components';
-import { Aurum, CancellationToken, ddsMap, dsMap, dsUnique, dsUpdateToken, EventEmitter } from 'aurumjs';
+import { Aurum, CancellationToken, ddsMap, dsMap, dsUnique, dsUpdateToken, ErrorBoundary, EventEmitter } from 'aurumjs';
 import { ipcRenderer } from 'electron';
 import { join, parse, relative } from 'path';
 import { AboutPopup } from './components/about/about_popup';
@@ -187,7 +187,9 @@ async function start() {
                                 {selectedDocument.withInitial(undefined).transform(
                                     dsUnique(),
                                     dsUpdateToken(),
-                                    dsMap(({ token, value }) => pickEditor(value, token))
+                                    dsMap(({ token, value }) => (
+                                        <ErrorBoundary errorFallback={(error) => error.message}> {pickEditor(value, token)}</ErrorBoundary>
+                                    ))
                                 )}
                             </div>
                         </PanelContent>
