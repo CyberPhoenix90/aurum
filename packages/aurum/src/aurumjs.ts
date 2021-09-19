@@ -3,6 +3,7 @@ export * from './rendering/aurum_element';
 export * from './rendering/aurum_style';
 export * from './builtin_components/router';
 export * from './builtin_components/suspense';
+export * from './builtin_components/error_boundary';
 export * from './builtin_components/switch';
 export * from './stream/data_source';
 export * from './stream/duplex_data_source';

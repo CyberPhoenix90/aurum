@@ -8,7 +8,8 @@
         "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
         "watch": "tsc -p tsconfig.cjs.json -w",
         "prepublish": "npm run build",
-        "test": "tsc -p tsconfig.test.json && http-server -o -c-1"
+        "test": "tsc -p tsconfig.test.json && http-server -o -c-1",
+        "test-watch": "tsc -p tsconfig.test.json -w | http-server -o -c-1"
     },
     "homepage": "https://aurumjs.org/",
     "repository": {
