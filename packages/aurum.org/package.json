@@ -4,7 +4,7 @@
     "description": "Official website for aurum.js",
     "private": true,
     "scripts": {
-        "build": "webpack --config webpack.config.js && cd server; tsc",
+        "build": "webpack --config webpack.config.js ",
         "watchclient": "webpack --config webpack.config.js -w",
         "watchserver": "cd ./server; tsc -w",
         "test": "jest",
