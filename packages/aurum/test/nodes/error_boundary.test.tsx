@@ -46,8 +46,28 @@ describe('ErrorBoundary', () => {
         await sleep(0);
         assert(getTestRoot().firstChild.textContent === errorMessage);
     });
+
+    it('Should show error fallback when a nested component throws', async () => {
+        attachToken = attachToTestRoot(
+            <div>
+                <ErrorBoundary errorFallback={(error: Error) => error.message}>
+                    <WrappedThrowComponent />
+                </ErrorBoundary>
+            </div>
+        );
+        await sleep(0);
+        assert(getTestRoot().firstChild.textContent === errorMessage);
+    });
 });
 
 function ThrowComponent(): Renderable {
     throw new Error(errorMessage);
+}
+
+function WrappedThrowComponent(): Renderable {
+    return (
+        <div>
+            <ThrowComponent />
+        </div>
+    );
 }
