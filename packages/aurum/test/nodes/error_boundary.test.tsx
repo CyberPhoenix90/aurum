@@ -1,12 +1,12 @@
 import { assert } from 'chai';
-import { ErrorBoundary, Renderable, Aurum } from '../../src/aurumjs';
+import { ErrorBoundary, CancellationToken, Renderable, Aurum } from '../../src/aurumjs';
 import { attachToTestRoot, getTestRoot, sleep } from '../test_utils';
 import { generateSuspenseTests } from './suspense.test';
 
 const errorMessage = "I'm an error";
 
 describe('ErrorBoundary', () => {
-    let attachToken;
+    let attachToken: CancellationToken;
 
     afterEach(() => {
         attachToken?.cancel();
@@ -43,7 +43,6 @@ describe('ErrorBoundary', () => {
                 </ErrorBoundary>
             </div>
         );
-        await sleep(0);
         assert(getTestRoot().firstChild.textContent === errorMessage);
     });
 
@@ -55,7 +54,6 @@ describe('ErrorBoundary', () => {
                 </ErrorBoundary>
             </div>
         );
-        await sleep(0);
         assert(getTestRoot().firstChild.textContent === errorMessage);
     });
 });

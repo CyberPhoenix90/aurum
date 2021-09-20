@@ -9,10 +9,11 @@ export interface ErrorBoundaryProps {
 }
 
 export function ErrorBoundary(props: ErrorBoundaryProps, children: Renderable[], api: AurumComponentAPI) {
-    const lc = createLifeCycle();
-    api.synchronizeLifeCycle(lc);
     const data = new DataSource<Renderable | Renderable[]>(props?.suspenseFallback);
     const renderFallbackError: ErrorRenderer = typeof props?.errorFallback === 'function' ? props.errorFallback : (error) => props?.errorFallback as Renderable;
+
+    const lc = createLifeCycle();
+    api.onDetach(() => lc.onDetach());
 
     function onDone(res: any[]): void {
         if (!api.cancellationToken.isCanceled) {
@@ -22,11 +23,9 @@ export function ErrorBoundary(props: ErrorBoundaryProps, children: Renderable[],
     }
 
     function onError(error: any): void {
-        lc.onDetach();
         console.error(error);
         if (!api.cancellationToken.isCanceled) {
             data.update(renderFallbackError(error));
-            lc.onAttach();
         }
     }
 

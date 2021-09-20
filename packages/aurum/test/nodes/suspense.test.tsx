@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { CancellationToken, Renderable, Suspense, Aurum } from '../../src/aurumjs';
 import { attachToTestRoot, getTestRoot, sleep } from '../test_utils';
 
@@ -30,6 +31,19 @@ export function generateSuspenseTests(renderSuspense: (fallback?: Renderable, ch
         assert(getTestRoot().firstChild.textContent === '1');
         await sleep(0);
         assert(getTestRoot().firstChild.textContent === '2');
+    });
+
+    it('Should call onAttach and onDetach of child in correct order', async () => {
+        const attachCallback = sinon.spy();
+        const detachCallback = sinon.spy();
+
+        attachToken = attachToTestRoot(renderSuspense('1', new Promise((r) => r(<div onAttach={() => attachCallback()} onDetach={() => detachCallback()} />))));
+        await sleep(0);
+        attachToken.cancel();
+
+        assert(attachCallback.calledOnce, 'onAttach should get called once');
+        assert(detachCallback.calledOnce, 'onDetach should get called once');
+        assert(attachCallback.calledBefore(detachCallback), 'onAttach should get called before onDetach');
     });
 }
 
