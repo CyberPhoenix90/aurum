@@ -15,11 +15,13 @@ export function renderBottomDock(
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
+    cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ) {
     return (
         <div
             class={combineClass(
+                cancellationToken,
                 model.props.class,
                 className({
                     ['bottom-dock']: true,
@@ -40,14 +42,13 @@ export function renderBottomDock(
 export function renderTopDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
-    dragHandleThickness: number = 2
+    cancellationToken: CancellationToken
 ) {
     return (
         <div
             class={combineClass(
+                cancellationToken,
                 model.props.class,
                 className({
                     ['top-dock']: true,
@@ -67,6 +68,7 @@ export function renderLeftDock(
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
+    cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
     const result = [];
@@ -74,6 +76,7 @@ export function renderLeftDock(
     result.push(
         <div
             class={combineClass(
+                cancellationToken,
                 model.props.class,
                 className({
                     ['left-dock']: true,
@@ -101,6 +104,7 @@ export function renderRightDock(
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
     className: any,
+    cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
     const result = [];
@@ -108,6 +112,7 @@ export function renderRightDock(
     result.push(
         <div
             class={combineClass(
+                cancellationToken,
                 model.props.class,
                 className({
                     ['right-dock']: true,

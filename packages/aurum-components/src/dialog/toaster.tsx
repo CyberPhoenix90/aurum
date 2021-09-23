@@ -108,16 +108,16 @@ export function Toast(props: { type: 'info' | 'success' | 'warning' | 'error' },
     let toastClass: ClassType = toastStyle;
     switch (props.type) {
         case 'info':
-            toastClass = combineClass(toastStyle, 'info');
+            toastClass = combineClass(api.cancellationToken, toastStyle, 'info');
             break;
         case 'success':
-            toastClass = combineClass(toastStyle, 'success');
+            toastClass = combineClass(api.cancellationToken, toastStyle, 'success');
             break;
         case 'warning':
-            toastClass = combineClass(toastStyle, 'warn');
+            toastClass = combineClass(api.cancellationToken, toastStyle, 'warn');
             break;
         case 'error':
-            toastClass = combineClass(toastStyle, 'error');
+            toastClass = combineClass(api.cancellationToken, toastStyle, 'error');
             break;
     }
 

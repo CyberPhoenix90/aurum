@@ -52,7 +52,7 @@ export function Sidebar(props: SidebarProps, children: Renderable[], api: AurumC
     const resolvedChildren = resolveChildren(children, api.cancellationToken, (c) => (c as AurumElementModel<any>).factory === SidebarItem);
 
     return (
-        <div class={combineClass(style, props.class)} style={props.style}>
+        <div class={combineClass(api.cancellationToken, style, props.class)} style={props.style}>
             <ul>{resolvedChildren}</ul>
         </div>
     );
@@ -66,10 +66,11 @@ export function SidebarItem(
         class?: ClassType;
         style?: AttributeValue;
     },
-    children: Renderable[]
+    children: Renderable[],
+    api: AurumComponentAPI
 ): Renderable {
     return (
-        <li title={props.title} onClick={props.onClick} class={combineClass(props.class, 'sidebar-item')} style={props.style}>
+        <li title={props.title} onClick={props.onClick} class={combineClass(api.cancellationToken, props.class, 'sidebar-item')} style={props.style}>
             <a href={props.href}>{children}</a>
         </li>
     );

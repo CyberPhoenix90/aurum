@@ -35,7 +35,8 @@ export function MenuStrip(
 		class?: ClassType;
 		dialogSource: ArrayDataSource<Renderable>;
 	},
-	children: Renderable[]
+	children: Renderable[],
+	api: AurumComponentAPI
 ): Renderable {
 	const controller = {
 		openId: new DataSource(-1),
@@ -51,7 +52,7 @@ export function MenuStrip(
 		(menu as AurumElementModel<any>).props.controller = controller;
 	}
 
-	return <div class={combineClass(style, props.class)}>{children}</div>;
+	return <div class={combineClass(api.cancellationToken, style, props.class)}>{children}</div>;
 }
 
 interface MenuStripController {

@@ -54,7 +54,6 @@ export interface AurumComponentAPI {
     synchronizeLifeCycle(lifeCycle: ComponentLifeCycle): void;
     onAttach(cb: () => void): void;
     onDetach(cb: () => void): void;
-    onError(cb: (error: Error) => Renderable): void;
     cancellationToken: CancellationToken;
     prerender(children: Renderable[], lifeCycle: ComponentLifeCycle): any[];
     prerender(child: Renderable, lifeCycle: ComponentLifeCycle): any;
@@ -379,9 +378,6 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
                 session.tokens.push(token);
             }
             token.addCancelable(cb);
-        },
-        onError: (cb) => {
-            throw new Error('not implemented');
         },
         get cancellationToken() {
             if (!token) {

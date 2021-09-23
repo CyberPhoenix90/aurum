@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { AttributeValue, Aurum, ClassType, combineClass, DataSource, dsMap, Renderable } from 'aurumjs';
+import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, DataSource, dsMap, Renderable } from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -45,13 +45,30 @@ interface CardProps {
     closable?: AttributeValue;
     style?: AttributeValue;
     class?: ClassType;
+    onClick?: (e: MouseEvent) => void;
+    onMouseDown?: (e: MouseEvent) => void;
+    onMouseUp?: (e: MouseEvent) => void;
+    onMouseEnter?: (e: MouseEvent) => void;
+    onMouseLeave?: (e: MouseEvent) => void;
+    onAttach?: (div: HTMLDivElement) => void;
+    onDetach?: () => void;
 }
 
-export function Card(props: CardProps, children: Renderable): Renderable {
+export function Card(props: CardProps, children: Renderable, api: AurumComponentAPI): Renderable {
     const closable = props.closable instanceof DataSource ? props.closable : new DataSource(props.closable ?? false);
 
     return (
-        <div class={combineClass(style, props.class)} style={props.style}>
+        <div
+            class={combineClass(api.cancellationToken, style, props.class)}
+            style={props.style}
+            onClick={props.onClick}
+            onMouseDown={props.onMouseDown}
+            onMouseUp={props.onMouseUp}
+            onMouseEnter={props.onMouseEnter}
+            onMouseLeave={props.onMouseLeave}
+            onAttach={props.onAttach}
+            onDetach={props.onDetach}
+        >
             {closable.transform(
                 dsMap((v) =>
                     v ? (
