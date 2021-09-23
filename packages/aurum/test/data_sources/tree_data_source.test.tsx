@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, CancellationToken, TreeDataSource } from '../src/aurumjs';
+import { ArrayDataSource, CancellationToken, TreeDataSource } from '../../src/aurumjs';
 
 describe('TreeDatasource', () => {
     let attachToken: CancellationToken;

@@ -1,7 +1,7 @@
-import { ArrayDataSource, DataSource } from './data_source';
-import { Callback } from '../utilities/common';
 import { CancellationToken } from '../utilities/cancellation_token';
+import { Callback } from '../utilities/common';
 import { EventEmitter } from '../utilities/event_emitter';
+import { ArrayDataSource, DataSource } from './data_source';
 import { DuplexDataSource } from './duplex_data_source';
 
 export interface ObjectChange<T, K extends keyof T> {
@@ -30,6 +30,58 @@ export class ObjectDataSource<T> {
         }
     }
 
+    public pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ObjectDataSource<T[K]> {
+        if (typeof this.data[key] === 'object') {
+            const subDataSource: ObjectDataSource<T[K]> = new ObjectDataSource(this.data[key]);
+
+            subDataSource.listen((change) => {
+                if (change.deleted) {
+                    delete this.data[key][change.key];
+                } else {
+                    this.get(key)[change.key] = change.newValue as any;
+                }
+            }, cancellationToken);
+
+            this.listenOnKey(key, (v) => {
+                if (typeof v.newValue === 'object') {
+                    if (v.newValue !== subDataSource.data) {
+                        subDataSource.merge(v.newValue);
+                    }
+                } else {
+                    subDataSource.clear();
+                }
+            });
+
+            return subDataSource;
+        } else {
+            throw new Error('Cannot pick a non object key');
+        }
+    }
+
+    public pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ArrayDataSource<FlatArray<T[K], 1>> {
+        if (Array.isArray(this.data[key])) {
+            const subDataSource: ArrayDataSource<FlatArray<T[K], 1>> = new ArrayDataSource(this.data?.[key] as any);
+
+            subDataSource.listen((change) => {
+                this.set(key, change.newState as any);
+            }, cancellationToken);
+
+            this.listenOnKey(key, (v) => {
+                if (Array.isArray(v.newValue)) {
+                    if (v.newValue.length !== subDataSource.length.value || !subDataSource.getData().every((item, index) => v.newValue[index] === item)) {
+                        subDataSource.merge(v.newValue);
+                    }
+                } else {
+                    subDataSource.clear();
+                }
+            });
+
+            return subDataSource;
+        } else {
+            throw new Error('Cannot pick a non array key');
+        }
+    }
+
     /**
      * Creates a datasource for a single key of the object
      * @param key
@@ -38,10 +90,16 @@ export class ObjectDataSource<T> {
     public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DataSource<T[K]> {
         const subDataSource: DataSource<T[K]> = new DataSource(this.data?.[key]);
 
+        subDataSource.listen(() => {
+            this.set(key, subDataSource.value);
+        }, cancellationToken);
+
         this.listenOnKey(
             key,
             (v) => {
-                subDataSource.update(v.newValue);
+                if (subDataSource.value !== v.newValue) {
+                    subDataSource.update(v.newValue);
+                }
             },
             cancellationToken
         );
@@ -214,6 +272,42 @@ export class ObjectDataSource<T> {
                 this.set(key as keyof T, newData[key]);
             }
         }
+    }
+
+    /**
+     * Merge the key value pairs of an object into this object non recursively and delete properties that do not exist in the newData
+     * @param newData
+     */
+    public merge(newData: Partial<T> | ObjectDataSource<T>): void {
+        const keys = new Set<string>(Object.keys(this.data));
+        if (newData instanceof ObjectDataSource) {
+            for (const key of newData.keys()) {
+                keys.delete(key);
+                this.set(key as keyof T, newData.data[key]);
+            }
+        } else {
+            for (const key of Object.keys(newData)) {
+                keys.delete(key);
+                this.set(key as keyof T, newData[key]);
+            }
+        }
+
+        for (const key of keys) {
+            this.delete(key as keyof T);
+        }
+    }
+
+    /**
+     * Deletes all keys
+     */
+    public clear(): void {
+        for (const key in this.data) {
+            this.delete(key);
+        }
+    }
+
+    public getData(): Readonly<T> {
+        return this.data;
     }
 
     /**
