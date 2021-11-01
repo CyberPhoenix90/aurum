@@ -1,15 +1,24 @@
 import { CancellationToken, DataSource } from 'aurumjs';
 import { NodeChange } from '../layout_engine';
-import { LayoutData, LayoutElementTreeNode, ReflowEvents } from '../model';
+import { LayoutData, LayoutElementTreeNode, ReflowEvent } from '../model';
 
 export abstract class AbstractLayout {
     protected token: CancellationToken;
+    private static abstractReflowTriggers: Set<ReflowEvent> = new Set();
 
-    public onChildChange(change: NodeChange, affectedParent: LayoutElementTreeNode) {}
+    public onSelfChange(self: LayoutElementTreeNode, layoutData: LayoutData, layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>): void {}
 
-    public onParentChange(change: NodeChange, affectedChild: LayoutElementTreeNode) {}
+    public onChildChange(change: NodeChange, affectedParent: LayoutElementTreeNode, emitChange: (change: NodeChange) => void): void {}
 
-    public initialize(): LayoutData {
+    public onParentChange(
+        change: NodeChange,
+        affectedChild: LayoutElementTreeNode,
+        affectedChildLayout: LayoutData,
+        layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
+        emitChange: (change: NodeChange) => void
+    ): void {}
+
+    public createDefaultLayoutData(): LayoutData {
         return {
             x: new DataSource(0),
             y: new DataSource(0),
@@ -21,26 +30,13 @@ export abstract class AbstractLayout {
         };
     }
 
-    public reflowTriggers(owner: LayoutElementTreeNode): ReflowEvents[] {
-        return [];
-    }
-
-    public link(data: LayoutData, owner: LayoutElementTreeNode, layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>): void {
-        if (this.token) {
-            throw new Error('Same layout linked twice');
-        }
-
-        this.token = new CancellationToken();
-        this.onLink(data, owner, layoutDataByNode, this.token);
-    }
-    public unlink(): void {
-        this.token.cancel();
-        this.token = undefined;
+    public reflowTriggers(): Set<ReflowEvent> {
+        return AbstractLayout.abstractReflowTriggers;
     }
 
     public abstract onLink(
+        node: LayoutElementTreeNode,
         layout: LayoutData,
-        owner: LayoutElementTreeNode,
         layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
         sessionToken: CancellationToken
     ): void;

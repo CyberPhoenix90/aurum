@@ -7,7 +7,9 @@
     "scripts": {
         "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
         "watch": "tsc -p tsconfig.cjs.json -w",
-        "prepublish": "npm run build"
+        "prepublish": "npm run build",
+        "test": "tsc -p tsconfig.test.json && http-server -o -c-1",
+        "test-watch": "tsc -p tsconfig.test.json -w | http-server -o -c-1"
     },
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -25,5 +27,11 @@
     "dependencies": {
         "aurumjs": "0.6.32"
     },
-    "devDependencies": {}
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "mocha": "^8.2.1",
+        "prettier": "^2.2.1",
+        "requirejs": "^2.3.6",
+        "sinon": "^9.0.3"
+    }
 }

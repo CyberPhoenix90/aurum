@@ -22,17 +22,7 @@ export enum DIRECTION4 {
     LEFT = 'LEFT'
 }
 
-export type ReflowEvents =
-    | 'onChildAdded'
-    | 'onChildRemoved'
-    | 'onDescendantAdded'
-    | 'onDescendantRemoved'
-    | 'onChildMoved'
-    | 'onChildResized'
-    | 'onChildSwapped'
-    | 'onDescendandMoved'
-    | 'onDescendandResized'
-    | 'onParentResized';
+export type ReflowEvent = 'onChildAdded' | 'onChildRemoved' | 'onChildMoved' | 'onChildResized' | 'onChildSwapped' | 'onParentResized' | 'onLayoutChanged';
 
 export interface LayoutData {
     x: DataSource<number>;
@@ -41,7 +31,7 @@ export interface LayoutData {
     innerHeight: DataSource<number>;
     outerWidth: DataSource<number>;
     outerHeight: DataSource<number>;
-    reflowEventListener: Set<ReflowEvents>;
+    reflowEventListener: Set<ReflowEvent>;
 }
 
 export interface LayoutElementTreeNode {

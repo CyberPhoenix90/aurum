@@ -1,16 +1,12 @@
-import { CancellationToken, DataSource, EventEmitter, TreeDataSource } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, dsTap, dsUnique, EventEmitter, TreeDataSource } from 'aurumjs';
 import { AbstractLayout } from './layouts/abstract_layout';
 import { BasicLayout } from './layouts/basic_layout';
-import { LayoutData, LayoutElementTreeNode, REFOWDIRECTION } from './model';
+import { LayoutData, LayoutElementTreeNode, ReflowEvent, REFOWDIRECTION } from './model';
 import { ReflowWorkList } from './reflow_work_list';
-
-const defaultLayout = new BasicLayout();
 
 export interface NodeChange {
     source: LayoutElementTreeNode;
-    innerSizeChanged: boolean;
-    outerSizeChanged: boolean;
-    positionChanged: boolean;
+    change: ReflowEvent;
     changeFlowDirection: REFOWDIRECTION;
 }
 
@@ -20,16 +16,268 @@ export class LayoutEngine {
     private reflowQueued: boolean;
 
     public onReflow: EventEmitter<void> = new EventEmitter();
-    public onReflowEnd: EventEmitter<{ nodesRecomputed: number; timeTaken: number }> = new EventEmitter();
+    public onReflowEnd: EventEmitter<{ changesProcessed: number; timeTaken: number }> = new EventEmitter();
     public onNodeChange: EventEmitter<NodeChange> = new EventEmitter();
-    private layoutCache: WeakMap<LayoutElementTreeNode, DataSource<AbstractLayout>> = new WeakMap();
+    private layoutCache: WeakMap<LayoutElementTreeNode, AbstractLayout> = new WeakMap();
+    private rootLayout: AbstractLayout;
 
-    constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken) {
+    constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken, rootLayout = new BasicLayout()) {
+        this.layoutDataByNode = new WeakMap();
+        this.rootLayout = rootLayout;
+        this.boundEmitChange = this.emitChange.bind(this);
+
         const layoutTree = new TreeDataSource('children', [rootNode]);
-        layoutTree.createArrayDataSourceOfNodes(cancellationToken);
+        const nodes = layoutTree.createArrayDataSourceOfNodes(cancellationToken) as ArrayDataSource<LayoutElementTreeNode>;
+
+        const nodeListenMap = new WeakMap<LayoutElementTreeNode, CancellationToken>();
+        nodes.onItemsAdded.subscribe((newNodes) => {
+            for (const node of newNodes) {
+                this.linkNode(node, nodeListenMap);
+            }
+        }, cancellationToken);
+
+        nodes.onItemsRemoved.subscribe((removedNodes) => {
+            for (const node of removedNodes) {
+                this.unlinkNode(node, nodeListenMap);
+            }
+        }, cancellationToken);
+
+        for (const node of nodes) {
+            this.linkNode(node, nodeListenMap);
+        }
     }
 
-    public emitChange(change: NodeChange): void {
+    private unlinkNode(node: LayoutElementTreeNode, nodeListenMap: WeakMap<LayoutElementTreeNode, CancellationToken>): void {
+        nodeListenMap.get(node).cancel();
+        nodeListenMap.delete(node);
+    }
+
+    private linkNode(node: LayoutElementTreeNode, nodeListenMap: WeakMap<LayoutElementTreeNode, CancellationToken>): void {
+        nodeListenMap.set(node, new CancellationToken());
+        const cancellationToken = nodeListenMap.get(node);
+        let started = false;
+
+        const layout = this.pickLayout(node);
+        const layoutData = layout.createDefaultLayoutData();
+        this.layoutDataByNode.set(node, layoutData);
+        layout.onLink(node, layoutData, this.layoutDataByNode, cancellationToken);
+
+        const triggers = layout.reflowTriggers();
+
+        if (triggers.has('onChildAdded')) {
+            node.children.onItemsAdded.subscribe(() => {
+                if (started) {
+                    this.emitChange({
+                        changeFlowDirection: REFOWDIRECTION.BIDIRECTIONAL,
+                        source: node,
+                        change: 'onChildAdded'
+                    });
+                }
+            }, cancellationToken);
+        }
+
+        if (triggers.has('onChildRemoved')) {
+            node.children.onItemsRemoved.subscribe(() => {
+                if (started) {
+                    this.emitChange({
+                        changeFlowDirection: REFOWDIRECTION.BIDIRECTIONAL,
+                        source: node,
+                        change: 'onChildRemoved'
+                    });
+                }
+            }, cancellationToken);
+        }
+
+        if (triggers.has('onChildMoved')) {
+            node.x.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildMoved'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.y.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildMoved'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+        }
+
+        if (triggers.has('onChildResized') || triggers.has('onParentResized')) {
+            node.width.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        if (triggers.has('onChildResized')) {
+                            this.emitChange({
+                                changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                                source: node,
+                                change: 'onChildResized'
+                            });
+                        }
+                    }
+
+                    if (triggers.has('onParentResized')) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.DOWNWARDS,
+                            source: node,
+                            change: 'onParentResized'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.height.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        if (triggers.has('onChildResized')) {
+                            this.emitChange({
+                                changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                                source: node,
+                                change: 'onChildResized'
+                            });
+                        }
+
+                        if (triggers.has('onParentResized')) {
+                            this.emitChange({
+                                changeFlowDirection: REFOWDIRECTION.DOWNWARDS,
+                                source: node,
+                                change: 'onParentResized'
+                            });
+                        }
+                    }
+                }),
+                cancellationToken
+            );
+        }
+
+        if (triggers.has('onChildMoved')) {
+            node.marginBottom.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildResized'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.marginLeft.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildResized'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.marginRight.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildResized'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.marginTop.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildResized'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+        }
+
+        node.layout.transform(
+            dsUnique(),
+            dsTap(() => {
+                if (started) {
+                    throw new Error('Not implemented');
+                }
+                // this.layoutCache = new WeakMap();
+                // this.emitChange({
+                //     changeFlowDirection: REFOWDIRECTION.DOWNWARDS,
+                //     source: node,
+                //     change: 'onLayoutChanged'
+                // });
+            }),
+            cancellationToken
+        );
+
+        if (triggers.has('onChildMoved')) {
+            node.originX.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildMoved'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            node.originY.transform(
+                dsUnique(),
+                dsTap(() => {
+                    if (started) {
+                        this.emitChange({
+                            changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                            source: node,
+                            change: 'onChildMoved'
+                        });
+                    }
+                }),
+                cancellationToken
+            );
+
+            started = true;
+        }
+    }
+
+    // To keep emit change private while allowing to use it othersie this class we make a bound reference that we can pass around
+    private boundEmitChange: (change: NodeChange) => void;
+    private emitChange(change: NodeChange): void {
         if (!this.reflowQueued) {
             queueMicrotask(() => this.reflow());
             this.reflowQueued = true;
@@ -49,34 +297,41 @@ export class LayoutEngine {
 
         this.reflowWork.clear();
         this.onReflowEnd.fire({
-            nodesRecomputed: changes,
+            changesProcessed: changes,
             timeTaken: performance.now() - t
         });
     }
 
     private processNodeChange(change: NodeChange) {
         this.onNodeChange.fire(change);
+
+        const layout = this.pickLayout(change.source);
+        layout.onSelfChange(change.source, this.layoutDataByNode.get(change.source), this.layoutDataByNode);
+
         if (change.changeFlowDirection === REFOWDIRECTION.UPWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
-            // const parent = this.getRelevantParent(change.source);
-            // if (parent) {
-            //     this.pickLayout(parent).onChildChange(change, parent);
-            // }
+            const parent = change.source.parent.value;
+            if (parent && this.layoutDataByNode.get(parent).reflowEventListener.has(change.change)) {
+                this.pickLayout(parent).onChildChange(change, parent, this.boundEmitChange);
+            }
         }
         if (change.changeFlowDirection === REFOWDIRECTION.DOWNWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
             for (const child of this.iterateChildren(change.source)) {
-                this.pickLayout(child).onParentChange(change, child);
+                const layoutData = this.layoutDataByNode.get(child);
+                if (layoutData.reflowEventListener.has(change.change)) {
+                    this.pickLayout(child).onParentChange(change, child, layoutData, this.layoutDataByNode, this.boundEmitChange);
+                }
             }
         }
     }
 
     private pickLayout(node: LayoutElementTreeNode): AbstractLayout {
         if (this.layoutCache.has(node)) {
-            return this.layoutCache.get(node).value;
+            return this.layoutCache.get(node);
         } else {
             let ptr = node.parent.value;
             while (ptr) {
                 if (ptr.layout.value) {
-                    this.layoutCache.set(node, ptr.layout);
+                    this.layoutCache.set(node, ptr.layout.value);
                     return ptr.layout.value;
                 } else {
                     ptr = ptr.parent.value;
@@ -84,7 +339,7 @@ export class LayoutEngine {
             }
         }
 
-        return defaultLayout;
+        return this.rootLayout;
     }
 
     private *iterateChildren(node: LayoutElementTreeNode): IterableIterator<LayoutElementTreeNode> {

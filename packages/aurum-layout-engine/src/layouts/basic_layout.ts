@@ -8,30 +8,30 @@ import { AbstractLayout } from './abstract_layout';
  */
 export class BasicLayout extends AbstractLayout {
     public onLink(
+        node: LayoutElementTreeNode,
         data: LayoutData,
-        owner: LayoutElementTreeNode,
         layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
         sessionToken: CancellationToken
     ): void {
-        owner.width.transform(
+        node.width.transform(
             dsMap((s) => (typeof s === 'number' ? s : 0)),
             dsPipe(data.innerWidth),
             dsPipe(data.outerWidth),
             sessionToken
         );
-        owner.height.transform(
+        node.height.transform(
             dsMap((s) => (typeof s === 'number' ? s : 0)),
             dsPipe(data.innerHeight),
             dsPipe(data.outerHeight),
             sessionToken
         );
 
-        owner.x.transform(
+        node.x.transform(
             dsMap((s) => (typeof s === 'number' ? s : 0)),
             dsPipe(data.x),
             sessionToken
         );
-        owner.y.transform(
+        node.y.transform(
             dsMap((s) => (typeof s === 'number' ? s : 0)),
             dsPipe(data.y),
             sessionToken

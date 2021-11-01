@@ -1,7 +1,8 @@
 import { CancellationToken } from 'aurumjs';
+import { NodeChange } from '../layout_engine';
 import { Calculation } from '../math/calculation';
 import { Unit } from '../math/unit';
-import { LayoutData, LayoutElementTreeNode, Position, ReflowEvents, Size } from '../model';
+import { LayoutData, LayoutElementTreeNode, Position, ReflowEvent, REFOWDIRECTION, Size } from '../model';
 import { ScreenHelper } from '../screen_helper';
 import { AbstractLayout } from './abstract_layout';
 
@@ -10,19 +11,21 @@ import { AbstractLayout } from './abstract_layout';
  *
  */
 export class DynamicLayout extends AbstractLayout {
-    public reflowTriggers(owner: LayoutElementTreeNode): ReflowEvents[] {
-        return ['onChildAdded', 'onChildMoved', 'onChildRemoved', 'onChildResized', 'onParentResized'];
+    private static dynamicReflowTriggers: Set<ReflowEvent> = new Set(['onChildAdded', 'onChildMoved', 'onChildRemoved', 'onChildResized', 'onParentResized']);
+
+    public reflowTriggers(): Set<ReflowEvent> {
+        return DynamicLayout.dynamicReflowTriggers;
     }
 
     public onLink(
+        node: LayoutElementTreeNode,
         layout: LayoutData,
-        owner: LayoutElementTreeNode,
         layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
         sessionToken: CancellationToken
     ): void {
         const events = layout.reflowEventListener;
-        owner.width.aggregate(
-            [owner.height],
+        node.width.aggregate(
+            [node.height],
             (w, h) => {
                 if (this.isSizeRelativeToParent(w) || this.isSizeRelativeToParent(h)) {
                     events.add('onParentResized');
@@ -45,32 +48,120 @@ export class DynamicLayout extends AbstractLayout {
             sessionToken
         );
 
-        if (owner.parent.value) {
-            layout.innerWidth.update(
-                this.computeSize(owner.width.value, layoutDataByNode.get(owner.parent.value).innerWidth.value, 'x', owner.children.getData(), layoutDataByNode)
-            );
-            layout.outerWidth.update(layout.innerWidth.value + owner.marginLeft.value + owner.marginRight.value);
-            layout.innerHeight.update(
-                this.computeSize(
-                    owner.height.value,
-                    layoutDataByNode.get(owner.parent.value).innerHeight.value,
-                    'x',
-                    owner.children.getData(),
-                    layoutDataByNode
-                )
-            );
-            layout.outerHeight.update(layout.innerHeight.value + owner.marginTop.value + owner.marginBottom.value);
+        this.onSelfChange(node, layout, layoutDataByNode);
+    }
 
-            layout.x.update(
-                this.computePosition(owner.x.value, layout.outerWidth.value, owner.originX.value, layoutDataByNode.get(owner.parent.value).innerWidth.value)
-            );
-            layout.y.update(
-                this.computePosition(owner.y.value, layout.outerHeight.value, owner.originY.value, layoutDataByNode.get(owner.parent.value).innerHeight.value)
-            );
+    public onParentChange(
+        change: NodeChange,
+        affectedChild: LayoutElementTreeNode,
+        layout: LayoutData,
+        layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
+        emitChange: (change: NodeChange) => void
+    ): void {
+        const previousPositionX = layout.x.value;
+        const previousPositionY = layout.y.value;
+        const previousWidth = layout.innerWidth.value;
+        const previousHeight = layout.innerHeight.value;
+
+        layout.x.update(
+            this.computePosition(
+                affectedChild.x.value,
+                layout.outerWidth.value,
+                affectedChild.originX.value,
+                layoutDataByNode.get(affectedChild.parent.value).innerWidth.value,
+                affectedChild.parent.value.marginLeft.value
+            )
+        );
+        layout.y.update(
+            this.computePosition(
+                affectedChild.y.value,
+                layout.outerHeight.value,
+                affectedChild.originY.value,
+                layoutDataByNode.get(affectedChild.parent.value).innerHeight.value,
+                affectedChild.parent.value.marginTop.value
+            )
+        );
+
+        if (previousPositionX !== layout.x.value || previousPositionY !== layout.y.value) {
+            emitChange({
+                changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                source: affectedChild,
+                change: 'onChildMoved'
+            });
+        }
+
+        layout.innerWidth.update(
+            this.computeSize(
+                affectedChild.width.value,
+                layoutDataByNode.get(affectedChild.parent.value).innerWidth.value,
+                'x',
+                affectedChild.children.getData(),
+                layoutDataByNode
+            )
+        );
+        layout.innerHeight.update(
+            this.computeSize(
+                affectedChild.height.value,
+                layoutDataByNode.get(affectedChild.parent.value).innerHeight.value,
+                'y',
+                affectedChild.children.getData(),
+                layoutDataByNode
+            )
+        );
+
+        if (previousWidth !== layout.innerWidth.value || previousHeight !== layout.innerHeight.value) {
+            emitChange({
+                changeFlowDirection: REFOWDIRECTION.UPWARDS,
+                source: affectedChild,
+                change: 'onChildResized'
+            });
+            emitChange({
+                changeFlowDirection: REFOWDIRECTION.DOWNWARDS,
+                source: affectedChild,
+                change: 'onParentResized'
+            });
         }
     }
 
-    private computePosition(value: Position, size: number, origin: number, parentSize: number): number {
+    public onSelfChange(node: LayoutElementTreeNode, layout: LayoutData, layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>): void {
+        if (node.parent.value) {
+            layout.innerWidth.update(
+                this.computeSize(node.width.value, layoutDataByNode.get(node.parent.value).innerWidth.value, 'x', node.children.getData(), layoutDataByNode)
+            );
+            layout.innerHeight.update(
+                this.computeSize(node.height.value, layoutDataByNode.get(node.parent.value).innerHeight.value, 'x', node.children.getData(), layoutDataByNode)
+            );
+
+            layout.x.update(
+                this.computePosition(
+                    node.x.value,
+                    layout.outerWidth.value,
+                    node.originX.value,
+                    layoutDataByNode.get(node.parent.value).innerWidth.value,
+                    node.parent.value.marginLeft.value
+                )
+            );
+            layout.y.update(
+                this.computePosition(
+                    node.y.value,
+                    layout.outerHeight.value,
+                    node.originY.value,
+                    layoutDataByNode.get(node.parent.value).innerHeight.value,
+                    node.parent.value.marginTop.value
+                )
+            );
+        } else {
+            layout.innerWidth.update(this.computeSize(node.width.value, 0, 'x', node.children.getData(), layoutDataByNode));
+            layout.innerHeight.update(this.computeSize(node.height.value, 0, 'x', node.children.getData(), layoutDataByNode));
+
+            layout.x.update(this.computePosition(node.x.value, layout.outerWidth.value, node.originX.value, 0, 0));
+            layout.y.update(this.computePosition(node.y.value, layout.outerHeight.value, node.originY.value, 0, 0));
+        }
+        layout.outerWidth.update(layout.innerWidth.value + node.marginLeft.value + node.marginRight.value);
+        layout.outerHeight.update(layout.innerHeight.value + node.marginTop.value + node.marginBottom.value);
+    }
+
+    private computePosition(value: Position, size: number, origin: number, parentSize: number, parentMargin: number): number {
         if (value === undefined) {
             return 0;
         }
@@ -88,7 +179,7 @@ export class DynamicLayout extends AbstractLayout {
             }
         }
 
-        return computedValue - origin * (size ?? 0);
+        return computedValue - origin * (size ?? 0) + parentMargin;
     }
 
     private computeSize(

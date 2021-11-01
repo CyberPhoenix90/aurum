@@ -690,6 +690,8 @@ export interface CollectionChange<T> {
 
 export interface ReadOnlyArrayDataSource<T> {
     [Symbol.iterator](): IterableIterator<T>;
+    onItemsAdded: EventEmitter<T[]>;
+    onItemsRemoved: EventEmitter<T[]>;
     listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
     listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
     listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
