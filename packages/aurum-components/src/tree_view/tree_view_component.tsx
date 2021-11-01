@@ -81,7 +81,9 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 padding-bottom: 2px;
                 user-select: none;
                 display: flex;
+                align-items: center;
                 padding-left: 9px;
+                height: 20px;
 
                 &.hasFocus {
                     &.isActive {
@@ -90,8 +92,9 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                         background-color: ${highlightColor1};
                     }
 
-                    margin: -1px;
+                    margin: -1px 0;
                     border: 1px solid ${color4};
+                    border-width: 1px 0;
                     background-color: ${color1};
                 }
             }
