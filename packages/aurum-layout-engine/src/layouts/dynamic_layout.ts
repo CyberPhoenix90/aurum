@@ -51,6 +51,41 @@ export class DynamicLayout extends AbstractLayout {
         this.onSelfChange(node, layout, layoutDataByNode);
     }
 
+    public onChildChange(
+        change: NodeChange,
+        affectedParent: LayoutElementTreeNode,
+        layout: LayoutData,
+        layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
+        emitChange: (change: NodeChange) => void
+    ): void {
+        if (this.isSizeRelativeToContent(affectedParent.width.value)) {
+            layout.innerWidth.update(
+                this.computeSize(
+                    affectedParent.width.value,
+                    layoutDataByNode.get(affectedParent.parent.value).innerWidth.value,
+                    'x',
+                    affectedParent.children.getData(),
+                    layoutDataByNode
+                )
+            );
+            layout.outerWidth.update(layout.innerWidth.value + affectedParent.marginLeft.value + affectedParent.marginRight.value);
+        }
+
+        if (this.isSizeRelativeToContent(affectedParent.height.value)) {
+            layout.innerHeight.update(
+                this.computeSize(
+                    affectedParent.height.value,
+                    layoutDataByNode.get(affectedParent.parent.value).innerHeight.value,
+                    'y',
+                    affectedParent.children.getData(),
+                    layoutDataByNode
+                )
+            );
+
+            layout.outerHeight.update(layout.innerHeight.value + affectedParent.marginTop.value + affectedParent.marginBottom.value);
+        }
+    }
+
     public onParentChange(
         change: NodeChange,
         affectedChild: LayoutElementTreeNode,
@@ -157,13 +192,28 @@ export class DynamicLayout extends AbstractLayout {
             layout.x.update(this.computePosition(node.x.value, layout.outerWidth.value, node.originX.value, 0, 0));
             layout.y.update(this.computePosition(node.y.value, layout.outerHeight.value, node.originY.value, 0, 0));
         }
-        layout.outerWidth.update(layout.innerWidth.value + node.marginLeft.value + node.marginRight.value);
-        layout.outerHeight.update(layout.innerHeight.value + node.marginTop.value + node.marginBottom.value);
+        if ((layout.innerWidth.value as any) !== 'auto') {
+            layout.outerWidth.update(layout.innerWidth.value + node.marginLeft.value + node.marginRight.value);
+        } else {
+            layout.outerWidth.update(layout.innerWidth.value);
+        }
+        if ((layout.innerHeight.value as any) !== 'auto') {
+            layout.outerHeight.update(layout.innerHeight.value + node.marginTop.value + node.marginBottom.value);
+        } else {
+            layout.outerHeight.update(layout.innerHeight.value);
+        }
     }
 
     private computePosition(value: Position, size: number, origin: number, parentSize: number, parentMargin: number): number {
         if (value === undefined) {
             return 0;
+        }
+        if (value === 'auto') {
+            return value as any;
+        }
+
+        if ((size as any) === 'auto') {
+            size = 0;
         }
 
         let computedValue;
@@ -191,6 +241,10 @@ export class DynamicLayout extends AbstractLayout {
     ): number {
         if (value === undefined) {
             return 0;
+        }
+
+        if (value === 'auto') {
+            return value as any;
         }
 
         if (value === 'inherit') {

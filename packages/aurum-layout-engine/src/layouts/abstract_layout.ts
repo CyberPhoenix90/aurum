@@ -1,4 +1,4 @@
-import { CancellationToken, DataSource } from 'aurumjs';
+import { CancellationToken } from 'aurumjs';
 import { NodeChange } from '../layout_engine';
 import { LayoutData, LayoutElementTreeNode, ReflowEvent } from '../model';
 
@@ -8,7 +8,13 @@ export abstract class AbstractLayout {
 
     public onSelfChange(self: LayoutElementTreeNode, layoutData: LayoutData, layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>): void {}
 
-    public onChildChange(change: NodeChange, affectedParent: LayoutElementTreeNode, emitChange: (change: NodeChange) => void): void {}
+    public onChildChange(
+        change: NodeChange,
+        affectedParent: LayoutElementTreeNode,
+        layout: LayoutData,
+        layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
+        emitChange: (change: NodeChange) => void
+    ): void {}
 
     public onParentChange(
         change: NodeChange,
@@ -17,18 +23,6 @@ export abstract class AbstractLayout {
         layoutDataByNode: WeakMap<LayoutElementTreeNode, LayoutData>,
         emitChange: (change: NodeChange) => void
     ): void {}
-
-    public createDefaultLayoutData(): LayoutData {
-        return {
-            x: new DataSource(0),
-            y: new DataSource(0),
-            innerWidth: new DataSource(0),
-            innerHeight: new DataSource(0),
-            outerWidth: new DataSource(0),
-            outerHeight: new DataSource(0),
-            reflowEventListener: new Set()
-        };
-    }
 
     public reflowTriggers(): Set<ReflowEvent> {
         return AbstractLayout.abstractReflowTriggers;

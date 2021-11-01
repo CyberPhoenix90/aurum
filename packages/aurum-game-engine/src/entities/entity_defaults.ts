@@ -18,5 +18,9 @@ export const entityDefaults: CommonEntity = {
     shaders: new ArrayDataSource([]),
     visible: new DataSource(true),
     wrapperNode: new DataSource(false),
-    zIndex: new DataSource(undefined)
+    zIndex: new DataSource(undefined),
+    marginBottom: new DataSource(0),
+    marginLeft: new DataSource(0),
+    marginRight: new DataSource(0),
+    marginTop: new DataSource(0)
 };

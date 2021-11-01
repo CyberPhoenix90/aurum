@@ -30,6 +30,11 @@ export interface CommonEntityProps {
     visible?: Data<boolean>;
     alpha?: Data<number>;
     rotation?: Data<number>;
+    margin?: Data<number>;
+    marginTop?: Data<number>;
+    marginRight?: Data<number>;
+    marginBottom?: Data<number>;
+    marginLeft?: Data<number>;
     components?: MapDataSource<Constructor<AbstractComponent>, AbstractComponent> | AbstractComponent[];
     class?: CommonEntity[] | ArrayDataSource<CommonEntity>;
     name?: Data<string>;
@@ -43,6 +48,10 @@ export interface CommonEntity {
     y?: DataSource<Position>;
     originX?: DataSource<number>;
     originY?: DataSource<number>;
+    marginTop?: DataSource<number>;
+    marginRight?: DataSource<number>;
+    marginBottom?: DataSource<number>;
+    marginLeft?: DataSource<number>;
     clip?: DataSource<boolean>;
     layout?: DataSource<AbstractLayout>;
     wrapperNode?: DataSource<boolean>;

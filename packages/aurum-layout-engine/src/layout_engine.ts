@@ -1,4 +1,4 @@
-import { ArrayDataSource, CancellationToken, dsTap, dsUnique, EventEmitter, TreeDataSource } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, DataSource, dsTap, dsUnique, EventEmitter, TreeDataSource } from 'aurumjs';
 import { AbstractLayout } from './layouts/abstract_layout';
 import { BasicLayout } from './layouts/basic_layout';
 import { LayoutData, LayoutElementTreeNode, ReflowEvent, REFOWDIRECTION } from './model';
@@ -21,11 +21,13 @@ export class LayoutEngine {
     private layoutCache: WeakMap<LayoutElementTreeNode, AbstractLayout> = new WeakMap();
     private rootLayout: AbstractLayout;
 
-    constructor(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken, rootLayout = new BasicLayout()) {
+    constructor() {
         this.layoutDataByNode = new WeakMap();
-        this.rootLayout = rootLayout;
         this.boundEmitChange = this.emitChange.bind(this);
+    }
 
+    public initialize(rootNode: LayoutElementTreeNode, cancellationToken: CancellationToken, rootLayout = new BasicLayout()) {
+        this.rootLayout = rootLayout;
         const layoutTree = new TreeDataSource('children', [rootNode]);
         const nodes = layoutTree.createArrayDataSourceOfNodes(cancellationToken) as ArrayDataSource<LayoutElementTreeNode>;
 
@@ -52,14 +54,25 @@ export class LayoutEngine {
         nodeListenMap.delete(node);
     }
 
+    private createDefaultLayoutData(): LayoutData {
+        return {
+            x: new DataSource(0),
+            y: new DataSource(0),
+            innerWidth: new DataSource(0),
+            innerHeight: new DataSource(0),
+            outerWidth: new DataSource(0),
+            outerHeight: new DataSource(0),
+            reflowEventListener: new Set()
+        };
+    }
+
     private linkNode(node: LayoutElementTreeNode, nodeListenMap: WeakMap<LayoutElementTreeNode, CancellationToken>): void {
         nodeListenMap.set(node, new CancellationToken());
         const cancellationToken = nodeListenMap.get(node);
         let started = false;
 
         const layout = this.pickLayout(node);
-        const layoutData = layout.createDefaultLayoutData();
-        this.layoutDataByNode.set(node, layoutData);
+        const layoutData = this.getLayoutDataFor(node);
         layout.onLink(node, layoutData, this.layoutDataByNode, cancellationToken);
 
         const triggers = layout.reflowTriggers();
@@ -311,7 +324,8 @@ export class LayoutEngine {
         if (change.changeFlowDirection === REFOWDIRECTION.UPWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
             const parent = change.source.parent.value;
             if (parent && this.layoutDataByNode.get(parent).reflowEventListener.has(change.change)) {
-                this.pickLayout(parent).onChildChange(change, parent, this.boundEmitChange);
+                const layoutData = this.layoutDataByNode.get(parent);
+                this.pickLayout(parent).onChildChange(change, parent, layoutData, this.layoutDataByNode, this.boundEmitChange);
             }
         }
         if (change.changeFlowDirection === REFOWDIRECTION.DOWNWARDS || change.changeFlowDirection === REFOWDIRECTION.BIDIRECTIONAL) {
@@ -350,6 +364,9 @@ export class LayoutEngine {
     }
 
     public getLayoutDataFor(node: LayoutElementTreeNode): LayoutData {
+        if (!this.layoutDataByNode.has(node)) {
+            this.layoutDataByNode.set(node, this.createDefaultLayoutData());
+        }
         return this.layoutDataByNode.get(node);
     }
 }

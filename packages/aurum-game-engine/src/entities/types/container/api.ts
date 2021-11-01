@@ -7,16 +7,16 @@ import { CommonEntity } from '../../../models/entities';
 import { Data } from '../../../models/input_data';
 
 export interface ContainerGraphNodeModel {
-	name?: Data<string>;
-	cancellationToken: CancellationToken;
-	components?: MapDataSource<Constructor<AbstractComponent>, AbstractComponent>;
-	children?: ArrayDataSource<SceneGraphNode<any>>;
-	models: {
-		coreDefault: CommonEntity;
-		entityTypeDefault: ContainerEntity;
-		appliedStyleClasses?: ArrayDataSource<ContainerEntity>;
-		userSpecified: ContainerEntity;
-	};
-	onAttach?(node: ContainerGraphNode): void;
-	onDetach?(node: ContainerGraphNode): void;
+    name: Data<string>;
+    cancellationToken: CancellationToken;
+    components: MapDataSource<Constructor<AbstractComponent>, AbstractComponent>;
+    children?: ArrayDataSource<SceneGraphNode<any>>;
+    models: {
+        coreDefault: CommonEntity;
+        entityTypeDefault: ContainerEntity;
+        appliedStyleClasses: ArrayDataSource<ContainerEntity>;
+        userSpecified: ContainerEntity;
+    };
+    onAttach?(node: ContainerGraphNode): void;
+    onDetach?(node: ContainerGraphNode): void;
 }

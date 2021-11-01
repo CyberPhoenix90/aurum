@@ -1,7 +1,7 @@
-import { PointLike } from 'aurum-layout-engine';
+import { AbstractLayout, LayoutElementTreeNode, PointLike, Position, Size } from 'aurum-layout-engine';
 import { ArrayDataSource, CancellationToken, DataSource, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
 import { render } from '../core/custom_aurum_renderer';
-import { layoutAlgorithm } from '../core/layout_engine';
+import { layoutEngine } from '../core/layout_engine';
 import { AbstractComponent } from '../entities/components/abstract_component';
 import { entityDefaults } from '../entities/entity_defaults';
 import { ContainerGraphNodeModel } from '../entities/types/container/api';
@@ -29,11 +29,55 @@ export interface SceneGraphNodeModel<T> {
     onDetach?(entity: SceneGraphNode<T>);
 }
 
-export abstract class SceneGraphNode<T extends CommonEntity> {
+export abstract class SceneGraphNode<T extends CommonEntity> implements LayoutElementTreeNode {
+    public get x(): DataSource<Position> {
+        return this.resolvedModel.x;
+    }
+
+    public get y(): DataSource<Position> {
+        return this.resolvedModel.y;
+    }
+
+    public get width(): DataSource<Size> {
+        return this.resolvedModel.width;
+    }
+
+    public get height(): DataSource<Size> {
+        return this.resolvedModel.height;
+    }
+
+    public get marginTop(): DataSource<number> {
+        return this.resolvedModel.marginTop;
+    }
+
+    public get marginRight(): DataSource<number> {
+        return this.resolvedModel.marginRight;
+    }
+
+    public get marginBottom(): DataSource<number> {
+        return this.resolvedModel.marginBottom;
+    }
+
+    public get marginLeft(): DataSource<number> {
+        return this.resolvedModel.marginLeft;
+    }
+
+    public get layout(): DataSource<AbstractLayout> {
+        return this.resolvedModel.layout;
+    }
+
+    public get originX(): DataSource<number> {
+        return this.resolvedModel.originX;
+    }
+
+    public get originY(): DataSource<number> {
+        return this.resolvedModel.originY;
+    }
+
     public readonly renderState: EntityRenderModel;
     public name?: DataSource<string>;
     public readonly components?: MapDataSource<Constructor<AbstractComponent>, AbstractComponent>;
-    public parent?: DataSource<SceneGraphNode<CommonEntity>>;
+    public parent: DataSource<SceneGraphNode<CommonEntity>>;
     public readonly uid: number;
     public readonly resolvedModel: T;
     public readonly models: {
@@ -43,7 +87,7 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
         userSpecified: T;
     };
     public readonly cancellationToken: CancellationToken;
-    public readonly children: ArrayDataSource<ArrayDataSource<Renderable> | DataSource<Renderable> | SceneGraphNode<CommonEntity>>;
+    public readonly children: ArrayDataSource<SceneGraphNode<CommonEntity>>;
     public readonly processedChildren: ReadOnlyArrayDataSource<SceneGraphNode<CommonEntity>>;
     private stageId: number;
     private renderPlugin: AbstractRenderPlugin;
@@ -228,7 +272,11 @@ export abstract class SceneGraphNode<T extends CommonEntity> {
             x: this.getModelSourceWithFallbackBase('x'),
             y: this.getModelSourceWithFallbackBase('y'),
             zIndex: this.getModelSourceWithFallbackBase('zIndex'),
-            layout: this.getModelSourceWithFallbackBase('layout')
+            layout: this.getModelSourceWithFallbackBase('layout'),
+            marginBottom: this.getModelSourceWithFallbackBase('marginBottom'),
+            marginLeft: this.getModelSourceWithFallbackBase('marginLeft'),
+            marginRight: this.getModelSourceWithFallbackBase('marginRight'),
+            marginTop: this.getModelSourceWithFallbackBase('marginTop')
         };
     }
 
@@ -301,15 +349,15 @@ export class ContainerGraphNode extends SceneGraphNode<ContainerEntity> {
     }
 
     protected createRenderModel(): ContainerEntityRenderModel {
-        const { x, y, width, height } = layoutAlgorithm(this);
+        const { x, y, innerWidth, innerHeight } = layoutEngine.getLayoutDataFor(this);
         return {
             alpha: this.resolvedModel.alpha,
             clip: this.resolvedModel.clip,
             renderableType: RenderableType.NO_RENDER,
             x: x,
             y: y,
-            width: width,
-            height: height,
+            width: innerWidth,
+            height: innerHeight,
             scaleX: this.resolvedModel.scaleX,
             scaleY: this.resolvedModel.scaleY,
             visible: this.resolvedModel.visible,
@@ -322,11 +370,11 @@ export class ContainerGraphNode extends SceneGraphNode<ContainerEntity> {
 }
 
 export const dataSourceDefaultModel: ContainerEntity = {
-    wrapperNode: new DataSource(true),
+    wrapperNode: new DataSource(true)
 };
 
 export const arrayDataSourceDefaultModel: ContainerEntity = {
-    wrapperNode: new DataSource(true),
+    wrapperNode: new DataSource(true)
 };
 
 export class ArrayDataSourceSceneGraphNode extends ContainerGraphNode {

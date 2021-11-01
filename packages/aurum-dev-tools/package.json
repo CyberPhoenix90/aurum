@@ -5,7 +5,7 @@
     "main": "webpack.js",
     "dependencies": {
         "@types/chrome": "0.0.123",
-        "aurumjs": "0.6.32"
+        "aurumjs": "0.7.1"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^6.1.0",

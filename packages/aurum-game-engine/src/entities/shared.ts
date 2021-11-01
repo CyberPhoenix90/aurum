@@ -11,6 +11,34 @@ export function getComponentByTypeFactory(components: ArrayDataSource<AbstractCo
 }
 
 export function propsToModel(props: CommonEntityProps): CommonEntity {
+    const leftMargin =
+        props.marginLeft ?? props.margin
+            ? DataSource.fromAggregation([toSourceIfDefined(props.marginLeft), toSourceIfDefined(props.margin)], (l, s) => {
+                  return l ?? s;
+              })
+            : undefined;
+
+    const rightMargin =
+        props.marginRight ?? props.margin
+            ? DataSource.fromAggregation([toSourceIfDefined(props.marginRight), toSourceIfDefined(props.margin)], (r, s) => {
+                  return r ?? s;
+              })
+            : undefined;
+
+    const topMargin =
+        props.marginTop ?? props.margin
+            ? DataSource.fromAggregation([toSourceIfDefined(props.marginTop), toSourceIfDefined(props.margin)], (t, s) => {
+                  return t ?? s;
+              })
+            : undefined;
+
+    const bottomMargin =
+        props.marginBottom ?? props.margin
+            ? DataSource.fromAggregation([toSourceIfDefined(props.marginBottom), toSourceIfDefined(props.margin)], (b, s) => {
+                  return b ?? s;
+              })
+            : undefined;
+
     return {
         layout: toSourceIfDefined(props.layout),
         x: toSourceIfDefined(props.x) ?? new DataSource(0),
@@ -28,7 +56,11 @@ export function propsToModel(props: CommonEntityProps): CommonEntity {
         wrapperNode: toSourceIfDefined(props.wrapperNode),
         visible: toSourceIfDefined(props.visible),
         blendMode: toSourceIfDefined(props.blendMode),
-        zIndex: toSourceIfDefined(props.zIndex)
+        zIndex: toSourceIfDefined(props.zIndex),
+        marginBottom: bottomMargin,
+        marginLeft: leftMargin,
+        marginRight: rightMargin,
+        marginTop: topMargin
     };
 }
 

@@ -21,7 +21,7 @@
         "aurum-game-engine": "^0.0.0",
         "aurum-game-editor-api": "0.0.0",
         "aurum-pixijs-renderer": "0.0.0",
-        "aurumjs": "0.6.32",
+        "aurumjs": "0.7.1",
         "chalk": "2.4.2",
         "electron": "13.2.3",
         "minimatch": "3.0.4",

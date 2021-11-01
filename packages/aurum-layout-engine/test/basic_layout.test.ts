@@ -12,7 +12,8 @@ describe('basic layout', () => {
 
     it('Basic Layout with no children', () => {
         const node = createLayoutNode();
-        const le = new LayoutEngine(node, new CancellationToken());
+        const le = new LayoutEngine();
+        le.initialize(node, new CancellationToken(), new DynamicLayout());
         le.onReflow.subscribe(() => {
             assert.fail('Should not be called');
         });
@@ -41,7 +42,8 @@ describe('basic layout', () => {
         const child = createLayoutNode();
         child.parent.update(node);
         node.children.push(child);
-        const le = new LayoutEngine(node, new CancellationToken());
+        const le = new LayoutEngine();
+        le.initialize(node, new CancellationToken(), new DynamicLayout());
         le.onReflow.subscribe(() => {
             assert.fail('Should not be called');
         });
@@ -83,7 +85,8 @@ describe('dynamic layout', () => {
     it('Dynamic Layout with no children', () => {
         return new Promise<void>((resolve, reject) => {
             const node = createLayoutNode();
-            const le = new LayoutEngine(node, new CancellationToken(), new DynamicLayout());
+            const le = new LayoutEngine();
+            le.initialize(node, new CancellationToken(), new DynamicLayout());
             le.onReflowEnd.subscribe((stats) => {
                 console.log(stats);
                 assert(nodeLayout.x.value === 2);
@@ -116,7 +119,8 @@ describe('dynamic layout', () => {
             const child = createLayoutNode();
             child.parent.update(node);
             node.children.push(child);
-            const le = new LayoutEngine(node, new CancellationToken(), new DynamicLayout());
+            const le = new LayoutEngine();
+            le.initialize(node, new CancellationToken(), new DynamicLayout());
             le.onReflowEnd.subscribeOnce((stats) => {
                 assert.equal(nodeLayout.x.value, 20);
                 assert.equal(nodeLayout.y.value, 300);
@@ -171,7 +175,8 @@ describe('dynamic layout', () => {
             node.children.push(child);
             node.children.push(child2);
 
-            const le = new LayoutEngine(node, new CancellationToken(), new DynamicLayout());
+            const le = new LayoutEngine();
+            le.initialize(node, new CancellationToken(), new DynamicLayout());
             le.onReflowEnd.subscribeOnce((stats) => {
                 assert.equal(childLayout.innerWidth.value, 40);
                 assert.equal(childLayout.innerHeight.value, 100);
@@ -205,7 +210,8 @@ describe('dynamic layout', () => {
             child2.parent.update(child);
             child.children.push(child2);
             node.children.push(child);
-            const le = new LayoutEngine(node, new CancellationToken(), new DynamicLayout());
+            const le = new LayoutEngine();
+            le.initialize(node, new CancellationToken(), new DynamicLayout());
             le.onReflowEnd.subscribeOnce((stats) => {
                 assert.equal(childLayout.innerWidth.value, 40);
                 assert.equal(childLayout.outerWidth.value, 50);

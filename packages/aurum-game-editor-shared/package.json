@@ -14,6 +14,6 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "aurumjs": "0.6.32"
+        "aurumjs": "0.7.1"
     }
 }

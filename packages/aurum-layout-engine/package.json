@@ -25,7 +25,7 @@
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT",
     "dependencies": {
-        "aurumjs": "0.6.32"
+        "aurumjs": "0.7.1"
     },
     "devDependencies": {
         "chai": "^4.2.0",

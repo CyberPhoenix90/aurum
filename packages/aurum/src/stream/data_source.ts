@@ -91,20 +91,6 @@ export interface ReadOnlyDataSource<T> {
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>,
-            ReadOnlyDataSource<H>
-        ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    aggregate<R, A, B, C, D, E, F, G, H, I>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
@@ -183,20 +169,6 @@ export interface GenericDataSource<T> {
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G, H>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>,
-            ReadOnlyDataSource<H>
-        ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    aggregate<R, A, B, C, D, E, F, G, H, I>(
         otherSources: [
             ReadOnlyDataSource<A>,
             ReadOnlyDataSource<B>,
@@ -475,8 +447,94 @@ export class DataSource<T> implements GenericDataSource<T> {
         return result;
     }
 
+    public static fromAggregation<R, A>(sources: [ReadOnlyDataSource<A>], combinator?: (first: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
+    public static fromAggregation<R, A, B>(
+        sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
+        combinator?: (first: A, second: B) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C>(
+        sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
+        combinator?: (first: A, second: B, third: C) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D>(
+        sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
+        combinator?: (first: A, second: B, third: C, fourth: D) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D, E>(
+        sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
+        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D, E, F>(
+        sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>, ReadOnlyDataSource<F>],
+        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D, E, F, G>(
+        sources: [
+            ReadOnlyDataSource<A>,
+            ReadOnlyDataSource<B>,
+            ReadOnlyDataSource<C>,
+            ReadOnlyDataSource<D>,
+            ReadOnlyDataSource<E>,
+            ReadOnlyDataSource<F>,
+            ReadOnlyDataSource<G>
+        ],
+        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D, E, F, G, H>(
+        sources: [
+            ReadOnlyDataSource<A>,
+            ReadOnlyDataSource<B>,
+            ReadOnlyDataSource<C>,
+            ReadOnlyDataSource<D>,
+            ReadOnlyDataSource<E>,
+            ReadOnlyDataSource<F>,
+            ReadOnlyDataSource<G>,
+            ReadOnlyDataSource<H>
+        ],
+        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R, A, B, C, D, E, F, G, H, I>(
+        sources: [
+            ReadOnlyDataSource<A>,
+            ReadOnlyDataSource<B>,
+            ReadOnlyDataSource<C>,
+            ReadOnlyDataSource<D>,
+            ReadOnlyDataSource<E>,
+            ReadOnlyDataSource<F>,
+            ReadOnlyDataSource<G>,
+            ReadOnlyDataSource<H>,
+            ReadOnlyDataSource<I>
+        ],
+        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H, ninth: I) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R>;
+    public static fromAggregation<R>(
+        sources: ReadOnlyDataSource<any>[],
+        combinator?: (...data: any[]) => R,
+        cancellationToken?: CancellationToken
+    ): DataSource<R> {
+        cancellationToken = cancellationToken ?? new CancellationToken();
+
+        const aggregatedSource = new DataSource<R>(combinator(...sources.map((s) => s?.value)));
+
+        for (let i = 0; i < sources.length; i++) {
+            sources[i]?.listen(() => {
+                aggregatedSource.update(combinator(...sources.map((s) => s?.value)));
+            }, cancellationToken);
+        }
+
+        return aggregatedSource;
+    }
+
     /**
-     * Combines two sources into a third source that listens to updates from both parent sources.
+     * Combines two or more sources into a new source that listens to updates from both parent sources and combines them
      * @param otherSource Second parent for the new source
      * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
      * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
@@ -550,20 +608,6 @@ export class DataSource<T> implements GenericDataSource<T> {
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>,
-            ReadOnlyDataSource<H>
-        ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E, F, G, H, I>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
@@ -573,15 +617,15 @@ export class DataSource<T> implements GenericDataSource<T> {
     public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
         cancellationToken = cancellationToken ?? new CancellationToken();
 
-        const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s.value)));
+        const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s?.value)));
 
         for (let i = 0; i < otherSources.length; i++) {
-            otherSources[i].listen(() => {
-                aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s.value)));
+            otherSources[i]?.listen(() => {
+                aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s?.value)));
             }, cancellationToken);
         }
 
-        this.listen(() => aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s.value))), cancellationToken);
+        this.listen(() => aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s?.value))), cancellationToken);
 
         return aggregatedSource;
     }

@@ -1,8 +1,8 @@
-import { layoutAlgorithm } from '../../../core/layout_engine';
 import { RenderableType } from '../../../models/entities';
 import { PointLike } from 'aurum-layout-engine';
 import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph';
 import { CameraEntity, CameraEntityRenderModel } from './model';
+import { layoutEngine } from '../../../core/layout_engine';
 
 export class CameraGraphNode extends SceneGraphNode<CameraEntity> {
     public declare readonly renderState: CameraEntityRenderModel;
@@ -20,7 +20,8 @@ export class CameraGraphNode extends SceneGraphNode<CameraEntity> {
     }
 
     protected createRenderModel(): CameraEntityRenderModel {
-        const { x, y, width, height } = layoutAlgorithm(this);
+        const { x, y, innerWidth, innerHeight } = layoutEngine.getLayoutDataFor(this);
+
         return {
             view: undefined,
             alpha: this.resolvedModel.alpha,
@@ -29,8 +30,8 @@ export class CameraGraphNode extends SceneGraphNode<CameraEntity> {
             renderableType: RenderableType.CAMERA,
             x: x,
             y: y,
-            width: width,
-            height: height,
+            width: innerWidth,
+            height: innerHeight,
             scaleX: this.resolvedModel.scaleX,
             scaleY: this.resolvedModel.scaleY,
             visible: this.resolvedModel.visible,
