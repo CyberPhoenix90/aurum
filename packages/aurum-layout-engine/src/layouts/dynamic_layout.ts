@@ -192,34 +192,17 @@ export class DynamicLayout extends AbstractLayout {
             layout.x.update(this.computePosition(node.x.value, layout.outerWidth.value, node.originX.value, 0, 0));
             layout.y.update(this.computePosition(node.y.value, layout.outerHeight.value, node.originY.value, 0, 0));
         }
-        if ((layout.innerWidth.value as any) !== 'auto') {
-            layout.outerWidth.update(layout.innerWidth.value + node.marginLeft.value + node.marginRight.value);
-        } else {
-            layout.outerWidth.update(layout.innerWidth.value);
-        }
-        if ((layout.innerHeight.value as any) !== 'auto') {
-            layout.outerHeight.update(layout.innerHeight.value + node.marginTop.value + node.marginBottom.value);
-        } else {
-            layout.outerHeight.update(layout.innerHeight.value);
-        }
+        layout.outerWidth.update(layout.innerWidth.value + node.marginLeft.value + node.marginRight.value);
+        layout.outerHeight.update(layout.innerHeight.value + node.marginTop.value + node.marginBottom.value);
     }
 
     private computePosition(value: Position, size: number, origin: number, parentSize: number, parentMargin: number): number {
         if (value === undefined) {
             return 0;
         }
-        if (value === 'auto') {
-            return value as any;
-        }
-
-        if ((size as any) === 'auto') {
-            size = 0;
-        }
 
         let computedValue;
-        if (typeof value === 'function') {
-            computedValue = value(parentSize);
-        } else if (typeof value === 'number') {
+        if (typeof value === 'number') {
             computedValue = value;
         } else {
             if (Calculation.isCalculation(value)) {
@@ -243,19 +226,13 @@ export class DynamicLayout extends AbstractLayout {
             return 0;
         }
 
-        if (value === 'auto') {
-            return value as any;
-        }
-
         if (value === 'inherit') {
             value = '100%';
         }
         if (value === 'content') {
             return this.computeContentSize(children, component, layoutDataByNode);
         } else {
-            if (typeof value === 'function') {
-                return value(parentSize, () => this.computeContentSize(children, component, layoutDataByNode));
-            } else if (typeof value === 'number') {
+            if (typeof value === 'number') {
                 return value;
             } else if (Calculation.isCalculation(value)) {
                 return new Calculation(value).toPixels(96, parentSize, () => this.computeContentSize(children, component, layoutDataByNode));
@@ -276,8 +253,16 @@ export class DynamicLayout extends AbstractLayout {
 
         const sizes: number[] = children.map((c) => {
             if (component === 'x') {
+                if (this.isSizeRelativeToParent(c.width.value)) {
+                    return 0;
+                }
+
                 return layoutDataByNode.get(c).outerWidth.value;
             } else {
+                if (this.isSizeRelativeToParent(c.height.value)) {
+                    return 0;
+                }
+
                 return layoutDataByNode.get(c).outerHeight.value;
             }
         });
@@ -286,10 +271,10 @@ export class DynamicLayout extends AbstractLayout {
     }
 
     private isSizeRelativeToContent(value: Size): boolean {
-        return (typeof value === 'string' && value.includes('content')) || typeof value === 'function';
+        return typeof value === 'string' && value.includes('content');
     }
 
     private isSizeRelativeToParent(value: Size): boolean {
-        return value === 'inherit' || value === 'remainder' || (typeof value === 'string' && value.includes('%')) || typeof value === 'function';
+        return value === 'inherit' || value === 'remainder' || (typeof value === 'string' && value.includes('%'));
     }
 }

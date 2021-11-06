@@ -1,5 +1,5 @@
 import { AbstractLayout, LayoutElementTreeNode, PointLike, Position, Size } from 'aurum-layout-engine';
-import { ArrayDataSource, CancellationToken, DataSource, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
+import { ArrayDataSource, CancellationToken, DataSource, dsUnique, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
 import { render } from '../core/custom_aurum_renderer';
 import { layoutEngine } from '../core/layout_engine';
 import { AbstractComponent } from '../entities/components/abstract_component';
@@ -255,12 +255,14 @@ export abstract class SceneGraphNode<T extends CommonEntity> implements LayoutEl
     }
 
     protected createBaseResolvedModel(): CommonEntity {
+        const autoWidth = new DataSource(0);
+        const autoHeight = new DataSource(0);
+
         return {
             alpha: this.getModelSourceWithFallbackBase('alpha'),
             rotation: this.getModelSourceWithFallbackBase('rotation'),
             blendMode: this.getModelSourceWithFallbackBase('blendMode'),
             clip: this.getModelSourceWithFallbackBase('clip'),
-            height: this.getModelSourceWithFallbackBase('height'),
             originX: this.getModelSourceWithFallbackBase('originX'),
             originY: this.getModelSourceWithFallbackBase('originY'),
             scaleX: this.getModelSourceWithFallbackBase('scaleX'),
@@ -268,9 +270,16 @@ export abstract class SceneGraphNode<T extends CommonEntity> implements LayoutEl
             shaders: this.getModelSourceWithFallbackBase('shaders'),
             wrapperNode: this.getModelSourceWithFallbackBase('wrapperNode'),
             visible: this.getModelSourceWithFallbackBase('visible'),
-            width: this.getModelSourceWithFallbackBase('width'),
             x: this.getModelSourceWithFallbackBase('x'),
             y: this.getModelSourceWithFallbackBase('y'),
+            autoWidth,
+            autoHeight,
+            width: DataSource.fromAggregation([this.getModelSourceWithFallbackBase('width'), autoWidth], (width, autoWidth) =>
+                width === 'auto' ? autoWidth : width
+            ).transform(dsUnique()),
+            height: DataSource.fromAggregation([this.getModelSourceWithFallbackBase('height'), autoHeight], (height, autoHeight) =>
+                height === 'auto' ? autoHeight : height
+            ).transform(dsUnique()),
             zIndex: this.getModelSourceWithFallbackBase('zIndex'),
             layout: this.getModelSourceWithFallbackBase('layout'),
             marginBottom: this.getModelSourceWithFallbackBase('marginBottom'),

@@ -2,6 +2,8 @@ import { CommonEntity } from '../models/entities';
 import { DataSource, ArrayDataSource } from 'aurumjs';
 
 export const entityDefaults: CommonEntity = {
+    autoWidth: new DataSource(0),
+    autoHeight: new DataSource(0),
     alpha: new DataSource(1),
     rotation: new DataSource(0),
     blendMode: new DataSource(undefined),

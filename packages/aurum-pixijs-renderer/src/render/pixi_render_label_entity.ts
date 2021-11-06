@@ -17,12 +17,12 @@ export class RenderLabelEntity extends NoRenderEntity {
 
     public bind(model: LabelGraphNode) {
         model.renderState.text.listenAndRepeat((v) => {
-            updateText.call(this, v.substring(0, model.renderState.renderCharCount.value));
+            this.updateText(v.substring(0, model.renderState.renderCharCount.value));
             this.updateSize(model);
         }, this.token);
 
         model.renderState.renderCharCount.listenAndRepeat((v) => {
-            updateText.call(this, model.renderState.text.value.substring(0, v));
+            this.updateText(model.renderState.text.value.substring(0, v));
             this.updateSize(model);
         }, this.token);
 
@@ -100,11 +100,14 @@ export class RenderLabelEntity extends NoRenderEntity {
         model.renderState.scaleY.listenAndRepeat((v) => {
             this.updateSize(model);
         }, this.token);
-
-        function updateText(text: string): void {
-            this.displayObject.text = text;
-        }
     }
 
-    private updateSize(model: LabelGraphNode) {}
+    private updateText(text: string): void {
+        this.displayObject.text = text;
+    }
+
+    private updateSize(model: LabelGraphNode): void {
+        model.resolvedModel.autoWidth.update(this.displayObject.width);
+        model.resolvedModel.autoHeight.update(this.displayObject.height);
+    }
 }

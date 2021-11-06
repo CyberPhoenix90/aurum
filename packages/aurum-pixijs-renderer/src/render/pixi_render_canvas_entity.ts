@@ -11,11 +11,11 @@ import {
     RegularPolygon,
     Vector2D,
     AbstractReactiveShape,
-    ReactiveRectangle,
-} from "aurum-game-engine";
-import { ArrayDataSource, CancellationToken, DataSource } from "aurumjs";
-import { Graphics } from "pixi.js";
-import { NoRenderEntity } from "./pixi_no_render_entity";
+    ReactiveRectangle
+} from 'aurum-game-engine';
+import { ArrayDataSource, CancellationToken, DataSource } from 'aurumjs';
+import { Graphics } from 'pixi.js';
+import { NoRenderEntity } from './pixi_no_render_entity';
 
 export class RenderCanvasEntity extends NoRenderEntity {
     public declare displayObject: Graphics;
@@ -44,12 +44,8 @@ export class RenderCanvasEntity extends NoRenderEntity {
             this.drawAction(action, this.drawToken);
         }
 
-        if (this.model.resolvedModel.width.value === "auto") {
-            this.model.renderState.width.update(this.displayObject.width);
-        }
-        if (this.model.resolvedModel.height.value === "auto") {
-            this.model.renderState.height.update(this.displayObject.height);
-        }
+        this.model.resolvedModel.autoWidth.update(this.displayObject.width);
+        this.model.resolvedModel.autoHeight.update(this.displayObject.height);
     }
 
     private drawAction(action: PaintOperation, token: CancellationToken) {
@@ -71,21 +67,11 @@ export class RenderCanvasEntity extends NoRenderEntity {
             }, token);
         }
 
-        const color = Color.fromString(
-            action.fillStyle instanceof DataSource
-                ? action.fillStyle.value
-                : action.fillStyle ?? "transparent"
-        );
+        const color = Color.fromString(action.fillStyle instanceof DataSource ? action.fillStyle.value : action.fillStyle ?? 'transparent');
         this.displayObject.beginFill(color.toRGBNumber(), color.a / 256);
-        const strokeColor = Color.fromString(
-            action.strokeStyle instanceof DataSource
-                ? action.strokeStyle.value
-                : action.strokeStyle ?? "transparent"
-        );
+        const strokeColor = Color.fromString(action.strokeStyle instanceof DataSource ? action.strokeStyle.value : action.strokeStyle ?? 'transparent');
         this.displayObject.lineStyle(
-            action.strokeThickness instanceof DataSource
-                ? action.strokeThickness.value
-                : action.strokeThickness ?? 1,
+            action.strokeThickness instanceof DataSource ? action.strokeThickness.value : action.strokeThickness ?? 1,
             strokeColor.toRGBNumber(),
             strokeColor.a / 256,
             action.strokeAlignment ?? 0.5
@@ -94,12 +80,7 @@ export class RenderCanvasEntity extends NoRenderEntity {
         this.renderShape(shape, token);
     }
 
-    private renderShape(
-        shape: AbstractShape | AbstractReactiveShape,
-        drawToken: CancellationToken,
-        offsetX: number = 0,
-        offsetY: number = 0
-    ) {
+    private renderShape(shape: AbstractShape | AbstractReactiveShape, drawToken: CancellationToken, offsetX: number = 0, offsetY: number = 0) {
         if (shape instanceof AbstractReactiveShape) {
             shape.position.x.listen(() => {
                 this.drawAll();
@@ -119,61 +100,29 @@ export class RenderCanvasEntity extends NoRenderEntity {
         }
 
         if (shape instanceof RoundedRectangle) {
-            this.displayObject.drawRoundedRect(
-                shape.x + offsetX,
-                shape.y + offsetY,
-                shape.width,
-                shape.height,
-                shape.radius
-            );
-        } else if (
-            shape instanceof Rectangle ||
-            shape instanceof ReactiveRectangle
-        ) {
-            this.displayObject.drawRect(
-                shape.x + offsetX,
-                shape.y + offsetY,
-                shape.width,
-                shape.height
-            );
+            this.displayObject.drawRoundedRect(shape.x + offsetX, shape.y + offsetY, shape.width, shape.height, shape.radius);
+        } else if (shape instanceof Rectangle || shape instanceof ReactiveRectangle) {
+            this.displayObject.drawRect(shape.x + offsetX, shape.y + offsetY, shape.width, shape.height);
         } else if (shape instanceof Circle) {
-            this.displayObject.drawCircle(
-                shape.x + offsetX,
-                shape.y + offsetY,
-                shape.radius
-            );
+            this.displayObject.drawCircle(shape.x + offsetX, shape.y + offsetY, shape.radius);
         } else if (shape instanceof RegularPolygon) {
             const point = new Vector2D(0, -shape.radius);
             this.displayObject.moveTo(shape.x + shape.radius, shape.y);
             for (let i = 0; i < shape.sides; i++) {
                 point.rotateBy(Math.PI / (shape.sides / 2));
-                this.displayObject.lineTo(
-                    point.x + shape.radius + shape.x,
-                    point.y + shape.radius + shape.y
-                );
+                this.displayObject.lineTo(point.x + shape.radius + shape.x, point.y + shape.radius + shape.y);
             }
         } else if (shape instanceof Polygon) {
             for (const point of shape.points) {
                 if (point === shape.points[0]) {
-                    this.displayObject.moveTo(
-                        point.x + shape.x + offsetX,
-                        point.y + offsetY + shape.y
-                    );
+                    this.displayObject.moveTo(point.x + shape.x + offsetX, point.y + offsetY + shape.y);
                 } else {
-                    this.displayObject.lineTo(
-                        point.x + shape.x + offsetX,
-                        point.y + offsetY + shape.y
-                    );
+                    this.displayObject.lineTo(point.x + shape.x + offsetX, point.y + offsetY + shape.y);
                 }
             }
         } else if (shape instanceof ComposedShape) {
             for (const subShape of shape.shapes) {
-                this.renderShape(
-                    subShape,
-                    drawToken,
-                    offsetX + shape.x,
-                    offsetY + shape.y
-                );
+                this.renderShape(subShape, drawToken, offsetX + shape.x, offsetY + shape.y);
             }
         }
     }

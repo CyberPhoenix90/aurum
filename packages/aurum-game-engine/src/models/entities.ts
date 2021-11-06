@@ -46,6 +46,8 @@ export interface CommonEntityProps {
 export interface CommonEntity {
     x?: DataSource<Position>;
     y?: DataSource<Position>;
+    autoWidth?: DataSource<number>;
+    autoHeight?: DataSource<number>;
     originX?: DataSource<number>;
     originY?: DataSource<number>;
     marginTop?: DataSource<number>;

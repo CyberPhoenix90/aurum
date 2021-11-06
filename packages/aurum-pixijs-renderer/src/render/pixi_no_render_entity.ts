@@ -1,20 +1,6 @@
-import {
-    BlendModes,
-    CommonEntity,
-    EntityRenderModel,
-    SceneGraphNode,
-    SceneGraphNodeModel,
-    Shader,
-} from "aurum-game-engine";
-import { CancellationToken, dsUnique } from "aurumjs";
-import {
-    BLEND_MODES,
-    Container,
-    Filter,
-    filters,
-    Graphics,
-    Sprite,
-} from "pixi.js";
+import { BlendModes, CommonEntity, EntityRenderModel, SceneGraphNode, SceneGraphNodeModel, Shader } from 'aurum-game-engine';
+import { CancellationToken, dsUnique } from 'aurumjs';
+import { BLEND_MODES, Container, Filter, filters, Graphics, Sprite, Text } from 'pixi.js';
 
 export class NoRenderEntity {
     public token: CancellationToken;
@@ -62,13 +48,11 @@ export class NoRenderEntity {
         model.renderState.shader.listenAndRepeat((change) => {
             this.displayObject.filters = [];
             switch (change.operation) {
-                case "add":
-                    this.displayObject.filters.push(
-                        ...change.items.map((s) => this.createShader(s))
-                    );
+                case 'add':
+                    this.displayObject.filters.push(...change.items.map((s) => this.createShader(s)));
                     break;
-                case "remove":
-                    throw new Error("not implemented");
+                case 'remove':
+                    throw new Error('not implemented');
             }
         });
 
@@ -99,53 +83,21 @@ export class NoRenderEntity {
         }, this.token);
 
         if (
-            Object.getPrototypeOf(this.displayObject).constructor !==
-                Container &&
-            Object.getPrototypeOf(this.displayObject).constructor !== Sprite
+            Object.getPrototypeOf(this.displayObject).constructor !== Container &&
+            Object.getPrototypeOf(this.displayObject).constructor !== Sprite &&
+            Object.getPrototypeOf(this.displayObject).constructor !== Text
         ) {
-            model.renderState.width.listenAndRepeat((v) => {
-                if (
-                    v !== undefined &&
-                    model.resolvedModel.width.value !== "auto"
-                ) {
-                    this.displayObject.width =
-                        v * model.renderState.scaleX.value;
-                }
-            }, this.token);
+            model.renderState.width.aggregate(
+                [model.renderState.scaleX],
+                (w, sx) => {
+                    this.displayObject.width = w * sx;
+                },
+                this.token
+            );
 
-            model.renderState.height.listenAndRepeat((v) => {
-                if (
-                    v !== undefined &&
-                    model.resolvedModel.height.value !== "auto"
-                ) {
-                    this.displayObject.height =
-                        v * model.renderState.scaleY.value;
-                }
-            }, this.token);
-
-            model.renderState.scaleX.listenAndRepeat((v) => {
-                if (
-                    model.renderState.width.value !== undefined &&
-                    model.resolvedModel.width.value !== "auto"
-                ) {
-                    this.displayObject.width =
-                        model.renderState.width.value * v;
-                } else {
-                    this.displayObject.scale.x = v;
-                }
-            }, this.token);
-
-            model.renderState.scaleY.listenAndRepeat((v) => {
-                if (
-                    model.renderState.height.value !== undefined &&
-                    model.resolvedModel.height.value !== "auto"
-                ) {
-                    this.displayObject.height =
-                        model.renderState.height.value * v;
-                } else {
-                    this.displayObject.scale.y = v;
-                }
-            }, this.token);
+            model.renderState.height.aggregate([model.renderState.scaleY], (h, sy) => {
+                this.displayObject.height = h * sy;
+            });
         }
 
         model.renderState.clip.transform(dsUnique()).listenAndRepeat((v) => {
@@ -153,12 +105,7 @@ export class NoRenderEntity {
                 const mask = new Graphics();
                 mask.lineStyle(5, 0xff0000);
                 mask.beginFill(0x880000);
-                mask.drawRect(
-                    0,
-                    0,
-                    model.renderState.width.value,
-                    model.renderState.height.value
-                );
+                mask.drawRect(0, 0, model.renderState.width.value, model.renderState.height.value);
                 mask.endFill();
 
                 this.displayObject.mask = mask;
@@ -178,35 +125,20 @@ export class NoRenderEntity {
 
         model.renderState.zIndex.listenAndRepeat((v) => {
             if (this.parent) {
-                this.parent.displayObject.children.sort(
-                    (a, b) =>
-                        ((a as any).entity.zIndex.value || 0) -
-                            (b as any).entity.zIndex.value || 0
-                );
+                this.parent.displayObject.children.sort((a, b) => ((a as any).entity.zIndex.value || 0) - (b as any).entity.zIndex.value || 0);
             }
         }, this.token);
     }
 
-    private setBlendMode(
-        model: EntityRenderModel,
-        blendMode: BlendModes = BlendModes.NORMAL
-    ) {
+    private setBlendMode(model: EntityRenderModel, blendMode: BlendModes = BlendModes.NORMAL) {
         let blendModeTarget = this.displayObject;
-        if (
-            this.displayObject.constructor.name === "Container" &&
-            blendMode !== BlendModes.NORMAL
-        ) {
+        if (this.displayObject.constructor.name === 'Container' && blendMode !== BlendModes.NORMAL) {
             const alphaFilter = new filters.AlphaFilter();
             this.displayObject.filters = [alphaFilter];
         }
-        if (
-            this.displayObject.filters &&
-            this.displayObject.filters.length > 0
-        ) {
+        if (this.displayObject.filters && this.displayObject.filters.length > 0) {
             //@ts-ignore
-            blendModeTarget = this.displayObject.filters[
-                this.displayObject.filters.length - 1
-            ];
+            blendModeTarget = this.displayObject.filters[this.displayObject.filters.length - 1];
         }
         switch (blendMode) {
             case BlendModes.NORMAL:
@@ -238,9 +170,7 @@ export class NoRenderEntity {
         return shader;
     }
 
-    protected createDisplayObject(
-        model: SceneGraphNodeModel<CommonEntity>
-    ): Container {
+    protected createDisplayObject(model: SceneGraphNodeModel<CommonEntity>): Container {
         return new Container();
     }
 }

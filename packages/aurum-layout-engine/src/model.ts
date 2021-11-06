@@ -50,5 +50,5 @@ export interface LayoutElementTreeNode {
     children: ArrayDataSource<LayoutElementTreeNode>;
 }
 
-export type Position = number | string | ((parentSize: number) => number);
-export type Size = number | string | 'content' | 'inherit' | 'remainder' | ((parentSize: number, computeContentSize: () => number) => number);
+export type Position = number | string;
+export type Size = number | string | 'content' | 'inherit' | 'remainder';

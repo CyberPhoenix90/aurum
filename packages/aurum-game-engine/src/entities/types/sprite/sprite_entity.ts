@@ -42,6 +42,8 @@ export function Sprite(props: SpriteEntityProps, _, api: AurumComponentAPI): Spr
             entityTypeDefault: spriteDefaultModel,
             userSpecified: {
                 ...propsToModel(props),
+                autoWidth: new DataSource(0),
+                autoHeight: new DataSource(0),
                 texture: toSourceIfDefined(props.texture),
                 drawDistanceX: toSourceIfDefined(props.drawDistanceX),
                 drawDistanceY: toSourceIfDefined(props.drawDistanceY),

@@ -81,19 +81,24 @@ export * from './resources/texture_manager';
 export * from './game_features/building/construction_grid';
 export * from './game_features/number_formatter';
 export * from './game_features/path_finding/a_star';
+
 export * from './game_features/time/calendar';
 export * from './game_features/time/clock';
 export * from './game_features/time/moment';
+
 export * from './game_features/drawing/tools/abstract_tool';
 export * from './game_features/drawing/tools/line';
 export * from './game_features/drawing/tools/pencil';
 export * from './game_features/drawing/tools/rectangle';
 export * from './game_features/drawing/tools/solid_rectangle';
+
+export * from './game_features/markup/text_formatter';
+
 export * from './game_features/floating_messages/floating_message_service';
+
 export * from './game_features/tile_maps/tiled/tiled_layer';
 export * from './game_features/tile_maps/tiled/tiled_map_format';
 export * from './game_features/tile_maps/tiled/tileset';
-
 export * from './game_features/tile_maps/tiled/entity/api';
 export * from './game_features/tile_maps/tiled/entity/model';
 export * from './game_features/tile_maps/tiled/entity/tiled_map_entity';

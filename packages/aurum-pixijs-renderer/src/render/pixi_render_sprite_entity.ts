@@ -90,23 +90,15 @@ export class RenderSpriteEntity extends NoRenderEntity {
             this.displayObject.texture = this.wrapTexture(bt, model);
             model.renderState.width.repeatLast();
         }
+
+        model.resolvedModel.autoWidth.update(bt.realWidth);
+        model.resolvedModel.autoHeight.update(bt.realHeight);
+
         textureMap.set(texture, bt);
     }
 
     private wrapTexture(baseTexture: BaseTexture, model: SpriteGraphNode): PixiTexture {
         const result = new PixiTexture(baseTexture);
-
-        model.resolvedModel.width.listenAndRepeat((v) => {
-            if (v === 'auto') {
-                model.renderState.width.update(baseTexture.realWidth);
-            }
-        });
-
-        model.resolvedModel.height.listenAndRepeat((v) => {
-            if (v === 'auto') {
-                model.renderState.height.update(baseTexture.realHeight);
-            }
-        });
 
         return result;
     }
@@ -116,20 +108,6 @@ export class RenderSpriteEntity extends NoRenderEntity {
 
         model.resolvedModel.texture.listen(() => {
             this.displayObject.texture = this.createTexture(model);
-        });
-
-        model.resolvedModel.width.listenAndRepeat((v) => {
-            if (v === 'auto') {
-                this.displayObject.width = this.displayObject.texture.baseTexture.realWidth;
-                model.renderState.width.update(this.displayObject.texture.baseTexture.realWidth);
-            }
-        });
-
-        model.resolvedModel.height.listenAndRepeat((v) => {
-            if (v === 'auto') {
-                this.displayObject.height = this.displayObject.texture.baseTexture.realHeight;
-                model.renderState.height.update(this.displayObject.texture.baseTexture.realHeight);
-            }
         });
 
         width.aggregate(
