@@ -295,7 +295,7 @@ export namespace Aurum {
             picture: HTMLNodeProps<HTMLElement>;
             output: OutputProps;
             object: ObjectProps;
-            optGroup: OptGroupProps;
+            optgroup: OptGroupProps;
             track: TrackProps;
             param: ParamProps;
             code: HTMLNodeProps<HTMLElement>;
