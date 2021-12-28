@@ -1,5 +1,5 @@
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from './common';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback } from './common.js';
 
 /**
  * @internal

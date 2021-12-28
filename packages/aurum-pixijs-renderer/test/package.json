@@ -15,7 +15,7 @@
         "@types/sinon": "^9.0.4",
         "aurum-game-engine": "file:../engine",
         "aurum-pixijs-renderer": "file:../render_plugins/pixijs",
-        "aurumjs": "^0.6.32",
+        "aurumjs": "^0.7.4",
         "chai": "^4.2.0",
         "mocha": "^8.2.0",
         "pixi.js": "^5.3.0",

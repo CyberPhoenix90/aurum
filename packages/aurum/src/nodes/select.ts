@@ -1,7 +1,7 @@
-import { DataSource, GenericDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter';
+import { DataSource, GenericDataSource } from '../stream/data_source.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter.js';
 
 export interface SelectProps extends HTMLNodeProps<HTMLSelectElement> {
     value?: GenericDataSource<string> | string;

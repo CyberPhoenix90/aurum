@@ -1,8 +1,8 @@
-import { ThenArg, Callback } from '../utilities/common';
-import { EventEmitter } from '../utilities/event_emitter';
-import { ArrayDataSource, DataSource } from './data_source';
-import { DuplexDataSource } from './duplex_data_source';
-import { Stream } from './stream';
+import { ThenArg, Callback } from '../utilities/common.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { ArrayDataSource, DataSource } from './data_source.js';
+import { DuplexDataSource } from './duplex_data_source.js';
+import { Stream } from './stream.js';
 import {
     DataSourceMapOperator,
     OperationType,
@@ -12,8 +12,8 @@ import {
     DataSourceDelayOperator,
     DataSourceDelayFilterOperator,
     DataSourceNoopOperator
-} from './operator_model';
-import { CancellationToken } from '../utilities/cancellation_token';
+} from './operator_model.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
 
 /**
  * Mutates an update

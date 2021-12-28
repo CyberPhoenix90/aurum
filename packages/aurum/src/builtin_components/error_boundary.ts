@@ -1,5 +1,5 @@
-import { AurumComponentAPI, createLifeCycle, Renderable } from '../rendering/aurum_element';
-import { DataSource } from '../stream/data_source';
+import { AurumComponentAPI, createLifeCycle, Renderable } from '../rendering/aurum_element.js';
+import { DataSource } from '../stream/data_source.js';
 
 export type ErrorRenderer = (error: any) => Renderable;
 

@@ -1,290 +1,290 @@
-import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter';
-import { AttributeValue } from '../utilities/common';
+import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter.js';
+import { AttributeValue } from '../utilities/common.js';
 
 /**
  * @internal
  */
 export interface AProps extends HTMLNodeProps<HTMLAnchorElement> {
-	href?: AttributeValue;
-	hreflang?: AttributeValue;
-	media?: AttributeValue;
-	download?: AttributeValue;
-	target?: AttributeValue;
-	ping?: AttributeValue;
-	referrerpolicy?: AttributeValue;
-	rel?: AttributeValue;
-	type?: AttributeValue;
+    href?: AttributeValue;
+    hreflang?: AttributeValue;
+    media?: AttributeValue;
+    download?: AttributeValue;
+    target?: AttributeValue;
+    ping?: AttributeValue;
+    referrerpolicy?: AttributeValue;
+    rel?: AttributeValue;
+    type?: AttributeValue;
 }
 /**
  * @internal
  */
 export interface AreaProps extends HTMLNodeProps<HTMLAreaElement> {
-	alt?: AttributeValue;
-	coords?: AttributeValue;
-	download?: AttributeValue;
-	href?: AttributeValue;
-	hreflang?: AttributeValue;
-	media?: AttributeValue;
-	rel?: AttributeValue;
-	shape?: AttributeValue;
-	target?: AttributeValue;
-	type?: AttributeValue;
+    alt?: AttributeValue;
+    coords?: AttributeValue;
+    download?: AttributeValue;
+    href?: AttributeValue;
+    hreflang?: AttributeValue;
+    media?: AttributeValue;
+    rel?: AttributeValue;
+    shape?: AttributeValue;
+    target?: AttributeValue;
+    type?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface VideoProps extends HTMLNodeProps<HTMLVideoElement> {
-	controls?: AttributeValue;
-	autoplay?: AttributeValue;
-	loop?: AttributeValue;
-	muted?: AttributeValue;
-	preload?: AttributeValue;
-	src?: AttributeValue;
-	poster?: AttributeValue;
-	width?: AttributeValue;
-	height?: AttributeValue;
+    controls?: AttributeValue;
+    autoplay?: AttributeValue;
+    loop?: AttributeValue;
+    muted?: AttributeValue;
+    preload?: AttributeValue;
+    src?: AttributeValue;
+    poster?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
-	controls?: AttributeValue;
-	autoplay?: AttributeValue;
-	loop?: AttributeValue;
-	muted?: AttributeValue;
-	preload?: AttributeValue;
-	src?: AttributeValue;
+    controls?: AttributeValue;
+    autoplay?: AttributeValue;
+    loop?: AttributeValue;
+    muted?: AttributeValue;
+    preload?: AttributeValue;
+    src?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
-	action?: AttributeValue;
-	method?: AttributeValue;
-	rel?: AttributeValue;
-	enctype?: AttributeValue;
-	novalidate?: AttributeValue;
-	target?: AttributeValue;
+    action?: AttributeValue;
+    method?: AttributeValue;
+    rel?: AttributeValue;
+    enctype?: AttributeValue;
+    novalidate?: AttributeValue;
+    target?: AttributeValue;
 }
 /**
  * @internal
  */
 export interface HtmlProps extends HTMLNodeProps<HTMLHtmlElement> {
-	lang?: string;
+    lang?: string;
 }
 
 /**
  * @internal
  */
 export interface MetaProps extends HTMLNodeProps<HTMLMetaElement> {
-	['http-equiv']?: AttributeValue;
-	['charset']?: AttributeValue;
-	content?: AttributeValue;
+    ['http-equiv']?: AttributeValue;
+    ['charset']?: AttributeValue;
+    content?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
-	type?: AttributeValue;
-	disabled?: AttributeValue;
+    type?: AttributeValue;
+    disabled?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface CanvasProps extends HTMLNodeProps<HTMLCanvasElement> {
-	width?: AttributeValue;
-	height?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface DataProps extends HTMLNodeProps<HTMLDataElement> {
-	value?: AttributeValue;
+    value?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface IFrameProps extends HTMLNodeProps<HTMLIFrameElement> {
-	src?: AttributeValue;
-	allow?: AttributeValue;
-	allowFullscreen?: AttributeValue;
-	allowPaymentRequest?: AttributeValue;
-	width?: AttributeValue;
-	height?: AttributeValue;
-	srcdoc?: AttributeValue;
-	loading?: AttributeValue;
-	sandbox?: AttributeValue;
-	frameborder?: AttributeValue;
+    src?: AttributeValue;
+    allow?: AttributeValue;
+    allowFullscreen?: AttributeValue;
+    allowPaymentRequest?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+    srcdoc?: AttributeValue;
+    loading?: AttributeValue;
+    sandbox?: AttributeValue;
+    frameborder?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ImgProps extends HTMLNodeProps<HTMLImageElement> {
-	src?: AttributeValue;
-	alt?: AttributeValue;
-	width?: AttributeValue;
-	height?: AttributeValue;
-	referrerPolicy?: AttributeValue;
-	sizes?: AttributeValue;
-	srcset?: AttributeValue;
-	useMap?: AttributeValue;
+    src?: AttributeValue;
+    alt?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+    referrerPolicy?: AttributeValue;
+    sizes?: AttributeValue;
+    srcset?: AttributeValue;
+    useMap?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface LabelProps extends HTMLNodeProps<HTMLLabelElement> {
-	for?: AttributeValue;
+    for?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface LinkProps extends HTMLNodeProps<HTMLLinkElement> {
-	href?: AttributeValue;
-	rel?: AttributeValue;
-	media?: AttributeValue;
-	as?: AttributeValue;
-	disabled?: AttributeValue;
-	type?: AttributeValue;
+    href?: AttributeValue;
+    rel?: AttributeValue;
+    media?: AttributeValue;
+    as?: AttributeValue;
+    disabled?: AttributeValue;
+    type?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface TimeProps extends HTMLNodeProps<HTMLTimeElement> {
-	datetime?: AttributeValue;
+    datetime?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface StyleProps extends HTMLNodeProps<HTMLStyleElement> {
-	media?: AttributeValue;
-	type?: AttributeValue;
+    media?: AttributeValue;
+    type?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface SourceProps extends HTMLNodeProps<HTMLSourceElement> {
-	src?: AttributeValue;
-	srcSet?: AttributeValue;
-	media?: AttributeValue;
-	sizes?: AttributeValue;
-	type?: AttributeValue;
+    src?: AttributeValue;
+    srcSet?: AttributeValue;
+    media?: AttributeValue;
+    sizes?: AttributeValue;
+    type?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface TrackProps extends HTMLNodeProps<HTMLTrackElement> {
-	src?: AttributeValue;
-	srclang?: AttributeValue;
-	label?: AttributeValue;
-	kind?: AttributeValue;
-	default?: AttributeValue;
+    src?: AttributeValue;
+    srclang?: AttributeValue;
+    label?: AttributeValue;
+    kind?: AttributeValue;
+    default?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ParamProps extends HTMLNodeProps<HTMLParamElement> {
-	value?: AttributeValue;
+    value?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ScriptProps extends HTMLNodeProps<HTMLScriptElement> {
-	src?: AttributeValue;
-	async?: AttributeValue;
-	defer?: AttributeValue;
-	integrity?: AttributeValue;
-	noModule?: AttributeValue;
-	crossorigin?: AttributeValue;
-	type?: AttributeValue;
+    src?: AttributeValue;
+    async?: AttributeValue;
+    defer?: AttributeValue;
+    integrity?: AttributeValue;
+    noModule?: AttributeValue;
+    crossorigin?: AttributeValue;
+    type?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface SvgProps extends HTMLNodeProps<HTMLOrSVGElement> {
-	width?: AttributeValue;
-	height?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ProgressProps extends HTMLNodeProps<HTMLProgressElement> {
-	max?: AttributeValue;
-	value?: AttributeValue;
+    max?: AttributeValue;
+    value?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface OptionProps extends HTMLNodeProps<HTMLElement> {
-	value?: AttributeValue;
-	disabled?: AttributeValue;
-	label?: AttributeValue;
-	selected?: AttributeValue;
+    value?: AttributeValue;
+    disabled?: AttributeValue;
+    label?: AttributeValue;
+    selected?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface OptGroupProps extends HTMLNodeProps<HTMLOptGroupElement> {
-	disabled?: AttributeValue;
-	label?: AttributeValue;
+    disabled?: AttributeValue;
+    label?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface OutputProps extends HTMLNodeProps<HTMLOutputElement> {
-	form?: AttributeValue;
-	for?: AttributeValue;
+    form?: AttributeValue;
+    for?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ObjectProps extends HTMLNodeProps<HTMLObjectElement> {
-	data?: AttributeValue;
-	width?: AttributeValue;
-	height?: AttributeValue;
-	form?: AttributeValue;
-	type?: AttributeValue;
-	typemustmatch?: AttributeValue;
-	usemap?: AttributeValue;
+    data?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+    form?: AttributeValue;
+    type?: AttributeValue;
+    typemustmatch?: AttributeValue;
+    usemap?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface ColProps extends HTMLNodeProps<HTMLObjectElement> {
-	span?: AttributeValue;
+    span?: AttributeValue;
 }
 
 /**
  * @internal
  */
 export interface TableCellProps extends HTMLNodeProps<HTMLObjectElement> {
-	abbr?: AttributeValue;
-	scope?: AttributeValue;
-	colspan?: AttributeValue;
-	headers?: AttributeValue;
-	rowspan?: AttributeValue;
+    abbr?: AttributeValue;
+    scope?: AttributeValue;
+    colspan?: AttributeValue;
+    headers?: AttributeValue;
+    rowspan?: AttributeValue;
 }
 
 /**
@@ -477,15 +477,15 @@ export const I = DomNodeCreator<HTMLNodeProps<HTMLElement>>('i');
  * @internal
  */
 export const IFrame = DomNodeCreator<IFrameProps>('iframe', [
-	'src',
-	'srcdoc',
-	'width',
-	'height',
-	'allow',
-	'allowFullscreen',
-	'allowPaymentRequest',
-	'loading',
-	'sandbox'
+    'src',
+    'srcdoc',
+    'width',
+    'height',
+    'allow',
+    'allowFullscreen',
+    'allowPaymentRequest',
+    'loading',
+    'sandbox'
 ]);
 /**
  * @internal

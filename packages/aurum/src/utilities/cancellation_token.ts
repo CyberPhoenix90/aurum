@@ -1,4 +1,4 @@
-import { Delegate, Callback } from './common';
+import { Delegate, Callback } from './common.js';
 
 export class CancellationToken {
     private cancelables: Delegate[];

@@ -1,9 +1,9 @@
-import { diagnosticMode } from '../debug_mode';
-import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource, ReadOnlyArrayDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { EventEmitter } from '../utilities/event_emitter';
-import { aurumClassName } from '../utilities/classname';
+import { diagnosticMode } from '../debug_mode.js';
+import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { aurumClassName } from '../utilities/classname.js';
 
 export function createRenderSession(): RenderSession {
     const session = {

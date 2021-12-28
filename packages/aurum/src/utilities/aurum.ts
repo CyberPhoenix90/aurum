@@ -1,6 +1,6 @@
-import { HTMLNodeProps } from '../builtin_components/dom_adapter';
-import { Input, InputProps } from '../nodes/input';
-import { Select, SelectProps } from '../nodes/select';
+import { HTMLNodeProps } from '../builtin_components/dom_adapter.js';
+import { Input, InputProps } from '../nodes/input.js';
+import { Select, SelectProps } from '../nodes/select.js';
 import {
     A,
     Abbr,
@@ -111,8 +111,8 @@ import {
     Video,
     VideoProps,
     Wbr
-} from '../nodes/simple_dom_nodes';
-import { TextArea, TextAreaProps } from '../nodes/textarea';
+} from '../nodes/simple_dom_nodes.js';
+import { TextArea, TextAreaProps } from '../nodes/textarea.js';
 import {
     ArrayAurumElement,
     AurumComponentAPI,
@@ -123,10 +123,10 @@ import {
     createRenderSession,
     render,
     Renderable
-} from '../rendering/aurum_element';
-import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source';
-import { CancellationToken } from './cancellation_token';
-import { MapLike } from './common';
+} from '../rendering/aurum_element.js';
+import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import { CancellationToken } from './cancellation_token.js';
+import { MapLike } from './common.js';
 
 const nodeMap = {
     address: Address,

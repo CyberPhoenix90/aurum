@@ -1,9 +1,9 @@
-import { AurumServerInfo, syncDuplexDataSource } from '../aurum_server/aurum_server_client';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
-import { EventEmitter } from '../utilities/event_emitter';
-import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource } from './data_source';
-import { DataFlow, ddsOneWayFlow } from './duplex_data_source_operators';
+import { AurumServerInfo, syncDuplexDataSource } from '../aurum_server/aurum_server_client.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback } from '../utilities/common.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource } from './data_source.js';
+import { DataFlow, ddsOneWayFlow } from './duplex_data_source_operators.js';
 import {
     DataSourceOperator,
     DuplexDataSourceDelayFilterOperator,
@@ -12,7 +12,7 @@ import {
     DuplexDataSourceMapOperator,
     DuplexDataSourceOperator,
     OperationType
-} from './operator_model';
+} from './operator_model.js';
 
 /**
  * Same as DataSource except data can flow in both directions

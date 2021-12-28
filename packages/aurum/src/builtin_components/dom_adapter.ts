@@ -1,9 +1,9 @@
-import { StringSource, ClassType, DataDrain, Callback, MapLike, AttributeValue } from '../utilities/common';
-import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
-import { Renderable, AurumComponentAPI, AurumElement, Rendered, render } from '../rendering/aurum_element';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { dsUnique } from '../stream/data_source_operators';
+import { StringSource, ClassType, DataDrain, Callback, MapLike, AttributeValue } from '../utilities/common.js';
+import { DataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { Renderable, AurumComponentAPI, AurumElement, Rendered, render } from '../rendering/aurum_element.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { dsUnique } from '../stream/data_source_operators.js';
 
 export interface HTMLNodeProps<T> {
     id?: AttributeValue;

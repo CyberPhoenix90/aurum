@@ -1,8 +1,8 @@
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
-import { EventEmitter } from '../utilities/event_emitter';
-import { ArrayDataSource, DataSource } from './data_source';
-import { DuplexDataSource } from './duplex_data_source';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback } from '../utilities/common.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { ArrayDataSource, DataSource } from './data_source.js';
+import { DuplexDataSource } from './duplex_data_source.js';
 
 export interface ObjectChange<T, K extends keyof T> {
     key: K;

@@ -1,8 +1,8 @@
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
-import { EventEmitter } from '../utilities/event_emitter';
-import { getValueOf } from '../utilities/sources';
-import { ArrayDataSource, CollectionChange, ReadOnlyArrayDataSource } from './data_source';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback } from '../utilities/common.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { getValueOf } from '../utilities/sources.js';
+import { ArrayDataSource, CollectionChange, ReadOnlyArrayDataSource } from './data_source.js';
 
 export type GenericTree<T, K extends keyof T> = {
     [P in K]: GenericTree<T, K>[] | ArrayDataSource<any>;
@@ -141,9 +141,8 @@ export class TreeDataSource<T, K extends keyof T> {
     }
 
     private adaptNodeList(nodes: ArrayDataSource<GenericTree<T, K>>, token: CancellationToken, nodeList = new ArrayDataSource<T>()): ArrayDataSource<T> {
+        const adaptMap = new Map<GenericTree<T, K>, CancellationToken>();
         nodes.listenAndRepeat((change) => {
-            const adaptMap = new Map<GenericTree<T, K>, CancellationToken>();
-
             switch (change.operation) {
                 case 'add':
                     for (const item of change.items) {

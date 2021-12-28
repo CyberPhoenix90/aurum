@@ -1,5 +1,5 @@
-import { DataSource, ReadOnlyDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
+import { DataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
 
 export type AttributeValue = string | ReadOnlyDataSource<string> | ReadOnlyDataSource<boolean> | boolean;
 export type StringSource = string | ReadOnlyDataSource<string>;

@@ -1,8 +1,8 @@
-import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter';
-import { AttributeValue, DataDrain } from '../utilities/common';
-import { GenericDataSource, DataSource } from '../stream/data_source';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { DuplexDataSource } from '../stream/duplex_data_source';
+import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter.js';
+import { AttributeValue, DataDrain } from '../utilities/common.js';
+import { GenericDataSource, DataSource } from '../stream/data_source.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
 
 export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
     placeholder?: AttributeValue;

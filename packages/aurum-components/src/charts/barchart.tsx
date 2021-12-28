@@ -50,6 +50,7 @@ export function BarChart(props: BarChartProps, children: Renderable[], api: Auru
                     height.update(bb.height);
                 });
                 ro.observe(div);
+                api.cancellationToken.addCancelable(() => ro.disconnect());
                 const bb = div.getBoundingClientRect();
                 width.update(bb.width);
                 height.update(bb.height);

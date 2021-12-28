@@ -1,7 +1,7 @@
-import { DataSourceOperator } from './operator_model';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback } from '../utilities/common';
-import { DataSource, processTransform, ReadOnlyDataSource } from './data_source';
+import { DataSourceOperator } from './operator_model.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback } from '../utilities/common.js';
+import { DataSource, processTransform, ReadOnlyDataSource } from './data_source.js';
 
 /**
  * Lets you logically combine 2 data sources so that update calls go through the input source and listen goes to the output source

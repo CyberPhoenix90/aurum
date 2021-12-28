@@ -1,7 +1,7 @@
-import { Aurum } from '../utilities/aurum';
-import { AurumComponentAPI, createAPI, createRenderSession, Renderable, RenderSession } from './aurum_element';
-import { DataSource } from '../stream/data_source';
-import { DomNodeCreator } from '../builtin_components/dom_adapter';
+import { Aurum } from '../utilities/aurum.js';
+import { AurumComponentAPI, createAPI, createRenderSession, Renderable, RenderSession } from './aurum_element.js';
+import { DataSource } from '../stream/data_source.js';
+import { DomNodeCreator } from '../builtin_components/dom_adapter.js';
 
 interface WebComponentProps {
     /**

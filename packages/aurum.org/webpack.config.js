@@ -33,9 +33,6 @@ module.exports = {
 		]
 	},
 	resolve: {
-		alias: {
-			aurumjs: path.resolve(__dirname, '../../node_modules/aurumjs')
-		},
 		extensions: ['.tsx', '.ts', '.js']
 	},
 	output: {

@@ -1,7 +1,7 @@
-import { ArrayDataSource, DataSource } from './data_source';
-import { Callback } from '../utilities/common';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { EventEmitter } from '../utilities/event_emitter';
+import { ArrayDataSource, DataSource } from './data_source.js';
+import { Callback } from '../utilities/common.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
 
 export interface SetChange<K> {
     key: K;

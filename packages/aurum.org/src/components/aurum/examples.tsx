@@ -60,9 +60,9 @@ const tabContent = new DataSource(<span>hello Tab 1</span>);
 }`)
 	},
 	{
-		title: 'Binding promises',
-		description: 'Aurum is quite liberal with what you can bind to HTML. This is what happens when you bind promises',
-		code: new DataSource(`import { DataSource } from 'aurumjs'
+		title: 'Asynchronous Components',
+		description: 'Aurum supports rendering async content. It will simply wait for the promise to resolve and render the resolved value. You can use the Suspense component to render temporary content while waiting for a promise.',
+		code: new DataSource(`import { DataSource, Suspense } from 'aurumjs'
 
 function sleep(time) {
 	return new Promise((resolve) => {
@@ -81,7 +81,8 @@ return function() {
 		<AsyncComponent delay={2000}></AsyncComponent>,
 		<AsyncComponent delay={3000}></AsyncComponent>,
 		<AsyncComponent delay={4000}></AsyncComponent>,
-		<AsyncComponent delay={5000}></AsyncComponent>
+		<AsyncComponent delay={5000}></AsyncComponent>,
+		<Suspense fallback={<div>Waiting...</div>}> <AsyncComponent delay={6000}></AsyncComponent> </Suspense>
 	]);
 
 	return (<div>
@@ -91,7 +92,8 @@ return function() {
 			<AsyncComponent delay={2000}></AsyncComponent>,
 			<AsyncComponent delay={3000}></AsyncComponent>,
 			<AsyncComponent delay={4000}></AsyncComponent>,
-			<AsyncComponent delay={5000}></AsyncComponent>
+			<AsyncComponent delay={5000}></AsyncComponent>,
+			<Suspense fallback={<div>Waiting...</div>}> <AsyncComponent delay={6000}></AsyncComponent> </Suspense>
 		])}>Replay</button>
 		</div>)
 }`)
@@ -116,16 +118,14 @@ return function Todo() {
 
 	return (
 		<div>
-			<div>
-				<input onKeyDown={(e) => {
-						if (e.keyCode === 13 && e.target.value) {
-							todoSource.push({id: (id++).toString(), done: new DataSource(false), text: new DataSource(e.target.value)});
-							e.target.value = '';
-						}
-					}}
-					placeholder="What needs to be done?"
-				></input>
-			</div>
+			<input onKeyDown={(e) => {
+					if (e.keyCode === 13 && e.target.value) {
+						todoSource.push({id: (id++).toString(), done: new DataSource(false), text: new DataSource(e.target.value)});
+						e.target.value = '';
+					}
+				}}
+				placeholder="What needs to be done?">
+			</input>
 			<ul>
 				{filteredView.map((model) => {
 						let item;

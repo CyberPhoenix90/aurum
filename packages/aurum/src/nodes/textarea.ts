@@ -1,8 +1,8 @@
-import { GenericDataSource, DataSource } from '../stream/data_source';
-import { AttributeValue, DataDrain } from '../utilities/common';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { DuplexDataSource } from '../stream/duplex_data_source';
-import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter';
+import { GenericDataSource, DataSource } from '../stream/data_source.js';
+import { AttributeValue, DataDrain } from '../utilities/common.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter.js';
 
 export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
     placeholder?: AttributeValue;

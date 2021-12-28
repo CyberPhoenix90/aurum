@@ -1,10 +1,10 @@
-import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client';
-import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode';
-import { CancellationToken } from '../utilities/cancellation_token';
-import { Callback, Predicate } from '../utilities/common';
-import { EventEmitter } from '../utilities/event_emitter';
-import { dsDiff, dsTap } from './data_source_operators';
-import { DuplexDataSource } from './duplex_data_source';
+import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client.js';
+import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback, Predicate } from '../utilities/common.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+import { dsDiff, dsTap } from './data_source_operators.js';
+import { DuplexDataSource } from './duplex_data_source.js';
 import {
     DataSourceDelayFilterOperator,
     DataSourceFilterOperator,
@@ -12,8 +12,8 @@ import {
     DataSourceMapOperator,
     DataSourceOperator,
     OperationType
-} from './operator_model';
-import { Stream } from './stream';
+} from './operator_model.js';
+import { Stream } from './stream.js';
 
 export interface ReadOnlyDataSource<T> {
     readonly value: T;

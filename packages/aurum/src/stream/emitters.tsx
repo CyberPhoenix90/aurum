@@ -1,9 +1,9 @@
-import { DataSource, ArrayDataSource } from './data_source';
-import { Stream } from './stream';
-import { DuplexDataSource } from './duplex_data_source';
-import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token';
-import { ObjectDataSource } from './object_data_source';
-import { dsDebounce, dsTap } from './data_source_operators';
+import { DataSource, ArrayDataSource } from './data_source.js';
+import { Stream } from './stream.js';
+import { DuplexDataSource } from './duplex_data_source.js';
+import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token.js';
+import { ObjectDataSource } from './object_data_source.js';
+import { dsDebounce, dsTap } from './data_source_operators.js';
 
 /**
  * Convenience function to update a stream at fixed intervals
