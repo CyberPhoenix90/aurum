@@ -19,7 +19,7 @@
     "license": "ISC",
     "dependencies": {
         "@emotion/css": "^11.1.3",
-        "aurumjs": "^0.7.0",
+        "aurumjs": "^0.7.2",
         "aurum-canvas": "^0.0.25"
     }
 }

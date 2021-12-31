@@ -18,7 +18,7 @@ const selectEvents = { change: 'onChange' };
  */
 export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEvents, (node: HTMLElement, props: SelectProps, cleanUp: CancellationToken) => {
     const select = node as HTMLSelectElement;
-    if (props.value) {
+    if (props?.value) {
         if (props.value instanceof DataSource) {
             props.value.listenAndRepeat((v) => {
                 select.value = v;

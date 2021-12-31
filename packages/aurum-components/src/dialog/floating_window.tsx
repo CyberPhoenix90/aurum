@@ -22,7 +22,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 user-select: none;
                 justify-content: space-between;
                 background-color: ${color1};
-                height: 20px;
+                min-height: 20px;
 
                 .window-actions {
                     & > * {
@@ -55,10 +55,10 @@ export interface FloatingWindowProps {
     minH?: DataSource<number> | number;
     maxH?: DataSource<number> | number;
 
-    onClickOutside?(e: MouseEvent): void;
-    onClickInside?(e: MouseEvent): void;
-    onEscape?(e: KeyboardEvent): void;
-    onClose?(e: MouseEvent): void;
+    onClickOutside?(e: MouseEvent, windowRef: Renderable): void;
+    onClickInside?(e: MouseEvent, windowRef: Renderable): void;
+    onEscape?(e: KeyboardEvent, windowRef: Renderable): void;
+    onClose?(e: MouseEvent, windowRef: Renderable): void;
 
     resizable?: boolean | DataSource<boolean>;
     minimizable?: boolean | DataSource<boolean>;
@@ -144,10 +144,12 @@ export function FloatingWindow(props: FloatingWindowProps, children: Renderable[
                                 >
                                     🗖
                                 </Button>
-                            ) : undefined
+                            ) : (
+                                undefined
+                            )
                         )
                     )}
-                    {closable.transform(dsMap((v) => (v ? <Button onClick={(e) => props.onClose?.(e)}>⨯</Button> : undefined)))}
+                    {closable.transform(dsMap((v) => (v ? <Button onClick={(e) => props.onClose?.(e, this)}>⨯</Button> : undefined)))}
                 </div>
             </div>
             <div class="floating-body">{(content as AurumElementModel<any>).children}</div>

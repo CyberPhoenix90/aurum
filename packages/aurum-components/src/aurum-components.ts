@@ -10,6 +10,7 @@ export * from './dialog/toaster';
 export * from './input/color_picker';
 export * from './input/number_field';
 export * from './input/text_field';
+export * from './input/text_area_field';
 export * from './input/button';
 export * from './input/drop_down_menu';
 export * from './input/json_renderer';

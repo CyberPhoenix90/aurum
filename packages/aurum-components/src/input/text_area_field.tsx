@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { Aurum, DataSource, dsMap, Renderable } from 'aurumjs';
-import { InputProps } from 'aurumjs/prebuilt/cjs/nodes/input';
+import { TextAreaProps } from 'aurumjs/prebuilt/cjs/nodes/textarea';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -10,9 +10,9 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
         (fontFamily, size, highlightFont, color1, color3, color2) => css`
             position: relative;
             display: inline-flex;
-            width: 200px;
+            width: 300px;
 
-            > input {
+            > textarea {
                 background-color: ${color1};
                 font-family: ${fontFamily};
                 font-size: ${size};
@@ -28,16 +28,16 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 
-export interface TextFieldProps extends InputProps {
+export interface TextAreaFieldProps extends TextAreaProps {
     decorators?: Renderable;
 }
 
-export function TextField(props: TextFieldProps) {
+export function TextAreaField(props: TextAreaFieldProps) {
     const { decorators, style, ...inputProps } = props;
 
     return (
         <span class={theme.transform(dsMap<string, string>((t) => `${t} text-field`)) as DataSource<string>} style={style}>
-            <input {...inputProps}></input>
+            <textarea {...inputProps}></textarea>
             {decorators}
         </span>
     );
