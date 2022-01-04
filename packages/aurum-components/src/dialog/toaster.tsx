@@ -5,17 +5,11 @@ import { aurumify } from '../utils';
 
 const toasterStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.heading3FontSize, theme.baseFontColor, theme.themeColor2, theme.boxShadow],
-        (fontFamily, size, fontColor, color2, boxShadow) => css`
+        [],
+        () => css`
             display: flex;
-            flex-direction: column;
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            background-color: ${color2};
-            box-shadow: ${boxShadow};
+            width: 100%;
             position: fixed;
-            left: 50%;
             top: 100%;
             z-index: 10000;
             transition: all 0.4s ease;
@@ -26,8 +20,24 @@ const toasterStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 const toastStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.success, theme.warning, theme.error, theme.highContrastFontColor],
-        (success, warning, error, highContrastFontColor) => css`
+        [
+            theme.fontFamily,
+            theme.heading3FontSize,
+            theme.baseFontColor,
+            theme.themeColor2,
+            theme.boxShadow,
+            theme.success,
+            theme.warning,
+            theme.error,
+            theme.highContrastFontColor
+        ],
+        (fontFamily, size, fontColor, color2, boxShadow, success, warning, error, highContrastFontColor) => css`
+            color: ${fontColor};
+            font-family: ${fontFamily};
+            font-size: ${size};
+            background-color: ${color2};
+            box-shadow: ${boxShadow};
+            margin: auto;
             padding: 8px;
             &.success {
                 background-color: ${success};

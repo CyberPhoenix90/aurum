@@ -814,6 +814,89 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         yield* this.getData();
         return;
     }
+
+    public static fromFetchText(
+        response: Response,
+        config: { onComplete?: () => void; itemSeperatorSequence: string } = { itemSeperatorSequence: '\n' }
+    ): ArrayDataSource<string> {
+        const decoder = new TextDecoder('utf-8');
+        const stream = new ArrayDataSource<string>();
+        const { onComplete, itemSeperatorSequence } = config;
+
+        let buffer: string = '';
+        const readerStream = response.body.getReader();
+        function read(reader: ReadableStreamDefaultReader<Uint8Array>): void {
+            reader.read().then(({ done, value }) => {
+                if (!done) {
+                    const data = (buffer + decoder.decode(value)).split(itemSeperatorSequence);
+                    buffer = data.splice(data.length - 1, 1)[0];
+                    stream.appendArray(data);
+                    read(reader);
+                } else {
+                    if (buffer.length) {
+                        stream.push(buffer);
+                    }
+                    onComplete?.();
+                }
+            });
+        }
+        read(readerStream);
+
+        return stream;
+    }
+
+    public static fromFetchJSON<T>(
+        response: Response,
+        config: {
+            onParseError?: (item) => T;
+            onComplete?: () => void;
+            itemSeperatorSequence: string;
+        } = {
+            itemSeperatorSequence: '\n'
+        }
+    ): ArrayDataSource<T> {
+        const decoder = new TextDecoder('utf-8');
+        const stream = new ArrayDataSource<T>();
+        const { onParseError, onComplete, itemSeperatorSequence } = config;
+
+        let buffer: string = '';
+        const readerStream = response.body.getReader();
+        function read(reader: ReadableStreamDefaultReader<Uint8Array>): void {
+            reader.read().then(({ done, value }) => {
+                if (!done) {
+                    const data = (buffer + decoder.decode(value)).split(itemSeperatorSequence);
+                    buffer = data.splice(data.length - 1, 1)[0];
+
+                    for (const item of data) {
+                        parseAndPush(item);
+                    }
+
+                    read(reader);
+                } else {
+                    if (buffer.length) {
+                        parseAndPush(buffer);
+                    }
+                    onComplete?.();
+                }
+            });
+        }
+        read(readerStream);
+
+        function parseAndPush(item: string) {
+            try {
+                stream.push(JSON.parse(item));
+            } catch (e) {
+                try {
+                    stream.push(onParseError(item));
+                } catch (e) {
+                    // Ignore item if it can't be parsed and/or no error handler is provided
+                }
+            }
+        }
+
+        return stream;
+    }
+
     /**
      * Connects to an aurum-server exposed array datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
@@ -939,6 +1022,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         } else {
             return new ArrayDataSource(value);
         }
+    }
+
+    public pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken) {
+        this.listenAndRepeat((c) => target.applyCollectionChange(c), cancellation);
     }
 
     /**
