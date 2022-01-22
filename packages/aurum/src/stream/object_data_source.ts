@@ -30,6 +30,10 @@ export class ObjectDataSource<T> {
         }
     }
 
+    public toString(): string {
+        return this.data.toString();
+    }
+
     public pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ObjectDataSource<T[K]> {
         if (typeof this.data[key] === 'object') {
             const subDataSource: ObjectDataSource<T[K]> = new ObjectDataSource(this.data[key]);

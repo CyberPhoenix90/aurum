@@ -240,6 +240,10 @@ export class DataSource<T> implements GenericDataSource<T> {
         this.updateEvent = new EventEmitter();
     }
 
+    public toString(): string {
+        return this.value.toString();
+    }
+
     public static toDataSource<T>(value: T | DataSource<T>): DataSource<T> {
         if (value instanceof DataSource) {
             return value;
@@ -773,6 +777,7 @@ export interface ReadOnlyArrayDataSource<T> {
         cancellationToken?: CancellationToken,
         config?: ViewConfig
     ): ReadOnlyArrayDataSource<T>;
+    reduce<R>(reducer: (acc: R, value: T) => R, initial?: R, cancellationToken?: CancellationToken): DataSource<R>;
     unique(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
     indexBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], T>;
     indexByProvider<K>(provider: (item: T) => K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<K, T>;
@@ -813,6 +818,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     *[Symbol.iterator](): IterableIterator<T> {
         yield* this.getData();
         return;
+    }
+
+    public toString(): string {
+        return this.data.toString();
     }
 
     public static fromFetchText(
@@ -1432,6 +1441,34 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
 
         return view as any;
+    }
+
+    public reduce<R>(reducer: (acc: R, value: T) => R, initial?: R, cancellationToken?: CancellationToken): DataSource<R> {
+        const result = new DataSource<R>(initial);
+
+        this.listenAndRepeat((change: CollectionChange<T>) => {
+            switch (change.operation) {
+                case 'add':
+                    let newVal = result.value;
+                    for (const item of change.items) {
+                        newVal = reducer(newVal, item);
+                    }
+                    result.update(newVal);
+                    break;
+                case 'merge':
+                case 'replace':
+                case 'swap':
+                case 'remove':
+                    let newVal2 = initial;
+                    for (const item of change.newState) {
+                        newVal2 = reducer(newVal2, item);
+                    }
+                    result.update(newVal2);
+                    break;
+            }
+        }, cancellationToken);
+
+        return result;
     }
 
     public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReversedArrayView<T> {
@@ -2350,6 +2387,10 @@ export class MapDataSource<K, V> {
         }
 
         return result;
+    }
+
+    public toString(): string {
+        return this.data.toString();
     }
 
     public static toMapDataSource<K, V>(value: Map<K, V> | MapDataSource<K, V>): MapDataSource<K, V> {

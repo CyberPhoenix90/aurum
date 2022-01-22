@@ -92,6 +92,10 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
         return this;
     }
 
+    public toString(): string {
+        return this.value.toString();
+    }
+
     /**
      * Allows creating a duplex stream that blocks data in one direction. Useful for plugging into code that uses two way flow but only one way is desired
      * @param direction direction of the dataflow that is allowed

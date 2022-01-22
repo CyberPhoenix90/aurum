@@ -27,6 +27,11 @@ export class SetDataSource<K> {
             return new SetDataSource(value);
         }
     }
+
+    public toString(): string {
+        return this.data.toString();
+    }
+
     /**
      * Creates a datasource for a single key of the object
      * @param key
