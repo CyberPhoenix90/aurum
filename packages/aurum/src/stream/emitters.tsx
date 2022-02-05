@@ -15,14 +15,40 @@ export function intervalEmitter<T = void>(
     cancellationToken?: CancellationToken
 ): void {
     (cancellationToken ?? new CancellationToken()).setInterval(() => {
-        if (target instanceof ArrayDataSource) {
-            target.push(value);
-        } else if (target instanceof DuplexDataSource) {
-            target.updateDownstream(value);
-        } else {
-            target.update(value);
-        }
+        updateSource<T>(target, value);
     }, interval);
+}
+
+function updateSource<T = void>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T>, value: T) {
+    if (target instanceof ArrayDataSource) {
+        target.push(value);
+    } else if (target instanceof DuplexDataSource) {
+        target.updateDownstream(value);
+    } else {
+        target.update(value);
+    }
+}
+
+export function urlHashEmitter(
+    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string>,
+    stripInHashParameters: boolean = false,
+    cancellationToken?: CancellationToken
+): void {
+    updateSource(target, stripInHashParameters ? getUrlHash() : location.hash);
+    (cancellationToken ?? new CancellationToken()).registerDomEvent(window, 'hashchange', () => {
+        updateSource(target, stripInHashParameters ? getUrlHash() : location.hash);
+    });
+}
+
+function getUrlHash(): string {
+    const hash = location.hash.substring(1);
+    if (hash.includes('?')) {
+        return hash.substring(0, hash.indexOf('?'));
+    } else if (hash.includes('#')) {
+        return hash.substring(0, hash.indexOf('#'));
+    } else {
+        return hash;
+    }
 }
 
 /**

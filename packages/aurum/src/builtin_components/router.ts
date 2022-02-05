@@ -1,78 +1,104 @@
-import { DataSource } from '../stream/data_source.js';
-import { Renderable, AurumComponentAPI, aurumElementModelIdentitiy, AurumElementModel } from '../rendering/aurum_element.js';
-import { dsMap, dsUnique } from '../stream/data_source_operators.js';
+import { ArrayDataSource, DataSource } from '../stream/data_source.js';
+import { Renderable, AurumComponentAPI, AurumElementModel } from '../rendering/aurum_element.js';
+import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
+import { resolveChildren, urlHashEmitter } from '../aurumjs.js';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
-    children = [].concat.apply(
-        [],
-        children.filter((c) => !!c)
-    );
-    if (
-        children.some(
-            (c) =>
-                !c[aurumElementModelIdentitiy] || !((c as AurumElementModel<any>).factory === Route || (c as AurumElementModel<any>).factory === DefaultRoute)
+    const resolvedChildren = resolveChildren<AurumElementModel<RouteProps>>(children, api.cancellationToken, (c) => {
+        if ((c as AurumElementModel<any>).factory !== Route && (c as AurumElementModel<any>).factory !== DefaultRoute) {
+            throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
+        }
+    });
+    resolvedChildren
+        .reduce(
+            (acc, c) => {
+                if ((c as AurumElementModel<any>).factory === DefaultRoute) {
+                    return acc + 1;
+                } else {
+                    return acc;
+                }
+            },
+            0,
+            api.cancellationToken
         )
-    ) {
-        throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
-    }
-    if (children.filter((c) => (c as AurumElementModel<any>).factory === DefaultRoute).length > 1) {
-        throw new Error('Too many default routes only 0 or 1 allowed');
-    }
+        .listenAndRepeat((count) => {
+            if (count > 1) {
+                throw new Error(`Too many default routes only 0 or 1 allowed. Found ${count}`);
+            }
+        });
 
-    const urlDataSource = new DataSource(getUrlPath());
+    const urlDataSource = new DataSource<string>();
 
     if (typeof window !== 'undefined') {
-        api.cancellationToken.registerDomEvent(window, 'hashchange', () => {
-            urlDataSource.update(getUrlPath());
-        });
+        urlHashEmitter(urlDataSource, true, api.cancellationToken);
     }
+
+    const activeRoute = new DataSource<AurumElementModel<RouteProps>>();
+
+    activeRoute.transform(
+        dsUnique(),
+        dsDiff(),
+        dsTap(({ newValue, oldValue }) => {
+            if (oldValue) {
+                oldValue.props?.onNavigateFrom?.();
+            }
+            if (newValue) {
+                newValue.props?.onNavigateTo?.();
+            }
+        })
+    );
 
     return urlDataSource
         .transform(dsUnique(), api.cancellationToken)
         .withInitial(urlDataSource.value)
-        .transform(dsMap((p) => selectRoute(p, children as any)));
+        .transform(dsMap((p) => selectRoute(p, resolvedChildren, activeRoute)));
 }
 
-function getUrlPath(): string {
-    const hash = location.hash.substring(1);
-    if (hash.includes('?')) {
-        return hash.substring(0, hash.indexOf('?'));
-    } else if (hash.includes('#')) {
-        return hash.substring(0, hash.indexOf('#'));
-    } else {
-        return hash;
-    }
-}
-
-function selectRoute(url: string, routes: AurumElementModel<RouteProps>[]): Renderable[] {
+function selectRoute(
+    url: string,
+    routes: ArrayDataSource<AurumElementModel<RouteProps>>,
+    activeRoute: DataSource<AurumElementModel<RouteProps>>
+): Renderable[] {
+    let selected;
     if (url === undefined || url === null) {
-        return routes.find((r) => r.factory === DefaultRoute)?.children;
+        selected = routes.find((r) => r.factory === DefaultRoute);
     } else {
         if (routes.find((r) => r.props?.href === url)) {
-            return routes.find((r) => r.props?.href === url).children;
+            selected = routes.find((r) => r.props?.href === url);
         } else {
             const segments = url.split('/');
             segments.pop();
             while (segments.length) {
                 const path = segments.join('/');
                 if (routes.find((r) => r.props?.href === path)) {
-                    return routes.find((r) => r.props?.href === path).children;
+                    selected = routes.find((r) => r.props?.href === path);
+                    break;
                 }
                 segments.pop();
             }
-            return routes.find((r) => r.factory === DefaultRoute)?.children;
+            selected = routes.find((r) => r.factory === DefaultRoute);
         }
+    }
+
+    if (selected) {
+        activeRoute.update(selected);
+        return selected.children;
+    } else {
+        activeRoute.update(undefined);
+        return undefined;
     }
 }
 
 export interface RouteProps {
     href: string;
+    onNavigateTo?: () => void;
+    onNavigateFrom?: () => void;
 }
 
 export function Route(props: RouteProps, children): undefined {
     return undefined;
 }
 
-export function DefaultRoute(props: {}, children): undefined {
+export function DefaultRoute(props: Omit<RouteProps, 'href'>, children): undefined {
     return undefined;
 }
