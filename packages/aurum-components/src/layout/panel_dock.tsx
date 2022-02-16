@@ -6,7 +6,7 @@ export interface PanelElementProps {
     size?: SizeTypes;
     minSize?: SizeTypes;
     maxSize?: SizeTypes;
-    resizable?: boolean;
+    resizable?: DataSource<boolean> | boolean;
 }
 
 export function renderBottomDock(
@@ -17,7 +17,7 @@ export function renderBottomDock(
     className: any,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
-) {
+): Renderable {
     return (
         <div
             class={combineClass(
@@ -30,9 +30,14 @@ export function renderBottomDock(
             )}
             style={size.transform(dsMap((size) => `width:100%; height:${size}px`))}
         >
-            {model.props.resizable ? (
-                <div onMouseDown={(e) => horizontalDragStart(e, size, minSize, maxSize, -1, dragHandleThickness)} class="horizontal-handle"></div>
-            ) : undefined}
+            {DataSource.toDataSource(model.props.resizable).transform(
+                dsMap((v) =>
+                    v ? (
+                        <div onMouseDown={(e) => horizontalDragStart(e, size, minSize, maxSize, -1, dragHandleThickness)} class="horizontal-handle"></div>
+                    ) : undefined
+                ),
+                cancellationToken
+            )}
 
             {model.children}
         </div>
@@ -44,7 +49,7 @@ export function renderTopDock(
     size: DataSource<number> | DuplexDataSource<number>,
     className: any,
     cancellationToken: CancellationToken
-) {
+): Renderable {
     return (
         <div
             class={combineClass(
@@ -89,11 +94,20 @@ export function renderLeftDock(
         </div>
     );
 
-    if (model.props.resizable) {
-        result.push(
-            <div onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, 1, dragHandleThickness)} class="vertical-handle" style="float:left"></div>
-        );
-    }
+    result.push(
+        DataSource.toDataSource(model.props.resizable).transform(
+            dsMap((v) =>
+                v ? (
+                    <div
+                        onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, 1, dragHandleThickness)}
+                        class="vertical-handle"
+                        style="float:left"
+                    ></div>
+                ) : undefined
+            ),
+            cancellationToken
+        )
+    );
 
     return result;
 }
@@ -125,8 +139,16 @@ export function renderRightDock(
         </div>
     );
 
+    result.push(
+        DataSource.toDataSource(model.props.resizable).transform(
+            dsMap((v) =>
+                v ? <div onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, -1)} class="vertical-handle" style="float:right"></div> : undefined
+            ),
+            cancellationToken
+        )
+    );
+
     if (model.props.resizable) {
-        result.push(<div onMouseDown={(e) => verticalDragStart(e, size, minSize, maxSize, -1)} class="vertical-handle" style="float:right"></div>);
     }
 
     return result;

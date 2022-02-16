@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"allowUnusedLabels": false,
+		"alwaysStrict": true,
+		"module": "esnext",
+		"newLine": "LF",
+		"target": "esnext",
+		"noUnusedLocals": true,
+		"declarationMap": true,
+		"jsx": "react",
+		"jsxFragmentFactory": "Aurum.fragment",
+		"jsxFactory": "Aurum.factory",
+		"declaration": true,
+		"inlineSources": true,
+		"sourceMap": true,
+		"watch": false,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"noEmitOnError": true,
+		"outDir": "prebuilt/esnext",
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "node",
+	},
+	"extends": "../../tsconfig.common.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx"]
+}

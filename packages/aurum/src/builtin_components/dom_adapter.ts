@@ -15,7 +15,7 @@ export interface HTMLNodeProps<T> {
     title?: AttributeValue;
     role?: AttributeValue;
     slot?: AttributeValue;
-    contentEditable?: AttributeValue;
+    contenteditable?: AttributeValue;
     onContextMenu?: DataDrain<MouseEvent>;
     onDblClick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
@@ -77,7 +77,7 @@ export const defaultEvents: MapLike<string> = {
 /**
  * @internal
  */
-export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contentEditable', 'slot', 'title'];
+export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contenteditable', 'slot', 'title'];
 
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,
