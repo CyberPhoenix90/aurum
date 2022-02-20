@@ -968,7 +968,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public static fromMultipleSources<T>(
-        sources: Array<ArrayDataSource<T> | T[] | ReadOnlyDataSource<T>>,
+        sources: Array<ReadOnlyArrayDataSource<T> | T[] | ReadOnlyDataSource<T>>,
         cancellationToken?: CancellationToken
     ): ReadOnlyArrayDataSource<T> {
         const boundaries = [0];
@@ -1086,7 +1086,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         arrayDataSource:
             | ReadOnlyArrayDataSource<DataSource<T>>
             | ReadOnlyArrayDataSource<ReadOnlyDataSource<T>>
-            | ReadOnlyArrayDataSource<GenericDataSource<T>>,
+            | ReadOnlyArrayDataSource<GenericDataSource<T>>
+            | ReadOnlyArrayDataSource<DuplexDataSource<T>>,
         cancellation: CancellationToken
     ): ReadOnlyArrayDataSource<T> {
         const result = new ArrayDataSource<T>();
@@ -1156,7 +1157,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }, cancellation);
         return result;
 
-        function listenToItem(item: ReadOnlyDataSource<T> | DataSource<T> | GenericDataSource<T>) {
+        function listenToItem(item: ReadOnlyDataSource<T> | DataSource<T> | GenericDataSource<T> | DuplexDataSource<T>) {
             session.set(item, new CancellationToken());
             cancellation.chain(session.get(item));
             item.listen((value) => {
