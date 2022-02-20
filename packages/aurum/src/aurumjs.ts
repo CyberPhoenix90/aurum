@@ -9,7 +9,6 @@ export * from './stream/data_source.js';
 export * from './stream/duplex_data_source.js';
 export * from './stream/object_data_source.js';
 export * from './stream/tree_data_source.js';
-export * from './stream/set_data_source.js';
 export * from './stream/data_source_operators.js';
 export * from './stream/duplex_data_source_operators.js';
 export * from './stream/operator_model.js';

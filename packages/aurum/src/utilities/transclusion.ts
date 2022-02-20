@@ -1,8 +1,12 @@
 import { Renderable } from '../rendering/aurum_element.js';
-import { ArrayDataSource, DataSource } from '../stream/data_source.js';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 
-export function resolveChildren<T>(children: Renderable[], cancellationToken: CancellationToken, validation?: (child: Renderable) => void): ArrayDataSource<T> {
+export function resolveChildren<T>(
+    children: Renderable[],
+    cancellationToken: CancellationToken,
+    validation?: (child: Renderable) => void
+): ReadOnlyArrayDataSource<T> {
     const chunks: Array<ArrayDataSource<T> | T[]> = process<T>(children);
     const result = ArrayDataSource.fromMultipleSources(chunks, cancellationToken);
 

@@ -1,7 +1,7 @@
-import { ArrayDataSource, DataSource } from '../stream/data_source.js';
-import { Renderable, AurumComponentAPI, AurumElementModel } from '../rendering/aurum_element.js';
-import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
 import { resolveChildren, urlHashEmitter } from '../aurumjs.js';
+import { AurumComponentAPI, AurumElementModel, Renderable } from '../rendering/aurum_element.js';
+import { DataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
+import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
     const resolvedChildren = resolveChildren<AurumElementModel<RouteProps>>(children, api.cancellationToken, (c) => {
@@ -56,7 +56,7 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
 
 function selectRoute(
     url: string,
-    routes: ArrayDataSource<AurumElementModel<RouteProps>>,
+    routes: ReadOnlyArrayDataSource<AurumElementModel<RouteProps>>,
     activeRoute: DataSource<AurumElementModel<RouteProps>>
 ): Renderable[] {
     let selected;

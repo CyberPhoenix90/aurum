@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ArrayDataSource, Aurum, CancellationToken, DataSource, DuplexDataSource } from '../../src/aurumjs';
+import { ArrayDataSource, Aurum, CancellationToken, DataSource, DuplexDataSource, SetDataSource } from '../../src/aurumjs';
 
 describe('ArrayDatasource', () => {
     let attachToken: CancellationToken;
@@ -190,6 +190,67 @@ describe('ArrayDatasource', () => {
         assert.deepEqual(ads.toArray(), [9, 7, 4, 4, 4, 8, 5, 1, 2, 3, 1, 2, 200]);
         ds.update(undefined);
         assert.deepEqual(ads.toArray(), [9, 7, 8, 5, 1, 2, 3, 1, 2, 200]);
+    });
+
+    it('dynamic to non dynamic 1', () => {
+        const dyn: ArrayDataSource<DataSource<number>> = new ArrayDataSource([new DataSource(1), new DataSource(2), new DataSource(3)]);
+        const nonDyn = ArrayDataSource.DynamicArrayDataSourceToArrayDataSource(dyn, new CancellationToken());
+
+        assert.deepEqual(nonDyn.toArray(), [1, 2, 3]);
+
+        dyn.push(new DataSource(4));
+
+        assert.deepEqual(nonDyn.toArray(), [1, 2, 3, 4]);
+
+        dyn.get(2).update(5);
+
+        assert.deepEqual(nonDyn.toArray(), [1, 2, 5, 4]);
+
+        dyn.removeAt(1);
+
+        assert.deepEqual(nonDyn.toArray(), [1, 5, 4]);
+    });
+
+    it('dynamic to non dynamic 2', () => {
+        const options = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'];
+        const allOptions = new SetDataSource(options);
+
+        const usedOptions = new ArrayDataSource<DataSource<string>>();
+        usedOptions.push(new DataSource('alpha'));
+        usedOptions.push(new DataSource('beta'));
+
+        const unusedOptions = allOptions.difference(
+            ArrayDataSource.DynamicArrayDataSourceToArrayDataSource(usedOptions, new CancellationToken()).toSetDataSource(new CancellationToken()),
+            new CancellationToken()
+        );
+
+        const result = unusedOptions.toArrayDataSource().sort();
+
+        assert.deepEqual(result.toArray(), ['delta', 'epsilon', 'gamma', 'zeta']);
+
+        usedOptions.push(new DataSource('gamma'));
+
+        assert.deepEqual(result.toArray(), ['delta', 'epsilon', 'zeta']);
+
+        usedOptions.get(1).update('delta');
+
+        assert.deepEqual(result.toArray(), ['beta', 'epsilon', 'zeta']);
+    });
+
+    it('from multiple 3', () => {
+        const ads1 = new ArrayDataSource([1, 2]);
+        const ds = new DataSource(3);
+        let ads = ArrayDataSource.fromMultipleSources([ads1, ds]);
+
+        assert.deepEqual(ads.toArray(), [1, 2, 3]);
+
+        ads1.push(4);
+
+        assert.deepEqual(ads.toArray(), [1, 2, 4, 3]);
+
+        ds.update(10);
+
+        assert.deepEqual(ads.toArray(), [1, 2, 4, 10]);
     });
 
     it('flat', () => {
