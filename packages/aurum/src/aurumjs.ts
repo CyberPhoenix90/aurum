@@ -1,5 +1,13 @@
 export * from './rendering/webcomponent.js';
-export * from './rendering/aurum_element.js';
+export {
+    Renderable,
+    AurumComponentAPI,
+    ComponentLifeCycle,
+    createAPI,
+    createLifeCycle,
+    createRenderSession,
+    RenderSession
+} from './rendering/aurum_element.js';
 export * from './rendering/aurum_style.js';
 export * from './builtin_components/router.js';
 export * from './builtin_components/suspense.js';
@@ -21,6 +29,7 @@ export * from './utilities/sources.js';
 export * from './stream/emitters.js';
 export * from './nodes/string_adapter.js';
 export * from './utilities/transclusion.js';
+export { aurumToHTML } from './builtin_components/dom_adapter.js';
 
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode.js';
 export { AttributeValue, ClassType, DataDrain } from './utilities/common.js';

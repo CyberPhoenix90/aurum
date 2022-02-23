@@ -121,7 +121,7 @@ import {
     aurumElementModelIdentitiy,
     createAPI,
     createRenderSession,
-    render,
+    renderInternal,
     Renderable
 } from '../rendering/aurum_element.js';
 import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
@@ -223,7 +223,7 @@ export class Aurum {
 
     public static attach(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
         const session = createRenderSession();
-        const content = render(aurumRenderable, session);
+        const content = renderInternal(aurumRenderable, session);
         if (content instanceof AurumElement) {
             content.attachToDom(dom, dom.childNodes.length);
             session.sessionToken.addCancelable(() => content.dispose());

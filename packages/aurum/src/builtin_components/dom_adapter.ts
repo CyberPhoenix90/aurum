@@ -1,7 +1,7 @@
 import { StringSource, ClassType, DataDrain, Callback, MapLike, AttributeValue } from '../utilities/common.js';
 import { DataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
-import { Renderable, AurumComponentAPI, AurumElement, Rendered, render } from '../rendering/aurum_element.js';
+import { Renderable, AurumComponentAPI, AurumElement, Rendered, renderInternal, createRenderSession } from '../rendering/aurum_element.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { dsUnique } from '../stream/data_source_operators.js';
 
@@ -91,7 +91,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
             processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
         }
         //@ts-ignore
-        const renderedChildren = render(children, api.renderSession);
+        const renderedChildren = renderInternal(children, api.renderSession);
         connectChildren(node, renderedChildren);
         if (props) {
             if (props.onAttach) {
@@ -185,6 +185,20 @@ function bindProps(node: HTMLElement, keys: string[], props: any, cleanUp: Cance
             }
         }
     }
+}
+
+/**
+ * Renders Aurum content synchronously in line.
+ * @param content Content to render
+ */
+export function aurumToHTML(content: Renderable): { content: HTMLElement; fireOnAttach(): void; dispose(): void } {
+    const rs = createRenderSession();
+    const renderedContent = renderInternal(content, rs);
+    return {
+        content: renderedContent,
+        fireOnAttach: () => rs.attachCalls.forEach((c) => c()),
+        dispose: () => rs.sessionToken.cancel()
+    };
 }
 
 function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string, cleanUp: CancellationToken) {

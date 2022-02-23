@@ -281,7 +281,7 @@ export interface RenderSession {
 /**
  * @internal
  */
-export function render<T extends Renderable | Renderable[]>(element: T, session: RenderSession, prerendering: boolean = false): any {
+export function renderInternal<T extends Renderable | Renderable[]>(element: T, session: RenderSession, prerendering: boolean = false): any {
     if (element == undefined) {
         return undefined;
     }
@@ -289,7 +289,7 @@ export function render<T extends Renderable | Renderable[]>(element: T, session:
     if (Array.isArray(element)) {
         const result = [];
         for (const item of element) {
-            const rendered = render(item, session, prerendering);
+            const rendered = renderInternal(item, session, prerendering);
             // Flatten the rendered content into a single array to avoid having to iterate over nested arrays later
             if (rendered !== undefined && rendered !== null) {
                 if (Array.isArray(rendered)) {
@@ -352,7 +352,7 @@ export function render<T extends Renderable | Renderable[]>(element: T, session:
         } else {
             componentResult = model.factory(model.props ?? {}, model.children, api);
         }
-        return render(componentResult, session, prerendering);
+        return renderInternal(componentResult, session, prerendering);
     }
     // Unsupported types are returned as is in hope that a transclusion component will transform it into something compatible
     return element as any;
@@ -389,7 +389,7 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
         prerender(target: Renderable | Renderable[], lifeCycle: ComponentLifeCycle) {
             const lc = lifeCycle as ComponentLifeCycleInternal;
             const subSession = createRenderSession();
-            const result = render(target, subSession, true);
+            const result = renderInternal(target, subSession, true);
 
             lc.attach.subscribeOnce(() => {
                 subSession.attachCalls.forEach((cb) => cb());
@@ -614,7 +614,7 @@ export class ArrayAurumElement extends AurumElement {
         }
 
         const s = createRenderSession();
-        const rendered = render(item, s);
+        const rendered = renderInternal(item, s);
         if (rendered === undefined || rendered === null) {
             return;
         }
@@ -702,7 +702,7 @@ export class SingularAurumElement extends AurumElement {
         this.clearContent();
         this.endSession();
         this.renderSession = createRenderSession();
-        let rendered = render(newValue, this.renderSession);
+        let rendered = renderInternal(newValue, this.renderSession);
         if (rendered === undefined) {
             this.children = [];
             return;

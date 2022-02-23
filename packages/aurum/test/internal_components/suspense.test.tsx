@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationToken, Renderable, Suspense, Aurum } from '../../src/aurumjs';
+import { Suspense } from '../../src/builtin_components/suspense';
+import { Renderable } from '../../src/rendering/aurum_element';
+import { CancellationToken } from '../../src/utilities/cancellation_token';
 import { attachToTestRoot, getTestRoot, sleep } from '../test_utils';
+import { Aurum } from '../../src/utilities/aurum';
 
 export function generateSuspenseTests(renderSuspense: (fallback?: Renderable, children?: any) => Renderable) {
     let attachToken: CancellationToken;
