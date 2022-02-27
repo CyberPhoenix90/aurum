@@ -17,7 +17,7 @@ describe('Data source utils', () => {
                 i: 3
             })
         };
-        var a = unwrapObjectRecursive(wrapped);
+
         assert.deepEqual(unwrapObjectRecursive(wrapped), {
             a: {
                 b: 1,

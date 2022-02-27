@@ -59,6 +59,27 @@ describe('object data source', () => {
         assert.equal(wrapper.get('a'), 3);
     });
 
+    it('toDataSource', () => {
+        const wrapper = new ObjectDataSource(testObject);
+        const datasource = wrapper.toDataSource();
+
+        let i = 0;
+        datasource.listenAndRepeat((c) => {
+            switch (i++) {
+                case 0:
+                case 1:
+                    assert.equal(c, testObject);
+                    break;
+                default:
+                    throw new Error('unexpected');
+            }
+        });
+
+        assert.equal(datasource.value, testObject);
+        wrapper.set('a', 2);
+        assert.equal(datasource.value, testObject);
+    });
+
     it('create synchronized arraydatasource from property', () => {
         const wrapper = new ObjectDataSource(testObject);
         const datasource = wrapper.pickArray('f');
