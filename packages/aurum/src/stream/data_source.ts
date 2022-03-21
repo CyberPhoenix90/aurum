@@ -759,6 +759,8 @@ export interface ReadOnlyArrayDataSource<T> {
     findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number;
     lastIndexOf(item: T): number;
     includes(item: T): boolean;
+    some(cb: (item: T, index: number, array: T[]) => boolean): boolean;
+    every(cb: (item: T, index: number, array: T[]) => boolean): boolean;
     toArray(): T[];
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
     reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
@@ -1389,6 +1391,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             this.data = this.data.concat(items);
         }
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
+
         this.update({
             operation: 'add',
             operationDetailed: 'append',
@@ -1398,9 +1404,6 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             newState: this.data
         });
         this.onItemsAdded.fire(items);
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
     }
 
     public splice(index: number, deleteCount: number, ...insertion: T[]): T[] {
@@ -1441,17 +1444,20 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public unshift(...items: T[]) {
         this.data.unshift(...items);
-        this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
-        this.onItemsAdded.fire(items);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
+        this.onItemsAdded.fire(items);
     }
 
     public pop(): T {
         //This could technically just call removeRight(1) but removeRight is based on splicing which creates a new array so this can be significantly faster
         const item = this.data.pop();
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
         this.update({
             operation: 'remove',
             operationDetailed: 'removeRight',
@@ -1462,9 +1468,6 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         });
         this.onItemsRemoved.fire([item]);
 
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
         return item;
     }
 
@@ -1479,6 +1482,9 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const old = this.data;
         this.data = newData.slice();
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
         this.update({
             operation: 'merge',
             operationDetailed: 'merge',
@@ -1489,30 +1495,27 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         });
         this.onItemsRemoved.fire(old);
         this.onItemsAdded.fire(this.data);
-
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
     }
 
     public removeRight(count: number): T[] {
         const length = this.data.length;
         const result = this.data.splice(length - count, count);
-        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
+        this.onItemsRemoved.fire(result);
 
         return result;
     }
 
     public removeLeft(count: number): void {
         const removed = this.data.splice(0, count);
-        this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
-        this.onItemsRemoved.fire(removed);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
+        this.onItemsRemoved.fire(removed);
     }
 
     public removeAt(index: number, count: number = 1): T[] {
@@ -1528,11 +1531,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public removeRange(start: number, end: number): T[] {
         const removed = this.data.splice(start, end - start);
-        this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
-        this.onItemsRemoved.fire(removed);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
+        this.onItemsRemoved.fire(removed);
 
         return removed;
     }
@@ -1551,6 +1554,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
         const items = this.data;
         this.data = [];
+
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
+
         this.update({
             operation: 'remove',
             operationDetailed: 'clear',
@@ -1561,18 +1569,25 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             newState: this.data
         });
         this.onItemsRemoved.fire(items);
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
+    }
+
+    public some(cb: (item: T, index: number, array: T[]) => boolean): boolean {
+        return this.data.some(cb);
+    }
+
+    public every(cb: (item: T, index: number, array: T[]) => boolean): boolean {
+        return this.data.every(cb);
     }
 
     public shift(): T {
         const item = this.data.shift();
-        this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
-        this.onItemsRemoved.fire([item]);
+
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+        this.onItemsRemoved.fire([item]);
 
         return item;
     }
