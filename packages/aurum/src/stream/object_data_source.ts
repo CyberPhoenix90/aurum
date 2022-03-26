@@ -283,7 +283,7 @@ export class ObjectDataSource<T> {
      * @param newData
      */
     public merge(newData: Partial<T> | ObjectDataSource<T>): void {
-        const keys = new Set<string>(Object.keys(this.data));
+        const keys = new Set<string>(Object.keys(this.data ?? {}));
         if (newData instanceof ObjectDataSource) {
             for (const key of newData.keys()) {
                 keys.delete(key);
@@ -305,6 +305,10 @@ export class ObjectDataSource<T> {
      * Deletes all keys
      */
     public clear(): void {
+        if (this.data == undefined) {
+            return;
+        }
+
         for (const key in this.data) {
             this.delete(key);
         }
