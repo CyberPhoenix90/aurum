@@ -1,3 +1,4 @@
+import { getValueOf } from '../aurumjs.js';
 import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client.js';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
@@ -1084,6 +1085,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
      */
     public static DynamicArrayDataSourceToArrayDataSource<T>(
         arrayDataSource:
+            | ReadOnlyArrayDataSource<ReadOnlyDataSource<T> | T>
+            | ReadOnlyArrayDataSource<DataSource<T> | T>
             | ReadOnlyArrayDataSource<DataSource<T>>
             | ReadOnlyArrayDataSource<ReadOnlyDataSource<T>>
             | ReadOnlyArrayDataSource<GenericDataSource<T>>
@@ -1091,20 +1094,20 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         cancellation: CancellationToken
     ): ReadOnlyArrayDataSource<T> {
         const result = new ArrayDataSource<T>();
-        const session = new WeakMap<ReadOnlyDataSource<T>, CancellationToken>();
+        const session = new WeakMap<any, CancellationToken>();
         arrayDataSource.listenAndRepeat(({ operationDetailed, index, index2, count, items, previousState, newState, target }) => {
             switch (operationDetailed) {
                 case 'append':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.appendArray(items.map((item) => item.value));
+                    result.appendArray(items.map((item) => getValueOf(item)));
                     break;
                 case 'prepend':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.unshift(...items.map((item) => item.value));
+                    result.unshift(...items.map((item) => getValueOf(item)));
                     break;
                 case 'merge':
                     for (const item of previousState) {
@@ -1113,13 +1116,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                     for (const item of newState) {
                         listenToItem(item);
                     }
-                    result.merge(newState.map((i) => i.value));
+                    result.merge(newState.map((i) => getValueOf(i)));
                     break;
                 case 'insert':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.insertAt(index, ...items.map((item) => item.value));
+                    result.insertAt(index, ...items.map((item) => getValueOf(item)));
                     break;
                 case 'clear':
                     for (const item of previousState) {
@@ -1148,7 +1151,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                 case 'replace':
                     stopLitenToItem(target);
                     listenToItem(items[0]);
-                    result.set(index, items[0].value);
+                    result.set(index, getValueOf(items[0]));
                     break;
                 case 'swap':
                     result.swap(index, index2);
@@ -1157,7 +1160,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }, cancellation);
         return result;
 
-        function listenToItem(item: ReadOnlyDataSource<T> | DataSource<T> | GenericDataSource<T> | DuplexDataSource<T>) {
+        function listenToItem(item: ReadOnlyDataSource<T> | T | DataSource<T> | GenericDataSource<T> | DuplexDataSource<T>) {
+            if (!('listen' in item)) {
+                return;
+            }
+
             session.set(item, new CancellationToken());
             cancellation.chain(session.get(item));
             item.listen((value) => {
@@ -1165,9 +1172,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             }, session.get(item));
         }
 
-        function stopLitenToItem(item: ReadOnlyDataSource<T>) {
-            session.get(item).cancel();
-            session.delete(item);
+        function stopLitenToItem(item: ReadOnlyDataSource<T> | T) {
+            if (session.has(item)) {
+                session.get(item).cancel();
+                session.delete(item);
+            }
         }
     }
 
