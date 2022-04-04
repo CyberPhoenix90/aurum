@@ -6,7 +6,8 @@ export {
     createAPI,
     createLifeCycle,
     createRenderSession,
-    RenderSession
+    RenderSession,
+    AurumElementModel
 } from './rendering/aurum_element.js';
 export * from './rendering/aurum_style.js';
 export * from './builtin_components/router.js';
