@@ -1,5 +1,18 @@
 import { css } from '@emotion/css';
-import { ArrayDataSource, Aurum, AurumComponentAPI, ClassType, combineClass, DataSource, dsMap, Renderable, resolveChildren } from 'aurumjs';
+import {
+    ArrayDataSource,
+    AttributeValue,
+    Aurum,
+    AurumComponentAPI,
+    ClassType,
+    combineAttribute,
+    combineClass,
+    DataSource,
+    dsMap,
+    Renderable,
+    resolveChildren
+} from 'aurumjs';
+import { AurumElementModel } from 'aurumjs/prebuilt/cjs/rendering/aurum_element';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -57,7 +70,9 @@ const toastStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
 );
 
 export interface ToasterProps {
-    toastActiveTime: number;
+    defaultToastActiveTime: number;
+    style?: AttributeValue;
+    class?: ClassType;
 }
 
 export function Toaster(props: ToasterProps, children: Renderable[], api: AurumComponentAPI): Renderable {
@@ -93,7 +108,10 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
     nextToast();
 
     return (
-        <div style={top.transform(dsMap((s) => `top:${s}%;`))} class={toasterStyle}>
+        <div
+            style={combineAttribute(api.cancellationToken, props.style, top.transform(dsMap((s) => `top:${s}%;`)))}
+            class={combineClass(api.cancellationToken, props.class, toasterStyle)}
+        >
             {activeToast}
         </div>
     );
@@ -109,12 +127,17 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
                     api.cancellationToken.setTimeout(() => {
                         activeToast.update(undefined);
                     }, 400);
-                }, props.toastActiveTime);
+                }, (toast as AurumElementModel<ToastProps>)?.props?.activeTime ?? props.defaultToastActiveTime);
             }
         }
     }
 }
-export function Toast(props: { type: 'info' | 'success' | 'warning' | 'error' }, children: Renderable[], api: AurumComponentAPI): Renderable {
+export interface ToastProps {
+    type: 'info' | 'success' | 'warning' | 'error';
+    activeTime?: number;
+}
+
+export function Toast(props: ToastProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     let toastClass: ClassType = toastStyle;
     switch (props.type) {
         case 'info':

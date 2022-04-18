@@ -1,3 +1,4 @@
+import { PanelComponent, PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop } from 'aurum-components';
 import {
     ArrayDataSource,
     AttributeValue,
@@ -11,34 +12,19 @@ import {
     Renderable,
     TreeDataSource
 } from 'aurumjs';
+import { CodeEditor } from './code_editor_component';
+import { ConsoleComponent } from './console_component';
+import { FileTreeNode, FileTreeFile } from './model';
 
 export interface GeneralProps {
     theme?: DataSource<string>;
-    width: DataSource<number>;
-    height: DataSource<number>;
+    width: DataSource<number> | number;
+    height: DataSource<number> | number;
 
     style?: AttributeValue;
     class?: ClassType;
-}
-
-export type FileTreeNode = FileTreeFile | FileTreeFolder;
-
-export interface FileTreeNodeCommon {
-    path: string;
-    name: string;
-
-    open?: DataSource<boolean>;
-
-    children?: FileTreeNode[];
-}
-
-export interface FileTreeFile extends FileTreeNodeCommon {
-    nodeType: 'file';
-    content: ArrayDataSource<string>;
-}
-
-export interface FileTreeFolder extends FileTreeNodeCommon {
-    nodeType: 'folder';
+    openFile?: DataSource<string>;
+    files: ArrayDataSource<{ path: string; content: ArrayDataSource<string> | DataSource<Uint8Array> }>;
 }
 
 export interface FileExplorerProps {
@@ -70,6 +56,10 @@ export interface ConsoleProps {
     onKeyPress?: (event: KeyboardEvent) => void;
 }
 
+export interface CodeEditorConfigProps {
+    language: string | DataSource<string>;
+}
+
 export interface TabsProps {
     readonly?: DataSource<boolean>;
     openTabs?: ArrayDataSource<FileTreeNode>;
@@ -77,10 +67,6 @@ export interface TabsProps {
     onFocus?: (tab: FileTreeNode, cancel: () => void) => void;
     onClose?: (tab: FileTreeNode, cancel: () => void) => void;
     onBlur?: (tab: FileTreeNode, cancel: () => void) => void;
-}
-
-export interface CodeEditorProps {
-    id: string;
 }
 
 export interface CustomSidebarProps {
@@ -121,8 +107,8 @@ export interface AurumCodeEditorProps {
         custom?: CustomBottomPanelProps[];
     };
     content?: {
-        editorSelector: (file: FileTreeFile) => string;
-        codeEditor?: CodeEditorProps;
+        editorSelector?: (file: FileTreeFile) => string;
+        codeEditor?: CodeEditorConfigProps;
         customEditor?: CustomEditorProps[];
     };
 }
@@ -132,9 +118,16 @@ export function AurumCodeEditor(props: AurumCodeEditorProps, children: Renderabl
         throw new Error('AurumCodeEditor does not accept children');
     }
 
+    props.general.width = DataSource.toDataSource(props.general.width);
+    props.general.height = DataSource.toDataSource(props.general.height);
+
     if (!props.bottomPanel && !props.topPanel && !props.leftSidebar && !props.rightSidebar && !props.content) {
         return;
     }
+
+    const openFile = new DataSource<FileTreeFile>(
+        fileToFileEntry(props.general.openFile ? props.general.files.find((e) => e.path === props.general.openFile.value) : props.general.files.get(0))
+    );
 
     return (
         <div
@@ -145,6 +138,117 @@ export function AurumCodeEditor(props: AurumCodeEditorProps, children: Renderabl
                 props.general.height.transform(dsMap((h) => `height:${h}px;`))
             )}
             class={props.general.class}
-        ></div>
+        >
+            <PanelComponent>
+                {props.topPanel ? (
+                    <PanelDockTop size={100} resizable>
+                        {selectTop(props.topPanel)}
+                    </PanelDockTop>
+                ) : undefined}
+                <PanelDockLeft size={100} resizable>
+                    {selectLeft(props.leftSidebar)}
+                </PanelDockLeft>
+                <PanelDockBottom size={100} resizable>
+                    {selectBottom(props.bottomPanel, {
+                        width: props.general.width,
+                        height: new DataSource(100),
+                        openFile
+                    })}
+                </PanelDockBottom>
+                <PanelDockRight size={100} resizable>
+                    {selectRight(props.rightSidebar, {
+                        width: props.general.width,
+                        height: props.general.height,
+                        openFile
+                    })}
+                </PanelDockRight>
+                <PanelContent>
+                    {selectContent(props.content, {
+                        width: props.general.width,
+                        height: props.general.height,
+                        openFile
+                    })}
+                </PanelContent>
+            </PanelComponent>
+        </div>
+    );
+}
+
+function selectTop(top: AurumCodeEditorProps['topPanel']): Renderable {
+    if (!top) {
+        return;
+    }
+}
+
+function selectLeft(left: AurumCodeEditorProps['leftSidebar']): Renderable {
+    if (!left) {
+        return;
+    }
+}
+
+function selectBottom(
+    bottom: AurumCodeEditorProps['bottomPanel'],
+    general: {
+        width: DataSource<number>;
+        height: DataSource<number>;
+        openFile: DataSource<FileTreeFile>;
+    }
+): Renderable {
+    if (!bottom) {
+        return;
+    }
+
+    if (bottom.console) {
+        return <ConsoleComponent width={general.width} height={general.height} />;
+    }
+}
+
+function selectRight(
+    right: AurumCodeEditorProps['rightSidebar'],
+    general: {
+        width: DataSource<number>;
+        height: DataSource<number>;
+        openFile: DataSource<FileTreeFile>;
+    }
+): Renderable {
+    if (!right) {
+        return;
+    }
+}
+
+function fileToFileEntry(file: { path: string; content: ArrayDataSource<string> | DataSource<Uint8Array> }): FileTreeFile {
+    return {
+        content: file.content,
+        directory: new DataSource(file.path.split('/').slice(0, -1).join('/')),
+        name: new DataSource(file.path.split('/').slice(-1)[0]),
+        nodeType: 'file'
+    };
+}
+
+function selectContent(
+    content: AurumCodeEditorProps['content'],
+    general: {
+        width: DataSource<number>;
+        height: DataSource<number>;
+        openFile: DataSource<FileTreeFile>;
+    }
+): Renderable {
+    if (!content) {
+        return;
+    }
+
+    const { openFile, height, width } = general;
+
+    return openFile.transform(
+        dsMap((file) => {
+            const id = content.editorSelector?.(file);
+            if (id && content.customEditor?.find((ce) => ce.id === id)) {
+                return content.customEditor?.find((ce) => ce.id === id)?.content(width, height, openFile);
+            } else {
+                if (content.codeEditor) {
+                    return <CodeEditor language={DataSource.toDataSource(content.codeEditor.language)} file={file} width={width} height={height} />;
+                }
+            }
+        })
     );
 }

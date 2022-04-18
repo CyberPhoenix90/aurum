@@ -2797,7 +2797,7 @@ export interface ReadOnlySetDataSource<K> {
     keys(): IterableIterator<K>;
     has(key: K): boolean;
     toArray(): K[];
-    toArrayDataSource(): ReadOnlyArrayDataSource<K>;
+    toArrayDataSource(cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<K>;
     toSet(): Set<K>;
     clear(): void;
     [Symbol.iterator](): IterableIterator<K>;
@@ -3064,11 +3064,11 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         return event.subscribe(callback, cancellationToken).cancel;
     }
 
-    public toArrayDataSource(): ReadOnlyArrayDataSource<K> {
-        return this.map((key) => key);
+    public toArrayDataSource(cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<K> {
+        return this.map((key) => key, cancellationToken);
     }
 
-    public map<D>(mapper: (key: K) => D): ReadOnlyArrayDataSource<D> {
+    public map<D>(mapper: (key: K) => D, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<D> {
         const stateMap: Map<K, D> = new Map<K, D>();
         const result = new ArrayDataSource<D>();
         this.listenAndRepeat((change) => {
@@ -3081,7 +3081,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
                 result.push(newItem);
                 stateMap.set(change.key, newItem);
             }
-        });
+        }, cancellationToken);
 
         return result;
     }

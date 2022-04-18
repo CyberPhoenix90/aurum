@@ -61,6 +61,14 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
         return result;
     }
 
+    public static toDuplexDataSource<T>(value: T | DuplexDataSource<T>): DuplexDataSource<T> {
+        if (value instanceof DuplexDataSource) {
+            return value;
+        } else {
+            return new DuplexDataSource(value);
+        }
+    }
+
     /**
      * Makes it possible to have 2 completely separate data flow pipelines for each direction
      * @param downStream stream to pipe downstream data to
