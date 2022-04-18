@@ -1,6 +1,6 @@
 {
     "name": "aurum-components",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "",
     "main": "prebuilt/cjs/aurum-components.js",
     "typings": "prebuilt/cjs/aurum-components.d.ts",
