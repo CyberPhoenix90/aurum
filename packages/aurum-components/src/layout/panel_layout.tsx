@@ -36,6 +36,8 @@ export interface PanelProps {
 export function PanelComponent(props: PanelProps, children: AurumElementModel<any>[], { className, cancellationToken }: AurumComponentAPI): Renderable {
     const style = generateStyle(props);
 
+    children = children.filter(Boolean);
+
     let left: AurumElementModel<PanelElementProps>;
     let right: AurumElementModel<PanelElementProps>;
     let top: AurumElementModel<PanelElementProps>;
