@@ -8,7 +8,7 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
         if ((c as AurumElementModel<any>).factory !== Route && (c as AurumElementModel<any>).factory !== DefaultRoute) {
             throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
         }
-    });
+    }).filter(Boolean);
     resolvedChildren
         .reduce(
             (acc, c) => {
