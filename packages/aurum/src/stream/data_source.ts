@@ -1553,6 +1553,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const index = this.data.indexOf(item);
         if (index !== -1) {
             return this.removeAt(index)[0];
+        } else {
+            return undefined;
         }
     }
 
@@ -2475,7 +2477,7 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
      */
     public updateFilter(filter: Predicate<T>): number {
         if (this.viewFilter === filter) {
-            return;
+            return this.data.length;
         }
         this.viewFilter = filter;
         this.refresh();

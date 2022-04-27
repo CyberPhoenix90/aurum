@@ -1,7 +1,7 @@
 src
 tsconfig.cjs.json
 tsconfig.amd.json
-tsconfig.json
+tsconfig.es.json
 .prettierrc
 dist_test
 coverage

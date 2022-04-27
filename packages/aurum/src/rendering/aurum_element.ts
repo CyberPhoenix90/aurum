@@ -155,6 +155,8 @@ export abstract class AurumElement {
                 return i + 1;
             }
         }
+
+        return -1;
     }
 
     protected getLastIndex(): number {
@@ -168,6 +170,8 @@ export abstract class AurumElement {
                 return i;
             }
         }
+
+        return -1;
     }
 
     protected abstract render(dataSource: DataSource<any> | ArrayDataSource<any> | DuplexDataSource<any>): void;

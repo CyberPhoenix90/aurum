@@ -59,7 +59,7 @@ export function combineClass(cancellationToken: CancellationToken, ...args: Clas
                 if (constants.length) {
                     return data.flat().concat(constants);
                 } else {
-                    data.flat();
+                    return data.flat();
                 }
             },
             cancellationToken

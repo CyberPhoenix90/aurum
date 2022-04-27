@@ -1,38 +1,31 @@
 {
-    "name": "aurumjs",
-    "version": "0.8.8",
-    "description": "Stream based declarative DOM rendering library for javascript",
-    "main": "prebuilt/cjs/aurumjs.js",
-    "typings": "prebuilt/cjs/aurumjs.d.ts",
-    "scripts": {
-        "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
-        "watch": "tsc -p tsconfig.cjs.json -w",
-        "prepublish": "npm run build",
-        "test": "tsc -p tsconfig.test.json && http-server -o -c-1",
-        "test-watch": "tsc -p tsconfig.test.json -w | http-server -o -c-1"
-    },
-    "homepage": "https://aurumjs.org/",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/CyberPhoenix90/aurum"
-    },
-    "keywords": [
-        "web-components",
-        "webcomponents",
-        "DOM",
-        "stream",
-        "rendering"
-    ],
-    "author": "Joao Santos (CyberPhoenix)",
-    "license": "MIT",
-    "devDependencies": {
-        "@types/chai": "^4.2.5",
-        "@types/mocha": "^8.2.0",
-        "@types/sinon": "^9.0.4",
-        "chai": "^4.2.0",
-        "mocha": "^8.2.1",
-        "prettier": "^2.2.1",
-        "requirejs": "^2.3.6",
-        "sinon": "^9.0.3"
-    }
+  "name": "aurumjs",
+  "version": "0.8.8",
+  "main": "dist/cjs/aurumjs.js",
+  "typings": "dist/cjs/aurumjs.d.ts",
+  "description": "Stream based declarative DOM rendering library for javascript",
+  "author": "Joao Santos (CyberPhoenix)",
+  "license": "MIT",
+  "homepage": "https://aurumjs.org/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyberPhoenix90/aurum"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.5",
+    "@types/mocha": "^8.2.0",
+    "@types/sinon": "^9.0.4",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "prettier": "^2.2.1",
+    "requirejs": "^2.3.6",
+    "sinon": "^9.0.3"
+  },
+  "keywords": [
+    "web-components",
+    "webcomponents",
+    "DOM",
+    "stream",
+    "rendering"
+  ]
 }

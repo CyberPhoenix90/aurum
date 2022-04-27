@@ -1,0 +1,6 @@
+{
+    "folderBlacklist": ["node_modules"],
+    "typescript": {
+        "tsdk": "node_modules/typescript"
+    }
+}

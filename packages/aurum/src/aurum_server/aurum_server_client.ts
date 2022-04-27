@@ -368,9 +368,7 @@ async function ensureConnection(key: string, protocol: 'ws' | 'wss', host: strin
     let backoff = 1000;
     if (pendingConnections.has(key)) {
         return pendingConnections.get(key);
-    }
-
-    if (!connections.has(key)) {
+    } else {
         const pendingConnection = new Promise<AurumServerClient>((resolve) => {
             async function tryConnect() {
                 const p = AurumServerClient.connect(host, protocol);

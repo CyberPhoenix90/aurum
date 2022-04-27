@@ -1,0 +1,25 @@
+{
+  "name": "aurum",
+  "version": "1.0.0",
+  "description": "Looking for aurumjs? Click here: https://github.com/CyberPhoenix90/aurum/tree/master/packages/aurum",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyberPhoenix90/aurum.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CyberPhoenix90/aurum/issues"
+  },
+  "homepage": "https://github.com/CyberPhoenix90/aurum#readme",
+  "dependencies": {
+    "eslint": "^8.14.0",
+    "prettier": "^2.6.2",
+    "typescript": "^4.6.3"
+  }
+}
