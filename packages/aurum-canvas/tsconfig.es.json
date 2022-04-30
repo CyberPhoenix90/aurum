@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "esnext",
     "target": "es2019",
     "sourceMap": true,
     "declaration": true,
@@ -17,11 +17,12 @@
     "noEmitOnError": true,
     "newLine": "LF",
     "declarationMap": true,
-    "outDir": "dist/cjs"
+    "outDir": "dist/es"
   },
   "include": [
     "src/**/*.ts",
     "../aurum/dist/amd/aurumjs.d.ts",
-    "../aurum/dist/cjs/index.d.ts"
+    "../aurum/dist/cjs/index.d.ts",
+    "../aurum/dist/es/index.d.ts"
   ]
 }

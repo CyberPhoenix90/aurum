@@ -7,6 +7,8 @@ export {
     createLifeCycle,
     createRenderSession,
     RenderSession,
+    AurumElement,
+    aurumElementModelIdentitiy,
     AurumElementModel
 } from './rendering/aurum_element.js';
 export * from './rendering/aurum_style.js';

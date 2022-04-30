@@ -160,7 +160,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
 
     function isOnTopOf(e: MouseEvent, target: ComponentModel, context: CanvasRenderingContext2D): boolean {
         if (!target.renderedState) {
-            return;
+            return false;
         }
         let x = e.offsetX - (props.translate?.value.x ? props.translate?.value.x * (props.scale?.value?.x ?? 1) : 0);
         let y = e.offsetY - (props.translate?.value.y ? props.translate?.value.y * (props.scale?.value?.x ?? 1) : 0);
