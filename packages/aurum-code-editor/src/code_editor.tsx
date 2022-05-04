@@ -176,14 +176,18 @@ export function AurumCodeEditor(props: AurumCodeEditorProps, children: Renderabl
 
 function selectTop(top: AurumCodeEditorProps['topPanel']): Renderable {
     if (!top) {
-        return;
+        return undefined;
     }
+
+    throw new Error('Not implemented');
 }
 
 function selectLeft(left: AurumCodeEditorProps['leftSidebar']): Renderable {
     if (!left) {
-        return;
+        return undefined;
     }
+
+    throw new Error('Not implemented');
 }
 
 function selectBottom(
@@ -195,12 +199,14 @@ function selectBottom(
     }
 ): Renderable {
     if (!bottom) {
-        return;
+        return undefined;
     }
 
     if (bottom.console) {
         return <ConsoleComponent width={general.width} height={general.height} />;
     }
+
+    throw new Error('Not implemented');
 }
 
 function selectRight(
@@ -212,8 +218,10 @@ function selectRight(
     }
 ): Renderable {
     if (!right) {
-        return;
+        return undefined;
     }
+
+    throw new Error('Not implemented');
 }
 
 function fileToFileEntry(file: { path: string; content: ArrayDataSource<string> | DataSource<Uint8Array> }): FileTreeFile {
@@ -234,7 +242,7 @@ function selectContent(
     }
 ): Renderable {
     if (!content) {
-        return;
+        return undefined;
     }
 
     const { openFile, height, width } = general;
