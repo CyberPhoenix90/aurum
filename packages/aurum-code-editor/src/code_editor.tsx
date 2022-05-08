@@ -15,6 +15,7 @@ import {
 import { CodeEditor } from './code_editor_component';
 import { ConsoleComponent } from './console_component';
 import { FileTreeNode, FileTreeFile } from './model';
+import { TabsComponent } from './tabs_component';
 
 export interface GeneralProps {
     theme?: DataSource<string>;
@@ -174,9 +175,20 @@ export function AurumCodeEditor(props: AurumCodeEditorProps, children: Renderabl
     );
 }
 
-function selectTop(top: AurumCodeEditorProps['topPanel']): Renderable {
+function selectTop(
+    top: AurumCodeEditorProps['topPanel'],
+    general: {
+        width: DataSource<number>;
+        height: DataSource<number>;
+        openFile: DataSource<FileTreeFile>;
+    }
+): Renderable {
     if (!top) {
         return undefined;
+    }
+
+    if (top.tabs) {
+        return <TabsComponent width={general.width} {...top.tabs} />;
     }
 
     throw new Error('Not implemented');

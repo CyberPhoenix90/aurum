@@ -50,6 +50,12 @@
             "outDir": "prebuilt/exnext",
             "name": "esnext",
             "platform": "isomorphic"
+        },
+        {
+            "outdir": "dist/test",
+            "name": "test",
+            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+            "platform": "browser"
         }
     ]
 }
