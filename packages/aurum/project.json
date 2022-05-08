@@ -49,7 +49,7 @@
         {
             "outdir": "dist/test",
             "name": "test",
-            "includes": ["test/**/*.ts", "test/**/*.tsx"],
+            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
             "platform": "browser"
         }
     ]

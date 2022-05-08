@@ -71,9 +71,9 @@ describe('Datasource', () => {
 
     it('should update value', () => {
         let ds = new DataSource(123);
-        assert(ds.value === 123);
+        assert.equal(ds.value, 123);
         ds.update(321);
-        assert(ds.value === 321);
+        assert.equal(ds.value, 321);
     });
 
     it('should fire events', () => {
@@ -86,7 +86,7 @@ describe('Datasource', () => {
                 resolve();
             });
             ds.update(321);
-            assert(ds.value === 321);
+            assert.equal(ds.value, 321);
         });
     });
 
@@ -117,51 +117,51 @@ describe('Datasource', () => {
         let ds = new DataSource(123);
         let ds2 = new DataSource(10);
         ds.pipe(ds2);
-        assert(ds2.value === 10);
+        assert.equal(ds2.value, 10);
         ds.update(100);
-        assert(ds2.value === 100);
+        assert.equal(ds2.value, 100);
         ds.update(200);
-        assert(ds2.value === 200);
+        assert.equal(ds2.value, 200);
         ds.update(300);
-        assert(ds2.value === 300);
+        assert.equal(ds2.value, 300);
     });
 
     it('should map updates', () => {
         let ds = new DataSource(123);
         let mapped = ds.transform(dsMap((v) => v + 10));
-        assert(mapped.value === 133);
+        assert.equal(mapped.value, 133);
         ds.update(100);
-        assert(mapped.value === 110);
+        assert.equal(mapped.value, 110);
         ds.update(200);
-        assert(mapped.value === 210);
+        assert.equal(mapped.value, 210);
         ds.update(300);
-        assert(mapped.value === 310);
+        assert.equal(mapped.value, 310);
     });
 
     it('should reduce updates', () => {
         let ds = new DataSource<number>();
         let reduced = ds.transform(dsReduce((p, c) => p + c, 0));
         ds.update(123);
-        assert(reduced.value === 123);
+        assert.equal(reduced.value, 123);
         ds.update(100);
-        assert(reduced.value === 223);
+        assert.equal(reduced.value, 223);
         ds.update(200);
-        assert(reduced.value === 423);
+        assert.equal(reduced.value, 423);
         ds.update(300);
-        assert(reduced.value === 723);
+        assert.equal(reduced.value, 723);
     });
 
     it('should aggregate updates', () => {
         let ds = new DataSource(1);
         let ds2 = new DataSource(1);
         let aggregated = ds.aggregate([ds2], (valueA, valueB) => valueA + valueB);
-        assert(aggregated.value === 2);
+        assert.equal(aggregated.value, 2);
         ds.update(100);
-        assert(aggregated.value === 101);
+        assert.equal(aggregated.value, 101);
         ds2.update(200);
-        assert(aggregated.value === 300);
+        assert.equal(aggregated.value, 300);
         ds.update(5);
-        assert(aggregated.value === 205);
+        assert.equal(aggregated.value, 205);
     });
 
     it('should aggregate many sources', () => {
@@ -175,36 +175,36 @@ describe('Datasource', () => {
             [ds2, ds3, ds4, ds5, ds6],
             (valueA, valueB, valueC, valueD, valueE, valueF) => valueA + valueB + valueC + valueD + valueE + valueF
         );
-        assert(aggregated.value === 6);
+        assert.equal(aggregated.value, 6);
         ds.update(100);
-        assert(aggregated.value === 105);
+        assert.equal(aggregated.value, 105);
         ds2.update(200);
-        assert(aggregated.value === 304);
+        assert.equal(aggregated.value, 304);
         ds3.update(5);
-        assert(aggregated.value === 308);
+        assert.equal(aggregated.value, 308);
         ds6.update(-7);
-        assert(aggregated.value === 300);
+        assert.equal(aggregated.value, 300);
     });
 
     it('should combine updates', () => {
         let ds = new DataSource(1);
         let ds2 = new DataSource(1);
         let combined = ds.combine([ds2]);
-        assert(combined.value === 1);
+        assert.equal(combined.value, 1);
         ds.update(100);
-        assert(combined.value === 100);
+        assert.equal(combined.value, 100);
         ds2.update(200);
-        assert(combined.value === 200);
+        assert.equal(combined.value, 200);
         ds.update(5);
-        assert(combined.value === 5);
+        assert.equal(combined.value, 5);
     });
 
     it('should pick keys from object updates', () => {
         let ds = new DataSource({ someKey: 123 });
         let pick = ds.transform(dsPick('someKey'));
-        assert(pick.value === 123);
+        assert.equal(pick.value, 123);
         ds.update({ someKey: 100 });
-        assert(pick.value === 100);
+        assert.equal(pick.value, 100);
         ds.update({ someKey: undefined });
         assert(pick.value === undefined);
         ds.update(null);
@@ -288,18 +288,18 @@ describe('Datasource', () => {
         );
         assert(mapped.value === 133);
         ds.updateDownstream(100);
-        assert(mapped.value === 110);
+        assert.equal(mapped.value, 110);
         ds.updateDownstream(200);
-        assert(mapped.value === 210);
+        assert.equal(mapped.value, 210);
         ds.updateDownstream(300);
-        assert(mapped.value === 310);
+        assert.equal(mapped.value, 310);
 
         mapped.updateUpstream(100);
         assert(ds.value === 90);
         mapped.updateUpstream(200);
-        assert(ds.value === 190);
+        assert.equal(ds.value, 190);
         mapped.updateUpstream(300);
-        assert(ds.value === 290);
+        assert.equal(ds.value, 290);
     });
 
     it('should filter updates both ways', () => {
@@ -324,6 +324,6 @@ describe('Datasource', () => {
         filtered.updateUpstream(200);
         assert(ds.value === 300);
         filtered.updateUpstream(350);
-        assert(ds.value === 350);
+        assert.equal(ds.value, 350);
     });
 });
