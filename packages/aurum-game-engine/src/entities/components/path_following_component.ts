@@ -1,11 +1,11 @@
 import { CancellationToken, DataSource } from 'aurumjs';
-import { Callback } from 'aurumjs/prebuilt/esnext/utilities/common';
 import { onBeforeRender } from '../../core/stage';
 import { Polygon } from '../../math/shapes/polygon';
 import { CommonEntity } from '../../models/entities';
 import { PointLike } from 'aurum-layout-engine';
 import { SceneGraphNode } from '../../models/scene_graph';
 import { AbstractMovementComponent } from './abstract_movement_component';
+import { Callback } from '../../utilities/common';
 
 export class PathFollowingComponent extends AbstractMovementComponent {
     private currentTarget: PointLike;

@@ -1,8 +1,8 @@
 {
     "name": "aurumjs",
     "version": "0.8.8",
-    "main": "dist/cjs/aurumjs.js",
-    "typings": "dist/cjs/aurumjs.d.ts",
+    "main": "prebuilt/cjs/aurumjs.js",
+    "typings": "prebuilt/cjs/aurumjs.d.ts",
     "description": "Stream based declarative DOM rendering library for javascript",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
@@ -32,15 +32,18 @@
     },
     "builds": [
         {
+            "outDir": "prebuilt/amd",
             "name": "amd",
             "platform": "browser"
         },
         {
+            "outDir": "prebuilt/cjs",
             "name": "cjs",
             "platform": "node"
         },
         {
-            "name": "es",
+            "outDir": "prebuilt/exnext",
+            "name": "esnext",
             "platform": "isomorphic"
         }
     ]

@@ -1,26 +1,26 @@
 {
-	"compilerOptions": {
-		"allowUnusedLabels": false,
-		"alwaysStrict": true,
-		"module": "amd",
-		"newLine": "LF",
-		"target": "esnext",
-		"noUnusedLocals": true,
-		"declarationMap": true,
-		"jsx": "react",
-		"strictFunctionTypes": true,
-		"jsxFactory": "Aurum.factory",
-		"declaration": true,
-		"inlineSources": true,
-		"sourceMap": true,
-		"watch": false,
-		"allowSyntheticDefaultImports": true,
-		"experimentalDecorators": true,
-		"noEmitOnError": true,
-		"outFile": "prebuilt/amd/aurum-game-engine.js",
-		"noFallthroughCasesInSwitch": true,
-		"moduleResolution": "node"
-	},
-	"extends": "../../tsconfig.common.json",
-	"include": ["src/**/*.ts", "src/**/*.tsx"]
+  "compilerOptions": {
+    "module": "amd",
+    "target": "esnext",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "jsxFactory": "Aurum.factory",
+    "jsxFragmentFactory": "Aurum.fragment",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "alwaysStrict": true,
+    "noEmitOnError": true,
+    "newLine": "LF",
+    "declarationMap": true,
+    "outFile": "prebuilt/amd/aurum-game-engine.js"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
 }

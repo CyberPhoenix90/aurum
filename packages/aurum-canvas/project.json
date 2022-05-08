@@ -34,15 +34,18 @@
     },
     "builds": [
         {
+            "outDir": "prebuilt/amd",
             "name": "amd",
             "platform": "browser"
         },
         {
+            "outDir": "prebuilt/cjs",
             "name": "cjs",
             "platform": "node"
         },
         {
-            "name": "es",
+            "outDir": "prebuilt/exnext",
+            "name": "esnext",
             "platform": "isomorphic"
         }
     ]

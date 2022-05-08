@@ -70,7 +70,12 @@ export interface FloatingWindowProps {
     alwaysOnTop?: boolean | DataSource<boolean>;
 }
 
-export function FloatingWindow(props: FloatingWindowProps, children: Renderable[], api: AurumComponentAPI): Renderable {
+export function FloatingWindow(
+    this: AurumElementModel<FloatingWindowProps>,
+    props: FloatingWindowProps,
+    children: Renderable[],
+    api: AurumComponentAPI
+): Renderable {
     const title = children.find((c) => (c as AurumElementModel<any>).factory === WindowTitle);
     const content = children.find((c) => (c as AurumElementModel<any>).factory === WindowContent);
     const x = props.x instanceof DataSource ? props.x : new DataSource(props.x);
@@ -144,9 +149,7 @@ export function FloatingWindow(props: FloatingWindowProps, children: Renderable[
                                 >
                                     🗖
                                 </Button>
-                            ) : (
-                                undefined
-                            )
+                            ) : undefined
                         )
                     )}
                     {closable.transform(dsMap((v) => (v ? <Button onClick={(e) => props.onClose?.(e, this)}>⨯</Button> : undefined)))}

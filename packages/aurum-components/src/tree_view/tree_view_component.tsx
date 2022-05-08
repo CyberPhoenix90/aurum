@@ -257,6 +257,8 @@ function parentOf(
             return value;
         }
     }
+
+    return undefined;
 }
 
 function next(
@@ -271,6 +273,8 @@ function next(
             return iterator.next().value;
         }
     }
+
+    return undefined;
 }
 
 function previous(
@@ -287,6 +291,8 @@ function previous(
         }
         previous = value;
     }
+
+    return undefined;
 }
 
 function* iterateEntries(
@@ -317,6 +323,8 @@ function sortItems(a: TreeEntry<any>, b: TreeEntry<any>, sorting: TreeViewSortin
             return isDirectory(a) && !isDirectory(b) ? -1 : isDirectory(b) && !isDirectory(a) ? 1 : getValueOf(a.name).localeCompare(getValueOf(b.name));
         case TreeViewSorting.FILE_FIRST_THEN_ALPHABETIC:
             return !isDirectory(a) && isDirectory(b) ? -1 : !isDirectory(b) && isDirectory(a) ? 1 : getValueOf(a.name).localeCompare(getValueOf(b.name));
+        default:
+            throw new Error('Invalid sort option');
     }
 }
 
@@ -520,6 +528,8 @@ function TreeEntryRenderable(
                                 indent={indent + 1}
                             ></TreeEntryRenderable>
                         ));
+                    } else {
+                        return undefined;
                     }
                 })
             )

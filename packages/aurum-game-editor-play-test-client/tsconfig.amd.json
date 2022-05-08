@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "amd",
+    "target": "esnext",
+    "sourceMap": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "jsxFactory": "Aurum.factory",
+    "jsxFragmentFactory": "Aurum.fragment",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "alwaysStrict": true,
+    "noEmitOnError": true,
+    "newLine": "LF",
+    "outFile": "dist/amd/aurum-game-editor-play-test-client.js"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+}

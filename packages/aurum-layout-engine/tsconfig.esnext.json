@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "target": "es2019",
+    "target": "esnext",
     "sourceMap": true,
-    "declaration": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
@@ -16,10 +15,10 @@
     "alwaysStrict": true,
     "noEmitOnError": true,
     "newLine": "LF",
-    "declarationMap": true,
-    "outDir": "dist/es"
+    "outDir": "prebuilt/exnext"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }

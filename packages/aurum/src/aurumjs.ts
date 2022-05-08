@@ -8,9 +8,48 @@ export {
     createRenderSession,
     RenderSession,
     AurumElement,
+    SingularAurumElement,
+    ArrayAurumElement,
     aurumElementModelIdentitiy,
     AurumElementModel
 } from './rendering/aurum_element.js';
+
+export {
+    AProps,
+    ProgressProps,
+    ColProps,
+    ImgProps,
+    SvgProps,
+    AreaProps,
+    DataProps,
+    FormProps,
+    HtmlProps,
+    LinkProps,
+    MetaProps,
+    SlotProps,
+    TimeProps,
+    ParamProps,
+    AudioProps,
+    LabelProps,
+    StyleProps,
+    TrackProps,
+    VideoProps,
+    ButtonProps,
+    CanvasProps,
+    IFrameProps,
+    ObjectProps,
+    OptionProps,
+    OutputProps,
+    ScriptProps,
+    SourceProps,
+    OptGroupProps,
+    TableCellProps
+} from './nodes/simple_dom_nodes';
+
+export { InputProps } from './nodes/input';
+export { SelectProps } from './nodes/select';
+export { TextAreaProps } from './nodes/textarea';
+
 export * from './rendering/aurum_style.js';
 export * from './builtin_components/router.js';
 export * from './builtin_components/suspense.js';

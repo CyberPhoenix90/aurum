@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "amd",
-    "target": "es2019",
+    "target": "esnext",
     "sourceMap": true,
     "declaration": true,
     "noImplicitThis": true,
@@ -17,7 +17,7 @@
     "noEmitOnError": true,
     "newLine": "LF",
     "declarationMap": true,
-    "outFile": "dist/amd/aurumjs.js"
+    "outFile": "prebuilt/amd/aurumjs.js"
   },
   "include": [
     "src/**/*.ts"

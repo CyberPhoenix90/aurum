@@ -90,8 +90,17 @@ interface MenuStripController {
 
 let id = 0;
 
+interface MenuStripRadioButtonProps {
+    class?: ClassType;
+    style?: AttributeValue;
+    isActive?: DataSource<boolean>;
+    onClick?: (e: MouseEvent) => void;
+    onDeactivate?: () => void;
+}
+
 export function MenuStripRadioButton(
-    props: { class?: ClassType; style?: AttributeValue; isActive?: DataSource<boolean>; onClick?: (e: MouseEvent) => void; onDeactivate?: () => void },
+    this: AurumElementModel<MenuStripRadioButtonProps>,
+    props: MenuStripRadioButtonProps,
     children: Renderable[],
     api: AurumComponentAPI
 ) {

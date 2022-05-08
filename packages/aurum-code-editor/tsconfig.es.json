@@ -21,9 +21,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "../aurum/dist/amd/aurumjs.d.ts",
-    "../aurum/dist/cjs/index.d.ts",
-    "../aurum/dist/es/index.d.ts"
+    "src/**/*.tsx"
   ]
 }

@@ -1,19 +1,14 @@
 {
-    "name": "aurum-game-editor-shared",
-    "private": true,
-    "version": "0.0.0",
-    "description": "",
-    "main": "prebuilt/cjs/aurum-game-editor-shared.js",
-    "typings": "prebuilt/cjs/aurum-game-editor-shared.d.ts",
-    "scripts": {
-        "build": "tsc && tsc -p tsconfig.amd.json && tsc -p tsconfig.cjs.json",
-        "watch": "tsc -p tsconfig.cjs.json -w",
-        "prepublish": "npm run build"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "aurumjs": "0.8.0"
-    }
+  "name": "aurum-game-editor-shared",
+  "version": "0.0.0",
+  "main": "prebuilt/cjs/aurum-game-editor-shared.js",
+  "typings": "prebuilt/cjs/aurum-game-editor-shared.d.ts",
+  "description": "Fully featured code editor as an aurum component",
+  "author": "Joao Santos (CyberPhoenix)",
+  "license": "MIT",
+  "homepage": "https://aurumjs.org/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyberPhoenix90/aurum-game-editor-shared"
+  }
 }

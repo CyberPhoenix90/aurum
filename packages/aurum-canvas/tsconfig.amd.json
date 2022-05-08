@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "amd",
-    "target": "es2019",
+    "target": "esnext",
     "sourceMap": true,
     "declaration": true,
     "noImplicitThis": true,
@@ -17,11 +17,10 @@
     "noEmitOnError": true,
     "newLine": "LF",
     "declarationMap": true,
-    "outFile": "dist/amd/aurum-canvas.js"
+    "outFile": "prebuilt/amd/aurum-canvas.js"
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "../aurum/dist/amd/aurumjs.d.ts"
+    "src/**/*.tsx"
   ]
 }

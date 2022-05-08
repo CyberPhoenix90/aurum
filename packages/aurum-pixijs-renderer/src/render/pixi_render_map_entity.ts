@@ -1,11 +1,6 @@
-import { NoRenderEntity } from "./pixi_no_render_entity";
-import {
-    TilesetTypes,
-    TiledLayer,
-    TiledMapRenderModel,
-    TiledMapGraphNode,
-} from "aurum-game-engine";
-import { Container, BaseTexture, Texture } from "pixi.js";
+import { NoRenderEntity } from './pixi_no_render_entity';
+import { TilesetTypes, TiledLayer, TiledMapRenderModel, TiledMapGraphNode } from 'aurum-game-engine';
+import { Container, BaseTexture, Texture } from 'pixi.js';
 
 let CompositeRectTileLayer: any;
 export function enableTilemap(compositeRectTileLayer: any) {
@@ -22,7 +17,7 @@ export class RenderMapEntity extends NoRenderEntity {
 
     protected createTexture(texture: HTMLImageElement) {
         if (!texture) {
-            return;
+            return undefined;
         }
         return new Texture(new BaseTexture(texture));
     }
@@ -43,29 +38,21 @@ export class RenderMapEntity extends NoRenderEntity {
         }
     }
 
-    private buildLayer(
-        model: TiledMapRenderModel,
-        layerModel: TiledLayer,
-        index: number
-    ): void {
+    private buildLayer(model: TiledMapRenderModel, layerModel: TiledLayer, index: number): void {
         // Since pixi tilemap layers don't act like containers when you place entities in them we have to work around the issue by
         // providing containers between each layer to allow us to add entities that act as if they are child of the layer
         const entitycontainer: Container = new Container();
 
-        const mapLayer = new CompositeRectTileLayer(
-            index,
-            this.textures,
-            model.mapData.value.width === layerModel.height
-        );
+        const mapLayer = new CompositeRectTileLayer(index, this.textures, model.mapData.value.width === layerModel.height);
 
         if (layerModel.data) {
             switch (model.mapData.value.orientation) {
-                case "isometric":
-                    throw new Error("not implemented");
-                case "hexagonal":
+                case 'isometric':
+                    throw new Error('not implemented');
+                case 'hexagonal':
                     this.buildHexLayer(model, layerModel, mapLayer);
                     break;
-                case "orthogonal":
+                case 'orthogonal':
                     this.buildOrtLayer(model, layerModel, mapLayer);
                     break;
             }
@@ -75,45 +62,21 @@ export class RenderMapEntity extends NoRenderEntity {
         this.displayObject.addChild(entitycontainer);
     }
 
-    private buildOrtLayer(
-        model: TiledMapRenderModel,
-        layerModel: TiledLayer,
-        mapLayer: any
-    ) {
+    private buildOrtLayer(model: TiledMapRenderModel, layerModel: TiledLayer, mapLayer: any) {
         layerModel.data.forEach((tileGid: number, index: number) => {
             if (tileGid === 0) {
                 return;
             }
-            const { tilesetIndex, tileX, tileY } = this.findTileData(
-                model,
-                tileGid
-            );
+            const { tilesetIndex, tileX, tileY } = this.findTileData(model, tileGid);
             const tileWidth = model.tilesets.getData()[tilesetIndex].tileWidth;
-            const tileHeight = model.tilesets.getData()[tilesetIndex]
-                .tileHeight;
-            const posX =
-                (index % model.mapData.value.width) *
-                model.mapData.value.tilewidth;
-            const posY =
-                Math.floor(index / model.mapData.value.width) *
-                model.mapData.value.tileheight;
-            mapLayer.addRect(
-                tilesetIndex,
-                tileX,
-                tileY,
-                posX,
-                posY,
-                tileWidth,
-                tileHeight
-            );
+            const tileHeight = model.tilesets.getData()[tilesetIndex].tileHeight;
+            const posX = (index % model.mapData.value.width) * model.mapData.value.tilewidth;
+            const posY = Math.floor(index / model.mapData.value.width) * model.mapData.value.tileheight;
+            mapLayer.addRect(tilesetIndex, tileX, tileY, posX, posY, tileWidth, tileHeight);
         });
     }
 
-    private buildHexLayer(
-        model: TiledMapRenderModel,
-        layerModel: TiledLayer,
-        mapLayer: any
-    ) {
+    private buildHexLayer(model: TiledMapRenderModel, layerModel: TiledLayer, mapLayer: any) {
         for (let y = 0; y < model.mapData.value.height; y++) {
             for (let x = 0; x < model.mapData.value.width; x += 2) {
                 const i = x + model.mapData.value.width * y;
@@ -126,15 +89,10 @@ export class RenderMapEntity extends NoRenderEntity {
         }
     }
 
-    private findTileData(
-        model: TiledMapRenderModel,
-        tileGid: number
-    ): { tilesetIndex: number; tileX: number; tileY: number } {
+    private findTileData(model: TiledMapRenderModel, tileGid: number): { tilesetIndex: number; tileX: number; tileY: number } {
         for (let i: number = 0; i < model.tilesets.getData().length; i++) {
             if (model.tilesets.getData()[i].hasGid(tileGid)) {
-                let { tileX, tileY } = model.tilesets
-                    .getData()
-                    [i].getTilePosition(tileGid);
+                let { tileX, tileY } = model.tilesets.getData()[i].getTilePosition(tileGid);
                 return { tilesetIndex: i, tileX, tileY };
             }
         }
@@ -142,19 +100,11 @@ export class RenderMapEntity extends NoRenderEntity {
         throw new Error(`cannot find tile ${tileGid}`);
     }
 
-    private placeHexTile(
-        model: TiledMapRenderModel,
-        tileGid: number,
-        index: number,
-        mapLayer: any
-    ): void {
+    private placeHexTile(model: TiledMapRenderModel, tileGid: number, index: number, mapLayer: any): void {
         if (tileGid === 0) {
             return;
         }
-        const { tilesetIndex, tileX, tileY } = this.findTileData(
-            model,
-            tileGid
-        );
+        const { tilesetIndex, tileX, tileY } = this.findTileData(model, tileGid);
         const tileWidth = model.tilesets.getData()[tilesetIndex].tileWidth;
         const tileHeight = model.tilesets.getData()[tilesetIndex].tileHeight;
 
@@ -163,8 +113,7 @@ export class RenderMapEntity extends NoRenderEntity {
 
         const indexX = index % model.mapData.value.width;
         const indexY = Math.floor(index / model.mapData.value.width);
-        const side =
-            (model.mapData.value.width - model.mapData.value.hexsidelength) / 2;
+        const side = (model.mapData.value.width - model.mapData.value.hexsidelength) / 2;
 
         posX = indexX * (side + model.mapData.value.hexsidelength);
         posY = indexY * model.mapData.value.tileheight;
@@ -172,15 +121,7 @@ export class RenderMapEntity extends NoRenderEntity {
             posY += model.mapData.value.tileheight / 2;
         }
 
-        mapLayer.addRect(
-            tilesetIndex,
-            tileX,
-            tileY,
-            posX,
-            posY,
-            tileWidth,
-            tileHeight
-        );
+        mapLayer.addRect(tilesetIndex, tileX, tileY, posX, posY, tileWidth, tileHeight);
     }
 
     protected createDisplayObject(model: TiledMapGraphNode) {

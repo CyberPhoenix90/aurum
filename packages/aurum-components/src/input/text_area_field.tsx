@@ -1,6 +1,5 @@
 import { css } from '@emotion/css';
-import { Aurum, DataSource, dsMap, Renderable } from 'aurumjs';
-import { TextAreaProps } from 'aurumjs/prebuilt/cjs/nodes/textarea';
+import { Aurum, TextAreaProps, DataSource, dsMap, Renderable, AttributeValue, ClassType, combineClass, AurumComponentAPI } from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -30,13 +29,18 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export interface TextAreaFieldProps extends TextAreaProps {
     decorators?: Renderable;
+    style?: AttributeValue;
+    class?: ClassType;
 }
 
-export function TextAreaField(props: TextAreaFieldProps) {
+export function TextAreaField(props: TextAreaFieldProps, children: Renderable[], api: AurumComponentAPI) {
     const { decorators, style, ...inputProps } = props;
 
     return (
-        <span class={theme.transform(dsMap<string, string>((t) => `${t} text-field`)) as DataSource<string>} style={style}>
+        <span
+            class={combineClass(api.cancellationToken, props.class, theme.transform(dsMap<string, string>((t) => `${t} text-field`)) as DataSource<string>)}
+            style={style}
+        >
             <textarea {...inputProps}></textarea>
             {decorators}
         </span>

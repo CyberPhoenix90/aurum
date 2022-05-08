@@ -426,6 +426,8 @@ function searchForSelectorInList(prefix: string, name: string, styleData: StyleS
             return result;
         }
     }
+
+    return undefined;
 }
 
 function searchForSelectorInSheet(prefix: string, name: string, styleData: StyleSheet): CSSStyleDeclaration | undefined {
@@ -435,6 +437,8 @@ function searchForSelectorInSheet(prefix: string, name: string, styleData: Style
             return ((styleData as CSSStyleSheet).cssRules[n] as CSSStyleRule).style;
         }
     }
+
+    return undefined;
 }
 
 function getTokenInheritanceChain(token: MarkupModel, tokenMap: Record<string, MarkupModel>): MarkupModel[] {

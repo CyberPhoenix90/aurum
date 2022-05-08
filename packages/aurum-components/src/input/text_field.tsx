@@ -1,6 +1,5 @@
 import { css } from '@emotion/css';
-import { Aurum, DataSource, dsMap, Renderable } from 'aurumjs';
-import { InputProps } from 'aurumjs/prebuilt/cjs/nodes/input';
+import { Aurum, DataSource, dsMap, Renderable, InputProps } from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
