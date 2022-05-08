@@ -1,6 +1,8 @@
 export * from './rendering/webcomponent.js';
 export {
     Renderable,
+    SingularAurumElement,
+    ArrayAurumElement,
     AurumComponentAPI,
     ComponentLifeCycle,
     createAPI,
@@ -8,8 +10,6 @@ export {
     createRenderSession,
     RenderSession,
     AurumElement,
-    SingularAurumElement,
-    ArrayAurumElement,
     aurumElementModelIdentitiy,
     AurumElementModel
 } from './rendering/aurum_element.js';

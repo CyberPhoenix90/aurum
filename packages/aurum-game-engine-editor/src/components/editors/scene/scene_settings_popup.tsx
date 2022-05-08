@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { Button, FloatingWindow, TextField, WindowContent, WindowTitle } from 'aurum-components';
-import { Aurum, DataSource, dsMap } from 'aurumjs';
+import { Aurum, DataSource, dsMap, AurumElementModel } from 'aurumjs';
 import { ipcRenderer } from 'electron';
 import { join, relative } from 'path';
 import { SceneSettings } from 'aurum-game-editor-shared';
@@ -41,7 +41,7 @@ interface SceneSettingsPopupProps {
     onApply(newSettings: SceneSettings): void;
 }
 
-export function SceneSettingsPopup(props: SceneSettingsPopupProps) {
+export function SceneSettingsPopup(this: AurumElementModel<SceneSettingsPopupProps>, props: SceneSettingsPopupProps) {
     const { onApply, sceneSettings } = props;
     const music = new DataSource(sceneSettings.backgroundMusic?.track ?? '');
 

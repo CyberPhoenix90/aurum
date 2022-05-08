@@ -112,6 +112,8 @@ function isAncestorOf(potentialAncestor: SceneEntityDataReactive, node: SceneEnt
             ptr = ptr.parent?.value;
         }
     }
+
+    return false;
 }
 
 function toTreeViewEntries(entities: ArrayDataSource<SceneEntityDataReactive>): ReadOnlyArrayDataSource<TreeEntry<SceneEntityDataReactive>> {

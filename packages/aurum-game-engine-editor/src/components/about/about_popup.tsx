@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { Button, FloatingWindow, WindowContent, WindowTitle } from 'aurum-components';
-import { Aurum } from 'aurumjs';
+import { Aurum, AurumElementModel, Renderable } from 'aurumjs';
 import { popups } from '../popups/popups';
 
 export interface AboutPopupProps {}
@@ -22,7 +22,7 @@ const style = css`
     }
 `;
 
-export function AboutPopup(props: AboutPopupProps) {
+export function AboutPopup(this: AurumElementModel<AboutPopupProps>, props: AboutPopupProps): Renderable {
     return (
         <FloatingWindow closable onClose={() => popups.remove(this)} draggable x={window.innerWidth / 2 - 250} y={window.innerHeight / 2 - 200} w={500} h={400}>
             <WindowTitle>About Aurum Engine Editor</WindowTitle>

@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { Button, FloatingWindow, TextField, WindowContent, WindowTitle } from 'aurum-components';
-import { Aurum, DataSource } from 'aurumjs';
+import { Aurum, DataSource, Renderable, AurumElementModel } from 'aurumjs';
 import { ipcRenderer } from 'electron';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -37,7 +37,7 @@ const style = css`
     }
 `;
 
-export function ProjectCreationPopup(props: ProjectCreationPopupProps) {
+export function ProjectCreationPopup(this: AurumElementModel<ProjectCreationPopupProps>, props: ProjectCreationPopupProps): Renderable {
     const projectName: DataSource<string> = new DataSource();
     const location: DataSource<string> = new DataSource();
 

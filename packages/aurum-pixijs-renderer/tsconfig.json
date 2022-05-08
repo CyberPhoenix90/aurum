@@ -19,7 +19,11 @@
 		"noEmitOnError": true,
 		"outDir": "prebuilt/esnext",
 		"noFallthroughCasesInSwitch": true,
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"paths": {
+			"aurumjs": ["./node_modules/aurumjs"]
+		}
+
 	},
 	"extends": "../../tsconfig.common.json",
 	"include": ["src/**/*.ts", "src/**/*.tsx"]

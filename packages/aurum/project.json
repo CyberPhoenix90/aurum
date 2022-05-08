@@ -32,19 +32,25 @@
     },
     "builds": [
         {
-            "outDir": "prebuilt/amd",
+            "outdir": "prebuilt/amd",
             "name": "amd",
             "platform": "browser"
         },
         {
-            "outDir": "prebuilt/cjs",
+            "outdir": "prebuilt/cjs",
             "name": "cjs",
             "platform": "node"
         },
         {
-            "outDir": "prebuilt/exnext",
+            "outdir": "prebuilt/exnext",
             "name": "esnext",
             "platform": "isomorphic"
+        },
+        {
+            "outdir": "dist/test",
+            "name": "test",
+            "includes": ["test/**/*.ts", "test/**/*.tsx"],
+            "platform": "browser"
         }
     ]
 }
