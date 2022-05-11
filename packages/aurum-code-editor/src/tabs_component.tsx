@@ -1,5 +1,5 @@
 import { TabBar } from 'aurum-components';
-import { ArrayDataSource, DataSource } from 'aurumjs';
+import { ArrayDataSource, Aurum, DataSource } from 'aurumjs';
 import { FileTreeNode } from './model';
 
 export interface TabsProps {

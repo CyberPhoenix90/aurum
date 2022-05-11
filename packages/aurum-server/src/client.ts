@@ -1,7 +1,8 @@
-import { CancellationToken, RemoteProtocol } from "aurumjs";
-import * as ws from "ws";
+import { CancellationToken, RemoteProtocol } from 'aurumjs';
+import * as ws from 'ws';
 
 export class Client {
+    public readonly mapdsSubscriptions: Map<string, CancellationToken>;
     public readonly dsSubscriptions: Map<string, CancellationToken>;
     public readonly adsSubscriptions: Map<string, CancellationToken>;
     public readonly ddsSubscriptions: Map<string, CancellationToken>;
@@ -10,6 +11,7 @@ export class Client {
 
     constructor(connection: ws) {
         this.connection = connection;
+        this.mapdsSubscriptions = new Map();
         this.dsSubscriptions = new Map();
         this.adsSubscriptions = new Map();
         this.ddsSubscriptions = new Map();
@@ -20,6 +22,9 @@ export class Client {
     }
 
     public dispose(): void {
+        for (const sub of this.mapdsSubscriptions.values()) {
+            sub.cancel();
+        }
         for (const sub of this.dsSubscriptions.values()) {
             sub.cancel();
         }

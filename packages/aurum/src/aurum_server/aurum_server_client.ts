@@ -1,4 +1,4 @@
-import { CancellationToken } from '../aurumjs.js';
+import { CancellationToken, MapDataSource } from '../aurumjs.js';
 import { ArrayDataSource, CollectionChange, DataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 
@@ -10,13 +10,17 @@ export enum RemoteProtocol {
     LISTEN_DUPLEX_DATASOURCE,
     LISTEN_ARRAY_DATASOURCE,
     LISTEN_ARRAY_DATASOURCE_ERR,
-    CANCEL_DATASOURCE,
+    LISTEN_MAP_DATASOURCE,
+    LISTEN_MAP_DATASOURCE_ERR,
     UPDATE_DATASOURCE,
     UPDATE_DUPLEX_DATASOURCE,
     UPDATE_ARRAY_DATASOURCE,
     UPDATE_DUPLEX_DATASOURCE_ERR,
+    UPDATE_MAP_DATASOURCE,
+    CANCEL_DATASOURCE,
     CANCEL_ARRAY_DATASOURCE,
-    CANCEL_DUPLEX_DATASOURCE
+    CANCEL_DUPLEX_DATASOURCE,
+    CANCEL_MAP_DATASOURCE
 }
 
 export interface AurumServerInfo {
@@ -24,6 +28,12 @@ export interface AurumServerInfo {
     host?: string;
     id: string;
     authenticationToken?: string;
+}
+
+export async function syncMapDataSource(source: MapDataSource<any, any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
+    const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+    await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
+    connections.get(key).syncMapDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 export async function syncDataSource(source: DataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
@@ -62,6 +72,10 @@ class AurumServerClient {
     private synchedArrayDataSources: Map<
         string,
         Map<string, { source: ArrayDataSource<any>; listeners: { source: ArrayDataSource<any>; token: CancellationToken }[] }>
+    >;
+    private synchedMapDataSources: Map<
+        string,
+        Map<string, { source: MapDataSource<any, any>; listeners: { source: MapDataSource<any, any>; token: CancellationToken }[] }>
     >;
 
     private constructor(connection: WebSocket) {
@@ -111,6 +125,47 @@ class AurumServerClient {
             .get(id)
             .get(authenticationToken)
             .source.listenAndRepeat((v) => dataSource.update(v), cancellation);
+    }
+
+    public syncMapDataSource(dataSource: MapDataSource<any, any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        cancellation.addCancelable(() => {
+            const listenersByAuth = this.synchedMapDataSources.get(id);
+            const listeners = listenersByAuth.get(authenticationToken);
+            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === dataSource));
+            if (listeners.listeners.length === 0) {
+                listenersByAuth.delete(authenticationToken);
+                listeners.source.cancelAll();
+                this.connection.send(
+                    JSON.stringify({
+                        type: RemoteProtocol.CANCEL_MAP_DATASOURCE,
+                        id,
+                        token: authenticationToken
+                    })
+                );
+            }
+        });
+
+        if (!this.synchedMapDataSources.has(id)) {
+            this.synchedMapDataSources.set(id, new Map());
+        }
+        if (!this.synchedMapDataSources.get(id).has(authenticationToken)) {
+            this.connection.send(
+                JSON.stringify({
+                    type: RemoteProtocol.LISTEN_MAP_DATASOURCE,
+                    id,
+                    token: authenticationToken
+                })
+            );
+            this.synchedMapDataSources.get(id).set(authenticationToken, { source: new MapDataSource(), listeners: [] });
+        }
+        this.synchedMapDataSources.get(id).get(authenticationToken).listeners.push({
+            source: dataSource,
+            token: cancellation
+        });
+        this.synchedMapDataSources
+            .get(id)
+            .get(authenticationToken)
+            .source.listenAndRepeat((v) => dataSource.applyMapChange(v), cancellation);
     }
 
     public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -269,6 +324,14 @@ class AurumServerClient {
                                 }
                             }
                             break;
+                        case RemoteProtocol.UPDATE_MAP_DATASOURCE:
+                            if (client.synchedMapDataSources.has(msg.id)) {
+                                const byAuth = client.synchedMapDataSources.get(msg.id);
+                                for (const dss of byAuth.values()) {
+                                    dss.source.applyMapChange(msg.change);
+                                }
+                            }
+                            break;
                     }
                 } catch (e) {
                     console.warn('Recieved malformed message from server');
@@ -334,9 +397,18 @@ class AurumServerClient {
                 }
             }
         }
+        for (const id of client.synchedMapDataSources.keys()) {
+            for (const auth of client.synchedMapDataSources.get(id).keys()) {
+                for (const { source, token } of client.synchedMapDataSources.get(id).get(auth).listeners) {
+                    this.syncMapDataSource(source, id, auth, token);
+                }
+            }
+        }
+
         this.synchedDataSources = new Map();
         this.synchedDuplexDataSources = new Map();
         this.synchedArrayDataSources = new Map();
+        this.synchedMapDataSources = new Map();
     }
 }
 
