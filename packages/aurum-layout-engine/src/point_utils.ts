@@ -75,7 +75,7 @@ export const pointUtils = {
         point.y = length * Math.sin(angle);
         return point;
     },
-    deltaPoint(point: PointLike, target: PointLike): PointLike {
+    pointDelta(point: PointLike, target: PointLike): PointLike {
         return { x: target.x - point.x, y: target.y - point.y };
     },
     set(point: PointLike, x: number, y: number): PointLike {
@@ -95,15 +95,15 @@ export const pointUtils = {
         return point;
     },
     distanceTo(point: PointLike, b: PointLike): number {
-        return pointUtils.length(pointUtils.deltaPoint(point, b));
+        return pointUtils.length(pointUtils.pointDelta(point, b));
     },
 
     manhattanDistance(point: PointLike, b: PointLike): number {
-        const con = pointUtils.deltaPoint(point, b);
+        const con = pointUtils.pointDelta(point, b);
         return Math.abs(point.x - con.x) + Math.abs(point.y - con.y);
     },
     distanceToSquared(point: PointLike, b: PointLike): number {
-        return pointUtils.lengthSquared(pointUtils.deltaPoint(point, b));
+        return pointUtils.lengthSquared(pointUtils.pointDelta(point, b));
     },
     componentWiseClamp(point: PointLike, minX: number, maxX: number, minY: number, maxY: number): PointLike {
         point.x = Math.max(Math.min(point.x, maxX), minX);

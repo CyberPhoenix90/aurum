@@ -1,7 +1,7 @@
 {
     "name": "aurum-engine-editor",
     "version": "0.0.0",
-    "main": "dist/cjs/aurum-engine-editor.js",
+    "main": "dist/cjs/launcher.js",
     "typings": "dist/cjs/aurum-engine-editor.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",

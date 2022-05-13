@@ -1,8 +1,18 @@
 import { assert } from 'chai';
+import { CancellationToken, DataSource } from '../../src/aurumjs';
 import { ObjectDataSource } from '../../src/stream/object_data_source';
 
 describe('object data source', () => {
-    let testObject;
+    let testObject: {
+        a: number;
+        b: string;
+        c: boolean;
+        d: any;
+        e: any;
+        f: number[];
+        g: any;
+        h: DataSource<string>;
+    };
 
     beforeEach(() => {
         testObject = {
@@ -23,7 +33,8 @@ describe('object data source', () => {
                     a: 1,
                     b: '2'
                 }
-            }
+            },
+            h: new DataSource('2')
         };
     });
 
@@ -37,13 +48,24 @@ describe('object data source', () => {
 
     it('create synchronized datasource from property', () => {
         const wrapper = new ObjectDataSource(testObject);
-        const datasource = wrapper.pick('a');
+        const datasource = wrapper.pick('a', new CancellationToken());
         assert.equal(datasource.value, 1);
         wrapper.set('a', 2);
         assert.equal(datasource.value, 2);
 
         datasource.update(3);
         assert.equal(wrapper.get('a'), 3);
+    });
+
+    it('create synchronized datasource from a datasource property', () => {
+        const wrapper = new ObjectDataSource(testObject);
+        const datasource = wrapper.pick('h', new CancellationToken());
+        assert.equal(datasource.value, '2');
+        wrapper.get('h').update('test');
+        assert.equal(datasource.value, 'test');
+
+        datasource.update('banana');
+        assert.equal(wrapper.get('h').value, 'banana');
     });
 
     it('create synchronized duplex datasource from property', () => {
@@ -138,7 +160,7 @@ describe('object data source', () => {
         const wrapper = new ObjectDataSource(testObject);
         const wrapper2 = wrapper.pickObject('g');
 
-        const datasource = wrapper2.pick('a');
+        const datasource = wrapper2.pick('a', new CancellationToken());
         assert.equal(datasource.value, 1);
         wrapper2.set('a', 2);
         assert.equal(datasource.value, 2);

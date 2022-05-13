@@ -15,11 +15,13 @@ export class ObjectDataSource<T> {
     protected data: T;
     private updateEvent: EventEmitter<ObjectChange<T, keyof T>>;
     private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
+    private pickCache: Map<keyof T, { source: DataSource<any>; refs: number }>;
 
     constructor(initialData: T) {
         this.data = initialData;
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+        this.pickCache = new Map();
     }
 
     public static toObjectDataSource<T>(value: T | ObjectDataSource<T>): ObjectDataSource<T> {
@@ -91,24 +93,60 @@ export class ObjectDataSource<T> {
      * @param key
      * @param cancellationToken
      */
-    public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DataSource<T[K]> {
-        const subDataSource: DataSource<T[K]> = new DataSource(this.data?.[key]);
+    public pick<K extends keyof T>(key: K, cancellationToken: CancellationToken): T[K] extends DataSource<infer U> ? DataSource<U> : DataSource<T[K]> {
+        if (!this.pickCache.has(key)) {
+            const subDataSource: DataSource<any> = new DataSource<any>();
 
-        subDataSource.listen(() => {
-            this.set(key, subDataSource.value);
-        }, cancellationToken);
-
-        this.listenOnKey(
-            key,
-            (v) => {
-                if (subDataSource.value !== v.newValue) {
-                    subDataSource.update(v.newValue);
+            subDataSource.listen((newValue: any) => {
+                if (this.data[key] instanceof DataSource) {
+                    if ((this.data[key] as any).value !== newValue) {
+                        (this.data[key] as any).update(newValue);
+                    }
+                } else {
+                    this.set(key, subDataSource.value);
                 }
-            },
-            cancellationToken
-        );
+            }, cancellationToken);
 
-        return subDataSource;
+            let valueSourceToken: CancellationToken;
+            let valueSourceRef: DataSource<any>;
+
+            this.listenOnKeyAndRepeat(
+                key,
+                (v) => {
+                    //@ts-ignore
+                    if (valueSourceRef && v.newValue !== valueSourceRef) {
+                        valueSourceRef = undefined;
+                        valueSourceToken.cancel();
+                    }
+
+                    if (v.newValue instanceof DataSource) {
+                        valueSourceRef = v.newValue;
+                        valueSourceToken = new CancellationToken();
+                        valueSourceRef.listenAndRepeat((newValue) => {
+                            if (subDataSource.value !== newValue) {
+                                subDataSource.update(newValue);
+                            }
+                        }, valueSourceToken);
+                    } else if (subDataSource.value !== v.newValue) {
+                        subDataSource.update(v.newValue);
+                    }
+                },
+                cancellationToken
+            );
+
+            this.pickCache.set(key, { source: subDataSource, refs: 0 });
+        }
+
+        cancellationToken.addCancelable(() => {
+            const entry = this.pickCache.get(key);
+            entry.refs--;
+            if (entry.refs === 0) {
+                this.pickCache.delete(key);
+            }
+        });
+
+        this.pickCache.get(key).refs++;
+        return this.pickCache.get(key).source as any;
     }
 
     /**

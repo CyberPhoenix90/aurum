@@ -1,17 +1,19 @@
-import { DataSource, CancellationToken, dsUnique } from 'aurumjs';
-import { Vector2D } from '../../math/vectors/vector2d';
+import { ReactivePointLike } from 'aurum-layout-engine';
+import { CancellationToken, DataSource } from 'aurumjs';
 import { onBeforeRender } from '../../core/stage';
-import { PointLike } from 'aurum-layout-engine';
+import { clamp } from '../../utilities/math_utils';
 
 export class Gamepadsettings {
     /**
      * How many percent at least the joystick must be moved until it registers.
      * This is essential because joysticks are inaccurate and sometimes up to 15% will be reigstered when the joystick is actually at rest
+     * Default: 0.2
      */
     joystickDeadzone?: number;
     /**
-     * Multiplies the value of the analog stick. This can be useful because on older or cheaper joysticks the maximum value never actually reaches 1.0
+     * Multiplies the value of the analog stick. This can be useful because on older or cheaper joysticks the maximum value may never actually reach 1.0 in some directions.
      * The value is capped to 1.0 so you don't have to worry about correcting the maximum value
+     * Default: 1.1
      */
     joystickActuationMultiplier?: number;
 }
@@ -37,11 +39,9 @@ export enum GamepadButtons {
 
 export class AurumGamepad {
     public readonly settings: Readonly<Gamepadsettings>;
-
     public buttonState: Record<GamepadButtons, DataSource<boolean>>;
     public buttonAnalogueState: Record<GamepadButtons, DataSource<number>>;
-    public leftJoystickState: DataSource<PointLike>;
-    public rightJoystickState: DataSource<PointLike>;
+    public joystickState: ReactivePointLike[];
 
     public get connected(): boolean {
         if (!this.gamepad) {
@@ -68,6 +68,8 @@ export class AurumGamepad {
 
     constructor(index: number, settings: Gamepadsettings = {}) {
         settings.joystickDeadzone = settings.joystickDeadzone ?? 0.2;
+        settings.joystickActuationMultiplier = settings.joystickActuationMultiplier ?? 1.1;
+
         this.settings = settings;
 
         for (const button of Object.keys(GamepadButtons)) {
@@ -75,30 +77,19 @@ export class AurumGamepad {
             this.buttonAnalogueState[button] = new DataSource(0);
         }
 
-        this.leftJoystickState = new DataSource({ x: 0, y: 0 }).transform(dsUnique((a, b) => a.x === b.x && a.y === b.y));
-        this.rightJoystickState = new DataSource({ x: 0, y: 0 }).transform(dsUnique((a, b) => a.x === b.x && a.y === b.y));
+        this.joystickState = [];
+        for (let i = 0; i < this.joystickCount; i++) {
+            this.joystickState.push({ x: new DataSource(0), y: new DataSource(0) });
+        }
 
         this.index = index;
         this.cancelationToken = new CancellationToken();
 
-        onBeforeRender.subscribe(() => {
-            this.fireEvents();
-        }, this.cancelationToken);
-
-        this.cancelationToken.addCancelable(() => {
-            this.leftJoystickState.cancelAll();
-            this.rightJoystickState.cancelAll();
-            for (const buttonState of Object.values(this.buttonState)) {
-                buttonState.cancelAll();
-            }
-            for (const buttonAnalogueState of Object.values(this.buttonAnalogueState)) {
-                buttonAnalogueState.cancelAll();
-            }
-        });
+        onBeforeRender.subscribe(this.fireEvents.bind(this), this.cancelationToken);
     }
 
     private fireEvents(): void {
-        if (!this.gamepad) {
+        if (!this.gamepad || !this.gamepad.connected) {
             return;
         }
 
@@ -110,8 +101,9 @@ export class AurumGamepad {
             buttonAnalogueState.update(this.getButtonValue(buttonIndexNumber));
         }
 
-        this.leftJoystickState.update(this.getJoystickValue(0));
-        this.rightJoystickState.update(this.getJoystickValue(1));
+        for (let i = 0; i < this.joystickCount; i++) {
+            this.updateJoystickValue(i, this.joystickState[i]);
+        }
     }
 
     public getButtonState(buttonIndex: GamepadButtons): boolean {
@@ -130,8 +122,7 @@ export class AurumGamepad {
         }
     }
 
-    private motionVector: Vector2D = new Vector2D();
-    public getJoystickValue(joystickIndex: number): { x: number; y: number } {
+    private updateJoystickValue(joystickIndex: number, data: ReactivePointLike): void {
         if (!this.gamepad) {
             throw new Error('Gamepad is not connected');
         }
@@ -140,22 +131,28 @@ export class AurumGamepad {
             throw new Error(`Gamepad joystick index overflow joystick index ${joystickIndex} ask but only ${this.joystickCount} joysticks available`);
         }
 
-        const x: number = this.gamepad.axes[joystickIndex * 2];
-        const y: number = this.gamepad.axes[joystickIndex * 2 + 1];
-        const motion: Vector2D = this.motionVector;
-        motion.x = x;
-        motion.y = y;
+        let x: number = clamp(this.gamepad.axes[joystickIndex * 2] * this.settings.joystickActuationMultiplier, 0, 1);
+        let y: number = clamp(this.gamepad.axes[joystickIndex * 2 + 1] * this.settings.joystickActuationMultiplier, 0, 1);
 
         if (this.settings.joystickDeadzone === undefined) {
             throw new Error('invalid state');
         }
 
-        if (this.settings.joystickActuationMultiplier) {
-            motion.mul(this.settings.joystickActuationMultiplier);
-            motion.clamp(0, 1);
+        if (x < this.settings.joystickDeadzone) {
+            x = 0;
         }
 
-        return motion.lengthSquared() > this.settings.joystickDeadzone ** 2 ? { x: motion.x, y: motion.y } : { x: 0, y: 0 };
+        if (y < this.settings.joystickDeadzone) {
+            y = 0;
+        }
+
+        if (data.x.value !== x) {
+            data.x.update(x);
+        }
+
+        if (data.y.value !== y) {
+            data.y.update(y);
+        }
     }
 
     public dispose() {

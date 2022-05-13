@@ -1,28 +1,22 @@
+import { CancellationToken } from 'aurumjs';
+import { DataPointLike, readData } from '../../utilities/data';
 import { Rectangle } from './rectangle';
-import { PointLike } from 'aurum-layout-engine';
 
 export abstract class AbstractShape {
-    public readonly position: PointLike;
+    public readonly position: DataPointLike;
 
     public get x() {
-        return this.position.x;
+        return readData(this.position.x);
     }
 
     public get y() {
-        return this.position.y;
+        return readData(this.position.y);
     }
 
-    public set x(value: number) {
-        this.position.x = value;
-    }
-
-    public set y(value: number) {
-        this.position.y = value;
-    }
-
-    constructor(position: PointLike) {
+    constructor(position: DataPointLike) {
         this.position = position;
     }
 
     public abstract getBoundingBox(): Rectangle;
+    public abstract getBoundingBoxStream(lifeCycle: CancellationToken): Rectangle;
 }

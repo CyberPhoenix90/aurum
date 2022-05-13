@@ -1,42 +1,35 @@
+import { CancellationToken } from 'aurumjs';
+import { DataPointLike, readData } from '../../utilities/data';
 import { AbstractShape } from './abstract_shape';
-import { PointLike } from 'aurum-layout-engine';
 
 export class Rectangle extends AbstractShape {
-    public size: PointLike;
+    public readonly size: DataPointLike;
 
     public get left(): number {
-        return this.position.x;
+        return this.x;
     }
 
     public get top(): number {
-        return this.position.y;
+        return this.y;
     }
 
     public get right(): number {
-        return this.position.x + this.size.x;
+        return this.x + this.width;
     }
 
     public get bottom(): number {
-        return this.position.y + this.size.y;
+        return this.y + this.height;
     }
 
     public get width(): number {
-        return this.size.x;
+        return readData(this.size.x);
     }
 
     public get height(): number {
-        return this.size.y;
+        return readData(this.size.y);
     }
 
-    public set width(value: number) {
-        this.size.x = value;
-    }
-
-    public set height(value: number) {
-        this.size.y = value;
-    }
-
-    constructor(position: PointLike, size: PointLike) {
+    constructor(position: DataPointLike, size: DataPointLike) {
         super(position);
         this.size = size;
     }
@@ -46,6 +39,10 @@ export class Rectangle extends AbstractShape {
     }
 
     public getBoundingBox(): Rectangle {
+        return new Rectangle({ x: readData(this.position.x), y: readData(this.position.y) }, { x: readData(this.size.x), y: readData(this.size.y) });
+    }
+
+    public getBoundingBoxStream(lifeCycleToken: CancellationToken): Rectangle {
         return new Rectangle({ x: this.position.x, y: this.position.y }, { x: this.size.x, y: this.size.y });
     }
 }

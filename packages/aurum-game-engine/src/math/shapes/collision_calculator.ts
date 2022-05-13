@@ -1,5 +1,7 @@
-import { Constructor, MapLike } from '../../models/common';
-import { PointLike, pointUtils } from 'aurum-layout-engine';
+import { PointLike } from 'aurum-layout-engine';
+import { Constructor } from '../../core/query';
+import { readData } from '../../utilities/data';
+import { dataPointUtils } from '../data_point_utils';
 import { AbstractShape } from './abstract_shape';
 import { Circle } from './circle';
 import { ComposedShape } from './composed_shape';
@@ -7,7 +9,7 @@ import { Point } from './point';
 import { Rectangle } from './rectangle';
 
 export class CollisionCalculator {
-    private collisionCheckMap: MapLike<(a: AbstractShape, b: AbstractShape) => boolean>;
+    private collisionCheckMap: Record<string, (a: AbstractShape, b: AbstractShape) => boolean>;
 
     constructor() {
         this.collisionCheckMap = {};
@@ -29,15 +31,17 @@ export class CollisionCalculator {
     public isShapeOverlappingComposedShape(shape: AbstractShape, composedShape: ComposedShape): boolean {
         let found: boolean = false;
         for (const s of composedShape.shapes) {
-            s.position.x += composedShape.position.x;
-            s.position.y += composedShape.position.y;
+            const originalX = s.position.x;
+            const originalY = s.position.y;
+            s.position.x = readData(shape.position.x) + readData(composedShape.position.x);
+            s.position.y = readData(shape.position.y) + readData(composedShape.position.y);
 
             if (this.isOverlapping(shape, s)) {
                 found = true;
             }
 
-            s.position.x -= composedShape.position.x;
-            s.position.y -= composedShape.position.y;
+            s.position.x = originalX;
+            s.position.y = originalY;
             if (found) {
                 return true;
             }
@@ -59,21 +63,21 @@ export class CollisionCalculator {
     }
 
     public isPointOverlappingCircle(a: Point, b: Circle): boolean {
-        return pointUtils.distanceToSquared(a.position, b.position) < b.radius ** 2;
+        return dataPointUtils.distanceToSquared(a.position, b.position) < readData(b.radius) ** 2;
     }
 
     public isCircleOverlappingCircle(a: Circle, b: Circle): boolean {
-        return pointUtils.distanceToSquared(a.position, b.position) < (a.radius + b.radius) ** 2;
+        return dataPointUtils.distanceToSquared(a.position, b.position) < (readData(a.radius) + readData(b.radius)) ** 2;
     }
 
     public isCirleOverlappingRectangle(a: Circle, b: Rectangle): boolean {
         const distX: number = Math.abs(a.x - b.x - b.width / 2);
         const distY: number = Math.abs(a.y - b.y - b.height / 2);
 
-        if (distX > b.width / 2 + a.radius) {
+        if (distX > readData(b.width) / 2 + readData(a.radius)) {
             return false;
         }
-        if (distY > b.height / 2 + a.radius) {
+        if (distY > readData(b.height) / 2 + readData(a.radius)) {
             return false;
         }
 
@@ -86,7 +90,7 @@ export class CollisionCalculator {
 
         const dx: number = distX - b.width / 2;
         const dy: number = distY - b.height / 2;
-        return dx * dx + dy * dy <= a.radius * a.radius;
+        return dx * dx + dy * dy <= readData(a.radius) * readData(a.radius);
     }
 
     public isPointOverlappingPoint(a: Point, b: Point): boolean {

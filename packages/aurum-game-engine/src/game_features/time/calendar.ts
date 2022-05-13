@@ -1,4 +1,4 @@
-import { Moment } from './moment';
+import { Instant } from './instant';
 
 export interface CalendarConfig {
     daysInAWeek: number;
@@ -18,11 +18,11 @@ export class Calendar {
         }
     }
 
-    public getDayOfTheWeek(moment: Moment): number {
+    public getDayOfTheWeek(moment: Instant): number {
         return moment.days % this.config.daysInAWeek;
     }
 
-    public getDayOfTheMonth(moment: Moment): number {
+    public getDayOfTheMonth(moment: Instant): number {
         return this.getDayOfTheYear(moment) - this.getDayOfTheYearForStartOfMonth(this.getMonthOfTheYear(moment));
     }
 
@@ -38,23 +38,23 @@ export class Calendar {
         return total;
     }
 
-    public getDayOfTheYear(moment: Moment): number {
+    public getDayOfTheYear(moment: Instant): number {
         return moment.days % this.daysInAYear();
     }
 
-    public getWeek(moment: Moment): number {
+    public getWeek(moment: Instant): number {
         return Math.floor(moment.days / this.config.daysInAWeek);
     }
 
-    public getMonth(moment: Moment): number {
+    public getMonth(moment: Instant): number {
         return this.getYear(moment) * this.config.monthsInAYear + this.getMonthOfTheYear(moment);
     }
 
-    public getYear(moment: Moment): number {
+    public getYear(moment: Instant): number {
         return Math.floor(moment.days / this.daysInAYear());
     }
 
-    public getMonthOfTheYear(moment: Moment): number {
+    public getMonthOfTheYear(moment: Instant): number {
         let total = this.getDayOfTheYear(moment);
         for (let i = 0; i < this.config.monthsInAYear; i++) {
             if (total < this.config.daysInAMonth[i % this.config.daysInAMonth.length]) {
@@ -65,11 +65,11 @@ export class Calendar {
         throw new Error('unexpected state');
     }
 
-    public getWeekOfTheYear(moment: Moment): number {
+    public getWeekOfTheYear(moment: Instant): number {
         return Math.floor(this.getDayOfTheYear(moment) / this.config.daysInAWeek);
     }
 
-    public getWeekOfTheMonth(moment: Moment): number {
+    public getWeekOfTheMonth(moment: Instant): number {
         return Math.floor(this.getDayOfTheMonth(moment) / 7);
     }
 
@@ -77,15 +77,15 @@ export class Calendar {
         return this.config.daysInAMonth[this.getMonthOfTheYear(moment) % this.config.daysInAMonth.length];
     }
 
-    public getPercentageOfTheWeek(moment: Moment): number {
+    public getPercentageOfTheWeek(moment: Instant): number {
         return this.getDayOfTheWeek(moment) / (this.config.daysInAWeek - 1);
     }
 
-    public getPercentageOfTheMonth(moment: Moment): number {
+    public getPercentageOfTheMonth(moment: Instant): number {
         return this.getDayOfTheMonth(moment) / (this.getDaysInCurrentMonth(moment) - 1);
     }
 
-    public getPercentageOfTheYear(moment: Moment): number {
+    public getPercentageOfTheYear(moment: Instant): number {
         return this.getDayOfTheYear(moment) / (this._daysInAYear - 1);
     }
 

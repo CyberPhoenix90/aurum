@@ -13,6 +13,11 @@ export class CancellationToken {
         this._isCancelled = false;
     }
 
+    /**
+     * Cancellation token that cannot be cancelled. Indicates that the life cycle is forever
+     */
+    public static forever: CancellationToken = new CancellationToken();
+
     public static fromMultiple(tokens: CancellationToken[]): CancellationToken {
         const result = new CancellationToken();
 
@@ -158,3 +163,11 @@ function loop(time: number): void {
         requestAnimationFrame(loop);
     }
 }
+
+CancellationToken.forever.cancel = () => {
+    throw new Error('cannot cancel forever cancellation token');
+};
+
+// To save memory we don't register the cancelablles on the forever token
+//@ts-ignore
+CancellationToken.forever.addCancelable = () => {};

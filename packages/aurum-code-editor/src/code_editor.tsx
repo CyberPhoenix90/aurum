@@ -143,7 +143,11 @@ export function AurumCodeEditor(props: AurumCodeEditorProps, children: Renderabl
             <PanelComponent>
                 {props.topPanel ? (
                     <PanelDockTop size={100} resizable>
-                        {selectTop(props.topPanel)}
+                        {selectTop(props.topPanel, {
+                            height: props.general.height,
+                            openFile,
+                            width: props.general.width
+                        })}
                     </PanelDockTop>
                 ) : undefined}
                 <PanelDockLeft size={100} resizable>

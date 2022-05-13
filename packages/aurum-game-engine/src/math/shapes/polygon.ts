@@ -1,26 +1,32 @@
 import { AbstractShape } from './abstract_shape';
 import { Rectangle } from './rectangle';
-import { Vector2D } from '../vectors/vector2d';
 import { PointLike } from 'aurum-layout-engine';
+import { DataPointLike } from '../../utilities/data';
+import { dataPointUtils } from '../data_point_utils';
+import { CancellationToken } from 'aurumjs';
 
 export class Polygon extends AbstractShape {
-    public points: Vector2D[];
+    public points: DataPointLike[];
 
-    constructor(position: PointLike, points: Vector2D[]) {
+    constructor(position: PointLike, points: DataPointLike[]) {
         super(position);
         this.points = points;
     }
 
     public isEquivalentTo(p: Polygon): boolean {
         return (
-            this.position.x === p.position.x &&
-            this.position.y === p.position.y &&
+            this.x === p.x &&
+            this.y === p.y &&
             this.points.length === p.points.length &&
-            this.points.every((point, i) => point.isEqual(p.points[i]))
+            this.points.every((point, i) => dataPointUtils.isEqual(point, p.points[i]))
         );
     }
 
     public getBoundingBox(): Rectangle {
-        return new Rectangle(this.position, { x: 1, y: 1 });
+        throw new Error('Method not implemented.');
+    }
+
+    public getBoundingBoxStream(lifeCycle: CancellationToken): Rectangle {
+        throw new Error('Method not implemented.');
     }
 }

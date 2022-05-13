@@ -1,7 +1,7 @@
-import { lerp } from '../../math/math_utils';
 import { animate } from './animate';
 import { CancellationToken } from 'aurumjs';
 import { PointLike } from 'aurum-layout-engine';
+import { lerp } from '../../utilities/math_utils';
 
 export interface TweenModel<T> {
     target: T;

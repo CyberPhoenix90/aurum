@@ -1,14 +1,23 @@
-import { ArrayDataSource, Aurum, AurumComponentAPI, createRenderSession, DataSource, EventEmitter, MapDataSource, Renderable, Webcomponent } from 'aurumjs';
-import { entityDefaults } from '../entities/entity_defaults';
-import { CameraGraphNode } from '../entities/types/camera/api';
-import { containerDefaultModel } from '../entities/types/container/container_entity';
+import {
+    ArrayDataSource,
+    Aurum,
+    AurumComponentAPI,
+    createRenderSession,
+    DataSource,
+    EventEmitter,
+    MapDataSource,
+    ReadOnlyArrayDataSource,
+    ReadOnlyDataSource,
+    Renderable,
+    Webcomponent
+} from 'aurumjs';
+import { Camera2DData } from '../builtins/traits/camera2D_data';
 import { Clock } from '../game_features/time/clock';
-import { ContainerGraphNode, SceneGraphNode } from '../models/scene_graph';
-import { AbstractRenderPlugin } from '../rendering/abstract_render_plugin';
-import { _ } from '../utilities/other/streamline';
-import { activeCameras } from './active_cameras';
+import { AbstractRenderPlugin } from '../graphics/rendering/abstract_render_plugin';
+import { _ } from '../utilities/streamline';
 import { render } from './custom_aurum_renderer';
-import { initializeLayoutEngine } from './layout_engine';
+import { EntityModel } from './entity';
+import { getAllWithLive } from './query';
 
 export interface StageProps {
     clock?: Clock;
@@ -21,18 +30,15 @@ const StageComponent = Webcomponent(
     {
         name: 'aurum-stage'
     },
-    (
-        props: { renderPlugin: AbstractRenderPlugin; nodes: Array<SceneGraphNode<any> | DataSource<Renderable> | ArrayDataSource<Renderable>>; clock: Clock },
-        api: AurumComponentAPI
-    ) => {
+    (props: { renderPlugin: AbstractRenderPlugin; nodes: ReadOnlyArrayDataSource<EntityModel>; clock: Clock }, api: AurumComponentAPI) => {
         const stageId = _.getUId();
-        const cameras: CameraGraphNode[] = props.nodes.filter((n) => n instanceof CameraGraphNode) as CameraGraphNode[];
+        const cameras = getAllWithLive(api.cancellationToken, Camera2DData);
         const clock = (engineClock = props.clock);
         let running = true;
         clock.start = () => (running = true);
         clock.stop = () => (running = false);
 
-        function attachNodes(renderPlugin: AbstractRenderPlugin, nodes: Array<SceneGraphNode<any> | DataSource<Renderable> | ArrayDataSource<Renderable>>) {
+        function attachNodes(renderPlugin: AbstractRenderPlugin, nodes: ReadOnlyDataSource<EntityModel>) {
             const root = new ContainerGraphNode({
                 name: 'root',
                 children: new ArrayDataSource(nodes as any),
@@ -46,7 +52,7 @@ const StageComponent = Webcomponent(
                 }
             });
 
-            initializeLayoutEngine(root, api.cancellationToken);
+            // initializeLayoutEngine(root, api.cancellationToken);
 
             root.attachToStage(renderPlugin, stageId);
         }
@@ -54,7 +60,6 @@ const StageComponent = Webcomponent(
         return (
             <div
                 onAttach={(stageNode) => {
-                    activeCameras.appendArray(cameras);
                     props.renderPlugin.addStage(stageId, stageNode);
                     attachNodes(props.renderPlugin, props.nodes);
                     let lastBefore = clock.timestamp;
@@ -93,7 +98,7 @@ export const onAfterRender: EventEmitter<number> = new EventEmitter();
 
 export function Stage(props: StageProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     const rs = createRenderSession();
-    const nodes = render(children, rs);
+    const nodes: ReadOnlyArrayDataSource<EntityModel> = ArrayDataSource.fromMultipleSources<EntityModel>(render(children, rs));
     api.onAttach(() => {
         rs.attachCalls.forEach((ac) => ac());
     });

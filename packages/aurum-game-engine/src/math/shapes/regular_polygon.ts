@@ -1,10 +1,12 @@
 import { PointLike } from 'aurum-layout-engine';
+import { CancellationToken } from 'aurumjs';
+import { Data, mulConst, readData, tx } from '../../utilities/data';
 import { AbstractShape } from './abstract_shape';
 import { Rectangle } from './rectangle';
 
 export class RegularPolygon extends AbstractShape {
-    public sides: number;
-    public radius: number;
+    public sides: Data<number>;
+    public radius: Data<number>;
 
     constructor(position: PointLike, sides: number, radius: number) {
         super(position);
@@ -13,16 +15,23 @@ export class RegularPolygon extends AbstractShape {
     }
 
     public isEquivalentTo(p: RegularPolygon): boolean {
-        return this.position.x === p.position.x && this.position.y === p.position.y && this.sides === p.sides && this.radius === p.radius;
+        return this.x === p.x && this.y === p.y && readData(this.sides) === readData(p.sides) && readData(this.radius) === readData(p.radius);
     }
 
     public getBoundingBox(): Rectangle {
         return new Rectangle(
             {
-                x: this.position.x - this.radius,
-                y: this.position.y - this.radius
+                x: this.x - readData(this.radius),
+                y: this.y - readData(this.radius)
             },
-            { x: this.radius * 2, y: this.radius * 2 }
+            { x: readData(this.radius) * 2, y: readData(this.radius) * 2 }
         );
+    }
+
+    public getBoundingBoxStream(lifeCycle: CancellationToken): Rectangle {
+        return new Rectangle(this.position, {
+            x: tx(lifeCycle, this.radius, mulConst(2)),
+            y: tx(lifeCycle, this.radius, mulConst(2))
+        });
     }
 }
