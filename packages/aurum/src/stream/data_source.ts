@@ -1,5 +1,5 @@
 import { getValueOf } from '../aurumjs.js';
-import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource } from '../aurum_server/aurum_server_client.js';
+import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
@@ -2868,6 +2868,20 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+    }
+
+    /**
+     * Connects to an aurum-server exposed set datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): SetDataSource<T> {
+        const result = new SetDataSource<T>(undefined);
+
+        syncSetDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
     }
 
     public clear(): void {

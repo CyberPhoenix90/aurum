@@ -1,7 +1,8 @@
+import { AurumServerInfo, syncObjectDataSource } from '../aurum_server/aurum_server_client.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
-import { ArrayDataSource, DataSource } from './data_source.js';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from './data_source.js';
 import { DuplexDataSource } from './duplex_data_source.js';
 
 export interface ObjectChange<T, K extends keyof T> {
@@ -11,7 +12,26 @@ export interface ObjectChange<T, K extends keyof T> {
     deleted?: boolean;
 }
 
-export class ObjectDataSource<T> {
+export interface ReadOnlyObjectDataSource<T> {
+    toString(): string;
+    pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyObjectDataSource<T[K]>;
+    pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<FlatArray<T[K], 1>>;
+    pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyDataSource<T[K]>;
+    pickDuplex<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DuplexDataSource<T[K]>;
+    listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
+    listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
+    map<D>(mapper: (key: keyof T) => D): ArrayDataSource<D>;
+    listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void>;
+    listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
+    keys(): string[];
+    values(): any;
+    get<K extends keyof T>(key: K): T[K];
+    getData(): Readonly<T>;
+    toObject(): T;
+    toDataSource(): DataSource<T>;
+}
+
+export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
     protected data: T;
     private updateEvent: EventEmitter<ObjectChange<T, keyof T>>;
     private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
@@ -20,6 +40,20 @@ export class ObjectDataSource<T> {
         this.data = initialData;
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+    }
+
+    /**
+     * Connects to an aurum-server exposed object datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): ObjectDataSource<T> {
+        const result = new ObjectDataSource<T>(undefined);
+
+        syncObjectDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
     }
 
     public static toObjectDataSource<T>(value: T | ObjectDataSource<T>): ObjectDataSource<T> {
@@ -142,7 +176,7 @@ export class ObjectDataSource<T> {
         return this.updateEvent.subscribe(callback, cancellationToken).cancel;
     }
 
-    public map<D>(mapper: (key: keyof T) => D): ArrayDataSource<D> {
+    public map<D>(mapper: (key: keyof T, value: T[keyof T]) => D): ArrayDataSource<D> {
         const stateMap: Map<string | number | Symbol, D> = new Map<string | number | Symbol, D>();
         const result = new ArrayDataSource<D>();
         this.listenAndRepeat((change) => {
@@ -151,11 +185,11 @@ export class ObjectDataSource<T> {
                 result.remove(item);
                 stateMap.delete(change.key);
             } else if (stateMap.has(change.key)) {
-                const newItem = mapper(change.key);
+                const newItem = mapper(change.key, change.newValue);
                 result.replace(stateMap.get(change.key), newItem);
                 stateMap.set(change.key, newItem);
             } else if (!stateMap.has(change.key) && !change.deleted) {
-                const newItem = mapper(change.key);
+                const newItem = mapper(change.key, change.newValue);
                 result.push(newItem);
                 stateMap.set(change.key, newItem);
             }

@@ -1,26 +1,45 @@
-import { CancellationToken, MapDataSource } from '../aurumjs.js';
-import { ArrayDataSource, CollectionChange, DataSource } from '../stream/data_source.js';
+import { ArrayDataSource, CollectionChange, DataSource, MapDataSource, SetDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { ObjectDataSource } from '../stream/object_data_source.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
 
 export enum RemoteProtocol {
     HEARTBEAT,
-    LISTEN_DATASOURCE_ERR,
     LISTEN_DATASOURCE,
+    LISTEN_DATASOURCE_ERR,
+    UPDATE_DATASOURCE,
+    UPDATE_DATASOURCE_ERR,
+    CANCEL_DATASOURCE,
+
     LISTEN_DUPLEX_DATASOURCE_ERR,
     LISTEN_DUPLEX_DATASOURCE,
+    UPDATE_DUPLEX_DATASOURCE,
+    UPDATE_DUPLEX_DATASOURCE_ERR,
+    CANCEL_DUPLEX_DATASOURCE,
+
     LISTEN_ARRAY_DATASOURCE,
     LISTEN_ARRAY_DATASOURCE_ERR,
+    UPDATE_ARRAY_DATASOURCE,
+    UPDATE_ARRAY_DATASOURCE_ERR,
+    CANCEL_ARRAY_DATASOURCE,
+
     LISTEN_MAP_DATASOURCE,
     LISTEN_MAP_DATASOURCE_ERR,
-    UPDATE_DATASOURCE,
-    UPDATE_DUPLEX_DATASOURCE,
-    UPDATE_ARRAY_DATASOURCE,
-    UPDATE_DUPLEX_DATASOURCE_ERR,
     UPDATE_MAP_DATASOURCE,
-    CANCEL_DATASOURCE,
-    CANCEL_ARRAY_DATASOURCE,
-    CANCEL_DUPLEX_DATASOURCE,
-    CANCEL_MAP_DATASOURCE
+    UPDATE_MAP_DATASOURCE_ERR,
+    CANCEL_MAP_DATASOURCE,
+
+    LISTEN_OBJECT_DATASOURCE,
+    LISTEN_OBJECT_DATASOURCE_ERR,
+    UPDATE_OBJECT_DATASOURCE,
+    UPDATE_OBJECT_DATASOURCE_ERR,
+    CANCEL_OBJECT_DATASOURCE,
+
+    LISTEN_SET_DATASOURCE,
+    LISTEN_SET_DATASOURCE_ERR,
+    UPDATE_SET_DATASOURCE,
+    UPDATE_SET_DATASOURCE_ERR,
+    CANCEL_SET_DATASOURCE
 }
 
 export interface AurumServerInfo {
@@ -28,6 +47,18 @@ export interface AurumServerInfo {
     host?: string;
     id: string;
     authenticationToken?: string;
+}
+
+export async function syncSetDataSource(source: SetDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
+    const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+    await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
+    connections.get(key).syncSetDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
+}
+
+export async function syncObjectDataSource(source: ObjectDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
+    const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+    await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
+    connections.get(key).syncObjectDataSource(source, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation);
 }
 
 export async function syncMapDataSource(source: MapDataSource<any, any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
@@ -77,6 +108,14 @@ class AurumServerClient {
         string,
         Map<string, { source: MapDataSource<any, any>; listeners: { source: MapDataSource<any, any>; token: CancellationToken }[] }>
     >;
+    private synchedObjectDataSources: Map<
+        string,
+        Map<string, { source: ObjectDataSource<any>; listeners: { source: ObjectDataSource<any>; token: CancellationToken }[] }>
+    >;
+    private synchedSetDataSources: Map<
+        string,
+        Map<string, { source: SetDataSource<any>; listeners: { source: SetDataSource<any>; token: CancellationToken }[] }>
+    >;
 
     private constructor(connection: WebSocket) {
         this.masterToken = new CancellationToken();
@@ -86,148 +125,142 @@ class AurumServerClient {
         this.synchedArrayDataSources = new Map();
     }
 
-    public syncDataSource(dataSource: DataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
-        cancellation.addCancelable(() => {
-            const listenersByAuth = this.synchedDataSources.get(id);
-            const listeners = listenersByAuth.get(authenticationToken);
-            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === dataSource));
-            if (listeners.listeners.length === 0) {
-                listenersByAuth.delete(authenticationToken);
-                listeners.source.cancelAll();
-                this.connection.send(
-                    JSON.stringify({
-                        type: RemoteProtocol.CANCEL_DATASOURCE,
-                        id,
-                        token: authenticationToken
-                    })
-                );
-            }
-        });
+    public syncDataSource(source: DataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedDataSources,
+            RemoteProtocol.LISTEN_DATASOURCE,
+            RemoteProtocol.CANCEL_DATASOURCE
+        );
 
-        if (!this.synchedDataSources.has(id)) {
-            this.synchedDataSources.set(id, new Map());
-        }
-        if (!this.synchedDataSources.get(id).has(authenticationToken)) {
+        source.listen((v) => {
+            delete v.operation;
+            delete v.newState;
+            delete v.previousState;
             this.connection.send(
                 JSON.stringify({
-                    type: RemoteProtocol.LISTEN_DATASOURCE,
-                    id,
-                    token: authenticationToken
+                    type: RemoteProtocol.UPDATE_DATASOURCE,
+                    token: authenticationToken,
+                    value: v,
+                    id
                 })
             );
-            this.synchedDataSources.get(id).set(authenticationToken, { source: new DataSource(), listeners: [] });
-        }
-        this.synchedDataSources.get(id).get(authenticationToken).listeners.push({
-            source: dataSource,
-            token: cancellation
-        });
-        this.synchedDataSources
-            .get(id)
-            .get(authenticationToken)
-            .source.listenAndRepeat((v) => dataSource.update(v), cancellation);
+        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
-    public syncMapDataSource(dataSource: MapDataSource<any, any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
-        cancellation.addCancelable(() => {
-            const listenersByAuth = this.synchedMapDataSources.get(id);
-            const listeners = listenersByAuth.get(authenticationToken);
-            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === dataSource));
-            if (listeners.listeners.length === 0) {
-                listenersByAuth.delete(authenticationToken);
-                listeners.source.cancelAll();
-                this.connection.send(
-                    JSON.stringify({
-                        type: RemoteProtocol.CANCEL_MAP_DATASOURCE,
-                        id,
-                        token: authenticationToken
-                    })
-                );
-            }
-        });
+    public syncObjectDataSource(source: ObjectDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedObjectDataSources,
+            RemoteProtocol.LISTEN_OBJECT_DATASOURCE,
+            RemoteProtocol.CANCEL_OBJECT_DATASOURCE
+        );
 
-        if (!this.synchedMapDataSources.has(id)) {
-            this.synchedMapDataSources.set(id, new Map());
-        }
-        if (!this.synchedMapDataSources.get(id).has(authenticationToken)) {
+        source.listen((v) => {
+            delete v.oldValue;
+
             this.connection.send(
                 JSON.stringify({
-                    type: RemoteProtocol.LISTEN_MAP_DATASOURCE,
-                    id,
-                    token: authenticationToken
+                    type: RemoteProtocol.UPDATE_OBJECT_DATASOURCE,
+                    token: authenticationToken,
+                    value: v,
+                    id
                 })
             );
-            this.synchedMapDataSources.get(id).set(authenticationToken, { source: new MapDataSource(), listeners: [] });
-        }
-        this.synchedMapDataSources.get(id).get(authenticationToken).listeners.push({
-            source: dataSource,
-            token: cancellation
-        });
-        this.synchedMapDataSources
-            .get(id)
-            .get(authenticationToken)
-            .source.listenAndRepeat((v) => dataSource.applyMapChange(v), cancellation);
+        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
-    public syncArrayDataSource(dataSource: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
-        cancellation.addCancelable(() => {
-            const listenersByAuth = this.synchedArrayDataSources.get(id);
-            const listeners = listenersByAuth.get(authenticationToken);
-            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === dataSource));
-            if (listeners.listeners.length === 0) {
-                listenersByAuth.delete(authenticationToken);
-                listeners.source.cancelAll();
-                this.connection.send(
-                    JSON.stringify({
-                        type: RemoteProtocol.CANCEL_ARRAY_DATASOURCE,
-                        id,
-                        token: authenticationToken
-                    })
-                );
-            }
-        });
+    public syncSetDataSource(source: SetDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedSetDataSources,
+            RemoteProtocol.LISTEN_SET_DATASOURCE,
+            RemoteProtocol.CANCEL_SET_DATASOURCE
+        );
 
-        if (!this.synchedArrayDataSources.has(id)) {
-            this.synchedArrayDataSources.set(id, new Map());
-        }
-        if (!this.synchedArrayDataSources.get(id).has(authenticationToken)) {
+        source.listen((v) => {
             this.connection.send(
                 JSON.stringify({
-                    type: RemoteProtocol.LISTEN_ARRAY_DATASOURCE,
-                    id,
-                    token: authenticationToken
+                    type: RemoteProtocol.UPDATE_SET_DATASOURCE,
+                    token: authenticationToken,
+                    value: v,
+                    id
                 })
             );
-            this.synchedArrayDataSources.get(id).set(authenticationToken, { source: new ArrayDataSource(), listeners: [] });
-        }
-        this.synchedArrayDataSources.get(id).get(authenticationToken).listeners.push({
-            source: dataSource,
-            token: cancellation
-        });
-        this.synchedArrayDataSources
-            .get(id)
-            .get(authenticationToken)
-            .source.listenAndRepeat((v) => dataSource.applyCollectionChange(v), cancellation);
+        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
-    public syncDuplexDataSource(dataSource: DuplexDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
-        cancellation.addCancelable(() => {
-            const listenersByAuth = this.synchedDuplexDataSources.get(id);
-            const listeners = listenersByAuth.get(authenticationToken);
-            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === dataSource));
-            if (listeners.listeners.length === 0) {
-                listenersByAuth.delete(authenticationToken);
-                listeners.source.cancelAll();
-                this.connection.send(
-                    JSON.stringify({
-                        type: RemoteProtocol.CANCEL_DUPLEX_DATASOURCE,
-                        id,
-                        token: authenticationToken
-                    })
-                );
-            }
-        });
+    public syncMapDataSource(source: MapDataSource<any, any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedMapDataSources,
+            RemoteProtocol.LISTEN_MAP_DATASOURCE,
+            RemoteProtocol.CANCEL_MAP_DATASOURCE
+        );
 
-        dataSource.listenUpstream((v) => {
+        source.listen((v) => {
+            delete v.oldValue;
+            this.connection.send(
+                JSON.stringify({
+                    type: RemoteProtocol.UPDATE_MAP_DATASOURCE,
+                    token: authenticationToken,
+                    value: v,
+                    id
+                })
+            );
+        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
+    }
+
+    public syncArrayDataSource(source: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedArrayDataSources,
+            RemoteProtocol.LISTEN_ARRAY_DATASOURCE,
+            RemoteProtocol.CANCEL_ARRAY_DATASOURCE
+        );
+
+        source.listen((v) => {
+            delete v.operation;
+            delete v.newState;
+            delete v.previousState;
+            this.connection.send(
+                JSON.stringify({
+                    type: RemoteProtocol.UPDATE_ARRAY_DATASOURCE,
+                    token: authenticationToken,
+                    value: v,
+                    id
+                })
+            );
+        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
+    }
+
+    public syncDuplexDataSource(source: DuplexDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
+        this.syncSource(
+            cancellation,
+            id,
+            authenticationToken,
+            source,
+            this.synchedDuplexDataSources,
+            RemoteProtocol.LISTEN_DUPLEX_DATASOURCE,
+            RemoteProtocol.CANCEL_DUPLEX_DATASOURCE
+        );
+
+        source.listenUpstream((v) => {
             this.connection.send(
                 JSON.stringify({
                     type: RemoteProtocol.UPDATE_DUPLEX_DATASOURCE,
@@ -237,36 +270,57 @@ class AurumServerClient {
                 })
             );
         }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
+    }
 
-        if (!this.synchedDuplexDataSources.has(id)) {
-            this.synchedDuplexDataSources.set(id, new Map());
+    private syncSource(
+        cancellation: CancellationToken,
+        id: string,
+        authenticationToken: string,
+        source: any,
+        syncedSources: Map<string, Map<string, { source: any; listeners: { source: any; token: CancellationToken }[] }>>,
+        listenMessage: RemoteProtocol,
+        cancelMessage: RemoteProtocol
+    ) {
+        cancellation.addCancelable(() => {
+            const listenersByAuth = syncedSources.get(id);
+            const listeners = listenersByAuth.get(authenticationToken);
+            listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === source));
+            if (listeners.listeners.length === 0) {
+                listenersByAuth.delete(authenticationToken);
+                listeners.source.cancelAll();
+                this.connection.send(
+                    JSON.stringify({
+                        type: cancelMessage,
+                        id,
+                        token: authenticationToken
+                    })
+                );
+            }
+        });
+
+        if (!syncedSources.has(id)) {
+            syncedSources.set(id, new Map());
         }
-        if (!this.synchedDuplexDataSources.get(id).has(authenticationToken)) {
+        if (!syncedSources.get(id).has(authenticationToken)) {
             this.connection.send(
                 JSON.stringify({
-                    type: RemoteProtocol.LISTEN_DUPLEX_DATASOURCE,
+                    type: listenMessage,
                     id,
                     token: authenticationToken
                 })
             );
-            this.synchedDuplexDataSources.get(id).set(authenticationToken, { source: new DuplexDataSource(), listeners: [] });
+            syncedSources.get(id).set(authenticationToken, { source, listeners: [] });
         }
-
-        this.synchedDuplexDataSources.get(id).get(authenticationToken).listeners.push({
-            source: dataSource,
+        syncedSources.get(id).get(authenticationToken).listeners.push({
+            source,
             token: cancellation
         });
-        this.synchedDuplexDataSources
-            .get(id)
-            .get(authenticationToken)
-            .source.listenAndRepeat((v) => dataSource.updateDownstream(v), cancellation);
-        dataSource.listenUpstream((v) => this.synchedDuplexDataSources.get(id).get(authenticationToken).source.updateUpstream(v), cancellation);
     }
 
     public static connect(host: string, protocol?: 'ws' | 'wss'): Promise<AurumServerClient> {
         let pendingToken = new CancellationToken();
         let started = false;
-        let latency = [0, 0, 0, 0];
+        let latency = [0, 0, 0, 0, 0];
         let cycle = 0;
         let latencyTs;
         let lastBeat;
@@ -404,11 +458,27 @@ class AurumServerClient {
                 }
             }
         }
+        for (const id of client.synchedObjectDataSources.keys()) {
+            for (const auth of client.synchedObjectDataSources.get(id).keys()) {
+                for (const { source, token } of client.synchedObjectDataSources.get(id).get(auth).listeners) {
+                    this.syncObjectDataSource(source, id, auth, token);
+                }
+            }
+        }
+        for (const id of client.synchedSetDataSources.keys()) {
+            for (const auth of client.synchedSetDataSources.get(id).keys()) {
+                for (const { source, token } of client.synchedSetDataSources.get(id).get(auth).listeners) {
+                    this.syncSetDataSource(source, id, auth, token);
+                }
+            }
+        }
 
         this.synchedDataSources = new Map();
         this.synchedDuplexDataSources = new Map();
         this.synchedArrayDataSources = new Map();
         this.synchedMapDataSources = new Map();
+        this.synchedObjectDataSources = new Map();
+        this.synchedSetDataSources = new Map();
     }
 }
 

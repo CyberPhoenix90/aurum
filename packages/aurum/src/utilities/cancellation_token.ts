@@ -13,6 +13,8 @@ export class CancellationToken {
         this._isCancelled = false;
     }
 
+    public static forever = new CancellationToken();
+
     public static fromMultiple(tokens: CancellationToken[]): CancellationToken {
         const result = new CancellationToken();
 
@@ -158,3 +160,8 @@ function loop(time: number): void {
         requestAnimationFrame(loop);
     }
 }
+
+CancellationToken.forever.addCancelable = () => void 0;
+CancellationToken.forever.cancel = () => {
+    throw new Error('Cannot cancel forever token');
+};

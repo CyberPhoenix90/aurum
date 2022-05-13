@@ -1,18 +1,21 @@
 import {
+    ArrayDataSource,
     CancellationToken,
     CollectionChange,
+    DataSource,
     DuplexDataSource,
     MapChange,
     MapDataSource,
-    ReadOnlyArrayDataSource,
-    ReadOnlyDataSource,
-    RemoteProtocol
+    ObjectChange,
+    ObjectDataSource,
+    RemoteProtocol,
+    SetDataSource
 } from 'aurumjs';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as ws from 'ws';
 import { Client } from './client';
-import { Endpoint, Router } from './router';
+import { Endpoint, ExposeConfig, Router } from './router';
 
 export interface AurumServerConfig {
     reuseServer?: HttpServer | HttpsServer;
@@ -110,6 +113,12 @@ export class AurumServer {
                     case RemoteProtocol.CANCEL_MAP_DATASOURCE:
                         this.cancelSubscriptionToExposedMapDataSource(message, sender);
                         break;
+                    case RemoteProtocol.CANCEL_SET_DATASOURCE:
+                        this.cancelSubscriptionToExposedSetDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.CANCEL_OBJECT_DATASOURCE:
+                        this.cancelSubscriptionToExposedObjectDataSource(message, sender);
+                        break;
                     case RemoteProtocol.LISTEN_DATASOURCE:
                         this.listenDataSource(message, sender);
                         break;
@@ -117,13 +126,37 @@ export class AurumServer {
                         this.listenDuplexDataSource(message, sender);
                         break;
                     case RemoteProtocol.LISTEN_ARRAY_DATASOURCE:
-                        this.listenReadOnlyArrayDataSource(message, sender);
+                        this.listenArrayDataSource(message, sender);
                         break;
                     case RemoteProtocol.LISTEN_MAP_DATASOURCE:
                         this.listenMapDataSource(message, sender);
                         break;
+                    case RemoteProtocol.LISTEN_OBJECT_DATASOURCE:
+                        this.listenObjectDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.LISTEN_SET_DATASOURCE:
+                        this.listenSetDataSource(message, sender);
+                        break;
                     case RemoteProtocol.UPDATE_DUPLEX_DATASOURCE:
                         this.updateDuplexDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_DATASOURCE:
+                        this.updateDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_ARRAY_DATASOURCE:
+                        this.updateArrayDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_DUPLEX_DATASOURCE:
+                        this.updateDuplexDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_MAP_DATASOURCE:
+                        this.updateMapDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_SET_DATASOURCE:
+                        this.updateSetDataSource(message, sender);
+                        break;
+                    case RemoteProtocol.UPDATE_OBJECT_DATASOURCE:
+                        this.updateObjectDataSource(message, sender);
                         break;
                     case RemoteProtocol.HEARTBEAT:
                         sender.sendMessage(RemoteProtocol.HEARTBEAT, undefined);
@@ -169,7 +202,7 @@ export class AurumServer {
         }
     }
 
-    public getExposedDataSource(id: string): Endpoint<ReadOnlyDataSource<any>> {
+    public getExposedDataSource(id: string): Endpoint<DataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedDataSource(id.substring(routerPath.length));
@@ -182,7 +215,7 @@ export class AurumServer {
         return this.routers[''].getExposedDataSource(id);
     }
 
-    public getExposedReadOnlyArrayDataSource(id: string): Endpoint<ReadOnlyArrayDataSource<any>> {
+    public getExposedArrayDataSource(id: string): Endpoint<ArrayDataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedArrayDataSource(id.substring(routerPath.length));
@@ -208,6 +241,32 @@ export class AurumServer {
         return this.routers[''].getExposedMapDataSource(id);
     }
 
+    public getExposedObjectDataSource(id: string): Endpoint<ObjectDataSource<any>> {
+        for (const routerPath in this.routers) {
+            if (routerPath !== '' && id.startsWith(routerPath)) {
+                const result = this.routers[routerPath].getExposedObjectDataSource(id.substring(routerPath.length));
+                if (result) {
+                    return result;
+                }
+            }
+        }
+
+        return this.routers[''].getExposedObjectDataSource(id);
+    }
+
+    public getExposedSetDataSource(id: string): Endpoint<SetDataSource<any>> {
+        for (const routerPath in this.routers) {
+            if (routerPath !== '' && id.startsWith(routerPath)) {
+                const result = this.routers[routerPath].getExposedSetDataSource(id.substring(routerPath.length));
+                if (result) {
+                    return result;
+                }
+            }
+        }
+
+        return this.routers[''].getExposedSetDataSource(id);
+    }
+
     public getExposedDuplexDataSource(id: string): Endpoint<DuplexDataSource<any>, 'read' | 'write'> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
@@ -221,12 +280,12 @@ export class AurumServer {
         return this.routers[''].getExposedDuplexDataSource(id);
     }
 
-    private listenReadOnlyArrayDataSource(message: any, sender: Client) {
+    private listenArrayDataSource(message: any, sender: Client) {
         const id = message.id;
         if (sender.adsSubscriptions.has(id)) {
             return;
         }
-        const endpoint = this.getExposedReadOnlyArrayDataSource(id);
+        const endpoint = this.getExposedArrayDataSource(id);
         if (endpoint) {
             const token = new CancellationToken();
             if (endpoint.authenticator(message.token, 'read')) {
@@ -265,16 +324,16 @@ export class AurumServer {
         }
     }
 
-    private listenMapDataSource(message: any, sender: Client) {
+    private listenMapDataSource(message: any, sender: Client): void {
         const id = message.id;
-        if (sender.adsSubscriptions.has(id)) {
+        if (sender.mapdsSubscriptions.has(id)) {
             return;
         }
         const endpoint = this.getExposedMapDataSource(id);
         if (endpoint) {
             const token = new CancellationToken();
             if (endpoint.authenticator(message.token, 'read')) {
-                sender.adsSubscriptions.set(id, token);
+                sender.mapdsSubscriptions.set(id, token);
                 endpoint.source.listen((change) => {
                     change = Object.assign({}, change);
                     // Optimize network traffic by removing fields not used by the client
@@ -303,6 +362,51 @@ export class AurumServer {
             }
         } else {
             sender.sendMessage(RemoteProtocol.LISTEN_MAP_DATASOURCE_ERR, {
+                id,
+                errorCode: 404,
+                error: 'No such map datasource'
+            });
+        }
+    }
+
+    private listenObjectDataSource(message: any, sender: Client): void {
+        const id = message.id;
+        if (sender.odsSubscriptions.has(id)) {
+            return;
+        }
+        const endpoint = this.getExposedObjectDataSource(id);
+        if (endpoint) {
+            const token = new CancellationToken();
+            if (endpoint.authenticator(message.token, 'read')) {
+                sender.odsSubscriptions.set(id, token);
+                endpoint.source.listen((change) => {
+                    change = Object.assign({}, change);
+                    // Optimize network traffic by removing fields not used by the client
+                    delete change.oldValue;
+                    sender.sendMessage(RemoteProtocol.UPDATE_OBJECT_DATASOURCE, {
+                        id,
+                        change
+                    });
+                }, token);
+                for (const key in endpoint.source.keys()) {
+                    sender.sendMessage(RemoteProtocol.UPDATE_OBJECT_DATASOURCE, {
+                        id,
+                        change: {
+                            key,
+                            newValue: endpoint.source.get(key),
+                            oldValue: undefined
+                        } as ObjectChange<any, any>
+                    });
+                }
+            } else {
+                sender.sendMessage(RemoteProtocol.LISTEN_OBJECT_DATASOURCE_ERR, {
+                    id,
+                    errorCode: 401,
+                    error: 'Unauthorized'
+                });
+            }
+        } else {
+            sender.sendMessage(RemoteProtocol.LISTEN_OBJECT_DATASOURCE_ERR, {
                 id,
                 errorCode: 404,
                 error: 'No such map datasource'
@@ -397,27 +501,43 @@ export class AurumServer {
         }
     }
 
-    public exposeDataSource<I>(id: string, source: ReadOnlyDataSource<I>, authenticate: (token: string, operation: 'read') => boolean = () => true): void {
-        this.routers[''].exposeDataSource(id, source, authenticate);
+    private cancelSubscriptionToExposedObjectDataSource(message: any, sender: Client) {
+        const sub = sender.odsSubscriptions.get(message.url);
+        if (sub) {
+            sub.cancel();
+            sender.odsSubscriptions.delete(message.url);
+        }
     }
 
-    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, authenticate: (token: string, operation: 'read') => boolean = () => true): void {
-        this.routers[''].exposeMapDataSource(id, source, authenticate);
+    private cancelSubscriptionToExposedSetDataSource(message: any, sender: Client) {
+        const sub = sender.setdsSubscriptions.get(message.url);
+        if (sub) {
+            sub.cancel();
+            sender.setdsSubscriptions.delete(message.url);
+        }
     }
 
-    public exposeArrayDataSource<I>(
-        id: string,
-        source: ReadOnlyArrayDataSource<I>,
-        authenticate: (token: string, operation: 'read') => boolean = () => true
-    ): void {
-        this.routers[''].exposeArrayDataSource(id, source, authenticate);
+    public exposeSetDataSource<I>(id: string, source: SetDataSource<I>, config: ExposeConfig): void {
+        this.routers[''].exposeSetDataSource(id, source, config);
     }
 
-    public exposeDuplexDataSource<I>(
-        id: string,
-        source: DuplexDataSource<I>,
-        authenticate: (token: string, operation: 'read' | 'write') => boolean = () => true
-    ): void {
-        this.routers[''].exposeDuplexDataSource(id, source, authenticate);
+    public exposeObjectDataSource<I>(id: string, source: ObjectDataSource<I>, config: ExposeConfig): void {
+        this.routers[''].exposeObjectDataSource(id, source, config);
+    }
+
+    public exposeDataSource<I>(id: string, source: DataSource<I>, config?: ExposeConfig): void {
+        this.routers[''].exposeDataSource(id, source, config);
+    }
+
+    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, config?: ExposeConfig): void {
+        this.routers[''].exposeMapDataSource(id, source, config);
+    }
+
+    public exposeArrayDataSource<I>(id: string, source: ArrayDataSource<I>, config?: ExposeConfig): void {
+        this.routers[''].exposeArrayDataSource(id, source, config);
+    }
+
+    public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config?: ExposeConfig): void {
+        this.routers[''].exposeDuplexDataSource(id, source, config);
     }
 }

@@ -6,6 +6,9 @@ export class Client {
     public readonly dsSubscriptions: Map<string, CancellationToken>;
     public readonly adsSubscriptions: Map<string, CancellationToken>;
     public readonly ddsSubscriptions: Map<string, CancellationToken>;
+    public readonly odsSubscriptions: Map<string, CancellationToken>;
+    public readonly setdsSubscriptions: Map<string, CancellationToken>;
+
     public readonly connection: ws;
     public timeSinceLastMessage: number;
 
@@ -15,6 +18,8 @@ export class Client {
         this.dsSubscriptions = new Map();
         this.adsSubscriptions = new Map();
         this.ddsSubscriptions = new Map();
+        this.odsSubscriptions = new Map();
+        this.setdsSubscriptions = new Map();
     }
 
     public sendMessage(messageType: RemoteProtocol, payload: any) {
@@ -32,6 +37,12 @@ export class Client {
             sub.cancel();
         }
         for (const sub of this.ddsSubscriptions.values()) {
+            sub.cancel();
+        }
+        for (const sub of this.odsSubscriptions.values()) {
+            sub.cancel();
+        }
+        for (const sub of this.setdsSubscriptions.values()) {
             sub.cancel();
         }
     }
