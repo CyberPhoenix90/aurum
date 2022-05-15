@@ -1,6 +1,6 @@
 {
     "name": "aurum-server",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "description": "Websocket powered webserver for Aurum.js allowing the sychronization between datasources of a server and a client",
     "main": "prebuilt/cjs/aurum-server.js",
     "typings": "prebuilt/cjs/aurum-server.d.ts",
@@ -27,7 +27,13 @@
     },
     "builds": [
         {
+            "outdir": "prebuilt/cjs",
             "name": "cjs",
+            "platform": "node"
+        },
+        {
+            "outdir": "prebuilt/esnext",
+            "name": "esnext",
             "platform": "node"
         }
     ]

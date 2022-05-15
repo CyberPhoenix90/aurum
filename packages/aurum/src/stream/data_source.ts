@@ -1,5 +1,5 @@
 import { getValueOf } from '../aurumjs.js';
-import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client.js';
+import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
@@ -2551,6 +2551,26 @@ export class MapDataSource<K, V> {
         this.updateEventOnKey = new Map();
     }
 
+    public cancelAll(): void {
+        this.updateEvent.cancelAll();
+        this.updateEventOnKey.forEach((v, k) => v.cancelAll());
+        this.updateEventOnKey.clear();
+    }
+
+    /**
+     * Connects to an aurum-server exposed map datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<K, V>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): MapDataSource<K, V> {
+        const result = new MapDataSource<K, V>();
+
+        syncMapDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
+    }
+
     public static fromMultipleMaps<K, V>(maps: MapDataSource<K, V>[], cancellationToken?: CancellationToken): MapDataSource<K, V> {
         const result = new MapDataSource<K, V>();
         let i = 0;
@@ -2578,6 +2598,10 @@ export class MapDataSource<K, V> {
         return result;
     }
 
+    public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
+        this.data.forEach(callbackfn, thisArg);
+    }
+
     public toString(): string {
         return this.data.toString();
     }
@@ -2587,6 +2611,14 @@ export class MapDataSource<K, V> {
             return value;
         } else {
             return new MapDataSource(value);
+        }
+    }
+
+    public applyMapChange(change: MapChange<K, V>) {
+        if (change.deleted && this.data.has(change.key)) {
+            this.delete(change.key);
+        } else if (!change.deleted && !this.data.has(change.key)) {
+            this.set(change.key, change.newValue);
         }
     }
 
@@ -2836,6 +2868,28 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+    }
+
+    /**
+     * Connects to an aurum-server exposed set datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): SetDataSource<T> {
+        const result = new SetDataSource<T>(undefined);
+
+        syncSetDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
+    }
+
+    public applySetChange(change: SetChange<K>): void {
+        if (change.exists && !this.has(change.key)) {
+            this.data.add(change.key);
+        } else if (!change.exists && this.has(change.key)) {
+            this.data.delete(change.key);
+        }
     }
 
     public clear(): void {
