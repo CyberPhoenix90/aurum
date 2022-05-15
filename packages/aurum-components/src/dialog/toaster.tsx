@@ -10,9 +10,9 @@ import {
     DataSource,
     dsMap,
     Renderable,
-    resolveChildren
+    resolveChildren,
+    AurumElementModel
 } from 'aurumjs';
-import { AurumElementModel } from 'aurumjs/prebuilt/cjs/rendering/aurum_element';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -127,7 +127,7 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
                     api.cancellationToken.setTimeout(() => {
                         activeToast.update(undefined);
                     }, 400);
-                }, (toast as AurumElementModel<ToastProps>)?.props?.activeTime ?? props.defaultToastActiveTime);
+                }, (toast as any as AurumElementModel<ToastProps>)?.props?.activeTime ?? props.defaultToastActiveTime);
             }
         }
     }

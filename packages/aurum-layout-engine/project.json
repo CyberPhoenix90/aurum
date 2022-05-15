@@ -1,0 +1,46 @@
+{
+    "name": "aurum-layout-engine",
+    "version": "0.0.0",
+    "main": "prebuilt/cjs/aurum-layout-engine.js",
+    "typings": "prebuilt/cjs/aurum-layout-engine.d.ts",
+    "compiler": "typescript",
+    "homepage": "https://aurumjs.org/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum-layout-engine"
+    },
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT",
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "mocha": "^8.2.1",
+        "prettier": "^2.2.1",
+        "requirejs": "^2.3.6",
+        "sinon": "^9.0.3"
+    },
+    "projectReferences": ["aurumjs"],
+    "defaultBuildSettings": {
+        "assembly": "executable",
+        "includes": ["src/**/*.ts", "src/**/*.tsx"],
+        "jsxFragmentFactory": "Aurum.fragment",
+        "jsxFactory": "Aurum.factory",
+        "jsx": "react"
+    },
+    "builds": [
+        {
+            "outDir": "prebuilt/amd",
+            "name": "amd",
+            "platform": "browser"
+        },
+        {
+            "outDir": "prebuilt/cjs",
+            "name": "cjs",
+            "platform": "node"
+        },
+        {
+            "outDir": "prebuilt/exnext",
+            "name": "esnext",
+            "platform": "isomorphic"
+        }
+    ]
+}

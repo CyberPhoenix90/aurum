@@ -102,12 +102,10 @@ export class ConstructionGrid<T> {
         }
     }
 
-    public removeBuildingAt(point: PointLike): T {
+    public removeBuildingAt(point: PointLike): void {
         const building = this.getBuildingAt(point);
         if (building) {
             this.removeBuilding(building.item);
-        } else {
-            return undefined;
         }
     }
 

@@ -1,5 +1,4 @@
-import { ColorPicker, ColorPickerProps, JSONRenderer, NumberField, NumberFieldProps, TextField, TextFieldProps } from 'aurum-components';
-import { Aurum, DataSource, dsMap } from 'aurumjs';
+import { ColorPicker, JSONRenderer, NumberField, TextField } from 'aurum-components';
 import {
     ArraySchemaFieldTypeDescriptor,
     EnumSchemaFieldTypeDescriptor,
@@ -12,6 +11,7 @@ import {
     SchemaFieldTypeDescriptor,
     TextSchemaFieldTypeDescriptor
 } from 'aurum-game-editor-api';
+import { Aurum, DataSource, dsMap } from 'aurumjs';
 import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model';
 
 export function sceneEntityToEntityEditor(entity: SceneEntityDataReactive, schema: ObjectSchema) {
@@ -58,7 +58,7 @@ export function EntityEditor(props: {
                         onEditDone(castValue(fieldSchema, valueToApply));
                     };
                     let lock = false;
-                    const commonProps: TextFieldProps | NumberFieldProps | ColorPickerProps = {
+                    const commonProps: any = {
                         onAttach: (i) => {
                             i.focus();
                         },

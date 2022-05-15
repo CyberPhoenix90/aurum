@@ -1,5 +1,5 @@
 import { getValueOf } from '../aurumjs.js';
-import { AurumServerInfo, syncArrayDataSource, syncDataSource } from '../aurum_server/aurum_server_client.js';
+import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
@@ -760,6 +760,8 @@ export interface ReadOnlyArrayDataSource<T> {
     findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number;
     lastIndexOf(item: T): number;
     includes(item: T): boolean;
+    some(cb: (item: T, index: number, array: T[]) => boolean): boolean;
+    every(cb: (item: T, index: number, array: T[]) => boolean): boolean;
     toArray(): T[];
     forEach(callbackfn: (value: T, index: number, array: T[]) => void): void;
     reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T>;
@@ -1398,6 +1400,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             this.data = this.data.concat(items);
         }
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
+
         this.update({
             operation: 'add',
             operationDetailed: 'append',
@@ -1407,9 +1413,6 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             newState: this.data
         });
         this.onItemsAdded.fire(items);
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
     }
 
     public splice(index: number, deleteCount: number, ...insertion: T[]): T[] {
@@ -1450,17 +1453,20 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public unshift(...items: T[]) {
         this.data.unshift(...items);
-        this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
-        this.onItemsAdded.fire(items);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'add', operationDetailed: 'prepend', count: items.length, items, index: 0, newState: this.data });
+        this.onItemsAdded.fire(items);
     }
 
     public pop(): T {
         //This could technically just call removeRight(1) but removeRight is based on splicing which creates a new array so this can be significantly faster
         const item = this.data.pop();
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
         this.update({
             operation: 'remove',
             operationDetailed: 'removeRight',
@@ -1471,9 +1477,6 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         });
         this.onItemsRemoved.fire([item]);
 
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
         return item;
     }
 
@@ -1488,6 +1491,9 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const old = this.data;
         this.data = newData.slice();
 
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
         this.update({
             operation: 'merge',
             operationDetailed: 'merge',
@@ -1498,30 +1504,27 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         });
         this.onItemsRemoved.fire(old);
         this.onItemsAdded.fire(this.data);
-
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
     }
 
     public removeRight(count: number): T[] {
         const length = this.data.length;
         const result = this.data.splice(length - count, count);
-        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'removeRight', count, index: length - count, items: result, newState: this.data });
+        this.onItemsRemoved.fire(result);
 
         return result;
     }
 
     public removeLeft(count: number): void {
         const removed = this.data.splice(0, count);
-        this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
-        this.onItemsRemoved.fire(removed);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
+        this.onItemsRemoved.fire(removed);
     }
 
     public removeAt(index: number, count: number = 1): T[] {
@@ -1537,11 +1540,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public removeRange(start: number, end: number): T[] {
         const removed = this.data.splice(start, end - start);
-        this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
-        this.onItemsRemoved.fire(removed);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+        this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
+        this.onItemsRemoved.fire(removed);
 
         return removed;
     }
@@ -1550,6 +1553,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const index = this.data.indexOf(item);
         if (index !== -1) {
             return this.removeAt(index)[0];
+        } else {
+            return undefined;
         }
     }
 
@@ -1560,6 +1565,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
         const items = this.data;
         this.data = [];
+
+        if (this.lengthSource.value !== this.data.length) {
+            this.lengthSource.update(this.data.length);
+        }
+
         this.update({
             operation: 'remove',
             operationDetailed: 'clear',
@@ -1570,18 +1580,25 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             newState: this.data
         });
         this.onItemsRemoved.fire(items);
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
+    }
+
+    public some(cb: (item: T, index: number, array: T[]) => boolean): boolean {
+        return this.data.some(cb);
+    }
+
+    public every(cb: (item: T, index: number, array: T[]) => boolean): boolean {
+        return this.data.every(cb);
     }
 
     public shift(): T {
         const item = this.data.shift();
-        this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
-        this.onItemsRemoved.fire([item]);
+
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
+
+        this.update({ operation: 'remove', operationDetailed: 'removeLeft', items: [item], count: 1, index: 0, newState: this.data });
+        this.onItemsRemoved.fire([item]);
 
         return item;
     }
@@ -2460,7 +2477,7 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
      */
     public updateFilter(filter: Predicate<T>): number {
         if (this.viewFilter === filter) {
-            return;
+            return this.data.length;
         }
         this.viewFilter = filter;
         this.refresh();
@@ -2534,6 +2551,26 @@ export class MapDataSource<K, V> {
         this.updateEventOnKey = new Map();
     }
 
+    public cancelAll(): void {
+        this.updateEvent.cancelAll();
+        this.updateEventOnKey.forEach((v, k) => v.cancelAll());
+        this.updateEventOnKey.clear();
+    }
+
+    /**
+     * Connects to an aurum-server exposed map datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<K, V>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): MapDataSource<K, V> {
+        const result = new MapDataSource<K, V>();
+
+        syncMapDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
+    }
+
     public static fromMultipleMaps<K, V>(maps: MapDataSource<K, V>[], cancellationToken?: CancellationToken): MapDataSource<K, V> {
         const result = new MapDataSource<K, V>();
         let i = 0;
@@ -2561,6 +2598,10 @@ export class MapDataSource<K, V> {
         return result;
     }
 
+    public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
+        this.data.forEach(callbackfn, thisArg);
+    }
+
     public toString(): string {
         return this.data.toString();
     }
@@ -2570,6 +2611,14 @@ export class MapDataSource<K, V> {
             return value;
         } else {
             return new MapDataSource(value);
+        }
+    }
+
+    public applyMapChange(change: MapChange<K, V>) {
+        if (change.deleted && this.data.has(change.key)) {
+            this.delete(change.key);
+        } else if (!change.deleted && !this.data.has(change.key)) {
+            this.set(change.key, change.newValue);
         }
     }
 
@@ -2819,6 +2868,28 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+    }
+
+    /**
+     * Connects to an aurum-server exposed set datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
+     * @param  {AurumServerInfo} aurumServerInfo
+     * @returns DataSource
+     */
+    public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): SetDataSource<T> {
+        const result = new SetDataSource<T>(undefined);
+
+        syncSetDataSource(result, aurumServerInfo, cancellation);
+
+        return result;
+    }
+
+    public applySetChange(change: SetChange<K>): void {
+        if (change.exists && !this.has(change.key)) {
+            this.data.add(change.key);
+        } else if (!change.exists && this.has(change.key)) {
+            this.data.delete(change.key);
+        }
     }
 
     public clear(): void {

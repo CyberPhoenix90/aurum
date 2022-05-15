@@ -1,9 +1,0 @@
-src
-tsconfig.json
-tsconfig.cjs.json
-.prettierrc
-disttest
-coverage
-.history
-.vscode
-unittestdb

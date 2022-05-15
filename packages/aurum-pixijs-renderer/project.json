@@ -1,0 +1,42 @@
+{
+    "name": "aurum-pixijs-renderer",
+    "version": "0.0.0",
+    "main": "prebuilt/cjs/aurum-pixijs-renderer.js",
+    "typings": "prebuilt/cjs/aurum-pixijs-renderer.d.ts",
+    "compiler": "typescript",
+    "homepage": "https://aurumjs.org/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum-pixijs-renderer"
+    },
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT",
+    "dependencies": {
+        "pixi.js": "^6.3.2"
+    },
+    "projectReferences": ["aurumjs", "aurum-game-engine"],
+    "defaultBuildSettings": {
+        "assembly": "library",
+        "includes": ["src/**/*.ts", "src/**/*.tsx"],
+        "jsxFragmentFactory": "Aurum.fragment",
+        "jsxFactory": "Aurum.factory",
+        "jsx": "react"
+    },
+    "builds": [
+        {
+            "outDir": "prebuilt/amd",
+            "name": "amd",
+            "platform": "browser"
+        },
+        {
+            "outDir": "prebuilt/cjs",
+            "name": "cjs",
+            "platform": "node"
+        },
+        {
+            "outDir": "prebuilt/exnext",
+            "name": "esnext",
+            "platform": "isomorphic"
+        }
+    ]
+}

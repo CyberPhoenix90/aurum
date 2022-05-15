@@ -1,4 +1,16 @@
-import { ArrayDataSource, Aurum, aurumClassName, AurumComponentAPI, DataSource, dsMap, DuplexDataSource, Renderable } from 'aurumjs';
+import {
+    ArrayDataSource,
+    Aurum,
+    aurumClassName,
+    combineClass,
+    AurumComponentAPI,
+    DataSource,
+    dsMap,
+    DuplexDataSource,
+    Renderable,
+    AttributeValue,
+    ClassType
+} from 'aurumjs';
 import { css } from '@emotion/css';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
@@ -49,7 +61,8 @@ interface TabBarProps {
     canClose?: boolean;
     onClose?(tab: string, index: number): void;
     onReorder?(tabA: string, tabB: string): void;
-    style?: string;
+    class?: ClassType;
+    style?: AttributeValue;
     selected: DataSource<string> | DuplexDataSource<string>;
 }
 
@@ -79,7 +92,7 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
     }
 
     return (
-        <div class={style} style={props.style}>
+        <div class={combineClass(api.cancellationToken, style, props.class)} style={props.style}>
             {tabs.transform(dsMap((tabsValue) => tabsValue.map((c, i) => renderTab(i, c))))}
         </div>
     );

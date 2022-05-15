@@ -4,8 +4,8 @@ import { AurumCodeEditor } from '../src/code_editor';
 Aurum.attach(
     <div>
         <AurumCodeEditor
-            bottomPanel={{
-                console: {}
+            topPanel={{
+                tabs: {}
             }}
             content={{
                 codeEditor: {

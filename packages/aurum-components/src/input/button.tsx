@@ -1,6 +1,5 @@
 import { css } from '@emotion/css';
-import { Aurum, Renderable } from 'aurumjs';
-import { ButtonProps } from 'aurumjs/prebuilt/cjs/nodes/simple_dom_nodes';
+import { ButtonProps, Aurum, Renderable, combineClass, AurumComponentAPI } from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
 
@@ -24,9 +23,9 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 
-export function Button(props: ButtonProps, children: Renderable[]) {
+export function Button(props: ButtonProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     return (
-        <button class={style} {...props}>
+        <button class={combineClass(api.cancellationToken, props.class, style)} {...props}>
             {children}
         </button>
     );

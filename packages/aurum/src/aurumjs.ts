@@ -1,14 +1,55 @@
 export * from './rendering/webcomponent.js';
 export {
     Renderable,
+    SingularAurumElement,
+    ArrayAurumElement,
     AurumComponentAPI,
     ComponentLifeCycle,
     createAPI,
     createLifeCycle,
     createRenderSession,
     RenderSession,
+    AurumElement,
+    aurumElementModelIdentitiy,
     AurumElementModel
 } from './rendering/aurum_element.js';
+
+export {
+    AProps,
+    ProgressProps,
+    ColProps,
+    ImgProps,
+    SvgProps,
+    AreaProps,
+    DataProps,
+    FormProps,
+    HtmlProps,
+    LinkProps,
+    MetaProps,
+    SlotProps,
+    TimeProps,
+    ParamProps,
+    AudioProps,
+    LabelProps,
+    StyleProps,
+    TrackProps,
+    VideoProps,
+    ButtonProps,
+    CanvasProps,
+    IFrameProps,
+    ObjectProps,
+    OptionProps,
+    OutputProps,
+    ScriptProps,
+    SourceProps,
+    OptGroupProps,
+    TableCellProps
+} from './nodes/simple_dom_nodes';
+
+export { InputProps } from './nodes/input';
+export { SelectProps } from './nodes/select';
+export { TextAreaProps } from './nodes/textarea';
+
 export * from './rendering/aurum_style.js';
 export * from './builtin_components/router.js';
 export * from './builtin_components/suspense.js';
@@ -34,4 +75,4 @@ export { aurumToHTML } from './builtin_components/dom_adapter.js';
 
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode.js';
 export { AttributeValue, ClassType, DataDrain } from './utilities/common.js';
-export { RemoteProtocol } from './aurum_server/aurum_server_client.js';
+export { RemoteProtocol, getRemoteFunction } from './aurum_server/aurum_server_client.js';

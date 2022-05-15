@@ -5,525 +5,525 @@ import { ProjectExplorerNode, ProjectExplorerNodeType } from '../components/proj
 import { ProjectFile } from './project_file';
 
 export interface ProjectModel {
-	name: string;
+    name: string;
 }
 
 function makeIfNotExist(folder: string): void {
-	if (!existsSync(folder)) {
-		mkdirSync(folder);
-	}
+    if (!existsSync(folder)) {
+        mkdirSync(folder);
+    }
 }
 
 function crawl(path: string, folderType: ProjectExplorerNodeType, fileType: ProjectExplorerNodeType): ProjectExplorerNode[] {
-	const contents = readdirSync(path);
-	const result: ProjectExplorerNode[] = [];
-	for (const content of contents) {
-		const isFile = statSync(join(path, content)).isFile();
-		result.push({
-			name: new DataSource(content),
-			children: isFile ? new ArrayDataSource() : new ArrayDataSource(crawl(join(path, content), folderType, fileType)),
-			type: isFile ? fileType : folderType,
-			open: new DataSource(false)
-		});
-	}
+    const contents = readdirSync(path);
+    const result: ProjectExplorerNode[] = [];
+    for (const content of contents) {
+        const isFile = statSync(join(path, content)).isFile();
+        result.push({
+            name: new DataSource(content),
+            children: isFile ? new ArrayDataSource() : new ArrayDataSource(crawl(join(path, content), folderType, fileType)),
+            type: isFile ? fileType : folderType,
+            open: new DataSource(false)
+        });
+    }
 
-	return result;
+    return result;
 }
 
 export enum ProjectRootFolders {
-	Animation = 'Animation',
-	AnimationAnimations = 'Animation/Animations',
-	AnimationStatemachines = 'Animation/Statemachines',
-	Assets = 'Assets',
-	AssetsData = 'Assets/Data',
-	AssetsMusic = 'Assets/Music',
-	AssetsSound = 'Assets/Sound',
-	AssetsTextures = 'Assets/Textures',
-	Characters = 'Characters',
-	Code = 'Code',
-	Components = 'Components',
-	EntityTemplates = 'Entity Templates',
-	Models = 'Models',
-	ModelsCreatedModels = 'Models/Created Models',
-	ModelsSchemas = 'Models/Schemas',
-	Globals = 'Globals',
-	Style = 'Style',
-	Scenes = 'Scenes',
-	Tilemaps = 'Tilemaps',
-	Tilesets = 'Tilesets'
+    Animation = 'Animation',
+    AnimationAnimations = 'Animation/Animations',
+    AnimationStatemachines = 'Animation/Statemachines',
+    Assets = 'Assets',
+    AssetsData = 'Assets/Data',
+    AssetsMusic = 'Assets/Music',
+    AssetsSound = 'Assets/Sound',
+    AssetsTextures = 'Assets/Textures',
+    Characters = 'Characters',
+    Code = 'Code',
+    Components = 'Components',
+    EntityTemplates = 'Entity Templates',
+    Models = 'Models',
+    ModelsCreatedModels = 'Models/Created Models',
+    ModelsSchemas = 'Models/Schemas',
+    Globals = 'Globals',
+    Style = 'Style',
+    Scenes = 'Scenes',
+    Tilemaps = 'Tilemaps',
+    Tilesets = 'Tilesets'
 }
 
 export class Project {
-	public readonly content: ArrayDataSource<ProjectExplorerNode>;
-	private projectFiles: Map<string, ProjectFile> = new Map();
+    public readonly content: ArrayDataSource<ProjectExplorerNode>;
+    private projectFiles: Map<string, ProjectFile> = new Map();
 
-	public get projectRootNode(): ProjectExplorerNode {
-		return this.content.get(0);
-	}
+    public get projectRootNode(): ProjectExplorerNode {
+        return this.content.get(0);
+    }
 
-	public readonly folder: string;
-	public readonly name: DataSource<string>;
+    public readonly folder: string;
+    public readonly name: DataSource<string>;
 
-	public addFile(node: ProjectExplorerNode, name: string, content: string = '') {
-		const path = join(this.getPathByNode(node), name);
-		writeFileSync(path, content);
-	}
+    public addFile(node: ProjectExplorerNode, name: string, content: string = '') {
+        const path = join(this.getPathByNode(node), name);
+        writeFileSync(path, content);
+    }
 
-	public addFolder(node: ProjectExplorerNode, name: string) {
-		const path = join(this.getPathByNode(node), name);
-		mkdirSync(path);
-	}
+    public addFolder(node: ProjectExplorerNode, name: string) {
+        const path = join(this.getPathByNode(node), name);
+        mkdirSync(path);
+    }
 
-	constructor(projectModel: ProjectModel, folder: string) {
-		this.folder = folder;
-		this.name = new DataSource(projectModel.name);
+    constructor(projectModel: ProjectModel, folder: string) {
+        this.folder = folder;
+        this.name = new DataSource(projectModel.name);
 
-		for (const rootFolder of Object.values(ProjectRootFolders)) {
-			makeIfNotExist(join(folder, rootFolder));
-		}
+        for (const rootFolder of Object.values(ProjectRootFolders)) {
+            makeIfNotExist(join(folder, rootFolder));
+        }
 
-		this.content = new ArrayDataSource<ProjectExplorerNode>([
-			{
-				type: ProjectExplorerNodeType.ProjectNode,
-				name: this.name.transform(dsMap((s) => `Project ${s}`)),
-				permissions: {
-					newFolder: false,
-					delete: false
-				},
-				open: new DataSource(true),
-				children: [
-					{
-						type: ProjectExplorerNodeType.SceneFolder,
-						name: new DataSource('Scenes'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource(crawl(join(folder, 'Scenes'), ProjectExplorerNodeType.SceneFolder, ProjectExplorerNodeType.Scene))
-					},
-					{
-						name: new DataSource('Models'),
-						type: ProjectExplorerNodeType.ModelsFolder,
-						permissions: {
-							rename: false,
-							newFolder: false,
-							delete: false
-						},
-						open: new DataSource(false),
-						children: new ArrayDataSource([
-							{
-								name: new DataSource('Schemas'),
-								type: ProjectExplorerNodeType.SchemaFolder,
-								permissions: {
-									rename: false,
-									delete: false
-								},
-								children: new ArrayDataSource([]),
-								open: new DataSource(false)
-							},
-							{
-								name: new DataSource('Created Models'),
-								type: ProjectExplorerNodeType.ModelsFolder,
-								permissions: {
-									rename: false,
-									delete: false
-								},
-								children: new ArrayDataSource([]),
-								open: new DataSource(false)
-							}
-						])
-					},
-					{
-						type: ProjectExplorerNodeType.CharacterFolder,
-						name: new DataSource('Characters'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource()
-					},
-					{
-						type: ProjectExplorerNodeType.GlobalsFolder,
-						name: new DataSource('Globals'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource(crawl(join(folder, 'Globals'), ProjectExplorerNodeType.GlobalsFolder, ProjectExplorerNodeType.Globals))
-					},
-					{
-						type: ProjectExplorerNodeType.StyleFolder,
-						name: new DataSource('Style'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource(crawl(join(folder, 'Style'), ProjectExplorerNodeType.StyleFolder, ProjectExplorerNodeType.Style))
-					},
-					{
-						type: ProjectExplorerNodeType.EntityTemplateFolder,
-						name: new DataSource('Entity Templates'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource(
-							crawl(join(folder, 'Entity Templates'), ProjectExplorerNodeType.EntityTemplateFolder, ProjectExplorerNodeType.EntityTemplate)
-						)
-					},
-					{
-						name: new DataSource('Tilemaps'),
-						type: ProjectExplorerNodeType.TileMapFolder,
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource()
-					},
-					{
-						type: ProjectExplorerNodeType.TileSetFolder,
-						name: new DataSource('Tilesets'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource()
-					},
-					{
-						type: ProjectExplorerNodeType.CodeFolder,
-						name: new DataSource('Code'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(false),
-						children: new ArrayDataSource(crawl(join(folder, 'Code'), ProjectExplorerNodeType.CodeFolder, ProjectExplorerNodeType.Code))
-					},
-					{
-						type: ProjectExplorerNodeType.ComponentFolder,
-						name: new DataSource('Components'),
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(false),
-						children: new ArrayDataSource(
-							crawl(join(folder, 'Components'), ProjectExplorerNodeType.ComponentFolder, ProjectExplorerNodeType.Component)
-						)
-					},
-					{
-						name: new DataSource('Assets'),
-						type: ProjectExplorerNodeType.AssetFolder,
-						permissions: {
-							rename: false,
-							delete: false
-						},
-						open: new DataSource(true),
-						children: new ArrayDataSource([
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Sound'),
-								children: new ArrayDataSource(
-									crawl(join(folder, 'Assets/Sound'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
-								),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							},
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Music'),
-								children: new ArrayDataSource(
-									crawl(join(folder, 'Assets/Music'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
-								),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							},
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Textures'),
-								children: new ArrayDataSource(
-									crawl(join(folder, 'Assets/Textures'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
-								),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							},
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Data'),
-								children: new ArrayDataSource(
-									crawl(join(folder, 'Assets/Data'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
-								),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							}
-						])
-					},
-					{
-						type: ProjectExplorerNodeType.AnimationFolder,
-						name: new DataSource('Animation'),
-						children: new ArrayDataSource([
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Statemachines'),
-								children: new ArrayDataSource(),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							},
-							{
-								type: ProjectExplorerNodeType.AssetFolder,
-								name: new DataSource('Animations'),
-								children: new ArrayDataSource(),
-								open: new DataSource(false),
-								permissions: {
-									rename: false,
-									delete: false
-								}
-							}
-						]),
-						permissions: {
-							delete: false,
-							rename: false
-						},
-						open: new DataSource(false)
-					}
-				]
-			}
-		]);
+        this.content = new ArrayDataSource<ProjectExplorerNode>([
+            {
+                type: ProjectExplorerNodeType.ProjectNode,
+                name: this.name.transform(dsMap((s) => `Project ${s}`)),
+                permissions: {
+                    newFolder: false,
+                    delete: false
+                },
+                open: new DataSource(true),
+                children: [
+                    {
+                        type: ProjectExplorerNodeType.SceneFolder,
+                        name: new DataSource('Scenes'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource(crawl(join(folder, 'Scenes'), ProjectExplorerNodeType.SceneFolder, ProjectExplorerNodeType.Scene))
+                    },
+                    {
+                        name: new DataSource('Models'),
+                        type: ProjectExplorerNodeType.ModelsFolder,
+                        permissions: {
+                            rename: false,
+                            newFolder: false,
+                            delete: false
+                        },
+                        open: new DataSource(false),
+                        children: new ArrayDataSource([
+                            {
+                                name: new DataSource('Schemas'),
+                                type: ProjectExplorerNodeType.SchemaFolder,
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                },
+                                children: new ArrayDataSource([]),
+                                open: new DataSource(false)
+                            },
+                            {
+                                name: new DataSource('Created Models'),
+                                type: ProjectExplorerNodeType.ModelsFolder,
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                },
+                                children: new ArrayDataSource([]),
+                                open: new DataSource(false)
+                            }
+                        ])
+                    },
+                    {
+                        type: ProjectExplorerNodeType.CharacterFolder,
+                        name: new DataSource('Characters'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource()
+                    },
+                    {
+                        type: ProjectExplorerNodeType.GlobalsFolder,
+                        name: new DataSource('Globals'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource(crawl(join(folder, 'Globals'), ProjectExplorerNodeType.GlobalsFolder, ProjectExplorerNodeType.Globals))
+                    },
+                    {
+                        type: ProjectExplorerNodeType.StyleFolder,
+                        name: new DataSource('Style'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource(crawl(join(folder, 'Style'), ProjectExplorerNodeType.StyleFolder, ProjectExplorerNodeType.Style))
+                    },
+                    {
+                        type: ProjectExplorerNodeType.EntityTemplateFolder,
+                        name: new DataSource('Entity Templates'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource(
+                            crawl(join(folder, 'Entity Templates'), ProjectExplorerNodeType.EntityTemplateFolder, ProjectExplorerNodeType.EntityTemplate)
+                        )
+                    },
+                    {
+                        name: new DataSource('Tilemaps'),
+                        type: ProjectExplorerNodeType.TileMapFolder,
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource()
+                    },
+                    {
+                        type: ProjectExplorerNodeType.TileSetFolder,
+                        name: new DataSource('Tilesets'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource()
+                    },
+                    {
+                        type: ProjectExplorerNodeType.CodeFolder,
+                        name: new DataSource('Code'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(false),
+                        children: new ArrayDataSource(crawl(join(folder, 'Code'), ProjectExplorerNodeType.CodeFolder, ProjectExplorerNodeType.Code))
+                    },
+                    {
+                        type: ProjectExplorerNodeType.ComponentFolder,
+                        name: new DataSource('Components'),
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(false),
+                        children: new ArrayDataSource(
+                            crawl(join(folder, 'Components'), ProjectExplorerNodeType.ComponentFolder, ProjectExplorerNodeType.Component)
+                        )
+                    },
+                    {
+                        name: new DataSource('Assets'),
+                        type: ProjectExplorerNodeType.AssetFolder,
+                        permissions: {
+                            rename: false,
+                            delete: false
+                        },
+                        open: new DataSource(true),
+                        children: new ArrayDataSource([
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Sound'),
+                                children: new ArrayDataSource(
+                                    crawl(join(folder, 'Assets/Sound'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
+                                ),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            },
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Music'),
+                                children: new ArrayDataSource(
+                                    crawl(join(folder, 'Assets/Music'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
+                                ),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            },
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Textures'),
+                                children: new ArrayDataSource(
+                                    crawl(join(folder, 'Assets/Textures'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
+                                ),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            },
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Data'),
+                                children: new ArrayDataSource(
+                                    crawl(join(folder, 'Assets/Data'), ProjectExplorerNodeType.AssetFolder, ProjectExplorerNodeType.Asset)
+                                ),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            }
+                        ])
+                    },
+                    {
+                        type: ProjectExplorerNodeType.AnimationFolder,
+                        name: new DataSource('Animation'),
+                        children: new ArrayDataSource([
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Statemachines'),
+                                children: new ArrayDataSource(),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            },
+                            {
+                                type: ProjectExplorerNodeType.AssetFolder,
+                                name: new DataSource('Animations'),
+                                children: new ArrayDataSource(),
+                                open: new DataSource(false),
+                                permissions: {
+                                    rename: false,
+                                    delete: false
+                                }
+                            }
+                        ]),
+                        permissions: {
+                            delete: false,
+                            rename: false
+                        },
+                        open: new DataSource(false)
+                    }
+                ]
+            }
+        ]);
 
-		this.connectParentReference(this.content.getData(), undefined);
-	}
+        this.connectParentReference(this.content.getData(), undefined);
+    }
 
-	private connectParentReference(nodes: ReadonlyArray<ProjectExplorerNode>, parent: ProjectExplorerNode): void {
-		for (const node of nodes) {
-			node.parent = new DataSource(parent);
-			this.connectParentReference(getValueOf(node.children), node);
-		}
-	}
+    private connectParentReference(nodes: ReadonlyArray<ProjectExplorerNode>, parent: ProjectExplorerNode): void {
+        for (const node of nodes) {
+            node.parent = new DataSource(parent);
+            this.connectParentReference(getValueOf(node.children), node);
+        }
+    }
 
-	public getFileOrFolderByNode(tag: ProjectExplorerNode): ProjectFile {
-		if (tag === this.projectRootNode) {
-			return undefined;
-		}
+    public getFileOrFolderByNode(tag: ProjectExplorerNode): ProjectFile {
+        if (tag === this.projectRootNode) {
+            return undefined;
+        }
 
-		const path = this.getPathByNode(tag);
+        const path = this.getPathByNode(tag);
 
-		return this.projectFileFromPath(path, tag.type);
-	}
+        return this.projectFileFromPath(path, tag.type);
+    }
 
-	public getPathByNode(tag: ProjectExplorerNode): string {
-		if (tag === this.projectRootNode) {
-			return this.folder;
-		}
+    public getPathByNode(tag: ProjectExplorerNode): string {
+        if (tag === this.projectRootNode) {
+            return this.folder;
+        }
 
-		const nodesPath = [tag];
-		let ptr = tag;
-		while (ptr.parent.value !== this.projectRootNode) {
-			nodesPath.push(ptr.parent.value);
-			ptr = ptr.parent.value;
-		}
-		const path = join(this.folder, ...nodesPath.reverse().map((e) => getValueOf(e.name)));
-		return path;
-	}
+        const nodesPath = [tag];
+        let ptr = tag;
+        while (ptr.parent.value !== this.projectRootNode) {
+            nodesPath.push(ptr.parent.value);
+            ptr = ptr.parent.value;
+        }
+        const path = join(this.folder, ...nodesPath.reverse().map((e) => getValueOf(e.name)));
+        return path;
+    }
 
-	public watchFolderByPathRecursively(folder: string, cancellationToken: CancellationToken): ArrayDataSource<ProjectFile> {
-		if (!isAbsolute(folder)) {
-			folder = join(this.folder, folder);
-		}
-		const result = this.getNodeByPath(folder);
+    public watchFolderByPathRecursively(folder: string, cancellationToken: CancellationToken): ArrayDataSource<ProjectFile> {
+        if (!isAbsolute(folder)) {
+            folder = join(this.folder, folder);
+        }
+        const result = this.getNodeByPath(folder);
 
-		if (!result) {
-			return undefined;
-		}
+        if (!result) {
+            return undefined;
+        }
 
-		if (Project.isFolder(result.type)) {
-			return this.watchFolderByNodeRecursively(result, new ArrayDataSource(), cancellationToken);
-		} else {
-			return new ArrayDataSource([this.getFileOrFolderByNode(result)]);
-		}
-	}
+        if (Project.isFolder(result.type)) {
+            return this.watchFolderByNodeRecursively(result, new ArrayDataSource(), cancellationToken);
+        } else {
+            return new ArrayDataSource([this.getFileOrFolderByNode(result)]);
+        }
+    }
 
-	public watchFolderByNodeRecursively(
-		folder: ProjectExplorerNode,
-		source: ArrayDataSource<ProjectFile>,
-		cancellationToken: CancellationToken
-	): ArrayDataSource<ProjectFile> {
-		if (Array.isArray(folder.children)) {
-			for (const child of folder.children) {
-				if (Project.isFolder(child.type)) {
-					this.watchFolderByNodeRecursively(child, source, cancellationToken);
-				} else {
-					source.push(this.getFileOrFolderByNode(child));
-				}
-			}
-		} else {
-			folder.children.listenAndRepeat((c) => {
-				switch (c.operation) {
-					case 'add':
-						for (const child of c.items) {
-							if (Project.isFolder(child.type)) {
-								this.watchFolderByNodeRecursively(child, source, cancellationToken);
-							} else {
-								source.push(this.getFileOrFolderByNode(child));
-							}
-						}
-						break;
-					case 'remove':
-						for (const child of c.items) {
-							if (!child.children) {
-								source.remove(this.getFileOrFolderByNode(child));
-							}
-						}
-				}
-			});
-		}
+    public watchFolderByNodeRecursively(
+        folder: ProjectExplorerNode,
+        source: ArrayDataSource<ProjectFile>,
+        cancellationToken: CancellationToken
+    ): ArrayDataSource<ProjectFile> {
+        if (Array.isArray(folder.children)) {
+            for (const child of folder.children) {
+                if (Project.isFolder(child.type)) {
+                    this.watchFolderByNodeRecursively(child, source, cancellationToken);
+                } else {
+                    source.push(this.getFileOrFolderByNode(child));
+                }
+            }
+        } else {
+            folder.children.listenAndRepeat((c) => {
+                switch (c.operation) {
+                    case 'add':
+                        for (const child of c.items) {
+                            if (Project.isFolder(child.type)) {
+                                this.watchFolderByNodeRecursively(child, source, cancellationToken);
+                            } else {
+                                source.push(this.getFileOrFolderByNode(child));
+                            }
+                        }
+                        break;
+                    case 'remove':
+                        for (const child of c.items) {
+                            if (!child.children) {
+                                source.remove(this.getFileOrFolderByNode(child));
+                            }
+                        }
+                }
+            });
+        }
 
-		return source;
-	}
+        return source;
+    }
 
-	public static isFolder(type: ProjectExplorerNodeType): boolean {
-		switch (type) {
-			case ProjectExplorerNodeType.CodeFolder:
-			case ProjectExplorerNodeType.EntityTemplateFolder:
-			case ProjectExplorerNodeType.ModelsFolder:
-			case ProjectExplorerNodeType.SchemaFolder:
-			case ProjectExplorerNodeType.StateMachineFolder:
-			case ProjectExplorerNodeType.TileMapFolder:
-			case ProjectExplorerNodeType.TileSetFolder:
-			case ProjectExplorerNodeType.AssetFolder:
-			case ProjectExplorerNodeType.SceneFolder:
-			case ProjectExplorerNodeType.AnimationFolder:
-			case ProjectExplorerNodeType.CharacterFolder:
-			case ProjectExplorerNodeType.GeneratedCodeFolder:
-			case ProjectExplorerNodeType.StyleFolder:
-			case ProjectExplorerNodeType.GlobalsFolder:
-			case ProjectExplorerNodeType.ComponentFolder:
-				return true;
-		}
+    public static isFolder(type: ProjectExplorerNodeType): boolean {
+        switch (type) {
+            case ProjectExplorerNodeType.CodeFolder:
+            case ProjectExplorerNodeType.EntityTemplateFolder:
+            case ProjectExplorerNodeType.ModelsFolder:
+            case ProjectExplorerNodeType.SchemaFolder:
+            case ProjectExplorerNodeType.StateMachineFolder:
+            case ProjectExplorerNodeType.TileMapFolder:
+            case ProjectExplorerNodeType.TileSetFolder:
+            case ProjectExplorerNodeType.AssetFolder:
+            case ProjectExplorerNodeType.SceneFolder:
+            case ProjectExplorerNodeType.AnimationFolder:
+            case ProjectExplorerNodeType.CharacterFolder:
+            case ProjectExplorerNodeType.GeneratedCodeFolder:
+            case ProjectExplorerNodeType.StyleFolder:
+            case ProjectExplorerNodeType.GlobalsFolder:
+            case ProjectExplorerNodeType.ComponentFolder:
+                return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private convertFolderTypeToRegularType(type: ProjectExplorerNodeType): ProjectExplorerNodeType {
-		switch (type) {
-			case ProjectExplorerNodeType.CodeFolder:
-				return ProjectExplorerNodeType.Code;
-			case ProjectExplorerNodeType.ComponentFolder:
-				return ProjectExplorerNodeType.Component;
-			case ProjectExplorerNodeType.EntityTemplateFolder:
-				return ProjectExplorerNodeType.EntityTemplate;
-			case ProjectExplorerNodeType.ModelsFolder:
-				return ProjectExplorerNodeType.Model;
-			case ProjectExplorerNodeType.SchemaFolder:
-				return ProjectExplorerNodeType.Schema;
-			case ProjectExplorerNodeType.StateMachineFolder:
-				return ProjectExplorerNodeType.StateMachine;
-			case ProjectExplorerNodeType.TileMapFolder:
-				return ProjectExplorerNodeType.TileMap;
-			case ProjectExplorerNodeType.TileSetFolder:
-				return ProjectExplorerNodeType.TileSet;
-			case ProjectExplorerNodeType.AssetFolder:
-				return ProjectExplorerNodeType.Asset;
-			case ProjectExplorerNodeType.SceneFolder:
-				return ProjectExplorerNodeType.Scene;
-			case ProjectExplorerNodeType.AnimationFolder:
-				return ProjectExplorerNodeType.Animation;
-			case ProjectExplorerNodeType.CharacterFolder:
-				return ProjectExplorerNodeType.Character;
-			case ProjectExplorerNodeType.GeneratedCodeFolder:
-				return ProjectExplorerNodeType.GeneratedCode;
-			case ProjectExplorerNodeType.GlobalsFolder:
-				return ProjectExplorerNodeType.Globals;
-			case ProjectExplorerNodeType.StyleFolder:
-				return ProjectExplorerNodeType.Style;
-		}
+    private convertFolderTypeToRegularType(type: ProjectExplorerNodeType): ProjectExplorerNodeType {
+        switch (type) {
+            case ProjectExplorerNodeType.CodeFolder:
+                return ProjectExplorerNodeType.Code;
+            case ProjectExplorerNodeType.ComponentFolder:
+                return ProjectExplorerNodeType.Component;
+            case ProjectExplorerNodeType.EntityTemplateFolder:
+                return ProjectExplorerNodeType.EntityTemplate;
+            case ProjectExplorerNodeType.ModelsFolder:
+                return ProjectExplorerNodeType.Model;
+            case ProjectExplorerNodeType.SchemaFolder:
+                return ProjectExplorerNodeType.Schema;
+            case ProjectExplorerNodeType.StateMachineFolder:
+                return ProjectExplorerNodeType.StateMachine;
+            case ProjectExplorerNodeType.TileMapFolder:
+                return ProjectExplorerNodeType.TileMap;
+            case ProjectExplorerNodeType.TileSetFolder:
+                return ProjectExplorerNodeType.TileSet;
+            case ProjectExplorerNodeType.AssetFolder:
+                return ProjectExplorerNodeType.Asset;
+            case ProjectExplorerNodeType.SceneFolder:
+                return ProjectExplorerNodeType.Scene;
+            case ProjectExplorerNodeType.AnimationFolder:
+                return ProjectExplorerNodeType.Animation;
+            case ProjectExplorerNodeType.CharacterFolder:
+                return ProjectExplorerNodeType.Character;
+            case ProjectExplorerNodeType.GeneratedCodeFolder:
+                return ProjectExplorerNodeType.GeneratedCode;
+            case ProjectExplorerNodeType.GlobalsFolder:
+                return ProjectExplorerNodeType.Globals;
+            case ProjectExplorerNodeType.StyleFolder:
+                return ProjectExplorerNodeType.Style;
+        }
 
-		return type;
-	}
+        return type;
+    }
 
-	public getNodeByPath(path: string): ProjectExplorerNode {
-		const relativePath = relative(this.folder, path);
-		if (relativePath.startsWith('.')) {
-			return undefined;
-		}
+    public getNodeByPath(path: string): ProjectExplorerNode {
+        const relativePath = relative(this.folder, path);
+        if (relativePath.startsWith('.')) {
+            return undefined;
+        }
 
-		const pathPieces = relativePath.split(sep);
-		let projectFolder: ProjectExplorerNode = undefined;
-		let projectFolderEntries = getValueOf(this.projectRootNode.children);
+        const pathPieces = relativePath.split(sep);
+        let projectFolder: ProjectExplorerNode = undefined;
+        let projectFolderEntries = getValueOf(this.projectRootNode.children);
 
-		for (const piece of pathPieces) {
-			const folder = projectFolderEntries.find((e) => getValueOf(e.name) === piece);
-			if (folder) {
-				projectFolder = folder;
-				projectFolderEntries = getValueOf(folder.children);
-			} else {
-				return undefined;
-			}
-		}
+        for (const piece of pathPieces) {
+            const folder = projectFolderEntries.find((e) => getValueOf(e.name) === piece);
+            if (folder) {
+                projectFolder = folder;
+                projectFolderEntries = getValueOf(folder.children);
+            } else {
+                return undefined;
+            }
+        }
 
-		return projectFolder;
-	}
+        return projectFolder;
+    }
 
-	public getFileByPath(path: string): ProjectFile {
-		const folder = this.getNodeByPath(path);
-		if (!folder) {
-			return;
-		}
-		return this.projectFileFromPath(path, this.convertFolderTypeToRegularType(folder.type));
-	}
+    public getFileByPath(path: string): ProjectFile {
+        const folder = this.getNodeByPath(path);
+        if (!folder) {
+            return undefined;
+        }
+        return this.projectFileFromPath(path, this.convertFolderTypeToRegularType(folder.type));
+    }
 
-	private projectFileFromPath(path: string, nodeType: ProjectExplorerNodeType) {
-		let contentStream;
-		if (!Project.isFolder(nodeType)) {
-			contentStream = new DuplexDataSource(readFileSync(path, 'utf8'));
-			contentStream.listenUpstream((v) => {
-				writeFileSync(diskPathStream.value, v);
-			});
-		}
-		const diskPathStream = new DuplexDataSource(path);
+    private projectFileFromPath(path: string, nodeType: ProjectExplorerNodeType) {
+        let contentStream;
+        if (!Project.isFolder(nodeType)) {
+            contentStream = new DuplexDataSource(readFileSync(path, 'utf8'));
+            contentStream.listenUpstream((v) => {
+                writeFileSync(diskPathStream.value, v);
+            });
+        }
+        const diskPathStream = new DuplexDataSource(path);
 
-		if (!this.projectFiles.has(path)) {
-			this.projectFiles.set(path, {
-				content: contentStream,
-				diskPath: diskPathStream,
-				projectPath: new DuplexDataSource(relative(this.folder, path)),
-				type: nodeType
-			});
-		}
-		return this.projectFiles.get(path);
-	}
+        if (!this.projectFiles.has(path)) {
+            this.projectFiles.set(path, {
+                content: contentStream,
+                diskPath: diskPathStream,
+                projectPath: new DuplexDataSource(relative(this.folder, path)),
+                type: nodeType
+            });
+        }
+        return this.projectFiles.get(path);
+    }
 
-	public save(to: string = this.folder): void {
-		writeFileSync(
-			join(to, 'project.json'),
-			JSON.stringify(
-				{
-					name: this.name.value
-				},
-				undefined,
-				4
-			)
-		);
-	}
+    public save(to: string = this.folder): void {
+        writeFileSync(
+            join(to, 'project.json'),
+            JSON.stringify(
+                {
+                    name: this.name.value
+                },
+                undefined,
+                4
+            )
+        );
+    }
 }
