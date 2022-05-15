@@ -169,6 +169,18 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
         return subDataSource;
     }
 
+    public hasKey(key: keyof T): boolean {
+        return this.data.hasOwnProperty(key);
+    }
+
+    public applyObjectChange(change: ObjectChange<T, keyof T>): void {
+        if (change.deleted && this.hasKey(change.key)) {
+            this.delete(change.key);
+        } else if (change.newValue !== this.get(change.key)) {
+            this.set(change.key, change.newValue);
+        }
+    }
+
     /**
      * Listen to changes of the object
      */
@@ -270,11 +282,13 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
      * @param value
      */
     public delete<K extends keyof T>(key: K): void {
-        const old = this.data[key];
-        delete this.data[key];
-        this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
-        if (this.updateEventOnKey.has(key)) {
-            this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
+        if (this.hasKey(key)) {
+            const old = this.data[key];
+            delete this.data[key];
+            this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
+            if (this.updateEventOnKey.has(key)) {
+                this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
+            }
         }
     }
 

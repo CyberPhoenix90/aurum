@@ -11,6 +11,11 @@ export enum RemoteProtocol {
     UPDATE_DATASOURCE_ERR,
     CANCEL_DATASOURCE,
 
+    PERFORM_RPC,
+    PERFORM_RPC_ERR,
+    PERFORM_RPC_RESULT,
+    PERFORM_RPC_RESULT_ERR,
+
     LISTEN_DUPLEX_DATASOURCE_ERR,
     LISTEN_DUPLEX_DATASOURCE,
     UPDATE_DUPLEX_DATASOURCE,
@@ -47,6 +52,27 @@ export interface AurumServerInfo {
     host?: string;
     id: string;
     authenticationToken?: string;
+}
+
+const pendingRPCResponses: Map<string, { resolve(value: any); reject(error: any) }> = new Map();
+
+export function getRemoteFunction<I, O = void>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): (input: I) => Promise<O> {
+    return syncFunction(aurumServerInfo, cancellation);
+}
+
+function syncFunction(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): (input: any) => Promise<any> {
+    const key = makeKey(aurumServerInfo.protocol, aurumServerInfo.host);
+
+    return async (input) => {
+        await ensureConnection(key, aurumServerInfo.protocol, aurumServerInfo.host);
+        return new Promise<any>((resolve, reject) => {
+            const client = connections.get(key);
+            if (!client) {
+                throw new Error('Client not connected');
+            }
+            return client.performRPC(input, aurumServerInfo.id, aurumServerInfo.authenticationToken, cancellation).then(resolve, reject);
+        });
+    };
 }
 
 export async function syncSetDataSource(source: SetDataSource<any>, aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): Promise<void> {
@@ -135,20 +161,6 @@ class AurumServerClient {
             RemoteProtocol.LISTEN_DATASOURCE,
             RemoteProtocol.CANCEL_DATASOURCE
         );
-
-        source.listen((v) => {
-            delete v.operation;
-            delete v.newState;
-            delete v.previousState;
-            this.connection.send(
-                JSON.stringify({
-                    type: RemoteProtocol.UPDATE_DATASOURCE,
-                    token: authenticationToken,
-                    value: v,
-                    id
-                })
-            );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
     public syncObjectDataSource(source: ObjectDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -161,19 +173,23 @@ class AurumServerClient {
             RemoteProtocol.LISTEN_OBJECT_DATASOURCE,
             RemoteProtocol.CANCEL_OBJECT_DATASOURCE
         );
+    }
 
-        source.listen((v) => {
-            delete v.oldValue;
+    public performRPC(input, endpointId: string, authenticationToken: string, cancellation: CancellationToken): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const uuid = Math.random().toString();
+            pendingRPCResponses.set(uuid, { resolve, reject });
 
             this.connection.send(
                 JSON.stringify({
-                    type: RemoteProtocol.UPDATE_OBJECT_DATASOURCE,
+                    type: RemoteProtocol.PERFORM_RPC,
                     token: authenticationToken,
-                    value: v,
-                    id
+                    id: endpointId,
+                    value: input,
+                    uuid
                 })
             );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
+        });
     }
 
     public syncSetDataSource(source: SetDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -186,17 +202,6 @@ class AurumServerClient {
             RemoteProtocol.LISTEN_SET_DATASOURCE,
             RemoteProtocol.CANCEL_SET_DATASOURCE
         );
-
-        source.listen((v) => {
-            this.connection.send(
-                JSON.stringify({
-                    type: RemoteProtocol.UPDATE_SET_DATASOURCE,
-                    token: authenticationToken,
-                    value: v,
-                    id
-                })
-            );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
     public syncMapDataSource(source: MapDataSource<any, any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -209,18 +214,6 @@ class AurumServerClient {
             RemoteProtocol.LISTEN_MAP_DATASOURCE,
             RemoteProtocol.CANCEL_MAP_DATASOURCE
         );
-
-        source.listen((v) => {
-            delete v.oldValue;
-            this.connection.send(
-                JSON.stringify({
-                    type: RemoteProtocol.UPDATE_MAP_DATASOURCE,
-                    token: authenticationToken,
-                    value: v,
-                    id
-                })
-            );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
     public syncArrayDataSource(source: ArrayDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -233,20 +226,6 @@ class AurumServerClient {
             RemoteProtocol.LISTEN_ARRAY_DATASOURCE,
             RemoteProtocol.CANCEL_ARRAY_DATASOURCE
         );
-
-        source.listen((v) => {
-            delete v.operation;
-            delete v.newState;
-            delete v.previousState;
-            this.connection.send(
-                JSON.stringify({
-                    type: RemoteProtocol.UPDATE_ARRAY_DATASOURCE,
-                    token: authenticationToken,
-                    value: v,
-                    id
-                })
-            );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
     }
 
     public syncDuplexDataSource(source: DuplexDataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {
@@ -352,6 +331,15 @@ class AurumServerClient {
                             } else {
                                 cycle++;
                             }
+                            break;
+                        case RemoteProtocol.PERFORM_RPC_RESULT_ERR:
+                        case RemoteProtocol.PERFORM_RPC_ERR:
+                            pendingRPCResponses.get(msg.uuid).reject(msg.error);
+                            pendingRPCResponses.delete(msg.uuid);
+                            break;
+                        case RemoteProtocol.PERFORM_RPC_RESULT:
+                            pendingRPCResponses.get(msg.uuid).resolve(msg.result);
+                            pendingRPCResponses.delete(msg.uuid);
                             break;
                         case RemoteProtocol.UPDATE_DATASOURCE:
                             if (client.synchedDataSources.has(msg.id)) {
@@ -507,6 +495,10 @@ function resolveHost(host: string): string {
 }
 
 async function ensureConnection(key: string, protocol: 'ws' | 'wss', host: string): Promise<AurumServerClient> {
+    if (connections.has(key)) {
+        return connections.get(key);
+    }
+
     let backoff = 1000;
     if (pendingConnections.has(key)) {
         return pendingConnections.get(key);

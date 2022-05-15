@@ -2615,9 +2615,9 @@ export class MapDataSource<K, V> {
     }
 
     public applyMapChange(change: MapChange<K, V>) {
-        if (change.deleted) {
+        if (change.deleted && this.data.has(change.key)) {
             this.delete(change.key);
-        } else {
+        } else if (!change.deleted && !this.data.has(change.key)) {
             this.set(change.key, change.newValue);
         }
     }
@@ -2882,6 +2882,14 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         syncSetDataSource(result, aurumServerInfo, cancellation);
 
         return result;
+    }
+
+    public applySetChange(change: SetChange<K>): void {
+        if (change.exists && !this.has(change.key)) {
+            this.data.add(change.key);
+        } else if (!change.exists && this.has(change.key)) {
+            this.data.delete(change.key);
+        }
     }
 
     public clear(): void {

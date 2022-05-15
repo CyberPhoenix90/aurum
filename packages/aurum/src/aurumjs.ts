@@ -75,4 +75,4 @@ export { aurumToHTML } from './builtin_components/dom_adapter.js';
 
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode.js';
 export { AttributeValue, ClassType, DataDrain } from './utilities/common.js';
-export { RemoteProtocol } from './aurum_server/aurum_server_client.js';
+export { RemoteProtocol, getRemoteFunction } from './aurum_server/aurum_server_client.js';

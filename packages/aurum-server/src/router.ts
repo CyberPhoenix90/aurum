@@ -1,5 +1,6 @@
 import { ArrayDataSource, CancellationToken, DataSource, DuplexDataSource, MapDataSource, ObjectDataSource, SetDataSource } from 'aurumjs';
 import { Client } from './client';
+import { Session } from './session';
 
 export interface Endpoint<S, T = 'read' | 'write'> {
     source: S;
@@ -11,7 +12,19 @@ export interface ExposeConfig {
     cancellationToken?: CancellationToken;
 }
 
+export interface RPCEndpoint<I, O> {
+    func: (input: I, session?: Session<any>) => O;
+    authenticator(token: string): boolean;
+}
+
 export class Router {
+    private exposedFunctions = new Map<
+        string,
+        {
+            func: (input: any, session: Session<any>) => any;
+            authenticator(token: string): boolean;
+        }
+    >();
     private exposedObjectDataSources: Map<
         string,
         {
@@ -56,7 +69,7 @@ export class Router {
         }
     >;
 
-    private clients: readonly Client[];
+    private clients: readonly Client<any>[];
 
     constructor() {
         this.exposedDataSources = new Map();
@@ -64,8 +77,12 @@ export class Router {
         this.exposedArrayDataSources = new Map();
     }
 
-    public attach(clients: readonly Client[]): void {
+    public attach(clients: readonly Client<any>[]): void {
         this.clients = clients;
+    }
+
+    public getExposedFunction(id: string): RPCEndpoint<any, any> {
+        return this.exposedFunctions.get(id);
     }
 
     public getExposedObjectDataSource(id: string): Endpoint<ObjectDataSource<any>> {
@@ -104,6 +121,26 @@ export class Router {
         this.expose(id, source, this.exposedDataSources, config, (c) => c.dsSubscriptions);
     }
 
+    public exposeFunction<I, O>(
+        id: string,
+        func: (input: I, session: Session<any>) => O,
+        config: {
+            cancellationToken?: CancellationToken;
+            authenticator?(token: string): boolean;
+        } = {}
+    ): void {
+        this.exposedFunctions.set(id, {
+            func,
+            authenticator: config.authenticator ?? (() => true)
+        });
+
+        if (config.cancellationToken) {
+            config.cancellationToken.addCancelable(() => {
+                this.exposedFunctions.delete(id);
+            });
+        }
+    }
+
     private expose(
         id: string,
         source: any,
@@ -115,15 +152,15 @@ export class Router {
             }
         >,
         config: ExposeConfig,
-        subscritionSelector: (client: Client) => Map<string, CancellationToken>
+        subscritionSelector: (client: Client<any>) => Map<string, CancellationToken>
     ): void {
         sources.set(id, {
             //Default is read only public
-            authenticator: config.authenticate ?? ((token, op) => op === 'read'),
+            authenticator: config?.authenticate ?? ((token, op) => op === 'read'),
             source
         });
 
-        if (config.cancellationToken) {
+        if (config?.cancellationToken) {
             config.cancellationToken.addCancelable(() => {
                 this.clients?.forEach((c) => {
                     const subs = subscritionSelector(c);
