@@ -149,6 +149,9 @@ class AurumServerClient {
         this.synchedDataSources = new Map();
         this.synchedDuplexDataSources = new Map();
         this.synchedArrayDataSources = new Map();
+        this.synchedMapDataSources = new Map();
+        this.synchedObjectDataSources = new Map();
+        this.synchedSetDataSources = new Map();
     }
 
     public syncDataSource(source: DataSource<any>, id: string, authenticationToken: string, cancellation: CancellationToken): void {

@@ -1,4 +1,16 @@
-import { ArrayDataSource, CancellationToken, DataSource, DuplexDataSource, MapDataSource, ObjectDataSource, SetDataSource } from 'aurumjs';
+import {
+    ArrayDataSource,
+    CancellationToken,
+    DataSource,
+    DuplexDataSource,
+    MapDataSource,
+    ObjectDataSource,
+    ReadOnlyArrayDataSource,
+    ReadOnlyDataSource,
+    ReadOnlyObjectDataSource,
+    ReadOnlySetDataSource,
+    SetDataSource
+} from 'aurumjs';
 import { Client } from './client';
 import { Session } from './session';
 
@@ -75,6 +87,9 @@ export class Router {
         this.exposedDataSources = new Map();
         this.exposedDuplexDataSources = new Map();
         this.exposedArrayDataSources = new Map();
+        this.exposedMapDataSources = new Map();
+        this.exposedSetDataSources = new Map();
+        this.exposedObjectDataSources = new Map();
     }
 
     public attach(clients: readonly Client<any>[]): void {
@@ -85,19 +100,19 @@ export class Router {
         return this.exposedFunctions.get(id);
     }
 
-    public getExposedObjectDataSource(id: string): Endpoint<ObjectDataSource<any>> {
+    public getExposedObjectDataSource(id: string): Endpoint<ReadOnlyObjectDataSource<any>> {
         return this.exposedObjectDataSources.get(id);
     }
 
-    public getExposedSetDataSource(id: string): Endpoint<SetDataSource<any>> {
+    public getExposedSetDataSource(id: string): Endpoint<ReadOnlySetDataSource<any>> {
         return this.exposedSetDataSources.get(id);
     }
 
-    public getExposedDataSource(id: string): Endpoint<DataSource<any>> {
+    public getExposedDataSource(id: string): Endpoint<ReadOnlyDataSource<any>> {
         return this.exposedDataSources.get(id);
     }
 
-    public getExposedArrayDataSource(id: string): Endpoint<ArrayDataSource<any>> {
+    public getExposedArrayDataSource(id: string): Endpoint<ReadOnlyArrayDataSource<any>> {
         return this.exposedArrayDataSources.get(id);
     }
 
@@ -109,15 +124,15 @@ export class Router {
         return this.exposedDuplexDataSources.get(id);
     }
 
-    public exposeSetDataSource<I>(id: string, source: SetDataSource<I>, config: ExposeConfig): void {
+    public exposeSetDataSource<I>(id: string, source: ReadOnlySetDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedSetDataSources, config, (c) => c.setdsSubscriptions);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ObjectDataSource<I>, config: ExposeConfig): void {
+    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedObjectDataSources, config, (c) => c.odsSubscriptions);
     }
 
-    public exposeDataSource<I>(id: string, source: DataSource<I>, config: ExposeConfig): void {
+    public exposeDataSource<I>(id: string, source: ReadOnlyDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedDataSources, config, (c) => c.dsSubscriptions);
     }
 
@@ -173,15 +188,15 @@ export class Router {
         }
     }
 
-    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, config: ExposeConfig): void {
+    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedMapDataSources, config, (c) => c.mapdsSubscriptions);
     }
 
-    public exposeArrayDataSource<I>(id: string, source: ArrayDataSource<I>, config: ExposeConfig): void {
+    public exposeArrayDataSource<I>(id: string, source: ReadOnlyArrayDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedArrayDataSources, config, (c) => c.adsSubscriptions);
     }
 
-    public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config: ExposeConfig): void {
+    public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedDuplexDataSources, config, (c) => c.ddsSubscriptions);
     }
 }

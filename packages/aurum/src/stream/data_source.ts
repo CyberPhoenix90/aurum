@@ -805,6 +805,7 @@ export interface ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): ReadOnlyArrayDataSource<T>;
     toSetDataSource(cancellationToken: CancellationToken): ReadOnlySetDataSource<T>;
+    pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken): void;
 }
 
 export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
@@ -1190,7 +1191,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
     }
 
-    public pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken) {
+    public pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken): void {
         this.listenAndRepeat((c) => target.applyCollectionChange(c), cancellation);
     }
 

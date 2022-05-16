@@ -447,10 +447,10 @@ export class ArrayAurumElement extends AurumElement {
         }, this.api.cancellationToken);
     }
 
-    private spliceChildren(index: number, amount: number, newItems?: Rendered): void {
+    private spliceChildren(index: number, amount: number, ...newItems: Rendered[]): void {
         let removed;
         if (newItems) {
-            removed = this.children.splice(index, amount, newItems);
+            removed = this.children.splice(index, amount, ...newItems);
         } else {
             removed = this.children.splice(index, amount);
         }
@@ -471,7 +471,12 @@ export class ArrayAurumElement extends AurumElement {
                 const source = change.previousState.slice();
                 for (let i = 0; i < change.newState.length; i++) {
                     if (this.children.length <= i) {
-                        this.children.push(this.renderItem(change.newState[i], ac));
+                        const rendered = this.renderItem(change.newState[i], ac);
+                        if (Array.isArray(rendered)) {
+                            this.children.push(...rendered);
+                        } else {
+                            this.children.push(rendered);
+                        }
                         source.push(change.newState[i]);
                     } else if (source[i] !== change.newState[i]) {
                         const index = source.indexOf(change.newState[i], i);
@@ -485,7 +490,12 @@ export class ArrayAurumElement extends AurumElement {
                             source[i] = d;
                             source[index] = c;
                         } else {
-                            this.spliceChildren(i, 0, this.renderItem(change.newState[i], ac));
+                            const rendered = this.renderItem(change.newState[i], ac);
+                            if (Array.isArray(rendered)) {
+                                this.spliceChildren(i, 0, ...rendered);
+                            } else {
+                                this.spliceChildren(i, 0, rendered);
+                            }
                             source.splice(i, 0, change.newState[i]);
                         }
                     }

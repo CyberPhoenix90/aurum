@@ -1,16 +1,16 @@
 import {
-    ArrayDataSource,
     CancellationToken,
     CollectionChange,
-    DataSource,
     DuplexDataSource,
     MapChange,
     MapDataSource,
     ObjectChange,
-    ObjectDataSource,
+    ReadOnlyArrayDataSource,
+    ReadOnlyDataSource,
+    ReadOnlyObjectDataSource,
+    ReadOnlySetDataSource,
     RemoteProtocol,
-    SetChange,
-    SetDataSource
+    SetChange
 } from 'aurumjs';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
@@ -144,23 +144,11 @@ export class AurumServer<T = void> {
                     case RemoteProtocol.UPDATE_DUPLEX_DATASOURCE:
                         this.updateDuplexDataSource(message, sender);
                         break;
-                    case RemoteProtocol.UPDATE_DATASOURCE:
-                        this.updateDataSource(message, sender);
-                        break;
-                    case RemoteProtocol.UPDATE_ARRAY_DATASOURCE:
-                        this.updateArrayDataSource(message, sender);
-                        break;
                     case RemoteProtocol.UPDATE_DUPLEX_DATASOURCE:
                         this.updateDuplexDataSource(message, sender);
                         break;
                     case RemoteProtocol.UPDATE_MAP_DATASOURCE:
                         this.updateMapDataSource(message, sender);
-                        break;
-                    case RemoteProtocol.UPDATE_SET_DATASOURCE:
-                        this.updateSetDataSource(message, sender);
-                        break;
-                    case RemoteProtocol.UPDATE_OBJECT_DATASOURCE:
-                        this.updateObjectDataSource(message, sender);
                         break;
                     case RemoteProtocol.PERFORM_RPC:
                         this.performRPC(message, sender);
@@ -192,11 +180,30 @@ export class AurumServer<T = void> {
             if (funcEndpoint.authenticator(message.token)) {
                 try {
                     const result = funcEndpoint.func(message.value, sender.session);
-                    sender.sendMessage(RemoteProtocol.PERFORM_RPC_RESULT, {
-                        id,
-                        uuid,
+                    if (result instanceof Promise) {
                         result
-                    });
+                            .then((res) => {
+                                sender.sendMessage(RemoteProtocol.PERFORM_RPC_RESULT, {
+                                    id,
+                                    uuid,
+                                    result: res
+                                });
+                            })
+                            .catch((err) => {
+                                sender.sendMessage(RemoteProtocol.PERFORM_RPC_ERR, {
+                                    id,
+                                    uuid,
+                                    errorCode: 500,
+                                    error: err.message
+                                });
+                            });
+                    } else {
+                        sender.sendMessage(RemoteProtocol.PERFORM_RPC_RESULT, {
+                            id,
+                            uuid,
+                            result
+                        });
+                    }
                 } catch (e) {
                     sender.sendMessage(RemoteProtocol.PERFORM_RPC_RESULT_ERR, {
                         id,
@@ -263,7 +270,7 @@ export class AurumServer<T = void> {
         return this.routers[''].getExposedFunction(id);
     }
 
-    public getExposedDataSource(id: string): Endpoint<DataSource<any>> {
+    public getExposedDataSource(id: string): Endpoint<ReadOnlyDataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedDataSource(id.substring(routerPath.length));
@@ -276,7 +283,7 @@ export class AurumServer<T = void> {
         return this.routers[''].getExposedDataSource(id);
     }
 
-    public getExposedArrayDataSource(id: string): Endpoint<ArrayDataSource<any>> {
+    public getExposedArrayDataSource(id: string): Endpoint<ReadOnlyArrayDataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedArrayDataSource(id.substring(routerPath.length));
@@ -302,7 +309,7 @@ export class AurumServer<T = void> {
         return this.routers[''].getExposedMapDataSource(id);
     }
 
-    public getExposedObjectDataSource(id: string): Endpoint<ObjectDataSource<any>> {
+    public getExposedObjectDataSource(id: string): Endpoint<ReadOnlyObjectDataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedObjectDataSource(id.substring(routerPath.length));
@@ -315,7 +322,7 @@ export class AurumServer<T = void> {
         return this.routers[''].getExposedObjectDataSource(id);
     }
 
-    public getExposedSetDataSource(id: string): Endpoint<SetDataSource<any>> {
+    public getExposedSetDataSource(id: string): Endpoint<ReadOnlySetDataSource<any>> {
         for (const routerPath in this.routers) {
             if (routerPath !== '' && id.startsWith(routerPath)) {
                 const result = this.routers[routerPath].getExposedSetDataSource(id.substring(routerPath.length));
@@ -549,50 +556,6 @@ export class AurumServer<T = void> {
         }
     }
 
-    private updateDataSource(message: any, sender: Client<T>) {
-        const id = message.id;
-        const endpoint = this.getExposedDataSource(id);
-        if (endpoint) {
-            if (endpoint.authenticator(message.token, 'write')) {
-                endpoint.source.update(message.value);
-            } else {
-                sender.sendMessage(RemoteProtocol.UPDATE_DATASOURCE_ERR, {
-                    id,
-                    errorCode: 401,
-                    error: 'Unauthorized'
-                });
-            }
-        } else {
-            sender.sendMessage(RemoteProtocol.UPDATE_DATASOURCE_ERR, {
-                id,
-                errorCode: 404,
-                error: 'No such duplex datasource'
-            });
-        }
-    }
-
-    private updateArrayDataSource(message: any, sender: Client<T>) {
-        const id = message.id;
-        const endpoint = this.getExposedArrayDataSource(id);
-        if (endpoint) {
-            if (endpoint.authenticator(message.token, 'write')) {
-                endpoint.source.applyCollectionChange(message.value);
-            } else {
-                sender.sendMessage(RemoteProtocol.UPDATE_ARRAY_DATASOURCE_ERR, {
-                    id,
-                    errorCode: 401,
-                    error: 'Unauthorized'
-                });
-            }
-        } else {
-            sender.sendMessage(RemoteProtocol.UPDATE_ARRAY_DATASOURCE_ERR, {
-                id,
-                errorCode: 404,
-                error: 'No such duplex datasource'
-            });
-        }
-    }
-
     private updateMapDataSource(message: any, sender: Client<T>) {
         const id = message.id;
         const endpoint = this.getExposedMapDataSource(id);
@@ -608,50 +571,6 @@ export class AurumServer<T = void> {
             }
         } else {
             sender.sendMessage(RemoteProtocol.UPDATE_MAP_DATASOURCE_ERR, {
-                id,
-                errorCode: 404,
-                error: 'No such duplex datasource'
-            });
-        }
-    }
-
-    private updateSetDataSource(message: any, sender: Client<T>) {
-        const id = message.id;
-        const endpoint = this.getExposedSetDataSource(id);
-        if (endpoint) {
-            if (endpoint.authenticator(message.token, 'write')) {
-                endpoint.source.applySetChange(message.value);
-            } else {
-                sender.sendMessage(RemoteProtocol.UPDATE_SET_DATASOURCE_ERR, {
-                    id,
-                    errorCode: 401,
-                    error: 'Unauthorized'
-                });
-            }
-        } else {
-            sender.sendMessage(RemoteProtocol.UPDATE_SET_DATASOURCE_ERR, {
-                id,
-                errorCode: 404,
-                error: 'No such duplex datasource'
-            });
-        }
-    }
-
-    private updateObjectDataSource(message: any, sender: Client<T>) {
-        const id = message.id;
-        const endpoint = this.getExposedObjectDataSource(id);
-        if (endpoint) {
-            if (endpoint.authenticator(message.token, 'write')) {
-                endpoint.source.applyObjectChange(message.value);
-            } else {
-                sender.sendMessage(RemoteProtocol.UPDATE_OBJECT_DATASOURCE_ERR, {
-                    id,
-                    errorCode: 401,
-                    error: 'Unauthorized'
-                });
-            }
-        } else {
-            sender.sendMessage(RemoteProtocol.UPDATE_OBJECT_DATASOURCE_ERR, {
                 id,
                 errorCode: 404,
                 error: 'No such duplex datasource'
@@ -729,11 +648,11 @@ export class AurumServer<T = void> {
         }
     }
 
-    public exposeSetDataSource<I>(id: string, source: SetDataSource<I>, config?: ExposeConfig): void {
+    public exposeSetDataSource<I>(id: string, source: ReadOnlySetDataSource<I>, config?: ExposeConfig): void {
         this.routers[''].exposeSetDataSource(id, source, config);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ObjectDataSource<I>, config?: ExposeConfig): void {
+    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config?: ExposeConfig): void {
         this.routers[''].exposeObjectDataSource(id, source, config);
     }
 
@@ -741,7 +660,7 @@ export class AurumServer<T = void> {
         this.routers[''].exposeFunction(id, func, config);
     }
 
-    public exposeDataSource<I>(id: string, source: DataSource<I>, config?: ExposeConfig): void {
+    public exposeDataSource<I>(id: string, source: ReadOnlyDataSource<I>, config?: ExposeConfig): void {
         this.routers[''].exposeDataSource(id, source, config);
     }
 
@@ -749,7 +668,7 @@ export class AurumServer<T = void> {
         this.routers[''].exposeMapDataSource(id, source, config);
     }
 
-    public exposeArrayDataSource<I>(id: string, source: ArrayDataSource<I>, config?: ExposeConfig): void {
+    public exposeArrayDataSource<I>(id: string, source: ReadOnlyArrayDataSource<I>, config?: ExposeConfig): void {
         this.routers[''].exposeArrayDataSource(id, source, config);
     }
 
