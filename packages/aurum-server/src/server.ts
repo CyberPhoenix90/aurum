@@ -648,31 +648,31 @@ export class AurumServer<T = void> {
         }
     }
 
-    public exposeSetDataSource<I>(id: string, source: ReadOnlySetDataSource<I>, config?: ExposeConfig): void {
+    public exposeSetDataSource<I>(id: string, source: SetDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeSetDataSource(id, source, config);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config?: ExposeConfig): void {
+    public exposeObjectDataSource<I>(id: string, source: ObjectDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeObjectDataSource(id, source, config);
     }
 
-    public exposeFunction<I, O>(id: string, func: (input: I, session: Session<T>) => O, config?: ExposeConfig): void {
+    public exposeFunction<I, O>(id: string, func: (input: I, session: Session<T>) => O, config: ExposeConfig = {}): void {
         this.routers[''].exposeFunction(id, func, config);
     }
 
-    public exposeDataSource<I>(id: string, source: ReadOnlyDataSource<I>, config?: ExposeConfig): void {
+    public exposeDataSource<I>(id: string, source: DataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeDataSource(id, source, config);
     }
 
-    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, config?: ExposeConfig): void {
+    public exposeMapDataSource<K, V>(id: string, source: MapDataSource<K, V>, config: ExposeConfig = {}): void {
         this.routers[''].exposeMapDataSource(id, source, config);
     }
 
-    public exposeArrayDataSource<I>(id: string, source: ReadOnlyArrayDataSource<I>, config?: ExposeConfig): void {
+    public exposeArrayDataSource<I>(id: string, source: ArrayDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeArrayDataSource(id, source, config);
     }
 
-    public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config?: ExposeConfig): void {
+    public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeDuplexDataSource(id, source, config);
     }
 }
