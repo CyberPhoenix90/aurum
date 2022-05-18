@@ -2175,6 +2175,8 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
                         items: this.data,
                         newState: this.data
                     });
+                    this.onItemsRemoved.fire(old);
+                    this.onItemsAdded.fire(this.data);
                     break;
             }
         }, cancellationToken);
@@ -2390,7 +2392,11 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
     }
 
     private appendSorted(items: T[]) {
-        this.merge(this.data.concat(items).sort(this.comparator));
+        if (items.length === 1 && this.data.length === 0) {
+            this.push(items[0]);
+        } else {
+            this.merge(this.data.concat(items).sort(this.comparator));
+        }
     }
 
     public refresh() {

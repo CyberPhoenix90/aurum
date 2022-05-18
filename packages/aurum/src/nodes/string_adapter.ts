@@ -3,7 +3,14 @@ import { ArrayDataSource, DataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 
-export async function aurumToString(content: any): Promise<string> {
+export interface AurumStringAdapterConfig {
+    attributeBlacklist?: string[];
+    attributeWhitelist?: string[];
+    tagBlacklist?: string[];
+    tagWhitelist?: string[];
+}
+
+export async function aurumToString(content: any, config: AurumStringAdapterConfig = {}): Promise<string> {
     if (content === undefined || content === null) {
         return '';
     }
@@ -43,13 +50,32 @@ export async function aurumToString(content: any): Promise<string> {
                 )
             );
         }
+
+        if (config.tagBlacklist && config.tagBlacklist.includes(item.name)) {
+            return '';
+        }
+
+        if (config.tagWhitelist && !config.tagWhitelist.includes(item.name)) {
+            return '';
+        }
+
         let propString: string = ' ';
         let children: string = '';
         if (item.children) {
             children = await aurumToString(item.children);
         }
         for (const prop in item.props) {
-            propString += `${prop}="${item.props[prop].toString()}" `;
+            if (config.attributeBlacklist && config.attributeBlacklist.includes(prop)) {
+                continue;
+            }
+
+            if (config.attributeWhitelist && !config.attributeWhitelist.includes(prop)) {
+                continue;
+            }
+
+            if (item.props[prop] != undefined) {
+                propString += `${prop}="${item.props[prop].toString()}" `;
+            }
         }
         return `<${item.name}${propString.trimRight()}>${children}</${item.name}>`;
     }

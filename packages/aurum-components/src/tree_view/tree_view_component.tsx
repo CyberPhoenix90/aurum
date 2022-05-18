@@ -34,7 +34,7 @@ export interface TreeViewComponentProps<T> {
     allowDragAndDrop?: boolean;
     allowFocus?: boolean;
     style?: AttributeValue;
-
+    longFileNameBehavior?: 'hscroll' | 'wrap' | 'elipsis';
     sorting?: TreeViewSorting;
     noEntriesMsg?: string;
     renaming?: DataSource<TreeEntry<T>>;
@@ -83,7 +83,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 display: flex;
                 align-items: center;
                 padding-left: 9px;
-                height: 20px;
+                min-height: 20px;
 
                 &.hasFocus {
                     &.isActive {
@@ -96,6 +96,12 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                     border: 1px solid ${color4};
                     border-width: 1px 0;
                     background-color: ${color1};
+                }
+
+                .file-name-nowrap {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
             }
 
@@ -162,6 +168,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
         )
         .map((e) => (
             <TreeEntryRenderable
+                longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                 dragState={dragState}
                 canDrag={props.canDrag ?? (() => true)}
                 canDrop={props.canDrop ?? (() => true)}
@@ -345,6 +352,7 @@ interface FocusData {
 
 function TreeEntryRenderable(
     props: {
+        longFileNameBehavior: 'hscroll' | 'wrap' | 'elipsis';
         canDrag(draggedEntry: TreeEntry<any>): boolean;
         canDrop(draggedEntry: TreeEntry<any>, targetEntry: TreeEntry<any>): boolean;
         onEntryDrop?(draggedEntry: TreeEntry<any>, targetEntry: TreeEntry<any>): void;
@@ -453,7 +461,7 @@ function TreeEntryRenderable(
                 entry.open.update(!entry.open.value);
                 events.onEntryClicked?.(event, entry);
             }}
-            style={`padding-left:${indent * indentWidth}px; ${events.onEntryClicked ? 'cusor:pointer;' : ''}`}
+            style={`padding-left:${indent * indentWidth}px; ${events.onEntryClicked ? 'cursor:pointer;' : ''}`}
         >
             <div
                 onClick={(event) => {
@@ -493,11 +501,11 @@ function TreeEntryRenderable(
                             ></TextField>
                         );
                     } else {
-                        return renderEntryDom(entry);
+                        return renderEntryDom(entry, props.longFileNameBehavior === 'hscroll');
                     }
                 }),
                 api.cancellationToken
-            ) ?? renderEntryDom(entry)}
+            ) ?? renderEntryDom(entry, props.longFileNameBehavior === 'hscroll')}
         </div>
     );
     if (isDirectory(entry)) {
@@ -514,6 +522,7 @@ function TreeEntryRenderable(
                             ) as ArrayDataSource<TreeEntry<any>>
                         ).map((c) => (
                             <TreeEntryRenderable
+                                longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                                 canDrag={props.canDrag}
                                 canDrop={props.canDrop}
                                 onEntryDrop={props.onEntryDrop}
@@ -539,8 +548,18 @@ function TreeEntryRenderable(
     return <div>{result}</div>;
 }
 
-function renderEntryDom(entry: TreeEntry<any>): any {
-    return entry.renderable ? entry.renderable : <div>{entry.name}</div>;
+function renderEntryDom(entry: TreeEntry<any>, nowrap: boolean): Renderable {
+    const name = aurumClassName({
+        'file-name-nowrap': nowrap
+    });
+
+    return entry.renderable ? (
+        entry.renderable
+    ) : (
+        <div title={entry.title} class={name}>
+            {entry.name}
+        </div>
+    );
 }
 
 function isDirectory(entry: TreeEntry<any>): boolean {

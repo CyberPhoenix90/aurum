@@ -1,6 +1,6 @@
 {
     "name": "aurum-components",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "description": "",
     "main": "prebuilt/cjs/aurum-components.js",
     "typings": "prebuilt/cjs/aurum-components.d.ts",
@@ -35,15 +35,18 @@
     },
     "builds": [
         {
+            "outdir": "prebuilt/amd",
             "name": "amd",
             "platform": "browser"
         },
         {
+            "outdir": "prebuilt/cjs",
             "name": "cjs",
             "platform": "node"
         },
         {
-            "name": "es",
+            "outdir": "prebuilt/esnext",
+            "name": "esnext",
             "platform": "isomorphic"
         }
     ]
