@@ -1,0 +1,56 @@
+{
+    "name": "@aurum/core",
+    "version": "1.0.0",
+    "main": "prebuilt/cjs/@aurum/core.js",
+    "typings": "prebuilt/cjs/@aurum/core.d.ts",
+    "description": "Stream based declarative DOM rendering library for javascript",
+    "compiler": "typescript",
+    "homepage": "https://aurumjs.org/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum"
+    },
+    "keywords": ["web-components", "webcomponents", "DOM", "stream", "rendering"],
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/chai": "^4.2.5",
+        "@types/mocha": "^8.2.0",
+        "@types/sinon": "^9.0.4",
+        "chai": "^4.2.0",
+        "mocha": "^8.2.1",
+        "prettier": "^2.2.1",
+        "requirejs": "^2.3.6",
+        "sinon": "^9.0.3"
+    },
+    "defaultBuildSettings": {
+        "assembly": "library",
+        "includes": ["src/**/*.ts"],
+        "jsxFragmentFactory": "Aurum.fragment",
+        "jsxFactory": "Aurum.factory",
+        "jsx": "react"
+    },
+    "builds": [
+        {
+            "outdir": "prebuilt/amd",
+            "name": "amd",
+            "platform": "browser"
+        },
+        {
+            "outdir": "prebuilt/cjs",
+            "name": "cjs",
+            "platform": "node"
+        },
+        {
+            "outdir": "prebuilt/exnext",
+            "name": "esnext",
+            "platform": "isomorphic"
+        },
+        {
+            "outdir": "dist/test",
+            "name": "test",
+            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+            "platform": "browser"
+        }
+    ]
+}

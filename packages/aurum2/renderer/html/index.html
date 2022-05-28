@@ -1,0 +1,51 @@
+<html lang="en">
+  <head>
+    <title>Aurum tests</title>
+    <link rel="stylesheet" href="node_modules/mocha/mocha.css">
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="node_modules/mocha/mocha.js"></script>
+    <script src="node_modules/chai/chai.js"></script>
+    <script src="node_modules/sinon/pkg/sinon.js"></script>
+    <script src="node_modules/requirejs/require.js"></script>
+    <script>
+            define('mocha', () => mocha)
+    </script>
+    <script>
+      define('chai', () => chai)
+</script>
+<script>
+  define('sinon', () => sinon)
+</script>
+<script>
+      mocha.setup('bdd');
+      expect = chai.expect;
+      requirejs.config({
+            paths: {
+              '@aurum/core':"/node_modules/@aurum/core/prebuilt/amd/@aurum/core"
+            }
+          });
+
+        const original = window.define;
+      const files = []
+        window.define = function(name) {
+            files.push(name);
+            original.apply(require, arguments);
+        };
+
+        window.define.amd = {
+            jQuery: true
+        };
+
+</script>
+    <script src="dist/test/@aurum/html.js"></script>
+    <script>
+          require(files.filter(f => f.startsWith('test/')), () => {
+            mocha.run();
+
+          })
+     </script>
+     <div id="target"></div>
+   </body>
+</html>
