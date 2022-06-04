@@ -1,6 +1,8 @@
 export * from './tree_view/tree_view_component';
 export * from './tree_view/tree_view_model';
 
+export * from './accordion/accordion';
+
 export * from './dialog/dialog';
 export * from './dialog/context_menu';
 export * from './dialog/floating_window';

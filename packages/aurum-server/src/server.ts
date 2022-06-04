@@ -601,58 +601,58 @@ export class AurumServer<T = void> {
     }
 
     private cancelSubscriptionToExposedSource(message: any, sender: Client<T>) {
-        const sub = sender.dsSubscriptions.get(message.url);
+        const sub = sender.dsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.dsSubscriptions.delete(message.url);
+            sender.dsSubscriptions.delete(message.id);
         }
     }
 
     private cancelSubscriptionToExposedArraySource(message: any, sender: Client<T>) {
-        const sub = sender.adsSubscriptions.get(message.url);
+        const sub = sender.adsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.adsSubscriptions.delete(message.url);
+            sender.adsSubscriptions.delete(message.id);
         }
     }
 
     private cancelSubscriptionToExposedDuplexSource(message: any, sender: Client<T>) {
-        const sub = sender.ddsSubscriptions.get(message.url);
+        const sub = sender.ddsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.ddsSubscriptions.delete(message.url);
+            sender.ddsSubscriptions.delete(message.id);
         }
     }
 
     private cancelSubscriptionToExposedMapDataSource(message: any, sender: Client<T>) {
-        const sub = sender.mapdsSubscriptions.get(message.url);
+        const sub = sender.mapdsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.mapdsSubscriptions.delete(message.url);
+            sender.mapdsSubscriptions.delete(message.id);
         }
     }
 
     private cancelSubscriptionToExposedObjectDataSource(message: any, sender: Client<T>) {
-        const sub = sender.odsSubscriptions.get(message.url);
+        const sub = sender.odsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.odsSubscriptions.delete(message.url);
+            sender.odsSubscriptions.delete(message.id);
         }
     }
 
     private cancelSubscriptionToExposedSetDataSource(message: any, sender: Client<T>) {
-        const sub = sender.setdsSubscriptions.get(message.url);
+        const sub = sender.setdsSubscriptions.get(message.id);
         if (sub) {
             sub.cancel();
-            sender.setdsSubscriptions.delete(message.url);
+            sender.setdsSubscriptions.delete(message.id);
         }
     }
 
-    public exposeSetDataSource<I>(id: string, source: SetDataSource<I>, config: ExposeConfig = {}): void {
+    public exposeSetDataSource<I>(id: string, source: ReadOnlySetDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeSetDataSource(id, source, config);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ObjectDataSource<I>, config: ExposeConfig = {}): void {
+    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeObjectDataSource(id, source, config);
     }
 
@@ -660,7 +660,7 @@ export class AurumServer<T = void> {
         this.routers[''].exposeFunction(id, func, config);
     }
 
-    public exposeDataSource<I>(id: string, source: DataSource<I>, config: ExposeConfig = {}): void {
+    public exposeDataSource<I>(id: string, source: ReadOnlyDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeDataSource(id, source, config);
     }
 
@@ -668,7 +668,7 @@ export class AurumServer<T = void> {
         this.routers[''].exposeMapDataSource(id, source, config);
     }
 
-    public exposeArrayDataSource<I>(id: string, source: ArrayDataSource<I>, config: ExposeConfig = {}): void {
+    public exposeArrayDataSource<I>(id: string, source: ReadOnlyArrayDataSource<I>, config: ExposeConfig = {}): void {
         this.routers[''].exposeArrayDataSource(id, source, config);
     }
 

@@ -1,6 +1,6 @@
 {
     "name": "aurum-components",
-    "version": "0.1.8",
+    "version": "0.2.0",
     "description": "",
     "main": "prebuilt/cjs/aurum-components.js",
     "typings": "prebuilt/cjs/aurum-components.d.ts",
@@ -34,6 +34,12 @@
         "jsx": "react"
     },
     "builds": [
+        {
+            "outdir": "dist/test",
+            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+            "name": "test",
+            "platform": "browser"
+        },
         {
             "outdir": "prebuilt/amd",
             "name": "amd",
