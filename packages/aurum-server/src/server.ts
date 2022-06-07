@@ -2,15 +2,12 @@ import {
     CancellationToken,
     CollectionChange,
     DuplexDataSource,
-    MapChange,
     MapDataSource,
-    ObjectChange,
     ReadOnlyArrayDataSource,
     ReadOnlyDataSource,
     ReadOnlyObjectDataSource,
     ReadOnlySetDataSource,
-    RemoteProtocol,
-    SetChange
+    RemoteProtocol
 } from 'aurumjs';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
@@ -402,7 +399,7 @@ export class AurumServer<T = void> {
             const token = new CancellationToken();
             if (endpoint.authenticator(message.token, 'read')) {
                 sender.mapdsSubscriptions.set(id, token);
-                endpoint.source.listen((change) => {
+                endpoint.source.listenAndRepeat((change) => {
                     change = Object.assign({}, change);
                     // Optimize network traffic by removing fields not used by the Client<T>
                     delete change.oldValue;
@@ -411,16 +408,6 @@ export class AurumServer<T = void> {
                         change
                     });
                 }, token);
-                for (const key in endpoint.source.keys()) {
-                    sender.sendMessage(RemoteProtocol.UPDATE_MAP_DATASOURCE, {
-                        id,
-                        change: {
-                            key,
-                            newValue: endpoint.source.get(key),
-                            oldValue: undefined
-                        } as MapChange<any, any>
-                    });
-                }
             } else {
                 sender.sendMessage(RemoteProtocol.LISTEN_MAP_DATASOURCE_ERR, {
                     id,
@@ -447,7 +434,7 @@ export class AurumServer<T = void> {
             const token = new CancellationToken();
             if (endpoint.authenticator(message.token, 'read')) {
                 sender.odsSubscriptions.set(id, token);
-                endpoint.source.listen((change) => {
+                endpoint.source.listenAndRepeat((change) => {
                     change = Object.assign({}, change);
                     // Optimize network traffic by removing fields not used by the Client<T>
                     delete change.oldValue;
@@ -456,16 +443,6 @@ export class AurumServer<T = void> {
                         change
                     });
                 }, token);
-                for (const key in endpoint.source.keys()) {
-                    sender.sendMessage(RemoteProtocol.UPDATE_OBJECT_DATASOURCE, {
-                        id,
-                        change: {
-                            key,
-                            newValue: endpoint.source.get(key),
-                            oldValue: undefined
-                        } as ObjectChange<any, any>
-                    });
-                }
             } else {
                 sender.sendMessage(RemoteProtocol.LISTEN_OBJECT_DATASOURCE_ERR, {
                     id,
@@ -492,21 +469,12 @@ export class AurumServer<T = void> {
             const token = new CancellationToken();
             if (endpoint.authenticator(message.token, 'read')) {
                 sender.setdsSubscriptions.set(id, token);
-                endpoint.source.listen((change) => {
+                endpoint.source.listenAndRepeat((change) => {
                     sender.sendMessage(RemoteProtocol.UPDATE_SET_DATASOURCE, {
                         id,
                         change
                     });
                 }, token);
-                for (const key in endpoint.source.keys()) {
-                    sender.sendMessage(RemoteProtocol.UPDATE_SET_DATASOURCE, {
-                        id,
-                        change: {
-                            key,
-                            exists: endpoint.source.has(key)
-                        } as SetChange<any>
-                    });
-                }
             } else {
                 sender.sendMessage(RemoteProtocol.LISTEN_SET_DATASOURCE, {
                     id,

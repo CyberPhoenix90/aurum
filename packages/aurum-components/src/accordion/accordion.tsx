@@ -12,7 +12,8 @@ import {
     ClassType,
     CancellationToken,
     combineClass,
-    dsMap
+    dsMap,
+    dsUpdateToken
 } from 'aurumjs';
 import { currentTheme } from '../theme/theme';
 import { aurumify } from '../utils';
@@ -222,7 +223,8 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                             <i>{open.transform(dsMap((isOpen) => (isOpen ? '-' : '+')))}</i>
                         </div>
                         {open.transform(
-                            dsMap((isOpen) =>
+                            dsUpdateToken(),
+                            dsMap(({ token: openStateToken, value: isOpen }) =>
                                 isOpen ? (
                                     <div
                                         onAttach={(div) => {
@@ -232,11 +234,17 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                                                 });
                                             } else {
                                                 div.style.maxHeight = div.scrollHeight + 'px';
+                                                const rso = new ResizeObserver(() => {
+                                                    div.style.maxHeight = div.scrollHeight + 'px';
+                                                });
+                                                rso.observe(div.firstChild as HTMLElement);
+                                                openStateToken.addCancelable(() => rso.disconnect());
+                                                token.addCancelable(() => rso.disconnect());
                                             }
                                         }}
                                         class="content"
                                     >
-                                        {accordionItem.children}
+                                        <div>{accordionItem.children}</div>
                                     </div>
                                 ) : undefined
                             )

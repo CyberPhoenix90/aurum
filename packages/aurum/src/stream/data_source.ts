@@ -2605,6 +2605,10 @@ export class MapDataSource<K, V> {
         return result;
     }
 
+    public pipe(target: MapDataSource<K, V>, cancellation?: CancellationToken): void {
+        this.listenAndRepeat((c) => target.applyMapChange(c), cancellation);
+    }
+
     public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
         this.data.forEach(callbackfn, thisArg);
     }

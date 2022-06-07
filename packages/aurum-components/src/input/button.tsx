@@ -18,6 +18,8 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             background-color: ${color2};
             display: flex;
             align-items: center;
+
+            cursor: pointer;
         `,
         lifecycleToken
     )
