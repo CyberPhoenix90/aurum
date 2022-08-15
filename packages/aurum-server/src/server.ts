@@ -44,13 +44,21 @@ export class AurumServer<T = void> {
         return this.wsServerClients.map((client) => client.session);
     }
 
-    public exposeRouter(route: string, router: Router): void {
+    public exposeRouter(route: string, router: Router, cancellationToken?: CancellationToken): void {
         this.routers[route] = router;
         router.attach(this.wsServerClients);
+
+        cancellationToken?.addCancelable(() => {
+            this.removeRouter(route);
+        });
     }
 
     public removeRouter(route: string): void {
-        delete this.routers[route];
+        const router = this.routers[route];
+        if (router) {
+            delete this.routers[route];
+            router.clear();
+        }
     }
 
     public static create<T>(config?: AurumServerConfig<T>): AurumServer<T> {

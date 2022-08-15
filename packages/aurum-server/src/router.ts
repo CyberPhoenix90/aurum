@@ -199,4 +199,29 @@ export class Router {
     public exposeDuplexDataSource<I>(id: string, source: DuplexDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedDuplexDataSources, config, (c) => c.ddsSubscriptions);
     }
+
+    public clear(): void {
+        for (const s of this.exposedDataSources.values()) {
+            s.source.cancelAll();
+        }
+        for (const s of this.exposedDuplexDataSources.values()) {
+            s.source.cancelAll();
+        }
+
+        for (const s of this.exposedArrayDataSources.values()) {
+            s.source.cancelAll();
+        }
+
+        for (const s of this.exposedMapDataSources.values()) {
+            s.source.cancelAll();
+        }
+
+        for (const s of this.exposedSetDataSources.values()) {
+            s.source.cancelAll();
+        }
+
+        for (const s of this.exposedObjectDataSources.values()) {
+            s.source.cancelAll();
+        }
+    }
 }

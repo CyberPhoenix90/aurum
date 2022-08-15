@@ -2895,6 +2895,13 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         return result;
     }
 
+    /**
+     * Remove all listeners
+     */
+    public cancelAll(): void {
+        this.updateEvent.cancelAll();
+    }
+
     public applySetChange(change: SetChange<K>): void {
         if (change.exists && !this.has(change.key)) {
             this.data.add(change.key);

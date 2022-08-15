@@ -67,6 +67,13 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
     public toString(): string {
         return this.data.toString();
     }
+    /**
+     * Remove all listeners
+     */
+    public cancelAll(): void {
+        this.updateEvent.cancelAll();
+        this.updateEventOnKey.forEach((v) => v.cancelAll());
+    }
 
     public pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ObjectDataSource<T[K]> {
         if (typeof this.data[key] === 'object') {
