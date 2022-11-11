@@ -63,7 +63,8 @@ export function ProjectExplorer(props: ProjectExplorerProps, children: Renderabl
                         }
                     }}
                     indentWidth={10}
-                    sorting={TreeViewSorting.DIRECTORY_FIRST_THEN_ALPHABETIC}
+                    fileTypePriority={'folders'}
+                    sorting={TreeViewSorting.ALPHABETICAL_ASC}
                     arrowColor=""
                     entries={entries}
                 ></TreeViewComponent>

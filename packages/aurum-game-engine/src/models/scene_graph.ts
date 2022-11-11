@@ -242,7 +242,7 @@ export abstract class SceneGraphNode<T extends CommonEntity> implements LayoutEl
             }
         }
 
-        throw new Error('Could not resolve source for key ' + key);
+        throw new Error('Could not resolve source for key ' + key.toString());
     }
 
     /**

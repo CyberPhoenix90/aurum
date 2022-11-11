@@ -594,7 +594,7 @@ export function dsBuffer<T>(time: number): DataSourceMapDelayFilterOperator<T, T
  */
 export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T[K]> {
     return {
-        name: `pick ${key}`,
+        name: `pick ${key.toString()}`,
         operationType: OperationType.MAP,
         operation: (v) => {
             if (v !== undefined && v !== null) {

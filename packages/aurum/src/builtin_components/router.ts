@@ -76,7 +76,9 @@ function selectRoute(
                 }
                 segments.pop();
             }
-            selected = routes.find((r) => r.factory === DefaultRoute);
+            if (!selected) {
+                selected = routes.find((r) => r.factory === DefaultRoute);
+            }
         }
     }
 
