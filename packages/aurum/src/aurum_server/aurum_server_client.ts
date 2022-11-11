@@ -337,7 +337,7 @@ class AurumServerClient {
                             break;
                         case RemoteProtocol.PERFORM_RPC_RESULT_ERR:
                         case RemoteProtocol.PERFORM_RPC_ERR:
-                            pendingRPCResponses.get(msg.uuid).reject(msg.error);
+                            pendingRPCResponses.get(msg.uuid).reject(new Error(msg.error));
                             pendingRPCResponses.delete(msg.uuid);
                             break;
                         case RemoteProtocol.PERFORM_RPC_RESULT:

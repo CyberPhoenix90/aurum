@@ -72,6 +72,10 @@ export function JSONRenderer(props: JSONRendererProps, children: any[], api: Aur
     if (children[0] instanceof DataSource || children[0] instanceof DuplexDataSource) {
         return children[0].transform(
             dsMap((c) => {
+                if (c == null) {
+                    return <></>;
+                }
+
                 return (
                     <JSONRendererBranch {...props} id="" editing={new DataSource(undefined)}>
                         {c}

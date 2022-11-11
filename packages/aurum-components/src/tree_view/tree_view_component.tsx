@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import {
+    ReadOnlyDataSource,
     ArrayDataSource,
     AttributeValue,
     Aurum,
@@ -22,19 +23,24 @@ import { TreeEntry } from './tree_view_model';
 
 export enum TreeViewSorting {
     NONE,
-    DIRECTORY_FIRST_THEN_NONE,
-    FILE_FIRST_THEN_NONE,
-    DIRECTORY_FIRST_THEN_ALPHABETIC,
-    FILE_FIRST_THEN_ALPHABETIC
+    ALPHABETICAL_ASC,
+    ALPHABETICAL_DESC,
+    FOLDERS_ALPHABETICAL_ASC_FILES_NONE,
+    FOLDERS_ALPHABETICAL_DESC_FILES_NONE
 }
 
+export type FileTypePriority = 'none' | 'folders' | 'files';
+
 export interface TreeViewComponentProps<T> {
+    searchQuery?: ReadOnlyDataSource<string>;
     indentWidth?: number;
+    cascadeFolderOpen?: boolean;
     arrowColor?: string | DataSource<string>;
     allowDragAndDrop?: boolean;
     allowFocus?: boolean;
     style?: AttributeValue;
     longFileNameBehavior?: 'hscroll' | 'wrap' | 'elipsis';
+    fileTypePriority?: FileTypePriority;
     sorting?: TreeViewSorting;
     noEntriesMsg?: string;
     renaming?: DataSource<TreeEntry<T>>;
@@ -161,13 +167,14 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
 
     const entries = props.entries
         .sort(
-            (a, b) => sortItems(a, b, props.sorting ?? TreeViewSorting.NONE),
+            (a, b) => sortItems(a, b, props.sorting ?? TreeViewSorting.NONE, props.fileTypePriority ?? 'none'),
             getValueOf(props.entries)
                 .map((e) => e.name)
                 .filter((e) => e instanceof DataSource) as any as DataSource<TreeEntry<any>>[]
         )
         .map((e) => (
             <TreeEntryRenderable
+                fileTypePriority={props.fileTypePriority}
                 longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                 dragState={dragState}
                 canDrag={props.canDrag ?? (() => true)}
@@ -202,28 +209,36 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
                 case 'ArrowLeft':
                     if (getValueOf(focusedEntry.value.children?.length)) {
                         if (focusedEntry.value.open.value) {
-                            focusedEntry.value.open.update(false);
+                            if (focusedEntry.value.open instanceof DataSource) {
+                                focusedEntry.value.open.update(false);
+                            } else {
+                                focusedEntry.value.open.updateDownstream(false);
+                            }
                         } else {
-                            focusedEntry.update(parentOf(focusedEntry.value, props.entries, props.sorting) ?? focusedEntry.value);
+                            focusedEntry.update(parentOf(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                         }
                     } else {
-                        focusedEntry.update(parentOf(focusedEntry.value, props.entries, props.sorting) ?? focusedEntry.value);
+                        focusedEntry.update(parentOf(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                     }
                     break;
                 case 'ArrowRight':
                     if (getValueOf(focusedEntry.value.children?.length)) {
                         if (focusedEntry.value.open.value) {
-                            focusedEntry.update(next(focusedEntry.value, props.entries, props.sorting) ?? focusedEntry.value);
+                            focusedEntry.update(next(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                         } else {
-                            focusedEntry.value.open.update(true);
+                            if (focusedEntry.value.open instanceof DataSource) {
+                                focusedEntry.value.open.update(true);
+                            } else {
+                                focusedEntry.value.open.updateDownstream(true);
+                            }
                         }
                     }
                     break;
                 case 'ArrowDown':
-                    focusedEntry.update(next(focusedEntry.value, props.entries, props.sorting) ?? focusedEntry.value);
+                    focusedEntry.update(next(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                     break;
                 case 'ArrowUp':
-                    focusedEntry.update(previous(focusedEntry.value, props.entries, props.sorting) ?? focusedEntry.value);
+                    focusedEntry.update(previous(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                     break;
             }
         });
@@ -255,9 +270,10 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
 function parentOf(
     pointer: TreeEntry<any>,
     entries: ReadOnlyArrayDataSource<TreeEntry<any>> | ArrayDataSource<TreeEntry<any>> | TreeEntry<any>[],
-    sorting: TreeViewSorting
+    sorting: TreeViewSorting,
+    priority: FileTypePriority
 ): TreeEntry<any> {
-    const iterator = iterateEntries(entries, sorting);
+    const iterator = iterateEntries(entries, sorting, priority);
     let value: TreeEntry<any>;
     while ((value = iterator.next().value)) {
         if (value.children && value.children.includes(pointer)) {
@@ -271,9 +287,10 @@ function parentOf(
 function next(
     pointer: TreeEntry<any>,
     entries: ReadOnlyArrayDataSource<TreeEntry<any>> | ArrayDataSource<TreeEntry<any>> | TreeEntry<any>[],
-    sorting: TreeViewSorting
+    sorting: TreeViewSorting,
+    priority: FileTypePriority
 ): TreeEntry<any> {
-    const iterator = iterateEntries(entries, sorting);
+    const iterator = iterateEntries(entries, sorting, priority);
     let value;
     while ((value = iterator.next().value)) {
         if (value === pointer) {
@@ -287,9 +304,10 @@ function next(
 function previous(
     pointer: TreeEntry<any>,
     entries: ArrayDataSource<TreeEntry<any>> | ReadOnlyArrayDataSource<TreeEntry<any>> | TreeEntry<any>[],
-    sorting: TreeViewSorting
+    sorting: TreeViewSorting,
+    priority: FileTypePriority
 ): TreeEntry<any> {
-    const iterator = iterateEntries(entries, sorting);
+    const iterator = iterateEntries(entries, sorting, priority);
     let previous;
     let value;
     while ((value = iterator.next().value)) {
@@ -304,32 +322,63 @@ function previous(
 
 function* iterateEntries(
     entries: ArrayDataSource<TreeEntry<any>> | ReadOnlyArrayDataSource<TreeEntry<any>> | TreeEntry<any>[],
-    sorting: TreeViewSorting
+    sorting: TreeViewSorting,
+    priority: FileTypePriority
 ): IterableIterator<TreeEntry<any>> {
     const set = Array.isArray(entries) ? entries : entries.toArray();
-    set.sort((a, b) => sortItems(a, b, sorting));
+    set.sort((a, b) => sortItems(a, b, sorting, priority));
     for (const e of set) {
         yield e;
         if (e.children?.length && e.open?.value) {
-            yield* iterateEntries(e.children, sorting);
+            yield* iterateEntries(e.children, sorting, priority);
         }
     }
 
     return undefined;
 }
 
-function sortItems(a: TreeEntry<any>, b: TreeEntry<any>, sorting: TreeViewSorting) {
+function sortItems(a: TreeEntry<any>, b: TreeEntry<any>, sorting: TreeViewSorting, priority: FileTypePriority): number {
+    if (priority === 'files') {
+        if (isFile(a) && isDirectory(b)) {
+            return -1;
+        } else if (isDirectory(a) && isFile(b)) {
+            return 1;
+        }
+    } else if (priority === 'folders') {
+        if (isFile(a) && isDirectory(b)) {
+            return 1;
+        } else if (isDirectory(a) && isFile(b)) {
+            return -1;
+        }
+    }
+
     switch (sorting) {
         case TreeViewSorting.NONE:
             return 1;
-        case TreeViewSorting.FILE_FIRST_THEN_NONE:
-            return !isDirectory(a) ? -1 : 1;
-        case TreeViewSorting.DIRECTORY_FIRST_THEN_NONE:
-            return isDirectory(a) ? -1 : 1;
-        case TreeViewSorting.DIRECTORY_FIRST_THEN_ALPHABETIC:
-            return isDirectory(a) && !isDirectory(b) ? -1 : isDirectory(b) && !isDirectory(a) ? 1 : getValueOf(a.name).localeCompare(getValueOf(b.name));
-        case TreeViewSorting.FILE_FIRST_THEN_ALPHABETIC:
-            return !isDirectory(a) && isDirectory(b) ? -1 : !isDirectory(b) && isDirectory(a) ? 1 : getValueOf(a.name).localeCompare(getValueOf(b.name));
+        case TreeViewSorting.ALPHABETICAL_ASC:
+            return getValueOf(a.name).localeCompare(getValueOf(b.name));
+        case TreeViewSorting.ALPHABETICAL_DESC:
+            return getValueOf(b.name).localeCompare(getValueOf(a.name));
+        case TreeViewSorting.FOLDERS_ALPHABETICAL_ASC_FILES_NONE:
+            if (isDirectory(a) && isFile(b)) {
+                return -1;
+            } else if (isFile(a) && isDirectory(b)) {
+                return 1;
+            } else if (isDirectory(a) && isDirectory(b)) {
+                return getValueOf(a.name).localeCompare(getValueOf(b.name));
+            } else {
+                return 1;
+            }
+        case TreeViewSorting.FOLDERS_ALPHABETICAL_DESC_FILES_NONE:
+            if (isDirectory(a) && isFile(b)) {
+                return -1;
+            } else if (isFile(a) && isDirectory(b)) {
+                return 1;
+            } else if (isDirectory(a) && isDirectory(b)) {
+                return getValueOf(b.name).localeCompare(getValueOf(a.name));
+            } else {
+                return 1;
+            }
         default:
             throw new Error('Invalid sort option');
     }
@@ -352,6 +401,7 @@ interface FocusData {
 
 function TreeEntryRenderable(
     props: {
+        fileTypePriority: FileTypePriority;
         longFileNameBehavior: 'hscroll' | 'wrap' | 'elipsis';
         canDrag(draggedEntry: TreeEntry<any>): boolean;
         canDrop(draggedEntry: TreeEntry<any>, targetEntry: TreeEntry<any>): boolean;
@@ -369,8 +419,8 @@ function TreeEntryRenderable(
     children: Renderable[],
     api: AurumComponentAPI
 ): Renderable[] {
-    const { entry, events, focusData, indent = 0, indentWidth, renaming, sorting } = props;
-    if (entry.open === undefined) {
+    const { entry, events, focusData, indent = 0, indentWidth, renaming, sorting, fileTypePriority } = props;
+    if (entry.open === undefined && isDirectory(entry)) {
         entry.open = new DataSource(false);
     }
     const dropOk = new DataSource(false);
@@ -458,7 +508,11 @@ function TreeEntryRenderable(
             }}
             onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry)}
             onClick={(event) => {
-                entry.open.update(!entry.open.value);
+                if (entry.open instanceof DataSource) {
+                    entry.open.update(!entry.open.value);
+                } else {
+                    entry.open.updateDownstream(!entry.open.value);
+                }
                 events.onEntryClicked?.(event, entry);
             }}
             style={`padding-left:${indent * indentWidth}px; ${events.onEntryClicked ? 'cursor:pointer;' : ''}`}
@@ -515,13 +569,14 @@ function TreeEntryRenderable(
                     if (open) {
                         return (
                             entry.children.sort(
-                                (a, b) => sortItems(a, b, sorting),
+                                (a, b) => sortItems(a, b, sorting, fileTypePriority),
                                 getValueOf(entry.children)
                                     .map((e) => e.name)
                                     .filter((e) => e instanceof DataSource) as any as DataSource<TreeEntry<any>>[]
                             ) as ArrayDataSource<TreeEntry<any>>
                         ).map((c) => (
                             <TreeEntryRenderable
+                                fileTypePriority={fileTypePriority}
                                 longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                                 canDrag={props.canDrag}
                                 canDrop={props.canDrop}
@@ -560,6 +615,10 @@ function renderEntryDom(entry: TreeEntry<any>, nowrap: boolean): Renderable {
             {entry.name}
         </div>
     );
+}
+
+function isFile(entry: TreeEntry<any>): boolean {
+    return !entry.children;
 }
 
 function isDirectory(entry: TreeEntry<any>): boolean {
