@@ -13,11 +13,11 @@ import {
     dsDiff,
     dsTap
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme';
+import { currentTheme } from '../theme/theme.js';
 import { css } from '@emotion/css';
-import { aurumify } from '../utils';
-import { Dialog } from '../dialog/dialog';
-import { ContextMenu } from '../dialog/context_menu';
+import { aurumify } from '../utils.js';
+import { Dialog } from '../dialog/dialog.js';
+import { ContextMenu } from '../dialog/context_menu.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(

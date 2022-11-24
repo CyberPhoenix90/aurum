@@ -16,18 +16,27 @@ import {
     AttributeValue,
     dsMap
 } from 'aurumjs';
-import { ComponentModel, ComponentType } from './component_model';
-import { RectangleComponentModel } from './drawables/aurum_rectangle';
-import { TextComponentModel } from './drawables/aurum_text';
-import { LineComponentModel } from './drawables/aurum_line';
-import { ElipseComponentModel } from './drawables/aurum_elipse';
-import { stateSymbol, StateComponentModel } from './drawables/state';
-import { PathComponentModel } from './drawables/aurum_path';
-import { QuadraticCurveComponentModel } from './drawables/aurum_quadratic_curve';
-import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve';
-import { deref } from './utilities';
-import { renderPath, renderRectangle, renderText, renderLine, renderQuadraticCurve, renderBezierCurve, renderElipse, renderRegularPolygon } from './rendering';
-import { initializeKeyboardPanningFeature, initializeMousePanningFeature, initializeZoomFeature } from './features';
+import { ComponentModel, ComponentType } from './component_model.js';
+import { RectangleComponentModel } from './drawables/aurum_rectangle.js';
+import { TextComponentModel } from './drawables/aurum_text.js';
+import { LineComponentModel } from './drawables/aurum_line.js';
+import { ElipseComponentModel } from './drawables/aurum_elipse.js';
+import { stateSymbol, StateComponentModel } from './drawables/state.js';
+import { PathComponentModel } from './drawables/aurum_path.js';
+import { QuadraticCurveComponentModel } from './drawables/aurum_quadratic_curve.js';
+import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
+import { deref } from './utilities.js';
+import {
+    renderPath,
+    renderRectangle,
+    renderText,
+    renderLine,
+    renderQuadraticCurve,
+    renderBezierCurve,
+    renderElipse,
+    renderRegularPolygon
+} from './rendering.js';
+import { initializeKeyboardPanningFeature, initializeMousePanningFeature, initializeZoomFeature } from './features.js';
 
 export interface AurumnCanvasFeatures {
     mouseWheelZoom?: {

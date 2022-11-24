@@ -47,7 +47,7 @@
             "platform": "node"
         },
         {
-            "outDir": "prebuilt/exnext",
+            "outDir": "prebuilt/esnext",
             "name": "esnext",
             "platform": "isomorphic"
         },

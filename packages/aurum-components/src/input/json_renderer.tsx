@@ -1,8 +1,8 @@
 import { Aurum, AurumComponentAPI, DataSource, dsMap, dsUnique, DuplexDataSource, getValueOf, Renderable } from 'aurumjs';
 import { css } from '@emotion/css';
-import { aurumify } from '../utils';
-import { currentTheme } from '../theme/theme';
-import { Button } from './button';
+import { aurumify } from '../utils.js';
+import { currentTheme } from '../theme/theme.js';
+import { Button } from './button.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(

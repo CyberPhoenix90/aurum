@@ -1,6 +1,6 @@
 import { AurumComponentAPI, createLifeCycle, ReadOnlyDataSource, Renderable } from 'aurumjs';
-import { CommonProps } from '../common_props';
-import { ComponentModel, ComponentType } from '../component_model';
+import { CommonProps } from '../common_props.js';
+import { ComponentModel, ComponentType } from '../component_model.js';
 
 export interface AurumImageProps extends Omit<CommonProps, 'strokeColor' | 'fillColor'> {
     width?: number | ReadOnlyDataSource<number>;

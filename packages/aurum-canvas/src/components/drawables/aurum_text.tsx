@@ -1,6 +1,6 @@
 import { AurumComponentAPI, createLifeCycle, DataSource, dsUnique, ReadOnlyDataSource, Renderable } from 'aurumjs';
-import { CommonProps } from '../common_props';
-import { ComponentModel, ComponentType } from '../component_model';
+import { CommonProps } from '../common_props.js';
+import { ComponentModel, ComponentType } from '../component_model.js';
 
 export interface AurumTexteProps extends CommonProps {
     font?: string | ReadOnlyDataSource<string>;

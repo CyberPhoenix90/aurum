@@ -1,6 +1,6 @@
 import { ReadOnlyDataSource } from 'aurumjs';
-import { InteractionProps } from './common_props';
-import { StateComponentModel } from './drawables/state';
+import { InteractionProps } from './common_props.js';
+import { StateComponentModel } from './drawables/state.js';
 
 export interface ComponentModel extends InteractionProps {
     type: ComponentType;
@@ -22,7 +22,7 @@ export interface RenderData {
     lines: string[];
     x: number;
     y: number;
-    realWidth?:number;
+    realWidth?: number;
     width?: number;
     height?: number;
     tx?: number;

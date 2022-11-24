@@ -1,13 +1,13 @@
-import { RectangleComponentModel } from './drawables/aurum_rectangle';
-import { TextComponentModel } from './drawables/aurum_text';
-import { LineComponentModel } from './drawables/aurum_line';
-import { ElipseComponentModel } from './drawables/aurum_elipse';
-import { PathComponentModel } from './drawables/aurum_path';
-import { QuadraticCurveComponentModel } from './drawables/aurum_quadratic_curve';
-import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve';
-import { deref } from './utilities';
-import { ComponentModel } from './component_model';
-import { CommonProps } from './common_props';
+import { RectangleComponentModel } from './drawables/aurum_rectangle.js';
+import { TextComponentModel } from './drawables/aurum_text.js';
+import { LineComponentModel } from './drawables/aurum_line.js';
+import { ElipseComponentModel } from './drawables/aurum_elipse.js';
+import { PathComponentModel } from './drawables/aurum_path.js';
+import { QuadraticCurveComponentModel } from './drawables/aurum_quadratic_curve.js';
+import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
+import { deref } from './utilities.js';
+import { ComponentModel } from './component_model.js';
+import { CommonProps } from './common_props.js';
 
 const regularPolygonKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'sides', 'radius', 'originX', 'originY'];
 const pathKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'lineWidth', 'originX', 'originY'];

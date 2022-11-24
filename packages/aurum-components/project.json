@@ -1,9 +1,9 @@
 {
     "name": "aurum-components",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "",
-    "main": "prebuilt/cjs/aurum-components.js",
-    "typings": "prebuilt/cjs/aurum-components.d.ts",
+    "main": "prebuilt/esnext/aurum-components.js",
+    "typings": "prebuilt/esnext/aurum-components.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {

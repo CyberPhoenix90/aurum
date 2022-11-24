@@ -12,8 +12,8 @@ import {
     ClassType
 } from 'aurumjs';
 import { css } from '@emotion/css';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(

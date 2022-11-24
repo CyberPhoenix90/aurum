@@ -1,5 +1,5 @@
 import { Aurum, DataSource, DuplexDataSource, GenericDataSource } from 'aurumjs';
-import { TextField, TextFieldProps } from './text_field';
+import { TextField, TextFieldProps } from './text_field.js';
 
 export interface NumberFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value'> {
     numberType?: NumberType;

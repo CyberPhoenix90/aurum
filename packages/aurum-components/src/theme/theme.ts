@@ -64,7 +64,7 @@ export const lightTheme: Theme = {
     themeColor2: new DataSource('#DEDEE4'),
     themeColor3: new DataSource('#D4D4D9'),
     themeColor4: new DataSource('#C9C9D4'),
-    highlightColor1: new DataSource('#094f71'),
+    highlightColor1: new DataSource('#D4E4F9'),
     boxShadow: new DataSource('0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 2px 0px rgb(0 0 0 / 26%), 0px 2px 3px 0px rgb(0 0 0 / 12%)'),
     success: new DataSource('#4caf50'),
     warning: new DataSource('#f8a500'),

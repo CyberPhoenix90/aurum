@@ -1,6 +1,6 @@
 import { ArrayDataSource, Aurum, AurumComponentAPI, CancellationToken, DataSource, dsMap, Renderable } from 'aurumjs';
-import { PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop } from './panel_dock';
-import { PanelComponent } from './panel_layout';
+import { PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop } from './panel_dock.js';
+import { PanelComponent } from './panel_layout.js';
 
 export interface LayoutTreeNode {
     left?: DataSource<LayoutTreeNode>;

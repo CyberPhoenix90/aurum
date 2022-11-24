@@ -1,5 +1,5 @@
 import { ArrayDataSource, DataSource, Aurum, CancellationToken } from 'aurumjs';
-import { AurumCanvas, AurumGroup, AurumRectangle } from '../src/aurum-canvas';
+import { AurumCanvas, AurumGroup, AurumRectangle } from '../src/aurum-canvas.js';
 
 describe('rendering', () => {
     let token: CancellationToken;

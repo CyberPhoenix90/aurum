@@ -11,9 +11,9 @@ import {
     Renderable,
     resolveChildren
 } from 'aurumjs';
-import { Dialog } from '../dialog/dialog';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { Dialog } from '../dialog/dialog.js';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 
 const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(

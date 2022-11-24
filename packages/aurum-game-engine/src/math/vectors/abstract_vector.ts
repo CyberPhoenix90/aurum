@@ -136,7 +136,7 @@ export abstract class AbstractVector {
     }
 
     public geometricAverage(): number {
-        return this.memory.reduce((a, b) => a * b) ** 1 / this.memory.length;
+        return this.memory.reduce((a, b) => a * b) ** (1 / this.memory.length);
     }
 
     public modulo(num: number): this {

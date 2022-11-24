@@ -1,5 +1,5 @@
 import { CancellationToken } from 'aurumjs';
-import { AurumCanvasProps } from './canvas';
+import { AurumCanvasProps } from './canvas.js';
 
 export function initializeKeyboardPanningFeature(props: AurumCanvasProps, canvas: HTMLCanvasElement): void {
     let moveToken: CancellationToken;

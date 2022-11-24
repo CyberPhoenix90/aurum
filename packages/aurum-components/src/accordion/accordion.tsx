@@ -15,8 +15,8 @@ import {
     dsMap,
     dsUpdateToken
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 
 export interface AccordionProps {
     style?: AttributeValue;

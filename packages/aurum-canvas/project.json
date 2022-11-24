@@ -1,9 +1,9 @@
 {
     "name": "aurum-canvas",
-    "version": "0.0.27",
+    "version": "0.0.28",
     "description": "Aurum style scene graph management for rendering in canvas",
-    "main": "prebuilt/cjs/aurum-canvas.js",
-    "typings": "prebuilt/cjs/aurum-canvas.d.ts",
+    "main": "prebuilt/esnext/aurum-canvas.js",
+    "typings": "prebuilt/esnext/aurum-canvas.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -44,7 +44,7 @@
             "platform": "node"
         },
         {
-            "outDir": "prebuilt/exnext",
+            "outDir": "prebuilt/esnext",
             "name": "esnext",
             "platform": "isomorphic"
         }

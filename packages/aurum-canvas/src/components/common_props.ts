@@ -1,5 +1,5 @@
 import { ReadOnlyDataSource } from 'aurumjs';
-import { ComponentModel, RenderData } from './component_model';
+import { ComponentModel, RenderData } from './component_model.js';
 
 export enum ColorBlending {
     SOURCE_OVER = 'source-over',

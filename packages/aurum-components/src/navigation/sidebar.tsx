@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { AttributeValue, Aurum, AurumComponentAPI, AurumElementModel, ClassType, combineClass, DataDrain, Renderable, resolveChildren } from 'aurumjs';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 
 export interface SidebarProps {
     class?: ClassType;

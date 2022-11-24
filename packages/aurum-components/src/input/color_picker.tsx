@@ -1,12 +1,12 @@
 import { Aurum } from 'aurumjs';
-import { TextField, TextFieldProps } from './text_field';
+import { TextField, TextFieldProps } from './text_field.js';
 
 export interface ColorPickerProps extends Omit<TextFieldProps, 'type'> {}
 
 export interface ColorPickerProps {}
 
 export function ColorPicker(props: ColorPickerProps) {
-	const { ...inputProps } = props;
+    const { ...inputProps } = props;
 
-	return <TextField {...inputProps} type="color"></TextField>;
+    return <TextField {...inputProps} type="color"></TextField>;
 }

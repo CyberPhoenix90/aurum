@@ -16,10 +16,10 @@ import {
     Switch,
     SwitchCase
 } from 'aurumjs';
-import { TextField } from '../input/text_field';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
-import { TreeEntry } from './tree_view_model';
+import { TextField } from '../input/text_field.js';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
+import { TreeEntry } from './tree_view_model.js';
 
 export enum TreeViewSorting {
     NONE,
@@ -326,7 +326,9 @@ function* iterateEntries(
     priority: FileTypePriority
 ): IterableIterator<TreeEntry<any>> {
     const set = Array.isArray(entries) ? entries : entries.toArray();
-    set.sort((a, b) => sortItems(a, b, sorting, priority));
+    if (sorting) {
+        set.sort((a, b) => sortItems(a, b, sorting, priority));
+    }
     for (const e of set) {
         yield e;
         if (e.children?.length && e.open?.value) {

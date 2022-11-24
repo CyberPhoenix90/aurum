@@ -1,6 +1,6 @@
 import { AurumComponentAPI, createLifeCycle, ReadOnlyDataSource, Renderable } from 'aurumjs';
-import { CommonProps } from '../common_props';
-import { ComponentModel, ComponentType } from '../component_model';
+import { CommonProps } from '../common_props.js';
+import { ComponentModel, ComponentType } from '../component_model.js';
 
 export interface AurumRectangleProps extends CommonProps {
     width: number | ReadOnlyDataSource<number>;

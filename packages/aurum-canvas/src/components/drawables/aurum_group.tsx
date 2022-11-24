@@ -1,6 +1,6 @@
 import { DataSource, AurumComponentAPI, Renderable, createLifeCycle } from 'aurumjs';
-import { ComponentModel, ComponentType } from '../component_model';
-import { InteractionProps } from '../common_props';
+import { ComponentModel, ComponentType } from '../component_model.js';
+import { InteractionProps } from '../common_props.js';
 
 export interface AurumGroupProps extends InteractionProps {
     state?: string | DataSource<string>;

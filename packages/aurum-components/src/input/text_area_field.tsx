@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { Aurum, TextAreaProps, DataSource, dsMap, Renderable, AttributeValue, ClassType, combineClass, AurumComponentAPI } from 'aurumjs';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 
 const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(

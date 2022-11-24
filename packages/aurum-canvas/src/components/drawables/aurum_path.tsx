@@ -1,6 +1,6 @@
 import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle } from 'aurumjs';
-import { ComponentModel, ComponentType } from '../component_model';
-import { CommonProps } from '../common_props';
+import { ComponentModel, ComponentType } from '../component_model.js';
+import { CommonProps } from '../common_props.js';
 
 export interface AurumPathProps extends CommonProps {
     path: string | ReadOnlyDataSource<string>;

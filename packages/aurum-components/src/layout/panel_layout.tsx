@@ -12,8 +12,8 @@ import {
     DuplexDataSource,
     Renderable
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme';
-import { aurumify } from '../utils';
+import { currentTheme } from '../theme/theme.js';
+import { aurumify } from '../utils.js';
 import {
     PanelContent,
     PanelDockBottom,
@@ -25,7 +25,7 @@ import {
     renderLeftDock,
     renderRightDock,
     renderTopDock
-} from './panel_dock';
+} from './panel_dock.js';
 
 export interface PanelProps {
     class?: string;

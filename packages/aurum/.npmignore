@@ -1,4 +1,3 @@
-src
 tsconfig.cjs.json
 tsconfig.amd.json
 tsconfig.es.json
@@ -7,3 +6,4 @@ dist_test
 coverage
 .history
 .vscode
+project.json

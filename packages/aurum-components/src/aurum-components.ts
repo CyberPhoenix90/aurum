@@ -1,37 +1,37 @@
-export * from './tree_view/tree_view_component';
-export * from './tree_view/tree_view_model';
+export * from './tree_view/tree_view_component.js';
+export * from './tree_view/tree_view_model.js';
 
-export * from './accordion/accordion';
+export * from './accordion/accordion.js';
 
-export * from './dialog/dialog';
-export * from './dialog/context_menu';
-export * from './dialog/floating_window';
-export * from './dialog/window_manager';
-export * from './dialog/toaster';
+export * from './dialog/dialog.js';
+export * from './dialog/context_menu.js';
+export * from './dialog/floating_window.js';
+export * from './dialog/window_manager.js';
+export * from './dialog/toaster.js';
 
-export * from './input/color_picker';
-export * from './input/number_field';
-export * from './input/text_field';
-export * from './input/text_area_field';
-export * from './input/button';
-export * from './input/drop_down_menu';
-export * from './input/json_renderer';
+export * from './input/color_picker.js';
+export * from './input/number_field.js';
+export * from './input/text_field.js';
+export * from './input/text_area_field.js';
+export * from './input/button.js';
+export * from './input/drop_down_menu.js';
+export * from './input/json_renderer.js';
 
-export * from './charts/barchart';
+export * from './charts/barchart.js';
 
-export * from './navigation/sidebar';
+export * from './navigation/sidebar.js';
 
-export * from './card/card';
+export * from './card/card.js';
 
-export * from './theme/theme';
+export * from './theme/theme.js';
 
-export * from './menu_strip/menu_strip';
+export * from './menu_strip/menu_strip.js';
 
-export * from './tab_bar/tab_bar';
+export * from './tab_bar/tab_bar.js';
 
-export * from './misc/currency';
+export * from './misc/currency.js';
 
-export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock';
-export * from './layout/panel_layout';
+export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock.js';
+export * from './layout/panel_layout.js';
 
-export { aurumify } from './utils';
+export { aurumify } from './utils.js';

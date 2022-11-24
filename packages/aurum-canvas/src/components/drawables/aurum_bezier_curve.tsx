@@ -1,6 +1,6 @@
 import { AurumComponentAPI, createLifeCycle, DataSource, ReadOnlyDataSource, Renderable } from 'aurumjs';
-import { CommonProps } from '../common_props';
-import { ComponentModel, ComponentType } from '../component_model';
+import { CommonProps } from '../common_props.js';
+import { ComponentModel, ComponentType } from '../component_model.js';
 
 export interface AurumBezierCurveProps extends CommonProps {
     tx: number | DataSource<number>;

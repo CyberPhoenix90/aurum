@@ -9,29 +9,28 @@
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/aurumjs)
 
 ## What is Aurum
+
 Aurum.js is a DOM rendering library inspired by react and angular.
 In Aurum you use stream based programing (Similar to rx.js) for data management. You link your streams directly to the DOM be it into attributes, inner text or inner html, you keep your UI up to date all through streams.
 Components in aurum never "rerender" react style, there is no reconciliation, no watching no dirty checking and no guesswork on what will cause things to render because all DOM changes are directly tied to a data stream.
 
 ## Why use Aurum
-* Aurum encourages writing UIs in a way that makes them update faster in response to data changes than even in popular modern libraries like react, vue or angular
 
-* Aurum does most of the data management overhead for you, saving time and allowing to focus on what matters: Implementing your business logic
+-   Aurum encourages writing UIs in a way that makes them update faster in response to data changes than even in popular modern libraries like react, vue or angular
 
-* Aurum has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
+-   Aurum does most of the data management overhead for you, saving time and allowing to focus on what matters: Implementing your business logic
 
-* Aurum is completely built around the stream pattern, pipe your data from the backend over adapters all the way into the DOM
+-   Aurum has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
+
+-   Aurum is completely built around the stream pattern, pipe your data from the backend over adapters all the way into the DOM
 
 ## Browser support
-* All chromium based browsers
 
-* Edge
+-   All chromium based browsers
 
-* Firefox
+-   Firefox
 
-* Safari
-
-* IE11 (requires several polyfills and your code bundler needs to downlevel the code to ES5 but it works)
+-   Safari
 
 ## Getting started
 
@@ -80,9 +79,10 @@ Aurum.attach((<div>Hello Aurum</div>), document.body)
 ```
 
 ## Website with documentation and further explanations
+
 http://aurumjs.org/
 
 ## Live example
+
 TODO App with creation, deletion drag and drop, editing and marking as done of tasks all under 100 lines of code with aurum:
 https://codepen.io/cyberphoenix90/pen/LYYMwVr
-
