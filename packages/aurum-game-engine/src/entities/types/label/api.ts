@@ -1,7 +1,7 @@
-import { layoutEngine } from '../../../core/layout_engine';
-import { RenderableType } from '../../../models/entities';
-import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph';
-import { LabelEntity, LabelEntityRenderModel } from './model';
+import { layoutEngine } from '../../../core/layout_engine.js';
+import { RenderableType } from '../../../models/entities.js';
+import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph.js';
+import { LabelEntity, LabelEntityRenderModel } from './model.js';
 
 export class LabelGraphNode extends SceneGraphNode<LabelEntity> {
     public declare readonly renderState: LabelEntityRenderModel;

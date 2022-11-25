@@ -1,6 +1,6 @@
-import { AbstractShape } from './abstract_shape';
-import { Rectangle } from './rectangle';
-import { Vector2D } from '../vectors/vector2d';
+import { AbstractShape } from './abstract_shape.js';
+import { Rectangle } from './rectangle.js';
+import { Vector2D } from '../vectors/vector2d.js';
 import { PointLike } from 'aurum-layout-engine';
 
 export class Polygon extends AbstractShape {

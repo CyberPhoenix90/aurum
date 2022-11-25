@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Aurum, AurumRouter, Route } from '../../src/aurumjs';
+import { Aurum, AurumRouter, Route } from '../../src/aurumjs.js';
 
 describe('Router', () => {
     let attachToken;

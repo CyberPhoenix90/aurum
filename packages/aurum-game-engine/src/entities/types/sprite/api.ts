@@ -1,7 +1,7 @@
-import { layoutEngine } from '../../../core/layout_engine';
-import { RenderableType } from '../../../models/entities';
-import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph';
-import { SpriteEntity, SpriteEntityRenderModel } from './model';
+import { layoutEngine } from '../../../core/layout_engine.js';
+import { RenderableType } from '../../../models/entities.js';
+import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph.js';
+import { SpriteEntity, SpriteEntityRenderModel } from './model.js';
 
 export class SpriteGraphNode extends SceneGraphNode<SpriteEntity> {
     public declare readonly renderState: SpriteEntityRenderModel;

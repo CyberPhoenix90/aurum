@@ -1,6 +1,6 @@
-import { AbstractGridTool } from './abstract_tool';
+import { AbstractGridTool } from './abstract_tool.js';
 import { PointLike } from 'aurum-layout-engine';
-import { MouseButtons } from '../../../input/mouse/mouse';
+import { MouseButtons } from '../../../input/mouse/mouse.js';
 
 export class SolidRectangleGridTool extends AbstractGridTool {
     private startX: number;

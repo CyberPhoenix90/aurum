@@ -1,6 +1,6 @@
 import { TabBar } from 'aurum-components';
 import { ArrayDataSource, Aurum, DataSource } from 'aurumjs';
-import { FileTreeNode } from './model';
+import { FileTreeNode } from './model.js';
 
 export interface TabsProps {
     width: DataSource<number>;

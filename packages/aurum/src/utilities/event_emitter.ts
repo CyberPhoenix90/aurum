@@ -69,7 +69,7 @@ export class EventEmitter<T> {
     /**
      * Subscribe to the event. The callback will be called when the event next fires an update after which the subscription is cancelled
      */
-    public subscribeOnce(callback: import('./common').Callback<T>, cancellationToken?: CancellationToken) {
+    public subscribeOnce(callback: Callback<T>, cancellationToken?: CancellationToken) {
         const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
 
         if (EventEmitter.leakWarningThreshold && this.subscribeOnceChannel.length > EventEmitter.leakWarningThreshold) {

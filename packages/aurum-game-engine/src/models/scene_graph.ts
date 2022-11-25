@@ -1,18 +1,18 @@
 import { AbstractLayout, LayoutElementTreeNode, PointLike, Position, Size } from 'aurum-layout-engine';
 import { ArrayDataSource, CancellationToken, DataSource, dsUnique, MapDataSource, ReadOnlyArrayDataSource, Renderable, SingularAurumElement } from 'aurumjs';
-import { render } from '../core/custom_aurum_renderer';
-import { layoutEngine } from '../core/layout_engine';
-import { AbstractComponent } from '../entities/components/abstract_component';
-import { entityDefaults } from '../entities/entity_defaults';
-import { ContainerGraphNodeModel } from '../entities/types/container/api';
-import { ContainerEntity, ContainerEntityRenderModel } from '../entities/types/container/model';
-import { AbstractRenderPlugin } from '../rendering/abstract_render_plugin';
-import { EntityRenderModel } from '../rendering/model';
-import { toSourceIfDefined } from '../utilities/data/to_source';
-import { _ } from '../utilities/other/streamline';
-import { Constructor } from './common';
-import { CommonEntity, RenderableType } from './entities';
-import { Data } from './input_data';
+import { render } from '../core/custom_aurum_renderer.js';
+import { layoutEngine } from '../core/layout_engine.js';
+import { AbstractComponent } from '../entities/components/abstract_component.js';
+import { entityDefaults } from '../entities/entity_defaults.js';
+import { ContainerGraphNodeModel } from '../entities/types/container/api.js';
+import { ContainerEntity, ContainerEntityRenderModel } from '../entities/types/container/model.js';
+import { AbstractRenderPlugin } from '../rendering/abstract_render_plugin.js';
+import { EntityRenderModel } from '../rendering/model.js';
+import { toSourceIfDefined } from '../utilities/data/to_source.js';
+import { _ } from '../utilities/other/streamline.js';
+import { Constructor } from './common.js';
+import { CommonEntity, RenderableType } from './entities.js';
+import { Data } from './input_data.js';
 
 export interface SceneGraphNodeModel<T> {
     name?: Data<string>;

@@ -1,8 +1,8 @@
-import { RenderableType } from '../../../models/entities';
+import { RenderableType } from '../../../models/entities.js';
 import { PointLike } from 'aurum-layout-engine';
-import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph';
-import { CameraEntity, CameraEntityRenderModel } from './model';
-import { layoutEngine } from '../../../core/layout_engine';
+import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph.js';
+import { CameraEntity, CameraEntityRenderModel } from './model.js';
+import { layoutEngine } from '../../../core/layout_engine.js';
 
 export class CameraGraphNode extends SceneGraphNode<CameraEntity> {
     public declare readonly renderState: CameraEntityRenderModel;

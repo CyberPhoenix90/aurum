@@ -1,8 +1,8 @@
 import { ObjectDataSource } from 'aurumjs';
-import { Data } from '../models/input_data';
+import { Data } from '../models/input_data.js';
 import { PointLike, pointUtils } from 'aurum-layout-engine';
-import { toSource } from '../utilities/data/to_source';
-import { _ } from '../utilities/other/streamline';
+import { toSource } from '../utilities/data/to_source.js';
+import { _ } from '../utilities/other/streamline.js';
 
 export class AspectRatioCalculator {
     public getBestSize(availableSpace: PointLike, desiredAspectRatio: number): PointLike {

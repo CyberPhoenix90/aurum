@@ -1,4 +1,4 @@
-import { ActiveSoundEffect } from './active_sound_effect';
+import { ActiveSoundEffect } from './active_sound_effect.js';
 
 export interface SoundOptions {
     loop?: boolean;

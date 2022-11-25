@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { ErrorBoundary, CancellationToken, Renderable, Aurum } from '../../src/aurumjs';
-import { attachToTestRoot, getTestRoot, sleep } from '../test_utils';
-import { generateSuspenseTests } from './suspense.test';
+import { ErrorBoundary, CancellationToken, Renderable, Aurum } from '../../src/aurumjs.js';
+import { attachToTestRoot, getTestRoot, sleep } from '../test_utils.js';
+import { generateSuspenseTests } from './suspense.test.js';
 
 const errorMessage = "I'm an error";
 

@@ -1,5 +1,5 @@
 import { CancellationToken } from 'aurumjs';
-import { Client } from './client';
+import { Client } from './client.js';
 
 export class Session<T> {
     public readonly connectionToken: CancellationToken;

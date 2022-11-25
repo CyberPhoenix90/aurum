@@ -1,7 +1,7 @@
 import { ContextMenu, currentTheme, Dialog, TreeEntry, TreeViewComponent } from 'aurum-components';
 import { ArrayDataSource, Aurum, DataSource, ReadOnlyArrayDataSource, Renderable } from 'aurumjs';
-import { dialogs } from '../../dialogs/dialogs';
-import { SceneEntityDataReactive } from './scene_edit_model';
+import { dialogs } from '../../dialogs/dialogs.js';
+import { SceneEntityDataReactive } from './scene_edit_model.js';
 
 export interface SceneGraphViewProps {
     editTarget: DataSource<SceneEntityDataReactive>;

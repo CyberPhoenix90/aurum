@@ -4,10 +4,10 @@ import { Aurum, DataSource, dsMap, AurumElementModel } from 'aurumjs';
 import { ipcRenderer } from 'electron';
 import { join, relative } from 'path';
 import { SceneSettings } from 'aurum-game-editor-shared';
-import { MessageType } from '../../../protocol';
-import { currentProject } from '../../../session/session';
-import { fileUrl } from '../../../utils/url';
-import { popups } from '../../popups/popups';
+import { MessageType } from '../../../protocol.js';
+import { currentProject } from '../../../session/session.js';
+import { fileUrl } from '../../../utils/url.js';
+import { popups } from '../../popups/popups.js';
 
 const style = css`
     margin: 12px;

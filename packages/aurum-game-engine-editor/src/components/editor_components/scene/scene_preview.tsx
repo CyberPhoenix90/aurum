@@ -3,9 +3,9 @@ import { aurumify, currentTheme } from 'aurum-components';
 import { Camera, CameraGraphNode, Stage } from 'aurum-game-engine';
 import { PixiJsRenderAdapter } from 'aurum-pixijs-renderer';
 import { ArrayDataSource, Aurum, AurumComponentAPI, DataSource, DuplexDataSource, Renderable } from 'aurumjs';
-import { Grid, SceneGrid } from './grid';
-import { SceneEntityDataReactive } from './scene_edit_model';
-import { DragSession, SceneRenderer } from './scene_renderer';
+import { Grid, SceneGrid } from './grid.js';
+import { SceneEntityDataReactive } from './scene_edit_model.js';
+import { DragSession, SceneRenderer } from './scene_renderer.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 	aurumify(

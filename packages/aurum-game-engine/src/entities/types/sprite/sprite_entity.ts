@@ -1,13 +1,13 @@
 import { ArrayDataSource, AurumComponentAPI, DataSource } from 'aurumjs';
 import { Unit } from 'aurum-layout-engine';
-import { CommonEntityProps } from '../../../models/entities';
-import { Data } from '../../../models/input_data';
-import { ResourceWrapper } from '../../../resources/abstract_resource_manager';
-import { toSourceIfDefined } from '../../../utilities/data/to_source';
-import { entityDefaults } from '../../entity_defaults';
-import { normalizeComponents, propsToModel } from '../../shared';
-import { SpriteGraphNode } from './api';
-import { SpriteEntity } from './model';
+import { CommonEntityProps } from '../../../models/entities.js';
+import { Data } from '../../../models/input_data.js';
+import { ResourceWrapper } from '../../../resources/abstract_resource_manager.js';
+import { toSourceIfDefined } from '../../../utilities/data/to_source.js';
+import { entityDefaults } from '../../entity_defaults.js';
+import { normalizeComponents, propsToModel } from '../../shared.js';
+import { SpriteGraphNode } from './api.js';
+import { SpriteEntity } from './model.js';
 
 export type Texture = Data<string | HTMLCanvasElement | HTMLImageElement | ResourceWrapper<HTMLImageElement, string>>;
 

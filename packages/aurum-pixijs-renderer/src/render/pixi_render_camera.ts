@@ -1,6 +1,6 @@
 import { CameraGraphNode, Color } from 'aurum-game-engine';
 import { AbstractRenderer, autoDetectRenderer, DisplayObject } from 'pixi.js';
-import { NoRenderEntity } from './pixi_no_render_entity';
+import { NoRenderEntity } from './pixi_no_render_entity.js';
 
 export class RenderCameraEntity extends NoRenderEntity {
     private readonly renderer: AbstractRenderer;

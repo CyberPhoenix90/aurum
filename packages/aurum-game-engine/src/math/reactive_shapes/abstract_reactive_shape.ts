@@ -1,6 +1,6 @@
 import { ReactivePointLike } from 'aurum-layout-engine';
-import { Rectangle } from '../shapes/rectangle';
-import { ReactiveRectangle } from './reactive_rectangle';
+import { Rectangle } from '../shapes/rectangle.js';
+import { ReactiveRectangle } from './reactive_rectangle.js';
 
 export abstract class AbstractReactiveShape {
     public readonly position: ReactivePointLike;

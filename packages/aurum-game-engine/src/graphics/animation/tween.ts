@@ -1,5 +1,5 @@
-import { lerp } from '../../math/math_utils';
-import { animate } from './animate';
+import { lerp } from '../../math/math_utils.js';
+import { animate } from './animate.js';
 import { CancellationToken } from 'aurumjs';
 import { PointLike } from 'aurum-layout-engine';
 

@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { SinonFakeTimers } from 'sinon';
-import { CancellationToken } from '../src/aurumjs';
+import { CancellationToken } from '../src/aurumjs.js';
 
 describe('cancellation token', () => {
     let clock: SinonFakeTimers;

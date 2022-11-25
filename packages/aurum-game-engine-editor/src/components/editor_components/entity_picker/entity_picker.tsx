@@ -1,9 +1,9 @@
 import { TreeEntry, TreeViewComponent } from 'aurum-components';
 import { ArrayDataSource, Aurum, AurumComponentAPI, DataSource, dsMap, Renderable } from 'aurumjs';
 import { join, parse, relative } from 'path';
-import { ProjectRootFolders } from '../../../models/project';
-import { currentProject } from '../../../session/session';
-import { SceneEntityDataReactive } from '../scene/scene_edit_model';
+import { ProjectRootFolders } from '../../../models/project.js';
+import { currentProject } from '../../../session/session.js';
+import { SceneEntityDataReactive } from '../scene/scene_edit_model.js';
 
 export interface EntityTypeTreeNode {
     entityFactory: () => SceneEntityDataReactive;

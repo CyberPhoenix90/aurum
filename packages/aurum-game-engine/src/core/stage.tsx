@@ -1,14 +1,14 @@
 import { ArrayDataSource, Aurum, AurumComponentAPI, createRenderSession, DataSource, EventEmitter, MapDataSource, Renderable, Webcomponent } from 'aurumjs';
-import { entityDefaults } from '../entities/entity_defaults';
-import { CameraGraphNode } from '../entities/types/camera/api';
-import { containerDefaultModel } from '../entities/types/container/container_entity';
-import { Clock } from '../game_features/time/clock';
-import { ContainerGraphNode, SceneGraphNode } from '../models/scene_graph';
-import { AbstractRenderPlugin } from '../rendering/abstract_render_plugin';
-import { _ } from '../utilities/other/streamline';
-import { activeCameras } from './active_cameras';
-import { render } from './custom_aurum_renderer';
-import { initializeLayoutEngine } from './layout_engine';
+import { entityDefaults } from '../entities/entity_defaults.js';
+import { CameraGraphNode } from '../entities/types/camera/api.js';
+import { containerDefaultModel } from '../entities/types/container/container_entity.js';
+import { Clock } from '../game_features/time/clock.js';
+import { ContainerGraphNode, SceneGraphNode } from '../models/scene_graph.js';
+import { AbstractRenderPlugin } from '../rendering/abstract_render_plugin.js';
+import { _ } from '../utilities/other/streamline.js';
+import { activeCameras } from './active_cameras.js';
+import { render } from './custom_aurum_renderer.js';
+import { initializeLayoutEngine } from './layout_engine.js';
 
 export interface StageProps {
     clock?: Clock;

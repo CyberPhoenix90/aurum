@@ -1,23 +1,23 @@
-import { baseEntitySchema, ObjectSchema, SchemaFieldType } from './abstract';
+import { baseEntitySchema, ObjectSchema, SchemaFieldType } from './abstract.js';
 
 export const labelEntitySchema: ObjectSchema = {
-	...baseEntitySchema,
-	color: {
-		tooltip: 'Color of the text',
-		optional: true,
-		allowedTypes: [
-			{
-				type: SchemaFieldType.COLOR
-			}
-		]
-	},
-	text: {
-		tooltip: 'Text content of the label',
-		optional: true,
-		allowedTypes: [
-			{
-				type: SchemaFieldType.TEXT
-			}
-		]
-	}
+    ...baseEntitySchema,
+    color: {
+        tooltip: 'Color of the text',
+        optional: true,
+        allowedTypes: [
+            {
+                type: SchemaFieldType.COLOR
+            }
+        ]
+    },
+    text: {
+        tooltip: 'Text content of the label',
+        optional: true,
+        allowedTypes: [
+            {
+                type: SchemaFieldType.TEXT
+            }
+        ]
+    }
 };

@@ -44,11 +44,11 @@ export {
     SourceProps,
     OptGroupProps,
     TableCellProps
-} from './nodes/simple_dom_nodes';
+} from './nodes/simple_dom_nodes.js';
 
-export { InputProps } from './nodes/input';
-export { SelectProps } from './nodes/select';
-export { TextAreaProps } from './nodes/textarea';
+export { InputProps } from './nodes/input.js';
+export { SelectProps } from './nodes/select.js';
+export { TextAreaProps } from './nodes/textarea.js';
 
 export * from './rendering/aurum_style.js';
 export * from './builtin_components/router.js';

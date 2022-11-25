@@ -1,4 +1,4 @@
-import { Unit, UnitType } from './unit';
+import { Unit, UnitType } from './unit.js';
 
 const CALCULATION_PARSER = /(content|inherit|[0-9]+px|[0-9]+%|[0-9]+mm|[0-9]+cm|[0-9]+in)+/gi;
 

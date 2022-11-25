@@ -1,9 +1,10 @@
 import { Aurum, DataSource } from 'aurumjs';
-import { CommonEntityProps, Data, Texture } from '../aurum-game-engine';
-import { Container } from '../entities/types/container/container_entity';
-import { Sprite } from '../entities/types/sprite/sprite_entity';
+import { Container } from '../entities/types/container/container_entity.js';
+import { Sprite, Texture } from '../entities/types/sprite/sprite_entity.js';
 import { Unit, UnitType } from 'aurum-layout-engine';
-import { toSourceIfDefined } from '../utilities/data/to_source';
+import { toSourceIfDefined } from '../utilities/data/to_source.js';
+import { CommonEntityProps } from '../models/entities.js';
+import { Data } from '../models/input_data.js';
 
 export interface GaugeProps extends CommonEntityProps {
     filling: {

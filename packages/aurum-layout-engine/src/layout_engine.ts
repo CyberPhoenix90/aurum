@@ -1,8 +1,8 @@
 import { ArrayDataSource, CancellationToken, DataSource, dsTap, dsUnique, EventEmitter, TreeDataSource } from 'aurumjs';
-import { AbstractLayout } from './layouts/abstract_layout';
-import { BasicLayout } from './layouts/basic_layout';
-import { LayoutData, LayoutElementTreeNode, ReflowEvent, REFOWDIRECTION } from './model';
-import { ReflowWorkList } from './reflow_work_list';
+import { AbstractLayout } from './layouts/abstract_layout.js';
+import { BasicLayout } from './layouts/basic_layout.js';
+import { LayoutData, LayoutElementTreeNode, ReflowEvent, REFOWDIRECTION } from './model.js';
+import { ReflowWorkList } from './reflow_work_list.js';
 
 export interface NodeChange {
     source: LayoutElementTreeNode;

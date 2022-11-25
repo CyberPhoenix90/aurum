@@ -1,4 +1,4 @@
-import { AbstractShape } from './abstract_shape';
+import { AbstractShape } from './abstract_shape.js';
 import { PointLike } from 'aurum-layout-engine';
 
 export class Rectangle extends AbstractShape {

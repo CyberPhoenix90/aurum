@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ObjectDataSource } from '../../src/stream/object_data_source';
+import { ObjectDataSource } from '../../src/stream/object_data_source.js';
 
 describe('object data source', () => {
     let testObject;

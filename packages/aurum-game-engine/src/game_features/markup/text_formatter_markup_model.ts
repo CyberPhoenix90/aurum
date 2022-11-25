@@ -1,6 +1,6 @@
-import { LabelEntityStyle } from '../../entities/types/label/model';
-import { _ } from '../../utilities/other/streamline';
-import { TextFormattingEffects } from './text_formatter';
+import { LabelEntityStyle } from '../../entities/types/label/model.js';
+import { _ } from '../../utilities/other/streamline.js';
+import { TextFormattingEffects } from './text_formatter.js';
 
 export interface MarkupModel {
     /**

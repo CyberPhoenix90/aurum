@@ -1,4 +1,4 @@
-import { CancellationToken, Renderable, Aurum } from '../src/aurumjs';
+import { CancellationToken, Renderable, Aurum } from '../src/aurumjs.js';
 
 export function sleep(time): Promise<void> {
     return new Promise((r) => {

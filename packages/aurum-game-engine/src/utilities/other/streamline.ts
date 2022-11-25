@@ -1,6 +1,6 @@
-import { ReadonlyData, Data } from '../../models/input_data';
+import { ReadonlyData, Data } from '../../models/input_data.js';
 import { DataSource, DuplexDataSource, Stream } from 'aurumjs';
-import { MapLike } from '../../models/common';
+import { MapLike } from '../../models/common.js';
 
 export interface TrimObjectOptions {
     NaN?: boolean;
@@ -68,7 +68,7 @@ export class StreamLine {
                     } else if (typeof dataSources[0][key] === 'undefined' && typeof dataSources[i][key] === 'object') {
                         dataSources[0][key] = {};
                         this.assignRecursive(dataSources[0][key], dataSources[i][key]);
-                    } else if (key in dataSources[i]) {
+                    } else if (typeof dataSources[i] === 'object' && key in (dataSources[i] as Object)) {
                         dataSources[0][key] = dataSources[i][key];
                     }
                 }

@@ -1,8 +1,8 @@
 import { ArrayDataSource, MapDataSource, DataSource } from 'aurumjs';
-import { Constructor } from '../models/common';
-import { AbstractComponent } from './components/abstract_component';
-import { CommonEntityProps, CommonEntity } from '../models/entities';
-import { toSourceIfDefined } from '../utilities/data/to_source';
+import { Constructor } from '../models/common.js';
+import { AbstractComponent } from './components/abstract_component.js';
+import { CommonEntityProps, CommonEntity } from '../models/entities.js';
+import { toSourceIfDefined } from '../utilities/data/to_source.js';
 
 export function getComponentByTypeFactory(components: ArrayDataSource<AbstractComponent>): (type: any) => any {
     return (type: Constructor<any>) => {

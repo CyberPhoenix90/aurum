@@ -1,10 +1,10 @@
 import { ArrayDataSource, AurumComponentAPI, createLifeCycle, DataSource, dsUnique, Renderable } from 'aurumjs';
-import { CommonEntityProps } from '../../../models/entities';
-import { toSourceIfDefined } from '../../../utilities/data/to_source';
-import { entityDefaults } from '../../entity_defaults';
-import { normalizeComponents, propsToModel } from '../../shared';
-import { LabelGraphNode } from './api';
-import { LabelEntityStyle, LabelEntity } from './model';
+import { CommonEntityProps } from '../../../models/entities.js';
+import { toSourceIfDefined } from '../../../utilities/data/to_source.js';
+import { entityDefaults } from '../../entity_defaults.js';
+import { normalizeComponents, propsToModel } from '../../shared.js';
+import { LabelGraphNode } from './api.js';
+import { LabelEntityStyle, LabelEntity } from './model.js';
 
 export interface LabelEntityProps extends CommonEntityProps, LabelEntityStyle {
     onAttach?(node: LabelGraphNode): void;

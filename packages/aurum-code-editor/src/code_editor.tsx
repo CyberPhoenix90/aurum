@@ -12,10 +12,10 @@ import {
     Renderable,
     TreeDataSource
 } from 'aurumjs';
-import { CodeEditor } from './code_editor_component';
-import { ConsoleComponent } from './console_component';
-import { FileTreeNode, FileTreeFile } from './model';
-import { TabsComponent } from './tabs_component';
+import { CodeEditor } from './code_editor_component.js';
+import { ConsoleComponent } from './console_component.js';
+import { FileTreeNode, FileTreeFile } from './model.js';
+import { TabsComponent } from './tabs_component.js';
 
 export interface GeneralProps {
     theme?: DataSource<string>;

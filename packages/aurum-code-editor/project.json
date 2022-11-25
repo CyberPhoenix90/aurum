@@ -2,8 +2,8 @@
     "name": "aurum-code-editor",
     "version": "0.0.0",
     "description": "Fully featured code editor as an aurum component",
-    "main": "prebuilt/cjs/aurum-components.js",
-    "typings": "prebuilt/cjs/aurum-components.d.ts",
+    "main": "prebuilt/esnext/aurum-components.js",
+    "typings": "prebuilt/esnext/aurum-components.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -36,16 +36,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

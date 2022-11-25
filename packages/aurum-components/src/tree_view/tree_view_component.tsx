@@ -1,20 +1,17 @@
 import { css } from '@emotion/css';
 import {
-    ReadOnlyDataSource,
     ArrayDataSource,
     AttributeValue,
     Aurum,
     aurumClassName,
     AurumComponentAPI,
     DataSource,
-    DefaultSwitchCase,
     dsDiff,
     dsMap,
     getValueOf,
     ReadOnlyArrayDataSource,
-    Renderable,
-    Switch,
-    SwitchCase
+    ReadOnlyDataSource,
+    Renderable
 } from 'aurumjs';
 import { TextField } from '../input/text_field.js';
 import { currentTheme } from '../theme/theme.js';
@@ -132,18 +129,20 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export function TreeViewComponent<T>(props: TreeViewComponentProps<T>) {
     return (
-        <Switch state={props.entries.length}>
-            <SwitchCase when={0}>
-                <div style={props.style} class={[style, 'tree-view-component no-entries'] as any}>
-                    {props.noEntriesMsg ?? 'No entries'}
-                </div>
-            </SwitchCase>
-            <DefaultSwitchCase>
-                <div style={props.style} class={[style, 'tree-view-component'] as any}>
-                    <RenderTreeView {...props}></RenderTreeView>
-                </div>
-            </DefaultSwitchCase>
-        </Switch>
+        <>
+            {props.entries.length.transform(
+                dsMap((length) =>
+                    length === 0 ? (
+                        <div style={props.style} class={[style, 'tree-view-component no-entries'] as any}>
+                            {props.noEntriesMsg ?? 'No entries'}
+                        </div>
+                    ) : undefined
+                )
+            )}
+            <div style={props.style} class={[style, 'tree-view-component'] as any}>
+                <RenderTreeView {...props}></RenderTreeView>
+            </div>
+        </>
     );
 }
 
@@ -205,6 +204,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
             if (!isActive.value || !focusedEntry.value || props.renaming?.value) {
                 return;
             }
+            e.preventDefault();
             switch (e.key) {
                 case 'ArrowLeft':
                     if (getValueOf(focusedEntry.value.children?.length)) {

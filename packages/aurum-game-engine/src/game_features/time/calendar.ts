@@ -1,4 +1,4 @@
-import { Moment } from './moment';
+import { Moment } from './moment.js';
 
 export interface CalendarConfig {
     daysInAWeek: number;

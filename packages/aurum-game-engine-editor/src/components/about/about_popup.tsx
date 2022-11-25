@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { Button, FloatingWindow, WindowContent, WindowTitle } from 'aurum-components';
 import { Aurum, AurumElementModel, Renderable } from 'aurumjs';
-import { popups } from '../popups/popups';
+import { popups } from '../popups/popups.js';
 
 export interface AboutPopupProps {}
 

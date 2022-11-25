@@ -1,13 +1,13 @@
 import { ArrayDataSource, EventEmitter } from 'aurumjs';
-import { aurumMouse, MouseButtons } from '../../input/mouse/mouse';
-import { collisionCalculator } from '../../math/shapes/collision_calculator';
-import { Point } from '../../math/shapes/point';
-import { Rectangle } from '../../math/shapes/rectangle';
-import { CommonEntity } from '../../models/entities';
-import { SceneGraphNode } from '../../models/scene_graph';
-import { AbstractComponent } from './abstract_component';
-import { CameraGraphNode } from '../types/camera/api';
-import { activeCameras } from '../../core/active_cameras';
+import { aurumMouse, MouseButtons } from '../../input/mouse/mouse.js';
+import { collisionCalculator } from '../../math/shapes/collision_calculator.js';
+import { Point } from '../../math/shapes/point.js';
+import { Rectangle } from '../../math/shapes/rectangle.js';
+import { CommonEntity } from '../../models/entities.js';
+import { SceneGraphNode } from '../../models/scene_graph.js';
+import { AbstractComponent } from './abstract_component.js';
+import { CameraGraphNode } from '../types/camera/api.js';
+import { activeCameras } from '../../core/active_cameras.js';
 
 export interface MouseInteractionConfig {
     cameras?: CameraGraphNode[] | ArrayDataSource<CameraGraphNode>;

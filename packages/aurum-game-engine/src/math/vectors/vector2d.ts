@@ -1,4 +1,4 @@
-import { AbstractVector } from './abstract_vector';
+import { AbstractVector } from './abstract_vector.js';
 import { Radian, PointLike } from 'aurum-layout-engine';
 
 /**

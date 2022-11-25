@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { aurumToHTML } from '../../src/aurumjs';
-import { Aurum } from '../../src/utilities/aurum';
+import { aurumToHTML } from '../../src/aurumjs.js';
+import { Aurum } from '../../src/utilities/aurum.js';
 
 describe('Aurum To HTML', () => {
     it('Should render HTML in place', () => {

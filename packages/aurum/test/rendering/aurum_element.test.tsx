@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { DataSource } from '../../src/stream/data_source';
-import { Aurum } from '../../src/utilities/aurum';
-import { CancellationToken } from '../../src/utilities/cancellation_token';
-import { Switch, SwitchCase } from '../../src/builtin_components/switch';
+import { DataSource } from '../../src/stream/data_source.js';
+import { Aurum } from '../../src/utilities/aurum.js';
+import { CancellationToken } from '../../src/utilities/cancellation_token.js';
+import { Switch, SwitchCase } from '../../src/builtin_components/switch.js';
 
 describe('Aurum Element', () => {
     let attachToken: CancellationToken;

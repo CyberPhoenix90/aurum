@@ -1,7 +1,7 @@
-import { layoutEngine } from '../../../core/layout_engine';
-import { RenderableType } from '../../../models/entities';
-import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph';
-import { CanvasEntity, CanvasEntityRenderModel } from './model';
+import { layoutEngine } from '../../../core/layout_engine.js';
+import { RenderableType } from '../../../models/entities.js';
+import { SceneGraphNode, SceneGraphNodeModel } from '../../../models/scene_graph.js';
+import { CanvasEntity, CanvasEntityRenderModel } from './model.js';
 
 export class CanvasGraphNode extends SceneGraphNode<CanvasEntity> {
     public declare readonly renderState: CanvasEntityRenderModel;

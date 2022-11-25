@@ -1,6 +1,6 @@
 import { CancellationToken } from 'aurumjs';
-import { NodeChange } from '../layout_engine';
-import { LayoutData, LayoutElementTreeNode, ReflowEvent } from '../model';
+import { NodeChange } from '../layout_engine.js';
+import { LayoutData, LayoutElementTreeNode, ReflowEvent } from '../model.js';
 
 export abstract class AbstractLayout {
     protected token: CancellationToken;

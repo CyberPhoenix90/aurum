@@ -1,2 +1,2 @@
-export * from "./scene";
-export * from "./entity_template";
+export * from './scene.js';
+export * from './entity_template.js';

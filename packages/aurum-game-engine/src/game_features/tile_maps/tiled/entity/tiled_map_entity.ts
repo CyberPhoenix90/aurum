@@ -1,14 +1,14 @@
 import { ArrayDataSource, AurumComponentAPI, Renderable, DataSource } from 'aurumjs';
-import { entityDefaults } from '../../../../entities/entity_defaults';
-import { normalizeComponents, propsToModel } from '../../../../entities/shared';
-import { AbstractShape } from '../../../../math/shapes/abstract_shape';
-import { Circle } from '../../../../math/shapes/circle';
-import { Polygon } from '../../../../math/shapes/polygon';
-import { Rectangle } from '../../../../math/shapes/rectangle';
-import { Vector2D } from '../../../../math/vectors/vector2d';
-import { CommonEntityProps } from '../../../../models/entities';
+import { entityDefaults } from '../../../../entities/entity_defaults.js';
+import { normalizeComponents, propsToModel } from '../../../../entities/shared.js';
+import { AbstractShape } from '../../../../math/shapes/abstract_shape.js';
+import { Circle } from '../../../../math/shapes/circle.js';
+import { Polygon } from '../../../../math/shapes/polygon.js';
+import { Rectangle } from '../../../../math/shapes/rectangle.js';
+import { Vector2D } from '../../../../math/vectors/vector2d.js';
+import { CommonEntityProps } from '../../../../models/entities.js';
 import { PointLike } from 'aurum-layout-engine';
-import { TiledLayer } from '../tiled_layer';
+import { TiledLayer } from '../tiled_layer.js';
 import {
     TiledMapCustomProperties,
     TiledMapLayerModel,
@@ -16,11 +16,11 @@ import {
     TiledMapObjectModel,
     TiledMapTilesetModel,
     TiledObjectShapeData
-} from '../tiled_map_format';
-import { Tileset } from '../tileset';
-import { TiledMapGraphNode } from './api';
-import { toSourceIfDefined } from '../../../../utilities/data/to_source';
-import { TiledMapEntity } from './model';
+} from '../tiled_map_format.js';
+import { Tileset } from '../tileset.js';
+import { TiledMapGraphNode } from './api.js';
+import { toSourceIfDefined } from '../../../../utilities/data/to_source.js';
+import { TiledMapEntity } from './model.js';
 
 export interface EntityFactory {
     [type: string]: (position: PointLike, props: TiledMapCustomProperties[], shape: AbstractShape) => Renderable;

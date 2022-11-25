@@ -1,10 +1,10 @@
 import { ArrayDataSource, CancellationToken, MapDataSource } from 'aurumjs';
-import { Constructor } from '../../../models/common';
-import { SceneGraphNode, ContainerGraphNode } from '../../../models/scene_graph';
-import { AbstractComponent } from '../../components/abstract_component';
-import { ContainerEntity } from './model';
-import { CommonEntity } from '../../../models/entities';
-import { Data } from '../../../models/input_data';
+import { Constructor } from '../../../models/common.js';
+import { SceneGraphNode, ContainerGraphNode } from '../../../models/scene_graph.js';
+import { AbstractComponent } from '../../components/abstract_component.js';
+import { ContainerEntity } from './model.js';
+import { CommonEntity } from '../../../models/entities.js';
+import { Data } from '../../../models/input_data.js';
 
 export interface ContainerGraphNodeModel {
     name: Data<string>;

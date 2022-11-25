@@ -1,6 +1,6 @@
-import { SceneEntityData } from './scene';
+import { SceneEntityData } from './scene.js';
 
 export interface EntityTemplateModel {
-	code: string;
-	entities: SceneEntityData[];
+    code: string;
+    entities: SceneEntityData[];
 }

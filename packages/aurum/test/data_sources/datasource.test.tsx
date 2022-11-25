@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../../src/aurumjs';
-import { DuplexDataSource } from '../../src/stream/duplex_data_source';
-import { ddsFilter, ddsMap, ddsUnique } from '../../src/stream/duplex_data_source_operators';
+import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../../src/aurumjs.js';
+import { DuplexDataSource } from '../../src/stream/duplex_data_source.js';
+import { ddsFilter, ddsMap, ddsUnique } from '../../src/stream/duplex_data_source_operators.js';
 
 describe('Datasource', () => {
     let attachToken: CancellationToken;

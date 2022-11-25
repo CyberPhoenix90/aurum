@@ -1,12 +1,14 @@
 import { ArrayDataSource, Aurum, AurumComponentAPI, DataSource, Renderable } from 'aurumjs';
-import { CommonEntity, ContainerEntityProps, Data, SceneGraphNode } from '../aurum-game-engine';
-import { AbstractComponent } from '../entities/components/abstract_component';
-import { MouseInteractionComponent } from '../entities/components/mouse_interaction_component';
-import { Canvas, PaintOperation } from '../entities/types/canvas/canvas_entity';
-import { Container } from '../entities/types/container/container_entity';
-import { Color } from '../graphics/color';
-import { RoundedRectangle } from '../math/shapes/rounded_rectangle';
-import { toSourceIfDefined } from '../utilities/data/to_source';
+import { AbstractComponent } from '../entities/components/abstract_component.js';
+import { MouseInteractionComponent } from '../entities/components/mouse_interaction_component.js';
+import { Canvas, PaintOperation } from '../entities/types/canvas/canvas_entity.js';
+import { Container, ContainerEntityProps } from '../entities/types/container/container_entity.js';
+import { Color } from '../graphics/color.js';
+import { RoundedRectangle } from '../math/shapes/rounded_rectangle.js';
+import { CommonEntity } from '../models/entities.js';
+import { Data } from '../models/input_data.js';
+import { SceneGraphNode } from '../models/scene_graph.js';
+import { toSourceIfDefined } from '../utilities/data/to_source.js';
 
 export interface PanelProps extends ContainerEntityProps {
     hover?: {

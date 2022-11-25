@@ -1,11 +1,11 @@
 import { Canvas, Container, Label, MapLike, MouseInteractionComponent, Panel, ReactiveRectangle, SceneGraphNode, Sprite } from 'aurum-game-engine';
 import { ArrayDataSource, Aurum, DataSource, dsMap, Renderable } from 'aurumjs';
 import { join } from 'path';
-import { EntityTemplateModel } from '../../../../../aurum-game-editor-shared/prebuilt/cjs/entity_template';
-import { setParentsForSceneModel, reactifySceneModel } from '../../../models/scene_entities/reactive_entities_utils';
-import { currentProject } from '../../../session/session';
-import { fileUrl } from '../../../utils/url';
-import { SceneEntityDataReactive } from './scene_edit_model';
+import { EntityTemplateModel } from '../../../../../aurum-game-editor-shared/prebuilt/esnext/entity_template.js';
+import { setParentsForSceneModel, reactifySceneModel } from '../../../models/scene_entities/reactive_entities_utils.js';
+import { currentProject } from '../../../session/session.js';
+import { fileUrl } from '../../../utils/url.js';
+import { SceneEntityDataReactive } from './scene_edit_model.js';
 
 export interface DragSession {
     dragStartX: number;

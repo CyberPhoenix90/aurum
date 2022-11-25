@@ -1,6 +1,6 @@
 import { CancellationToken, dsMap, dsPipe } from 'aurumjs';
-import { LayoutData, LayoutElementTreeNode } from '../model';
-import { AbstractLayout } from './abstract_layout';
+import { LayoutData, LayoutElementTreeNode } from '../model.js';
+import { AbstractLayout } from './abstract_layout.js';
 
 /**
  * The basic layout only supports numerical positions and sizes and just forwards them as is without any modifications. This allows for zero reflow layouting which is very performance efficient at the cost of having no real features

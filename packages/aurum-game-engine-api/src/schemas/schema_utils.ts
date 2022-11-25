@@ -1,7 +1,7 @@
-import { ObjectSchema, baseEntitySchema } from './abstract';
-import { labelEntitySchema } from './label';
-import { panelEntitySchema } from './panel';
-import { spriteEntitySchema } from './sprite';
+import { ObjectSchema, baseEntitySchema } from './abstract.js';
+import { labelEntitySchema } from './label.js';
+import { panelEntitySchema } from './panel.js';
+import { spriteEntitySchema } from './sprite.js';
 
 export function getSchema(namespace: string): ObjectSchema {
     if (namespace.startsWith('@internal/')) {

@@ -1,10 +1,10 @@
 import { ArrayDataSource, AurumComponentAPI, createRenderSession, DataSource, Renderable } from 'aurumjs';
-import { render } from '../../../core/custom_aurum_renderer';
-import { CommonEntity, CommonEntityProps } from '../../../models/entities';
-import { ContainerGraphNode } from '../../../models/scene_graph';
-import { entityDefaults } from '../../entity_defaults';
-import { normalizeComponents, propsToModel } from '../../shared';
-import { ContainerEntity } from './model';
+import { render } from '../../../core/custom_aurum_renderer.js';
+import { CommonEntity, CommonEntityProps } from '../../../models/entities.js';
+import { ContainerGraphNode } from '../../../models/scene_graph.js';
+import { entityDefaults } from '../../entity_defaults.js';
+import { normalizeComponents, propsToModel } from '../../shared.js';
+import { ContainerEntity } from './model.js';
 
 export interface ContainerEntityProps extends CommonEntityProps {
     onAttach?(node: ContainerGraphNode): void;

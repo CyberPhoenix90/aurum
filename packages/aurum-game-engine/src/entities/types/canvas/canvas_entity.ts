@@ -1,12 +1,12 @@
 import { ArrayDataSource, AurumComponentAPI, DataSource } from 'aurumjs';
-import { CommonEntityProps } from '../../../models/entities';
-import { CanvasGraphNode } from './api';
-import { AbstractShape } from '../../../math/shapes/abstract_shape';
-import { Data } from '../../../models/input_data';
-import { normalizeComponents, propsToModel } from '../../shared';
-import { entityDefaults } from '../../entity_defaults';
-import { CanvasEntity } from './model';
-import { AbstractReactiveShape } from '../../../math/reactive_shapes/abstract_reactive_shape';
+import { CommonEntityProps } from '../../../models/entities.js';
+import { CanvasGraphNode } from './api.js';
+import { AbstractShape } from '../../../math/shapes/abstract_shape.js';
+import { Data } from '../../../models/input_data.js';
+import { normalizeComponents, propsToModel } from '../../shared.js';
+import { entityDefaults } from '../../entity_defaults.js';
+import { CanvasEntity } from './model.js';
+import { AbstractReactiveShape } from '../../../math/reactive_shapes/abstract_reactive_shape.js';
 
 export interface PaintOperation {
     shape?: AbstractShape | AbstractReactiveShape;

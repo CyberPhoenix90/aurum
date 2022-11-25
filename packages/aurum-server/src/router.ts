@@ -11,8 +11,8 @@ import {
     ReadOnlySetDataSource,
     SetDataSource
 } from 'aurumjs';
-import { Client } from './client';
-import { Session } from './session';
+import { Client } from './client.js';
+import { Session } from './session.js';
 
 export interface Endpoint<S, T = 'read' | 'write'> {
     source: S;

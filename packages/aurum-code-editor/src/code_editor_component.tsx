@@ -1,5 +1,5 @@
 import { DataSource, Aurum, ArrayDataSource } from 'aurumjs';
-import { FileTreeFile } from './model';
+import { FileTreeFile } from './model.js';
 
 export interface CodeEditorProps {
     file: FileTreeFile;

@@ -1,6 +1,6 @@
-import { Moment } from './moment';
+import { Moment } from './moment.js';
 import { CancellationToken, DataSource } from 'aurumjs';
-import { onBeforeRender } from '../../core/stage';
+import { onBeforeRender } from '../../core/stage.js';
 
 export interface ClockConfig {
 	timestamp?: number;

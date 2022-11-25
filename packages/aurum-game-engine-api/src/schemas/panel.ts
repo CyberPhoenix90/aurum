@@ -1,4 +1,4 @@
-import { baseEntitySchema, ObjectSchema, SchemaFieldType } from './abstract';
+import { baseEntitySchema, ObjectSchema, SchemaFieldType } from './abstract.js';
 
 export const panelEntitySchema: ObjectSchema = {
     ...baseEntitySchema,

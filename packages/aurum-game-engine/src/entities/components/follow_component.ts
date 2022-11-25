@@ -1,9 +1,9 @@
-import { onBeforeRender } from '../../core/stage';
-import { Vector2D } from '../../math/vectors/vector2d';
-import { CommonEntity } from '../../models/entities';
+import { onBeforeRender } from '../../core/stage.js';
+import { Vector2D } from '../../math/vectors/vector2d.js';
+import { CommonEntity } from '../../models/entities.js';
 import { PointLike } from 'aurum-layout-engine';
-import { SceneGraphNode } from '../../models/scene_graph';
-import { AbstractMovementComponent, MovementComponentConfiguration } from './abstract_movement_component';
+import { SceneGraphNode } from '../../models/scene_graph.js';
+import { AbstractMovementComponent, MovementComponentConfiguration } from './abstract_movement_component.js';
 
 export interface FollowingConfig extends MovementComponentConfiguration {
     target?: SceneGraphNode<CommonEntity>;

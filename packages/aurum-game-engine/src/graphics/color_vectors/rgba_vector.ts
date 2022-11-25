@@ -1,6 +1,6 @@
-import { HSVAVector } from './hsva_vector';
-import { HSVVector } from './hsv_vector';
-import { Vector4D } from '../../math/vectors/vector4d';
+import { HSVAVector } from './hsva_vector.js';
+import { HSVVector } from './hsv_vector.js';
+import { Vector4D } from '../../math/vectors/vector4d.js';
 
 export class RGBAVector extends Vector4D {
     public get r(): number {

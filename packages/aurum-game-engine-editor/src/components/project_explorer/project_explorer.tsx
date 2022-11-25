@@ -1,11 +1,11 @@
 import { css } from '@emotion/css';
 import { aurumify, currentTheme, Dialog, TreeEntry, TreeViewComponent, TreeViewSorting } from 'aurum-components';
 import { Aurum, AurumComponentAPI, DataSource, dsMap, getValueOf, ReadOnlyArrayDataSource, Renderable } from 'aurumjs';
-import { Project } from '../../models/project';
-import { openFile } from '../../session/session';
-import { dialogs } from '../dialogs/dialogs';
-import { ProjectExplorerNode } from './model';
-import { ProjectExplorerContextMenu } from './project_explorer_context_menu';
+import { Project } from '../../models/project.js';
+import { openFile } from '../../session/session.js';
+import { dialogs } from '../dialogs/dialogs.js';
+import { ProjectExplorerNode } from './model.js';
+import { ProjectExplorerContextMenu } from './project_explorer_context_menu.js';
 
 export interface ProjectExplorerProps {
     project: DataSource<Project>;

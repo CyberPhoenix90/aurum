@@ -1,4 +1,4 @@
-import { CommonEntity } from '../models/entities';
+import { CommonEntity } from '../models/entities.js';
 import { DataSource, ArrayDataSource } from 'aurumjs';
 
 export const entityDefaults: CommonEntity = {

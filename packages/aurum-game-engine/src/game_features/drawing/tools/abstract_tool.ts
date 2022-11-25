@@ -1,5 +1,5 @@
 import { PointLike } from 'aurum-layout-engine';
-import { MouseButtons } from '../../../input/mouse/mouse';
+import { MouseButtons } from '../../../input/mouse/mouse.js';
 
 export interface AbstractGridToolConfig {
     onClearPreview();

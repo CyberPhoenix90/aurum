@@ -1,5 +1,5 @@
 import { PointLike } from 'aurum-layout-engine';
-import { Rectangle } from './rectangle';
+import { Rectangle } from './rectangle.js';
 
 export class RoundedRectangle extends Rectangle {
     public radius: number;

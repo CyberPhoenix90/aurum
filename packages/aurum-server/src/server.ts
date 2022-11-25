@@ -11,10 +11,10 @@ import {
 } from 'aurumjs';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
-import * as ws from 'ws';
-import { Client } from './client';
-import { Endpoint, ExposeConfig, Router, RPCEndpoint } from './router';
-import { Session } from './session';
+import ws from 'ws';
+import { Client } from './client.js';
+import { Endpoint, ExposeConfig, Router, RPCEndpoint } from './router.js';
+import { Session } from './session.js';
 
 export interface AurumServerConfig<T> {
     reuseServer?: HttpServer | HttpsServer;

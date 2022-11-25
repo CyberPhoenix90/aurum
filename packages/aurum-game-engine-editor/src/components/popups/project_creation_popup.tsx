@@ -4,9 +4,9 @@ import { Aurum, DataSource, Renderable, AurumElementModel } from 'aurumjs';
 import { ipcRenderer } from 'electron';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { MessageType } from '../../protocol';
-import { loadProject } from '../../session/session';
-import { popups } from './popups';
+import { MessageType } from '../../protocol.js';
+import { loadProject } from '../../session/session.js';
+import { popups } from './popups.js';
 
 export interface ProjectCreationPopupProps {}
 

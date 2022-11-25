@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import * as open from 'open';
+import open from 'open';
 import { join } from 'path';
-import { MessageType } from './protocol';
+import { MessageType } from './protocol.js';
 
 function createWindow() {
     const win = new BrowserWindow({

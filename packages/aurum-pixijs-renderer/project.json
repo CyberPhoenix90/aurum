@@ -1,8 +1,8 @@
 {
     "name": "aurum-pixijs-renderer",
     "version": "0.0.0",
-    "main": "prebuilt/cjs/aurum-pixijs-renderer.js",
-    "typings": "prebuilt/cjs/aurum-pixijs-renderer.d.ts",
+    "main": "prebuilt/esnext/aurum-pixijs-renderer.js",
+    "typings": "prebuilt/esnext/aurum-pixijs-renderer.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -23,16 +23,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

@@ -1,5 +1,5 @@
-import { Radian } from './model';
-import { PointLike } from './point';
+import { Radian } from './model.js';
+import { PointLike } from './point.js';
 
 export const pointUtils = {
     clone(point: PointLike): PointLike {

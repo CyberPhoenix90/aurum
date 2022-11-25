@@ -1,10 +1,10 @@
-import { SceneGraphNode, SceneGraphNodeModel } from '../../../../models/scene_graph';
-import { TiledMapEntity, TiledMapRenderModel } from './model';
-import { RenderableType } from '../../../../models/entities';
-import { TiledMapTileModel } from '../tiled_map_format';
-import { TiledLayer } from '../tiled_layer';
-import { Tileset } from '../tileset';
-import { layoutEngine } from '../../../../core/layout_engine';
+import { SceneGraphNode, SceneGraphNodeModel } from '../../../../models/scene_graph.js';
+import { TiledMapEntity, TiledMapRenderModel } from './model.js';
+import { RenderableType } from '../../../../models/entities.js';
+import { TiledMapTileModel } from '../tiled_map_format.js';
+import { TiledLayer } from '../tiled_layer.js';
+import { Tileset } from '../tileset.js';
+import { layoutEngine } from '../../../../core/layout_engine.js';
 
 export class TiledMapGraphNode extends SceneGraphNode<TiledMapEntity> {
     public declare readonly renderState: TiledMapRenderModel;

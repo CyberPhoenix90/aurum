@@ -1,8 +1,8 @@
 {
     "name": "aurum-layout-engine",
     "version": "0.0.0",
-    "main": "prebuilt/cjs/aurum-layout-engine.js",
-    "typings": "prebuilt/cjs/aurum-layout-engine.d.ts",
+    "main": "prebuilt/esnext/aurum-layout-engine.js",
+    "typings": "prebuilt/esnext/aurum-layout-engine.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -20,23 +20,13 @@
     },
     "projectReferences": ["aurumjs"],
     "defaultBuildSettings": {
-        "assembly": "executable",
+        "assembly": "library",
         "includes": ["src/**/*.ts", "src/**/*.tsx"],
         "jsxFragmentFactory": "Aurum.fragment",
         "jsxFactory": "Aurum.factory",
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

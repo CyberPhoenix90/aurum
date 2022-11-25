@@ -1,10 +1,10 @@
 import { ContextMenu } from 'aurum-components';
 import { ArrayDataSource, Aurum, DataSource } from 'aurumjs';
 import { ipcRenderer } from 'electron';
-import { Project } from '../../models/project';
-import { MessageType } from '../../protocol';
-import { currentProject } from '../../session/session';
-import { ProjectExplorerNode, ProjectExplorerNodeType } from './model';
+import { Project } from '../../models/project.js';
+import { MessageType } from '../../protocol.js';
+import { currentProject } from '../../session/session.js';
+import { ProjectExplorerNode, ProjectExplorerNodeType } from './model.js';
 
 export interface ProjectExplorerContextMenuProps {
     node: ProjectExplorerNode;

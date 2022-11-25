@@ -2,8 +2,8 @@
     "name": "aurum-game-editor-shared",
     "version": "0.0.0",
     "description": "Fully featured code editor as an aurum component",
-    "main": "prebuilt/cjs/aurum-game-editor-shared.js",
-    "typings": "prebuilt/cjs/aurum-game-editor-shared.d.ts",
+    "main": "prebuilt/esnext/aurum-game-editor-shared.js",
+    "typings": "prebuilt/esnext/aurum-game-editor-shared.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -21,16 +21,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

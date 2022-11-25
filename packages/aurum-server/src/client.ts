@@ -1,6 +1,6 @@
 import { CancellationToken, RemoteProtocol } from 'aurumjs';
-import { Session } from './session';
-import * as ws from 'ws';
+import { Session } from './session.js';
+import ws from 'ws';
 
 export class Client<T> {
     public readonly mapdsSubscriptions: Map<string, CancellationToken>;

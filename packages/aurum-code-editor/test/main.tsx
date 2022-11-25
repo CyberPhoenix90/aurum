@@ -1,5 +1,5 @@
 import { ArrayDataSource, Aurum, DataSource } from 'aurumjs';
-import { AurumCodeEditor } from '../src/code_editor';
+import { AurumCodeEditor } from '../src/code_editor.js';
 
 Aurum.attach(
     <div>

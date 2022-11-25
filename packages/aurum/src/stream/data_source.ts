@@ -1164,7 +1164,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return result;
 
         function listenToItem(item: ReadOnlyDataSource<T> | T | DataSource<T> | GenericDataSource<T> | DuplexDataSource<T>) {
-            if (!('listen' in item)) {
+            if (typeof item !== 'object' || !('listen' in item)) {
                 return;
             }
 

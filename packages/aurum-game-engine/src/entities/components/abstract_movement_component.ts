@@ -1,11 +1,11 @@
-import { AbstractComponent } from './abstract_component';
-import { CommonEntity } from '../../models/entities';
+import { AbstractComponent } from './abstract_component.js';
+import { CommonEntity } from '../../models/entities.js';
 import { PointLike } from 'aurum-layout-engine';
 import { DataSource, CancellationToken } from 'aurumjs';
-import { Vector2D } from '../../math/vectors/vector2d';
-import { Clock } from '../../game_features/time/clock';
-import { SceneGraphNode } from '../../models/scene_graph';
-import { engineClock } from '../../core/stage';
+import { Vector2D } from '../../math/vectors/vector2d.js';
+import { Clock } from '../../game_features/time/clock.js';
+import { SceneGraphNode } from '../../models/scene_graph.js';
+import { engineClock } from '../../core/stage.js';
 
 export interface MovementComponentConfiguration {
     speed: number;

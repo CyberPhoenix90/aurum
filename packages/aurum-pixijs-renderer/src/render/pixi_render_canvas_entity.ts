@@ -15,7 +15,7 @@ import {
 } from 'aurum-game-engine';
 import { ArrayDataSource, CancellationToken, DataSource } from 'aurumjs';
 import { Graphics } from 'pixi.js';
-import { NoRenderEntity } from './pixi_no_render_entity';
+import { NoRenderEntity } from './pixi_no_render_entity.js';
 
 export class RenderCanvasEntity extends NoRenderEntity {
     public declare displayObject: Graphics;

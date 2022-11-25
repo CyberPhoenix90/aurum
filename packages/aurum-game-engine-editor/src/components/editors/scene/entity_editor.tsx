@@ -12,7 +12,7 @@ import {
     TextSchemaFieldTypeDescriptor
 } from 'aurum-game-editor-api';
 import { Aurum, DataSource, dsMap } from 'aurumjs';
-import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model';
+import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model.js';
 
 export function sceneEntityToEntityEditor(entity: SceneEntityDataReactive, schema: ObjectSchema) {
     const object: any = {

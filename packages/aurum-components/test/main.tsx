@@ -1,6 +1,6 @@
 import { ArrayDataSource, Aurum } from 'aurumjs';
-import { Toast, Toaster } from '../src/dialog/toaster';
-import { Accordion, AccordionItem } from '../src/accordion/accordion';
+import { Toast, Toaster } from '../src/dialog/toaster.js';
+import { Accordion, AccordionItem } from '../src/accordion/accordion.js';
 
 const ads = new ArrayDataSource();
 

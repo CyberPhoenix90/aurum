@@ -1,6 +1,6 @@
 import { Color, LabelGraphNode } from 'aurum-game-engine';
 import { Text } from 'pixi.js';
-import { NoRenderEntity } from './pixi_no_render_entity';
+import { NoRenderEntity } from './pixi_no_render_entity.js';
 
 export class RenderLabelEntity extends NoRenderEntity {
     public declare displayObject: Text;

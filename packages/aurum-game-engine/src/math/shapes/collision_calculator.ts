@@ -1,10 +1,10 @@
-import { Constructor, MapLike } from '../../models/common';
+import { Constructor, MapLike } from '../../models/common.js';
 import { PointLike, pointUtils } from 'aurum-layout-engine';
-import { AbstractShape } from './abstract_shape';
-import { Circle } from './circle';
-import { ComposedShape } from './composed_shape';
-import { Point } from './point';
-import { Rectangle } from './rectangle';
+import { AbstractShape } from './abstract_shape.js';
+import { Circle } from './circle.js';
+import { ComposedShape } from './composed_shape.js';
+import { Point } from './point.js';
+import { Rectangle } from './rectangle.js';
 
 export class CollisionCalculator {
     private collisionCheckMap: MapLike<(a: AbstractShape, b: AbstractShape) => boolean>;

@@ -1,6 +1,6 @@
 {
     "name": "aurum-canvas",
-    "version": "0.0.28",
+    "version": "0.0.30",
     "description": "Aurum style scene graph management for rendering in canvas",
     "main": "prebuilt/esnext/aurum-canvas.js",
     "typings": "prebuilt/esnext/aurum-canvas.d.ts",
@@ -33,16 +33,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

@@ -14,22 +14,22 @@ import {
     Switch,
     SwitchCase
 } from 'aurumjs';
-import { ProjectFile } from '../../../models/project_file';
-import { reactifySceneModel, setParentsForSceneModel } from '../../../models/scene_entities/reactive_entities_utils';
-import { EntityPicker, EntityTypeTreeNode } from '../../editor_components/entity_picker/entity_picker';
-import { CameraControls } from '../../editor_components/scene/camera_controls';
-import { resolveSchema } from '../../editor_components/scene/entity_utils';
-import { SceneGrid } from '../../editor_components/scene/grid';
-import { GridControls } from '../../editor_components/scene/grid_controls';
-import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model';
-import { SceneGraphView } from '../../editor_components/scene/scene_graph_view';
-import { ScenePreview } from '../../editor_components/scene/scene_preview';
-import { DragSession } from '../../editor_components/scene/scene_renderer';
-import { ProjectExplorerNodeType } from '../../project_explorer/model';
-import { AbstractEditorProps } from '../abstract';
-import { CodeEditor } from '../code/code_editor';
-import { EntityEditor, sceneEntityToEntityEditor } from '../scene/entity_editor';
-import { EntityTemplateModelReactive } from './entity_template_model';
+import { ProjectFile } from '../../../models/project_file.js';
+import { reactifySceneModel, setParentsForSceneModel } from '../../../models/scene_entities/reactive_entities_utils.js';
+import { EntityPicker, EntityTypeTreeNode } from '../../editor_components/entity_picker/entity_picker.js';
+import { CameraControls } from '../../editor_components/scene/camera_controls.js';
+import { resolveSchema } from '../../editor_components/scene/entity_utils.js';
+import { SceneGrid } from '../../editor_components/scene/grid.js';
+import { GridControls } from '../../editor_components/scene/grid_controls.js';
+import { SceneEntityDataReactive } from '../../editor_components/scene/scene_edit_model.js';
+import { SceneGraphView } from '../../editor_components/scene/scene_graph_view.js';
+import { ScenePreview } from '../../editor_components/scene/scene_preview.js';
+import { DragSession } from '../../editor_components/scene/scene_renderer.js';
+import { ProjectExplorerNodeType } from '../../project_explorer/model.js';
+import { AbstractEditorProps } from '../abstract.js';
+import { CodeEditor } from '../code/code_editor.js';
+import { EntityEditor, sceneEntityToEntityEditor } from '../scene/entity_editor.js';
+import { EntityTemplateModelReactive } from './entity_template_model.js';
 
 export interface EntityTemplateEditorProps extends AbstractEditorProps {}
 

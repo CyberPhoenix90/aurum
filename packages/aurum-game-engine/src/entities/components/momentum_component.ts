@@ -1,10 +1,10 @@
 import { DataSource } from 'aurumjs';
-import { engineClock, onBeforeRender } from '../../core/stage';
-import { Clock } from '../../game_features/time/clock';
-import { CommonEntity } from '../../models/entities';
+import { engineClock, onBeforeRender } from '../../core/stage.js';
+import { Clock } from '../../game_features/time/clock.js';
+import { CommonEntity } from '../../models/entities.js';
 import { PointLike } from 'aurum-layout-engine';
-import { SceneGraphNode } from '../../models/scene_graph';
-import { AbstractComponent } from './abstract_component';
+import { SceneGraphNode } from '../../models/scene_graph.js';
+import { AbstractComponent } from './abstract_component.js';
 
 export interface MomentumConfig {
     speed: PointLike;

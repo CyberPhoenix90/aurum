@@ -1,10 +1,10 @@
 import { CancellationToken } from 'aurumjs';
-import { NodeChange } from '../layout_engine';
-import { Calculation } from '../math/calculation';
-import { Unit } from '../math/unit';
-import { LayoutData, LayoutElementTreeNode, Position, ReflowEvent, REFOWDIRECTION, Size } from '../model';
-import { ScreenHelper } from '../screen_helper';
-import { AbstractLayout } from './abstract_layout';
+import { NodeChange } from '../layout_engine.js';
+import { Calculation } from '../math/calculation.js';
+import { Unit } from '../math/unit.js';
+import { LayoutData, LayoutElementTreeNode, Position, ReflowEvent, REFOWDIRECTION, Size } from '../model.js';
+import { ScreenHelper } from '../screen_helper.js';
+import { AbstractLayout } from './abstract_layout.js';
 
 /**
  * The dynamic layout supports numbers, calculations and even callbacks for size and position computation. Complex layouts using this can be expensive. Ideal for use in HUD elements to be able to write a single layout for all screen sizes.

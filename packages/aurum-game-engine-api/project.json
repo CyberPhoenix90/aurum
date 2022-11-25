@@ -1,8 +1,8 @@
 {
     "name": "aurum-game-editor-api",
     "version": "0.0.0",
-    "main": "prebuilt/cjs/aurum-game-editor-api.js",
-    "typings": "prebuilt/cjs/aurum-game-editor-api.d.ts",
+    "main": "prebuilt/esnext/aurum-game-editor-api.js",
+    "typings": "prebuilt/esnext/aurum-game-editor-api.d.ts",
     "compiler": "typescript",
     "homepage": "https://aurumjs.org/",
     "repository": {
@@ -20,16 +20,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outDir": "prebuilt/amd",
-            "name": "amd",
-            "platform": "browser"
-        },
-        {
-            "outDir": "prebuilt/cjs",
-            "name": "cjs",
-            "platform": "node"
-        },
         {
             "outDir": "prebuilt/esnext",
             "name": "esnext",

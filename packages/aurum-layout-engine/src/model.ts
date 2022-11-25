@@ -1,5 +1,5 @@
 import { ArrayDataSource, DataSource } from 'aurumjs';
-import { AbstractLayout } from './layouts/abstract_layout';
+import { AbstractLayout } from './layouts/abstract_layout.js';
 
 export type Radian = number;
 export type Degrees = number;

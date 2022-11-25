@@ -10,15 +10,15 @@ import {
     aurumElementModelIdentitiy,
     CancellationToken
 } from 'aurumjs';
-import { Container } from '../../entities/types/container/container_entity';
-import { LabelGraphNode } from '../../entities/types/label/api';
-import { Label } from '../../entities/types/label/label_entity';
-import { LabelEntityStyle } from '../../entities/types/label/model';
-import { SpriteGraphNode } from '../../entities/types/sprite/api';
-import { Sprite, SpriteEntityProps, Texture } from '../../entities/types/sprite/sprite_entity';
-import { ReadonlyData } from '../../models/input_data';
-import { _ } from '../../utilities/other/streamline';
-import { defaultMarkupModel, MarkupModel } from './text_formatter_markup_model';
+import { Container } from '../../entities/types/container/container_entity.js';
+import { LabelGraphNode } from '../../entities/types/label/api.js';
+import { Label } from '../../entities/types/label/label_entity.js';
+import { LabelEntityStyle } from '../../entities/types/label/model.js';
+import { SpriteGraphNode } from '../../entities/types/sprite/api.js';
+import { Sprite, SpriteEntityProps, Texture } from '../../entities/types/sprite/sprite_entity.js';
+import { ReadonlyData } from '../../models/input_data.js';
+import { _ } from '../../utilities/other/streamline.js';
+import { defaultMarkupModel, MarkupModel } from './text_formatter_markup_model.js';
 
 export interface TextFormatterOptions {
     baseFontStyle?: LabelEntityStyle;

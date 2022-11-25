@@ -1,7 +1,7 @@
-import { EntityRenderModel } from '../../../rendering/model';
+import { EntityRenderModel } from '../../../rendering/model.js';
 import { ReadOnlyDataSource, DataSource, ArrayDataSource } from 'aurumjs';
-import { CommonEntity } from '../../../models/entities';
-import { ResourceWrapper } from '../../../resources/abstract_resource_manager';
+import { CommonEntity } from '../../../models/entities.js';
+import { ResourceWrapper } from '../../../resources/abstract_resource_manager.js';
 import { Unit } from 'aurum-layout-engine';
 
 export interface SpriteEntityRenderModel extends EntityRenderModel {

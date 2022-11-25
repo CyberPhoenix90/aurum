@@ -1,4 +1,4 @@
-import { NoRenderEntity } from './pixi_no_render_entity';
+import { NoRenderEntity } from './pixi_no_render_entity.js';
 import { TilesetTypes, TiledLayer, TiledMapRenderModel, TiledMapGraphNode } from 'aurum-game-engine';
 import { Container, BaseTexture, Texture } from 'pixi.js';
 

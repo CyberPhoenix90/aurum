@@ -1,6 +1,6 @@
 import { PointLike } from 'aurum-layout-engine';
-import { AbstractShape } from './abstract_shape';
-import { Rectangle } from './rectangle';
+import { AbstractShape } from './abstract_shape.js';
+import { Rectangle } from './rectangle.js';
 
 export class RegularPolygon extends AbstractShape {
     public sides: number;

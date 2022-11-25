@@ -1,6 +1,6 @@
-import { SquaredArray } from '../../utilities/data_structures/squared_array';
+import { SquaredArray } from '../../utilities/data_structures/squared_array.js';
 import { PointLike } from 'aurum-layout-engine';
-import { Projector } from '../../models/common';
+import { Projector } from '../../models/common.js';
 import { ArrayDataSource } from 'aurumjs';
 
 export interface BuildingModel<T> {

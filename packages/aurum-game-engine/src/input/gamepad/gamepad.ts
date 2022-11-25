@@ -1,6 +1,6 @@
 import { DataSource, CancellationToken, dsUnique } from 'aurumjs';
-import { Vector2D } from '../../math/vectors/vector2d';
-import { onBeforeRender } from '../../core/stage';
+import { Vector2D } from '../../math/vectors/vector2d.js';
+import { onBeforeRender } from '../../core/stage.js';
 import { PointLike } from 'aurum-layout-engine';
 
 export class Gamepadsettings {

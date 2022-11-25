@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { DataSource, dsMap } from '../../src/aurumjs';
-import { Aurum } from '../../src/utilities/aurum';
-import { CancellationToken } from '../../src/utilities/cancellation_token';
+import { DataSource, dsMap } from '../../src/aurumjs.js';
+import { Aurum } from '../../src/utilities/aurum.js';
+import { CancellationToken } from '../../src/utilities/cancellation_token.js';
 
 function TestComponent(props, children, api) {
     return <span>{children}</span>;

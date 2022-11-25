@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { ObjectDataSource, unwrapObjectRecursive } from '../../src/aurumjs';
-import { ArrayDataSource, DataSource } from '../../src/stream/data_source';
+import { ObjectDataSource, unwrapObjectRecursive } from '../../src/aurumjs.js';
+import { ArrayDataSource, DataSource } from '../../src/stream/data_source.js';
 
 describe('Data source utils', () => {
     it('should unwrap recursively', () => {

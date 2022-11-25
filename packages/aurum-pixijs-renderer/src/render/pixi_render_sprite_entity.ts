@@ -1,7 +1,7 @@
 import { Color, ResourceWrapper, SpriteGraphNode } from 'aurum-game-engine';
 import { ScreenHelper } from 'aurum-layout-engine';
 import { BaseTexture, Sprite, Texture as PixiTexture } from 'pixi.js';
-import { NoRenderEntity } from './pixi_no_render_entity';
+import { NoRenderEntity } from './pixi_no_render_entity.js';
 
 export const textureMap: Map<string | HTMLCanvasElement | HTMLImageElement | ResourceWrapper<HTMLImageElement, string>, BaseTexture> = new Map();
 export const pendingTextureMap: Map<string | ResourceWrapper<HTMLImageElement, string>, Promise<HTMLImageElement>> = new Map();

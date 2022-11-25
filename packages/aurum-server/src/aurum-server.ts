@@ -1,3 +1,3 @@
-export { AurumServer, AurumServerConfig } from './server';
-export { Router, Endpoint } from './router';
-export { Session } from './session';
+export { AurumServer, AurumServerConfig } from './server.js';
+export { Router, Endpoint } from './router.js';
+export { Session } from './session.js';

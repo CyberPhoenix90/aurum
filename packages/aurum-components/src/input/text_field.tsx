@@ -31,7 +31,7 @@ export interface TextFieldProps extends InputProps {
     decorators?: Renderable;
 }
 
-export function TextField(props: TextFieldProps) {
+export function TextField(props: TextFieldProps): Renderable {
     const { decorators, style, ...inputProps } = props;
 
     return (

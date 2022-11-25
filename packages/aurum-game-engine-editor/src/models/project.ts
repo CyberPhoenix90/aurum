@@ -1,8 +1,8 @@
 import { ArrayDataSource, CancellationToken, DataSource, dsMap, DuplexDataSource, getValueOf } from 'aurumjs';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { isAbsolute, join, relative, sep } from 'path';
-import { ProjectExplorerNode, ProjectExplorerNodeType } from '../components/project_explorer/model';
-import { ProjectFile } from './project_file';
+import { ProjectExplorerNode, ProjectExplorerNodeType } from '../components/project_explorer/model.js';
+import { ProjectFile } from './project_file.js';
 
 export interface ProjectModel {
     name: string;
