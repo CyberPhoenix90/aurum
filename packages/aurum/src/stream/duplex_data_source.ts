@@ -113,9 +113,15 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     }
     /**
      * Updates the value in the data source and calls the listen callback for all listeners
+     * Moves the data from the top to the bottom. Used to reflect changes in the source data to the derived data
      * @param newValue new value for the data source
      */
     public updateDownstream(newValue: T): void {
+        //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
+        if (newValue === this) {
+            throw new Error('Cannot update data source with itself');
+        }
+
         if (this.updatingDownstream) {
             throw new Error(
                 'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
@@ -129,10 +135,16 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     }
 
     /**
-     * Updates the value in the data source and calls the listen callback for all listeners
+     * Updates the value in the data source and calls the listen callback for all listeners.
+     * Moves the data from the bottom to the top. Used to reflect changes in derived data back to the source
      * @param newValue new value for the data source
      */
     public updateUpstream(newValue: T): void {
+        //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
+        if (newValue === this) {
+            throw new Error('Cannot update data source with itself');
+        }
+
         if (this.updatingUpstream) {
             throw new Error(
                 'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'

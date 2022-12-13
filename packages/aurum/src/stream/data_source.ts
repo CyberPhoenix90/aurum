@@ -338,6 +338,11 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param newValue new value for the data source
      */
     public update(newValue: T): void {
+        //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
+        if(newValue === this) {
+            throw new Error('Cannot update data source with itself');
+        }
+
         this.primed = true;
         if (this.updating) {
             throw new Error(
