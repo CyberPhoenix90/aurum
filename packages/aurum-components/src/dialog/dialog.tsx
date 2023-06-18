@@ -1,8 +1,8 @@
-import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineAttribute, Renderable } from 'aurumjs';
+import { Aurum, AurumComponentAPI, ClassType, combineStyle, Renderable, StyleType } from 'aurumjs';
 
 export interface DialogProps {
     class?: ClassType;
-    style?: AttributeValue;
+    style?: StyleType;
     blockContextMenu?: boolean;
     onClickOutside?(e: MouseEvent): void;
     onClickInside?(e: MouseEvent): void;
@@ -71,7 +71,7 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
                     e.preventDefault();
                 }
             }}
-            style={combineAttribute(
+            style={combineStyle(
                 api.cancellationToken,
                 props.style,
                 `position:absolute; originX:${orientationX};originY:${orientationY}; left:${posX}px; top:${posY}px;`

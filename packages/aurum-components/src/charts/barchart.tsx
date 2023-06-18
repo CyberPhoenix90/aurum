@@ -1,7 +1,6 @@
 import { AurumCanvas, AurumRectangle } from 'aurum-canvas';
 import {
     ArrayDataSource,
-    AttributeValue,
     Aurum,
     AurumComponentAPI,
     CancellationToken,
@@ -11,7 +10,8 @@ import {
     dsMap,
     dsTap,
     ReadOnlyDataSource,
-    Renderable
+    Renderable,
+    StyleType
 } from 'aurumjs';
 
 export interface DataPoint {
@@ -26,7 +26,7 @@ export interface Serie {
 }
 
 export interface BarChartProps {
-    style?: AttributeValue;
+    style?: StyleType;
     class?: ClassType;
     series: Serie[] | ArrayDataSource<Serie>;
     buckets: number | DataSource<number>;

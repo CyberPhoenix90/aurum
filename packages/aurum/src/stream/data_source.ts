@@ -339,7 +339,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      */
     public update(newValue: T): void {
         //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
-        if(newValue === this) {
+        if (newValue === this) {
             throw new Error('Cannot update data source with itself');
         }
 
@@ -915,14 +915,14 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config: {
             onParseError?: (item) => T;
             onComplete?: () => void;
-            itemSeperatorSequence: string;
+            itemSeperatorSequence?: string;
         } = {
             itemSeperatorSequence: '\n'
         }
     ): ArrayDataSource<T> {
         const decoder = new TextDecoder('utf-8');
         const stream = new ArrayDataSource<T>();
-        const { onParseError, onComplete, itemSeperatorSequence } = config;
+        const { onParseError, onComplete, itemSeperatorSequence = '\n' } = config;
 
         let buffer: string = '';
         const readerStream = response.body.getReader();
@@ -1531,6 +1531,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
         this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
         this.onItemsRemoved.fire(removed);
+    }
+
+    public removeWhere(reject: (v: T) => boolean): void {
+        const removed = this.data.filter(reject);
+        for (const item of removed) {
+            this.remove(item);
+        }
     }
 
     public removeAt(index: number, count: number = 1): T[] {
@@ -2701,6 +2708,21 @@ export class MapDataSource<K, V> {
         return result;
     }
 
+    public toKeysArrayDataSource(cancellation: CancellationToken): ArrayDataSource<K> {
+        const result = new ArrayDataSource<K>();
+        this.listenAndRepeat((change) => {
+            if (change.deleted) {
+                result.remove(change.key);
+            } else if (!change.deleted) {
+                if (!result.includes(change.key)) {
+                    result.push(change.key);
+                }
+            }
+        }, cancellation);
+
+        return result;
+    }
+
     public toArrayDataSource(cancellation: CancellationToken): ArrayDataSource<V> {
         const stateMap: Map<K, V> = new Map<K, V>();
         const result = new ArrayDataSource<V>();
@@ -2716,6 +2738,29 @@ export class MapDataSource<K, V> {
             } else if (!stateMap.has(change.key) && !change.deleted) {
                 const newItem = change.newValue;
                 result.push(newItem);
+                stateMap.set(change.key, newItem);
+            }
+        }, cancellation);
+
+        return result;
+    }
+
+    public toEntriesArrayDataSource(cancellation: CancellationToken): ArrayDataSource<[K, V]> {
+        const stateMap: Map<K, V> = new Map<K, V>();
+        const result = new ArrayDataSource<[K, V]>();
+        this.listenAndRepeat((change) => {
+            if (change.deleted && stateMap.has(change.key)) {
+                const index = result.findIndex((v) => v[0] === change.key);
+                result.removeAt(index);
+                stateMap.delete(change.key);
+            } else if (stateMap.has(change.key)) {
+                const newItem = change.newValue;
+                const index = result.findIndex((v) => v[0] === change.key);
+                result.set(index, [change.key, newItem]);
+                stateMap.set(change.key, newItem);
+            } else if (!stateMap.has(change.key) && !change.deleted) {
+                const newItem = change.newValue;
+                result.push([change.key, newItem]);
                 stateMap.set(change.key, newItem);
             }
         }, cancellation);

@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import {
     ArrayDataSource,
-    AttributeValue,
+    StyleType,
     Aurum,
     aurumClassName,
     AurumComponentAPI,
@@ -35,7 +35,7 @@ export interface TreeViewComponentProps<T> {
     arrowColor?: string | DataSource<string>;
     allowDragAndDrop?: boolean;
     allowFocus?: boolean;
-    style?: AttributeValue;
+    style?: StyleType;
     longFileNameBehavior?: 'hscroll' | 'wrap' | 'elipsis';
     fileTypePriority?: FileTypePriority;
     sorting?: TreeViewSorting;

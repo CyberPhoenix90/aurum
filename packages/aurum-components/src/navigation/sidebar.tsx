@@ -1,11 +1,22 @@
 import { css } from '@emotion/css';
-import { AttributeValue, Aurum, AurumComponentAPI, AurumElementModel, ClassType, combineClass, DataDrain, Renderable, resolveChildren } from 'aurumjs';
+import {
+    AttributeValue,
+    Aurum,
+    AurumComponentAPI,
+    AurumElementModel,
+    ClassType,
+    combineClass,
+    DataDrain,
+    Renderable,
+    resolveChildren,
+    StyleType
+} from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 
 export interface SidebarProps {
     class?: ClassType;
-    style?: AttributeValue;
+    style?: StyleType;
 }
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
@@ -64,7 +75,7 @@ export function SidebarItem(
         title?: AttributeValue;
         onClick?: DataDrain<MouseEvent>;
         class?: ClassType;
-        style?: AttributeValue;
+        style?: StyleType;
     },
     children: Renderable[],
     api: AurumComponentAPI

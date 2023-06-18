@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { Aurum, TextAreaProps, DataSource, dsMap, Renderable, AttributeValue, ClassType, combineClass, AurumComponentAPI } from 'aurumjs';
+import { Aurum, TextAreaProps, DataSource, dsMap, Renderable, ClassType, combineClass, AurumComponentAPI, StyleType } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 
@@ -29,7 +29,7 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export interface TextAreaFieldProps extends TextAreaProps {
     decorators?: Renderable;
-    style?: AttributeValue;
+    style?: StyleType;
     class?: ClassType;
 }
 

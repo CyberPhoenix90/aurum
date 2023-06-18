@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { Aurum, DataSource, CancellationToken } from '../../src/aurumjs.js';
+import { Aurum, DataSource, CancellationToken, MapDataSource, combineStyle, combineClass } from '../../src/aurumjs.js';
 describe('Aurum', () => {
     let clock: sinon.SinonFakeTimers;
     beforeEach(() => {
@@ -245,6 +245,276 @@ describe('Aurum', () => {
 
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === 'test');
+    });
+
+    it('should accept maps for class attribute', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    class={{
+                        red: true,
+                        green: false
+                    }}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === true);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === false);
+    });
+
+    it('should accept maps with datasources for class attribute', () => {
+        const ds = new DataSource(false);
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    class={{
+                        red: true,
+                        green: false,
+                        blue: ds
+                    }}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === true);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === false);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('blue') === false);
+
+        ds.update(true);
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === true);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === false);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('blue') === true);
+    });
+
+    it('should accept arrays for class attribute', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <p class={['red', 'green']}>Hello World</p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === true);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === true);
+    });
+
+    it('should accept map data sources for class', () => {
+        const ds = new MapDataSource<string, boolean>();
+        ds.set('red', true);
+        ds.set('green', false);
+
+        attachToken = Aurum.attach(
+            <div>
+                <p class={ds}>Hello World</p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === true);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === false);
+
+        ds.set('red', false);
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === false);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === false);
+
+        ds.set('green', true);
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('red') === false);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).classList.contains('green') === true);
+    });
+
+    it('should accept style objects for style attribute', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    style={{
+                        color: 'red',
+                        backgroundColor: 'green'
+                    }}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+    });
+
+    it('should accept style objects with datasources for style attribute', () => {
+        const ds = new DataSource('red');
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    style={{
+                        color: ds,
+                        backgroundColor: 'green'
+                    }}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+
+        ds.update('blue');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'blue');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+    });
+
+    it('should accept map data sources for style', () => {
+        const ds = new MapDataSource<string, string>();
+        ds.set('color', 'red');
+        ds.set('backgroundColor', 'green');
+
+        attachToken = Aurum.attach(
+            <div>
+                <p style={ds}>Hello World</p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+
+        ds.set('color', 'blue');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'blue');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+
+        ds.set('backgroundColor', 'yellow');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'blue');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'yellow');
+
+        ds.delete('color');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === '');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'yellow');
+    });
+
+    it('should be able to combine style objects and datasources', () => {
+        const ds = new DataSource('color:red');
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    style={combineStyle(
+                        attachToken,
+                        {
+                            backgroundColor: 'blue'
+                        },
+                        ds
+                    )}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'blue');
+
+        ds.update('color:yellow');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'yellow');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'blue');
+    });
+
+    it('should be able to combine style objects and datasources with map datasources', () => {
+        const ds = new MapDataSource<string, string>();
+        ds.set('color', 'red');
+
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    style={combineStyle(
+                        attachToken,
+                        {
+                            backgroundColor: 'blue'
+                        },
+                        ds
+                    )}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'blue');
+
+        ds.set('color', 'yellow');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'yellow');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'blue');
+    });
+
+    it('should be able to combine classnames and constant classes', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    class={combineClass(attachToken, 'red', 'green', {
+                        blue: true,
+                        yellow: false
+                    })}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).className === 'red green blue');
+    });
+
+    it('should be able to combine classnames and datasources', () => {
+        const ds = new DataSource('red');
+        attachToken = Aurum.attach(
+            <div>
+                <p
+                    class={combineClass(attachToken, ds, 'green', {
+                        blue: true,
+                        yellow: false
+                    })}
+                >
+                    Hello World
+                </p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).className === 'green blue red');
+
+        ds.update('yellow');
+
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).className === 'green blue yellow');
     });
 
     it('Should accept data sources', () => {

@@ -1,9 +1,11 @@
-import { StringSource, ClassType, DataDrain, Callback, MapLike, AttributeValue } from '../utilities/common.js';
-import { DataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import { StringSource, ClassType, DataDrain, Callback, MapLike, AttributeValue, StyleType } from '../utilities/common.js';
+import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { Renderable, AurumComponentAPI, AurumElement, Rendered, renderInternal, createRenderSession } from '../rendering/aurum_element.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { dsUnique } from '../stream/data_source_operators.js';
+import { aurumClassName } from '../aurumjs.js';
+import { camelCaseToKebabCase } from '../utilities/classname.js';
 
 export interface HTMLNodeProps<T> {
     id?: AttributeValue;
@@ -11,7 +13,7 @@ export interface HTMLNodeProps<T> {
     draggable?: AttributeValue;
     class?: ClassType;
     tabindex?: AttributeValue;
-    style?: AttributeValue;
+    style?: StyleType;
     title?: AttributeValue;
     role?: AttributeValue;
     slot?: AttributeValue;
@@ -77,7 +79,7 @@ export const defaultEvents: MapLike<string> = {
 /**
  * @internal
  */
-export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'style', 'role', 'contenteditable', 'slot', 'title'];
+export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'role', 'contenteditable', 'slot', 'title'];
 
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,
@@ -127,6 +129,12 @@ function connectChildren(target: HTMLElement, children: Rendered[]): void {
         } else if (child instanceof AurumElement) {
             child.attachToDom(target, target.childNodes.length);
         } else {
+            if (typeof child === 'function') {
+                throw new Error(
+                    'Unexpected child type passed to DOM Node: function. Did you mean to use a component? To use a component use JSX syntax such as <MyComponent/> it works even with function references. <props.myReference/>'
+                );
+            }
+
             throw new Error(`Unexpected child type passed to DOM Node: ${children}`);
         }
     }
@@ -148,6 +156,10 @@ export function processHTMLNode(
     bindProps(node, defaultAttributes, props, cleanUp, dataProps);
     if (extraAttributes) {
         bindProps(node, extraAttributes, props, cleanUp);
+    }
+
+    if (props.style) {
+        handleStyle(node, props.style, cleanUp);
     }
 
     if (props.class) {
@@ -245,6 +257,16 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
                     node.className = v;
                 }
             });
+    } else if (data instanceof ArrayDataSource) {
+        const value: DataSource<string> = data.reduce<string>((p, c) => `${p} ${c}`, '', cleanUp);
+        node.className = value.value;
+        value.listen((v) => {
+            node.className = v;
+        }, cleanUp);
+    } else if (data instanceof MapDataSource || (typeof data === 'object' && !Array.isArray(data))) {
+        ///@ts-ignore
+        const result = aurumClassName(data, cleanUp);
+        return handleClass(node, result, cleanUp);
     } else {
         const value: string = (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
             if (!c) {
@@ -279,5 +301,50 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
                 });
             }
         }
+    }
+}
+function handleStyle(node: HTMLElement, data: StyleType, cleanUp: CancellationToken) {
+    if (typeof data === 'string') {
+        node.style.cssText = data;
+    } else if (data instanceof DataSource || data instanceof DuplexDataSource) {
+        if (typeof data.value === 'string') {
+            node.setAttribute('style', data.value);
+        }
+        data.transform(dsUnique(), cleanUp).listen((v) => {
+            if (typeof v === 'string') {
+                node.setAttribute('style', v);
+            }
+        });
+    } else if (data instanceof MapDataSource) {
+        const ds = data.toEntriesArrayDataSource(cleanUp).reduce<string>(
+            (p, c) => {
+                return `${p}${camelCaseToKebabCase(c[0])}:${c[1]};`;
+            },
+            '',
+            cleanUp
+        );
+        ds.listenAndRepeat((v) => {
+            node.setAttribute('style', v);
+        }, cleanUp);
+    } else if (typeof data === 'object' && !Array.isArray(data)) {
+        const result = new ArrayDataSource<[string, string]>();
+        let index = 0;
+        for (const i in data) {
+            if (data[i] instanceof DataSource) {
+                const myIndex = index;
+                result.push([i, data[i].value]);
+                (data[i] as ReadOnlyDataSource<string>).listen((v) => {
+                    result.set(myIndex, [i, v]);
+                }, cleanUp);
+            } else {
+                result.push([i, data[i]]);
+            }
+            index++;
+        }
+
+        const ds = result.reduce<string>((p, c) => `${p}${camelCaseToKebabCase(c[0])}:${c[1]};`, '', cleanUp);
+        ds.listenAndRepeat((v) => {
+            node.setAttribute('style', v);
+        }, cleanUp);
     }
 }

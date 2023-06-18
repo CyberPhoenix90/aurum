@@ -1,17 +1,17 @@
 import { css } from '@emotion/css';
 import {
     ArrayDataSource,
-    AttributeValue,
     Aurum,
     AurumComponentAPI,
     ClassType,
-    combineAttribute,
     combineClass,
     DataSource,
     dsMap,
     Renderable,
     resolveChildren,
-    AurumElementModel
+    AurumElementModel,
+    combineStyle,
+    StyleType
 } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
@@ -71,7 +71,7 @@ const toastStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export interface ToasterProps {
     defaultToastActiveTime: number;
-    style?: AttributeValue;
+    style?: StyleType;
     class?: ClassType;
 }
 
@@ -109,7 +109,7 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
 
     return (
         <div
-            style={combineAttribute(api.cancellationToken, props.style, top.transform(dsMap((s) => `top:${s}%;`)))}
+            style={combineStyle(api.cancellationToken, props.style, top.transform(dsMap((s) => `top:${s}%;`)))}
             class={combineClass(api.cancellationToken, props.class, toasterStyle)}
         >
             {activeToast}

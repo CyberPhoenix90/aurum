@@ -1,14 +1,14 @@
 {
     "name": "aurum-components",
-    "version": "0.3.0",
+    "version": "0.3.2",
     "description": "",
     "main": "prebuilt/esnext/aurum-components.js",
     "typings": "prebuilt/esnext/aurum-components.d.ts",
     "compiler": "typescript",
-    "homepage": "https://aurumjs.org/",
+    "homepage": "https://cyberphoenix90.github.io/aurum-website/",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/CyberPhoenix90/aurum-components"
+        "url": "git+https://github.com/CyberPhoenix90/aurum/tree/master/packages/aurum-components"
     },
     "keywords": ["aurumjs", "components"],
     "author": "Joao Santos (CyberPhoenix)",

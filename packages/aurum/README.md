@@ -16,13 +16,15 @@ Components in aurum never "rerender" react style, there is no reconciliation, no
 
 ## Why use Aurum
 
--   Aurum encourages writing UIs in a way that makes them update faster in response to data changes than even in popular modern libraries like react, vue or angular
+-   Aurum encourages writing UIs in a way that makes them update faster in response to data changes than even in popular modern libraries like react, vue or angular without the need for memoization, immutability or pure components.
 
 -   Aurum does most of the data management overhead for you, saving time and allowing to focus on what matters: Implementing your business logic
 
 -   Aurum has very few concepts and a small API, you can get a full understanding of Aurum.js in record time.
 
 -   Aurum is completely built around the stream pattern, pipe your data from the backend over adapters all the way into the DOM
+
+-   Aurum is not a framework. It does not impose how you should write your app and it plays nice with other libraries. You can even mix react and aurum in the same page if you want to.
 
 ## Browser support
 
@@ -66,7 +68,9 @@ In tsconfig.json put the jsxFactory option
 
 ```
     "compilerOptions": {
-        "jsxFactory": "Aurum.factory"
+        "jsxFactory": "Aurum.factory",
+        "jsxFragmentFactory": "Aurum.fragment",
+
     }
 ```
 
@@ -80,7 +84,7 @@ Aurum.attach((<div>Hello Aurum</div>), document.body)
 
 ## Website with documentation and further explanations
 
-http://aurumjs.org/
+https://cyberphoenix90.github.io/aurum-website/
 
 ## Live example
 

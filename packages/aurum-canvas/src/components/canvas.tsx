@@ -13,7 +13,6 @@ import {
     createLifeCycle,
     ReadOnlyDataSource,
     ClassType,
-    AttributeValue,
     dsMap
 } from 'aurumjs';
 import { ComponentModel, ComponentType } from './component_model.js';
@@ -37,6 +36,7 @@ import {
     renderRegularPolygon
 } from './rendering.js';
 import { initializeKeyboardPanningFeature, initializeMousePanningFeature, initializeZoomFeature } from './features.js';
+import { StyleType } from 'aurumjs/prebuilt/esnext/utilities/common.js';
 
 export interface AurumnCanvasFeatures {
     mouseWheelZoom?: {
@@ -66,7 +66,7 @@ export interface AurumCanvasProps {
     onAttach?(canvas: HTMLCanvasElement): void;
     onDetach?(): void;
     class?: ClassType;
-    style?: AttributeValue;
+    style?: StyleType;
     width?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
     height?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
     translate?: DataSource<{ x: number; y: number }>;
@@ -145,8 +145,8 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             }}
             style={props.style}
             class={props.class}
-            width={typeof props.width !== 'object' ? props.width?.toString() : (props.width.transform(dsMap((v) => v.toString())) as DataSource<string>)}
-            height={typeof props.height !== 'object' ? props.height?.toString() : (props.height.transform(dsMap((v) => v.toString())) as DataSource<string>)}
+            width={typeof props.width !== 'object' ? props.width?.toString() : (props.width.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)}
+            height={typeof props.height !== 'object' ? props.height?.toString() : (props.height.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)}
         ></canvas>
     );
 

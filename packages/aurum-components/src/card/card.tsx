@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, DataSource, dsMap, Renderable } from 'aurumjs';
+import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, DataSource, dsMap, Renderable, StyleType } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 
@@ -43,7 +43,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 interface CardProps {
     onClose?: (e: MouseEvent) => void;
     closable?: AttributeValue;
-    style?: AttributeValue;
+    style?: StyleType;
     class?: ClassType;
     onClick?: (e: MouseEvent) => void;
     onMouseDown?: (e: MouseEvent) => void;

@@ -4,22 +4,22 @@ import {
     Aurum,
     AurumComponentAPI,
     AurumElementModel,
-    DataSource,
-    combineAttribute,
-    Renderable,
-    resolveChildren,
-    AttributeValue,
-    ClassType,
     CancellationToken,
+    ClassType,
+    DataSource,
+    Renderable,
+    StyleType,
     combineClass,
+    combineStyle,
     dsMap,
-    dsUpdateToken
+    dsUpdateToken,
+    resolveChildren
 } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 
 export interface AccordionProps {
-    style?: AttributeValue;
+    style?: StyleType;
     class?: ClassType;
     singleOpen?: boolean | DataSource<boolean>;
     sizeMode:
@@ -149,7 +149,7 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                 }
             }}
             class={combineClass(api.cancellationToken, style, props.class, className)}
-            style={combineAttribute(
+            style={combineStyle(
                 api.cancellationToken,
                 props.style,
                 props.sizeMode.type === 'fit-content'

@@ -11,7 +11,8 @@ import {
     AttributeValue,
     dsMap,
     dsDiff,
-    dsTap
+    dsTap,
+    StyleType
 } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { css } from '@emotion/css';
@@ -50,7 +51,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 export function MenuStrip(
     props: {
-        style?: AttributeValue;
+        style?: StyleType;
         class?: ClassType;
         dialogSource: ArrayDataSource<Renderable>;
     },
@@ -159,7 +160,7 @@ export function MenuStripMenuContent(props: {}, children: Renderable[]) {
     return undefined;
 }
 
-export function MenuStripMenu(props: { class?: ClassType; style?: AttributeValue }, children: Renderable[], api: AurumComponentAPI) {
+export function MenuStripMenu(props: { class?: ClassType; style?: StyleType }, children: Renderable[], api: AurumComponentAPI) {
     const menuContent = children.find((c) => (c as AurumElementModel<any>).factory === MenuStripMenuContent);
     const menuId = id++;
     //@ts-ignore

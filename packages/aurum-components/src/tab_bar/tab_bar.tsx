@@ -8,7 +8,7 @@ import {
     dsMap,
     DuplexDataSource,
     Renderable,
-    AttributeValue,
+    StyleType,
     ClassType
 } from 'aurumjs';
 import { css } from '@emotion/css';
@@ -62,7 +62,7 @@ interface TabBarProps {
     onClose?(tab: string, index: number): void;
     onReorder?(tabA: string, tabB: string): void;
     class?: ClassType;
-    style?: AttributeValue;
+    style?: StyleType;
     selected: DataSource<string> | DuplexDataSource<string>;
 }
 

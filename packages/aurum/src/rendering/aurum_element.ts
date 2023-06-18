@@ -1,9 +1,11 @@
 import { diagnosticMode } from '../debug_mode.js';
-import { DataSource, ArrayDataSource, CollectionChange, ReadOnlyDataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
+import { ArrayDataSource, CollectionChange, DataSource, MapDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { EventEmitter } from '../utilities/event_emitter.js';
 import { aurumClassName } from '../utilities/classname.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
+
+export type AurumComponent<T> = (props: T, children: Renderable[], api: AurumComponentAPI) => Renderable;
 
 export function createRenderSession(): RenderSession {
     const session = {
@@ -57,7 +59,9 @@ export interface AurumComponentAPI {
     cancellationToken: CancellationToken;
     prerender(children: Renderable[], lifeCycle: ComponentLifeCycle): any[];
     prerender(child: Renderable, lifeCycle: ComponentLifeCycle): any;
-    className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>>;
+    className(
+        data: { [key: string]: boolean | ReadOnlyDataSource<boolean> } | MapDataSource<string, boolean>
+    ): Array<string | ReadOnlyDataSource<string>> | ArrayDataSource<string>;
 }
 
 export interface AurumElementModel<T> {
@@ -405,7 +409,9 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
             });
             return result;
         },
-        className(data: { [key: string]: boolean | ReadOnlyDataSource<boolean> }): Array<string | ReadOnlyDataSource<string>> {
+        className(
+            data: { [key: string]: boolean | ReadOnlyDataSource<boolean> } | MapDataSource<string, boolean>
+        ): Array<string | ReadOnlyDataSource<string>> | ArrayDataSource<string> {
             return aurumClassName(data, api.cancellationToken);
         }
     };
@@ -612,7 +618,7 @@ export class ArrayAurumElement extends AurumElement {
                 this.renderSessions = new WeakMap();
                 break;
             default:
-                throw new Error('not implemented');
+                throw new Error(`DOM updates from ${change.operationDetailed} are not supported`);
         }
         if (!optimized) {
             this.updateDom();
