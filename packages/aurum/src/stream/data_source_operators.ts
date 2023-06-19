@@ -760,3 +760,15 @@ export function dsPipeAll<T>(...sources: Array<DataSource<T> | DuplexDataSource<
         }
     };
 }
+
+export function dsAccumulate(initialValue: number): DataSourceMapOperator<number, number> {
+    let sum = initialValue;
+    return {
+        name: `accumulate`,
+        operationType: OperationType.MAP,
+        operation: (v) => {
+            sum += v;
+            return sum;
+        }
+    };
+}

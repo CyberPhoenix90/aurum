@@ -2,8 +2,9 @@ import { Aurum } from '../utilities/aurum.js';
 import { AurumComponentAPI, createAPI, createRenderSession, Renderable, RenderSession } from './aurum_element.js';
 import { DataSource } from '../stream/data_source.js';
 import { DomNodeCreator } from '../builtin_components/dom_adapter.js';
+import { Constructor } from '../utilities/common.js';
 
-interface WebComponentProps {
+interface WebComponentProps<Props> {
     /**
      * Name of the webcomponent, must be lower case kebab case and must have at least one hyphen as required by the spec
      * example: au-mycomponent
@@ -12,21 +13,25 @@ interface WebComponentProps {
     /**
      * List of attributes of the web component that will be transformed into a data source that reflects the exact state of the attribute in the DOM no matter what changes the attirbute
      */
-    observedAttributes?: string[];
+    observedAttributes?: (keyof Props)[];
     shadowRootMode?: 'open' | 'closed';
     shadowRootDelegatesFocus?: boolean;
+    /**
+     * Base class of the web component, defaults to HTMLElement
+     */
+    baseClass?: Constructor<HTMLElement>;
 }
 
 /**
  * Wrapper around native web components allows using aurum style component structure to create native components.
  */
 export function Webcomponent<T>(
-    config: WebComponentProps,
+    config: WebComponentProps<T>,
     logic: (props: T, api: AurumComponentAPI) => Renderable
 ): (props: T, children: Renderable[], api: AurumComponentAPI) => Renderable {
     customElements.define(
         config.name,
-        class extends HTMLElement {
+        class extends (config.baseClass ?? HTMLElement) {
             private api: AurumComponentAPI;
             private session: RenderSession;
             private props: any;
@@ -76,7 +81,7 @@ export function Webcomponent<T>(
         }
     );
 
-    return DomNodeCreator(config.name, config.observedAttributes, undefined, (node, props) => {
+    return DomNodeCreator(config.name, config.observedAttributes as string[], undefined, (node, props) => {
         for (const key in props) {
             //@ts-ignore
             if (!(key in node.props)) {

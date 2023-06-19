@@ -1633,14 +1633,21 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const result = new DataSource<R>(initial);
 
         this.listenAndRepeat((change: CollectionChange<T>) => {
-            switch (change.operation) {
-                case 'add':
+            switch (change.operationDetailed) {
+                case 'append':
                     let newVal = result.value;
                     for (const item of change.items) {
                         newVal = reducer(newVal, item);
                     }
                     result.update(newVal);
                     break;
+                case 'clear':
+                    result.update(initial);
+                    break;
+                case 'removeRight':
+                case 'removeLeft':
+                case 'prepend':
+                case 'insert':
                 case 'merge':
                 case 'replace':
                 case 'swap':
@@ -3268,6 +3275,28 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         this.updateEvent.fire({ key, exists: true });
         if (this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.get(key).fire(true);
+        }
+    }
+
+    public merge(newData: Set<K> | SetDataSource<K> | K[] | ArrayDataSource<K>): void {
+        let newItems: Set<K>;
+        if (newData instanceof SetDataSource) {
+            newItems = newData.data;
+        } else if (newData instanceof Set) {
+            newItems = newData;
+        } else if (newData instanceof ArrayDataSource) {
+            newItems = new Set(newData.getData());
+        } else {
+            newItems = new Set(newData);
+        }
+        for (const item of this.data) {
+            if (!newItems.has(item)) {
+                this.delete(item);
+            }
+        }
+
+        for (const item of newItems) {
+            this.add(item);
         }
     }
 

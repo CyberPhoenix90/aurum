@@ -77,6 +77,6 @@ export async function aurumToString(content: any, config: AurumStringAdapterConf
                 propString += `${prop}="${item.props[prop].toString()}" `;
             }
         }
-        return `<${item.name}${propString.trimRight()}>${children}</${item.name}>`;
+        return `<${item.name}${propString.trimEnd()}>${children}</${item.name}>`;
     }
 }

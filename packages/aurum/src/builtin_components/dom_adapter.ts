@@ -200,12 +200,19 @@ function bindProps(node: HTMLElement, keys: string[], props: any, cleanUp: Cance
 }
 
 /**
- * Renders Aurum content synchronously in line.
+ * Renders Aurum content synchronously in line. In case no lifecycle sync object is provided you have to manually call fireOnAttach and dispose at the appropriate times to ensure proper lifecycle handling such as attach and detach events
  * @param content Content to render
+ * @param syncLifecycle Optional lifecycle sync object. If provided the lifecycle of the rendered content will be synchronized with the provided lifecycle (meaning attach and detach events will be fired when the lifecycle fires them)
  */
-export function aurumToHTML(content: Renderable): { content: HTMLElement; fireOnAttach(): void; dispose(): void } {
+export function aurumToHTML(content: Renderable, syncLifecycle?: AurumComponentAPI): { content: HTMLElement; fireOnAttach(): void; dispose(): void } {
     const rs = createRenderSession();
     const renderedContent = renderInternal(content, rs);
+
+    if (syncLifecycle) {
+        syncLifecycle.onAttach(() => rs.attachCalls.forEach((c) => c()));
+        syncLifecycle.onDetach(() => rs.sessionToken.cancel());
+    }
+
     return {
         content: renderedContent,
         fireOnAttach: () => rs.attachCalls.forEach((c) => c()),

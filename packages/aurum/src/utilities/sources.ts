@@ -1,11 +1,16 @@
 import { ObjectDataSource } from '../aurumjs.js';
-import { DataSource, ArrayDataSource } from '../stream/data_source.js';
+import { DataSource, ArrayDataSource, MapDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { Stream } from '../stream/stream.js';
 
-export function getValueOf<T>(sourceOrPrimitive: T[] | ArrayDataSource<T>): ReadonlyArray<T>;
-export function getValueOf<T>(sourceOrPrimitive: T | DataSource<T> | DuplexDataSource<T> | Stream<T>): T;
-export function getValueOf<T>(sourceOrPrimitive: T | T[] | DataSource<T> | DuplexDataSource<T> | Stream<T> | ArrayDataSource<T>): T | ReadonlyArray<T> {
+export type Data<T> = T | DataSource<T>;
+export type DataArray<T> = T[] | ArrayDataSource<T>;
+export type DataObject<T> = T | ObjectDataSource<T>;
+export type DataMap<T> = Map<string, T> | MapDataSource<string, T>;
+
+export function getValueOf<T>(sourceOrPrimitive: DataArray<T>): ReadonlyArray<T>;
+export function getValueOf<T>(sourceOrPrimitive: Data<T> | DuplexDataSource<T> | Stream<T>): T;
+export function getValueOf<T>(sourceOrPrimitive: Data<T> | DataArray<T> | DuplexDataSource<T> | Stream<T>): T | ReadonlyArray<T> {
     if (sourceOrPrimitive instanceof DataSource || sourceOrPrimitive instanceof DuplexDataSource || sourceOrPrimitive instanceof Stream) {
         return sourceOrPrimitive.value;
     }

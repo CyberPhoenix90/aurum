@@ -21,6 +21,18 @@ export class Stream<I, O = I> implements ReadOnlyDataSource<O> {
 
     private constructor() {}
 
+    public static fromFunction<I, O>(func: (value: I) => O): Stream<I, O> {
+        const result = new Stream<I, O>();
+        result.input = new DataSource<I>();
+        result.output = new DataSource<O>();
+
+        result.input.listen((value) => {
+            result.output.update(func(value));
+        });
+
+        return result;
+    }
+
     public static fromFetchRaw(url: string): Stream<void | RequestInit, Promise<Response>> {
         const input = new DataSource<void | RequestInit>();
         const output = new DataSource<Promise<Response>>();
