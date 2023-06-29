@@ -1,9 +1,9 @@
-import { getValueOf } from '../aurumjs.js';
 import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
 import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
+import { getValueOf } from '../utilities/sources.js';
 import { dsDiff, dsTap } from './data_source_operators.js';
 import { DuplexDataSource } from './duplex_data_source.js';
 import {

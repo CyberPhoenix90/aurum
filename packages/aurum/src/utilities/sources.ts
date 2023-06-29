@@ -1,6 +1,6 @@
-import { ObjectDataSource } from '../aurumjs.js';
 import { DataSource, ArrayDataSource, MapDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { ObjectDataSource } from '../stream/object_data_source.js';
 import { Stream } from '../stream/stream.js';
 
 export type Data<T> = T | DataSource<T>;

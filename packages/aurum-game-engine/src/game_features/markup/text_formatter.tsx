@@ -91,7 +91,7 @@ export function TextFormatter(props: TextFormatterProps, children: Renderable[],
     api.synchronizeLifeCycle(lc);
     const input = api.prerender(children, lc).map((e) => (typeof e === 'string' ? document.createTextNode(e) : e));
 
-    if (input.find((e) => !(e instanceof HTMLElement || e instanceof Text))) {
+    if (input.find((e) => !(e instanceof HTMLElement || e instanceof SVGElement || e instanceof Text))) {
         throw new Error('TextFormatter expects an HTML element as its children');
     }
 

@@ -1,7 +1,8 @@
-import { resolveChildren, urlHashEmitter } from '../aurumjs.js';
 import { AurumComponentAPI, AurumElementModel, Renderable } from '../rendering/aurum_element.js';
 import { DataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
 import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
+import { urlHashEmitter } from '../stream/emitters.js';
+import { resolveChildren } from '../utilities/transclusion.js';
 
 export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
     const resolvedChildren = resolveChildren<AurumElementModel<RouteProps>>(children, api.cancellationToken, (c) => {

@@ -1,11 +1,11 @@
-import { ArrayDataSource, SetDataSource } from '../stream/data_source';
-import { DuplexDataSource } from '../stream/duplex_data_source';
-import { CancellationToken } from './cancellation_token';
-import { EventEmitter } from './event_emitter';
-import { UrlStorage } from './url_storage';
+import { ArrayDataSource, SetDataSource } from '../stream/data_source.js';
+import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import { CancellationToken } from './cancellation_token.js';
+import { EventEmitter } from './event_emitter.js';
+import { UrlStorage } from './url_storage.js';
 
 export class StorageStream {
-    private storageAPI: Storage;
+    public readonly storageAPI: Storage;
     private onChange: EventEmitter<{ key: string; value: string }>;
     private originalSetItem: (key: string, value: string) => void;
     private originalRemoveItem: (key: string) => void;

@@ -4,8 +4,7 @@ import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { Renderable, AurumComponentAPI, AurumElement, Rendered, renderInternal, createRenderSession } from '../rendering/aurum_element.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { dsUnique } from '../stream/data_source_operators.js';
-import { aurumClassName } from '../aurumjs.js';
-import { camelCaseToKebabCase } from '../utilities/classname.js';
+import { aurumClassName, camelCaseToKebabCase } from '../utilities/classname.js';
 
 export interface HTMLNodeProps<T> {
     id?: AttributeValue;
@@ -85,10 +84,16 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,
     extraAttributes?: string[],
     extraEvents?: MapLike<string>,
-    extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void
+    extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void,
+    svg: boolean = false
 ) {
     return function (props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
-        const node = document.createElement(nodeName);
+        let node;
+        if (svg) {
+            node = document.createElementNS('http://www.w3.org/2000/svg', nodeName);
+        } else {
+            node = document.createElement(nodeName);
+        }
         if (props) {
             processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
         }
@@ -124,7 +129,7 @@ function connectChildren(target: HTMLElement, children: Rendered[]): void {
         if (!child) {
             continue;
         }
-        if (child instanceof Text || child instanceof HTMLElement) {
+        if (child instanceof Text || child instanceof HTMLElement || child instanceof SVGElement) {
             target.appendChild(child);
         } else if (child instanceof AurumElement) {
             child.attachToDom(target, target.childNodes.length);
@@ -271,7 +276,7 @@ function handleClass(node: HTMLElement, data: ClassType, cleanUp: CancellationTo
             node.className = v;
         }, cleanUp);
     } else if (data instanceof MapDataSource || (typeof data === 'object' && !Array.isArray(data))) {
-        ///@ts-ignore
+        //@ts-ignore
         const result = aurumClassName(data, cleanUp);
         return handleClass(node, result, cleanUp);
     } else {

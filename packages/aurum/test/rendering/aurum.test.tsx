@@ -22,8 +22,22 @@ describe('Aurum', () => {
 
     it('Should set inner text', () => {
         attachToken = Aurum.attach(<div>Hello World</div>, document.getElementById('target'));
-        clock.tick(100);
         assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === 'Hello World');
+    });
+
+    it('Should work with svg', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+                </svg>
+            </div>,
+            document.getElementById('target')
+        );
+        assert(document.getElementById('target').firstChild.childNodes.length === 1);
+        assert(document.getElementById('target').firstChild.firstChild.nodeName === 'svg');
+        assert(document.getElementById('target').firstChild.firstChild.firstChild.nodeName === 'circle');
+        assert((document.getElementById('target').firstChild.firstChild.firstChild as SVGElement).getAttribute('cx') === '50');
     });
 
     it('Should fire onAttach when connected to dom', () => {

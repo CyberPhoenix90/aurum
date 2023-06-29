@@ -1,5 +1,6 @@
-import { Aurum, ErrorBoundary } from '../aurumjs.js';
 import { AurumComponentAPI, Renderable } from '../rendering/aurum_element.js';
+import { Aurum } from '../utilities/aurum.js';
+import { ErrorBoundary } from './error_boundary.js';
 
 export interface SuspenseProps {
     fallback?: Renderable;

@@ -40,7 +40,7 @@ type ResolvedRenderable =
 
 export type Renderable = ResolvedRenderable | Promise<ResolvedRenderable>;
 
-export type Rendered = AurumElement | HTMLElement | Text;
+export type Rendered = AurumElement | HTMLElement | Text | SVGElement;
 
 export interface ComponentLifeCycle {
     onAttach(): void;
@@ -244,7 +244,7 @@ export abstract class AurumElement {
                 this.hostNode.childNodes[i + workIndex + offset] !== this.children[i] &&
                 this.hostNode.childNodes[i + workIndex + offset] !== (this.children[i + 1] as SingularAurumElement)?.contentStartMarker
             ) {
-                if (child instanceof HTMLElement || child instanceof Text) {
+                if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
                     this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
                     if (this.hostNode.childNodes[i + workIndex + offset]) {
                         this.lastEndIndex++;
@@ -257,7 +257,7 @@ export abstract class AurumElement {
                     throw new Error('not implemented');
                 }
             } else {
-                if (child instanceof HTMLElement || child instanceof Text) {
+                if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
                     if (this.hostNode.childNodes[i + workIndex + offset]) {
                         this.lastEndIndex++;
                         this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
@@ -564,7 +564,7 @@ export class ArrayAurumElement extends AurumElement {
                 const itemA = this.children[change.index];
                 const itemB = this.children[change.index2];
 
-                if (itemA instanceof HTMLElement && itemB instanceof HTMLElement) {
+                if ((itemA instanceof HTMLElement && itemB instanceof HTMLElement) || (itemA instanceof SVGElement && itemB instanceof SVGElement)) {
                     optimized = true;
                     if (itemA.parentElement === itemB.parentElement) {
                         if (itemA.nextSibling === itemB) {

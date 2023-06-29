@@ -49,7 +49,7 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
         }
     });
 
-    if (props.target instanceof HTMLElement) {
+    if (props.target instanceof HTMLElement || props.target instanceof SVGElement) {
         const bb = props.target.getBoundingClientRect();
         applyLayout(bb);
     } else {

@@ -1,8 +1,9 @@
 {
     "name": "aurum-server",
-    "version": "0.0.21",
+    "version": "0.0.23",
     "description": "Websocket powered webserver for Aurum.js allowing the sychronization between datasources of a server and a client",
     "main": "prebuilt/esnext/aurum-server.js",
+    "type": "module",
     "typings": "prebuilt/esnext/aurum-server.d.ts",
     "compiler": "typescript",
     "repository": {

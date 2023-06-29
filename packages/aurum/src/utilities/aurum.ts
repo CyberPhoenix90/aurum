@@ -26,12 +26,14 @@ import {
     ColProps,
     Data,
     DataProps,
+    Defs,
     Details,
     Div,
     Em,
     Footer,
     Form,
     FormProps,
+    G,
     H1,
     H2,
     H3,
@@ -53,6 +55,7 @@ import {
     Label,
     LabelProps,
     Li,
+    Line,
     Link,
     LinkProps,
     Meta,
@@ -76,6 +79,7 @@ import {
     Progress,
     ProgressProps,
     Q,
+    Rect,
     Samp,
     Script,
     ScriptProps,
@@ -110,7 +114,43 @@ import {
     Var,
     Video,
     VideoProps,
-    Wbr
+    Wbr,
+    Text,
+    Tspan,
+    Circle,
+    Ellipse,
+    Polygon,
+    Polyline,
+    Path,
+    Image,
+    Symbol,
+    CircleProps,
+    EllipseProps,
+    ImageProps,
+    LineProps,
+    PathProps,
+    PolygonProps,
+    PolylineProps,
+    RectProps,
+    SymbolProps,
+    UseProps,
+    LinearGradientProps,
+    RadialGradientProps,
+    StopProps,
+    MaskProps,
+    Mask,
+    Use,
+    Stop,
+    LinearGradient,
+    RadialGradient,
+    Marker,
+    ClipPath,
+    ForeignObject,
+    Pattern,
+    ClipPathProps,
+    PatternProps,
+    ForeignObjectProps,
+    MarkerProps
 } from '../nodes/simple_dom_nodes.js';
 import { TextArea, TextAreaProps } from '../nodes/textarea.js';
 import {
@@ -211,7 +251,29 @@ const nodeMap = {
     slot: Slot,
     col: Col,
     colgroup: Colgroup,
-    caption: Caption
+    caption: Caption,
+    line: Line,
+    rect: Rect,
+    defs: Defs,
+    g: G,
+    text: Text,
+    tspan: Tspan,
+    circle: Circle,
+    ellipse: Ellipse,
+    polygon: Polygon,
+    polyline: Polyline,
+    path: Path,
+    image: Image,
+    symbol: Symbol,
+    use: Use,
+    stop: Stop,
+    lineargradient: LinearGradient,
+    radialgradient: RadialGradient,
+    clippath: ClipPath,
+    pattern: Pattern,
+    mask: Mask,
+    foreignobject: ForeignObject,
+    marker: Marker
 };
 
 export class Aurum {
@@ -369,6 +431,28 @@ export namespace Aurum {
             col: ColProps;
             colgroup: ColProps;
             caption: HTMLNodeProps<HTMLTableCaptionElement>;
+            line: LineProps;
+            rect: RectProps;
+            defs: HTMLNodeProps<SVGDefsElement>;
+            g: HTMLNodeProps<SVGGElement>;
+            text: HTMLNodeProps<SVGTextElement>;
+            tspan: HTMLNodeProps<SVGTSpanElement>;
+            circle: CircleProps;
+            ellipse: EllipseProps;
+            polygon: PolygonProps;
+            polyline: PolylineProps;
+            path: PathProps;
+            image: ImageProps;
+            symbol: SymbolProps;
+            use: UseProps;
+            stop: StopProps;
+            linearGradient: LinearGradientProps;
+            radialGradient: RadialGradientProps;
+            clipPath: ClipPathProps;
+            pattern: PatternProps;
+            mask: MaskProps;
+            foreignObject: ForeignObjectProps;
+            marker: MarkerProps;
         }
     }
 }

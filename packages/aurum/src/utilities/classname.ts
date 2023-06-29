@@ -1,5 +1,5 @@
-import { dsMap } from '../aurumjs.js';
 import { ReadOnlyDataSource, DataSource, MapDataSource, ArrayDataSource } from '../stream/data_source.js';
+import { dsMap } from '../stream/data_source_operators.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 import { AttributeValue, ClassType, StyleType } from './common.js';

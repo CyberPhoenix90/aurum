@@ -44,7 +44,28 @@ export {
     ScriptProps,
     SourceProps,
     OptGroupProps,
-    TableCellProps
+    TableCellProps,
+    UseProps,
+    PathProps,
+    DefsProps,
+    LineProps,
+    MaskProps,
+    RectProps,
+    StopProps,
+    TextProps,
+    ImageProps,
+    CircleProps,
+    MarkerProps,
+    SymbolProps,
+    PolygonProps,
+    EllipseProps,
+    PolylineProps,
+    SVGNodeProps,
+    LinearGradientProps,
+    RadialGradientProps,
+    ClipPathProps,
+    PatternProps,
+    ForeignObjectProps
 } from './nodes/simple_dom_nodes.js';
 
 export { InputProps } from './nodes/input.js';
@@ -73,7 +94,7 @@ export * from './utilities/classname.js';
 export * from './utilities/sources.js';
 export * from './utilities/transclusion.js';
 export * from './utilities/storage_stream.js';
-export * from './utilities/url_storage';
+export * from './utilities/url_storage.js';
 
 export { aurumToHTML } from './builtin_components/dom_adapter.js';
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode.js';

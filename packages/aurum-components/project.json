@@ -1,8 +1,9 @@
 {
     "name": "aurum-components",
-    "version": "0.3.3",
+    "version": "0.3.5",
     "description": "",
     "main": "prebuilt/esnext/aurum-components.js",
+    "type": "module",
     "typings": "prebuilt/esnext/aurum-components.d.ts",
     "compiler": "typescript",
     "homepage": "https://cyberphoenix90.github.io/aurum-website/",

@@ -734,18 +734,322 @@ export const Script = DomNodeCreator<ScriptProps>('script', [
     'nonce'
 ]);
 
+const commonSvgProps = [
+    'clip-path',
+    'clip-rule',
+    'color',
+    'color-interpolation',
+    'color-rendering',
+    'cursor',
+    'display',
+    'fill',
+    'fill-opacity',
+    'fill-rule',
+    'filter',
+    'mask',
+    'opacity',
+    'pointer-events',
+    'shape-rendering',
+    'stroke',
+    'stroke-dasharray',
+    'stroke-dashoffset',
+    'stroke-linecap',
+    'stroke-linejoin',
+    'stroke-miterlimit',
+    'stroke-opacity',
+    'stroke-width',
+    'transform',
+    'vector-effect',
+    'visibility'
+];
+
+export interface SVGNodeProps extends HTMLNodeProps<SVGSVGElement> {
+    'clip-path'?: AttributeValue;
+    'clip-rule'?: AttributeValue;
+    color?: AttributeValue;
+    'color-interpolation'?: AttributeValue;
+    'color-rendering'?: AttributeValue;
+    cursor?: AttributeValue;
+    display?: AttributeValue;
+    fill?: AttributeValue;
+    'fill-opacity'?: AttributeValue;
+    'fill-rule'?: AttributeValue;
+    filter?: AttributeValue;
+    mask?: AttributeValue;
+    opacity?: AttributeValue;
+    'pointer-events'?: AttributeValue;
+    'shape-rendering'?: AttributeValue;
+    stroke?: AttributeValue;
+    'stroke-dasharray'?: AttributeValue;
+    'stroke-dashoffset'?: AttributeValue;
+    'stroke-linecap'?: AttributeValue;
+    'stroke-linejoin'?: AttributeValue;
+    'stroke-miterlimit'?: AttributeValue;
+    'stroke-opacity'?: AttributeValue;
+    'stroke-width'?: AttributeValue;
+    transform?: AttributeValue;
+    'vector-effect'?: AttributeValue;
+    visibility?: AttributeValue;
+}
 /**
  * @internal
  */
-export interface SvgProps extends HTMLNodeProps<HTMLOrSVGElement> {
+export interface SvgProps extends SVGNodeProps {
     width?: AttributeValue;
     height?: AttributeValue;
+    xmlns?: AttributeValue;
+    version?: AttributeValue;
+    x?: AttributeValue;
+    y?: AttributeValue;
+    x1?: AttributeValue;
+    y1?: AttributeValue;
+    x2?: AttributeValue;
+    y2?: AttributeValue;
+    cx?: AttributeValue;
+    cy?: AttributeValue;
+    r?: AttributeValue;
+    rx?: AttributeValue;
+    ry?: AttributeValue;
+    d?: AttributeValue;
+    path?: AttributeValue;
+    points?: AttributeValue;
+    viewBox?: AttributeValue;
+    preserveAspectRatio?: AttributeValue;
+    'xmlns:xlink'?: AttributeValue;
+    'xml:space'?: AttributeValue;
 }
 
 /**
  * @internal
  */
-export const Svg = DomNodeCreator<SvgProps>('svg', ['width', 'height']);
+export const Svg = DomNodeCreator<SvgProps>(
+    'svg',
+    [
+        'width',
+        'height',
+        'xmlns',
+        'version',
+        'x',
+        'y',
+        'x1',
+        'y1',
+        'x2',
+        'y2',
+        'cx',
+        'cy',
+        'r',
+        'rx',
+        'ry',
+        'd',
+        'path',
+        'points',
+        'viewBox',
+        'preserveAspectRatio',
+        'xmlns:xlink',
+        'xml:space',
+        ...commonSvgProps
+    ],
+    undefined,
+    undefined,
+    true
+);
+
+export interface CircleProps extends SVGNodeProps {
+    cx?: AttributeValue;
+    cy?: AttributeValue;
+    r?: AttributeValue;
+}
+
+export const Circle = DomNodeCreator<CircleProps>('circle', ['cx', 'cy', 'r', ...commonSvgProps], undefined, undefined, true);
+
+export interface EllipseProps extends SVGNodeProps {
+    cx?: AttributeValue;
+    cy?: AttributeValue;
+    rx?: AttributeValue;
+    ry?: AttributeValue;
+}
+
+export const Ellipse = DomNodeCreator<EllipseProps>('ellipse', ['cx', 'cy', 'rx', 'ry', ...commonSvgProps], undefined, undefined, true);
+
+export interface LineProps extends SVGNodeProps {
+    x1?: AttributeValue;
+    y1?: AttributeValue;
+    x2?: AttributeValue;
+    y2?: AttributeValue;
+}
+
+export const Line = DomNodeCreator<LineProps>('line', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
+
+export interface PolygonProps extends SVGNodeProps {
+    points?: AttributeValue;
+}
+
+export const Polygon = DomNodeCreator<PolygonProps>('polygon', ['points', ...commonSvgProps], undefined, undefined, true);
+
+export interface PolylineProps extends SVGNodeProps {
+    points?: AttributeValue;
+}
+
+export const Polyline = DomNodeCreator<PolylineProps>('polyline', ['points', ...commonSvgProps], undefined, undefined, true);
+
+export interface PathProps extends SVGNodeProps {
+    d?: AttributeValue;
+}
+
+export const Path = DomNodeCreator<PathProps>('path', ['d', ...commonSvgProps], undefined, undefined, true);
+
+export interface RectProps extends SVGNodeProps {
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+}
+
+export const Rect = DomNodeCreator<RectProps>('rect', ['x', 'y', 'width', 'height', ...commonSvgProps], undefined, undefined, true);
+
+export interface TextProps extends SVGNodeProps {
+    dx?: AttributeValue;
+    dy?: AttributeValue;
+    rotate?: AttributeValue;
+    textLength?: AttributeValue;
+    x?: AttributeValue;
+    y?: AttributeValue;
+}
+
+export const Text = DomNodeCreator<TextProps>('text', ['dx', 'dy', 'rotate', 'textLength', 'x', 'y', ...commonSvgProps], undefined, undefined, true);
+
+export const Tspan = DomNodeCreator<TextProps>('tspan', ['dx', 'dy', 'rotate', 'textLength', 'x', 'y', ...commonSvgProps], undefined, undefined, true);
+
+export interface ImageProps extends SVGNodeProps {
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+    href?: AttributeValue;
+}
+
+export const Image = DomNodeCreator<ImageProps>('image', ['x', 'y', 'width', 'height', 'href', ...commonSvgProps], undefined, undefined, true);
+
+export interface GProps extends SVGNodeProps {}
+
+export const G = DomNodeCreator<GProps>('g', [...commonSvgProps], undefined, undefined, true);
+
+export interface DefsProps extends SVGNodeProps {}
+
+export const Defs = DomNodeCreator<DefsProps>('defs', [...commonSvgProps], undefined, undefined, true);
+
+export interface SymbolProps extends SVGNodeProps {
+    viewBox?: AttributeValue;
+    preserveAspectRatio?: AttributeValue;
+}
+
+export const Symbol = DomNodeCreator<SymbolProps>('symbol', ['viewBox', 'preserveAspectRatio', ...commonSvgProps], undefined, undefined, true);
+
+export interface UseProps extends SVGNodeProps {
+    href?: AttributeValue;
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+}
+
+export const Use = DomNodeCreator<UseProps>('use', ['href', 'x', 'y', 'width', 'height', ...commonSvgProps], undefined, undefined, true);
+
+export interface MarkerProps extends SVGNodeProps {
+    viewBox?: AttributeValue;
+    preserveAspectRatio?: AttributeValue;
+    refX?: AttributeValue;
+    refY?: AttributeValue;
+    markerWidth?: AttributeValue;
+    markerHeight?: AttributeValue;
+    orient?: AttributeValue;
+}
+
+export const Marker = DomNodeCreator<MarkerProps>(
+    'marker',
+    ['viewBox', 'preserveAspectRatio', 'refX', 'refY', 'markerWidth', 'markerHeight', 'orient', ...commonSvgProps],
+    undefined,
+    undefined,
+    true
+);
+
+export interface MaskProps extends SVGNodeProps {
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+}
+
+export const Mask = DomNodeCreator<MaskProps>('mask', ['x', 'y', 'width', 'height', ...commonSvgProps], undefined, undefined, true);
+
+export interface LinearGradientProps extends SVGNodeProps {
+    x1?: AttributeValue;
+    y1?: AttributeValue;
+    x2?: AttributeValue;
+    y2?: AttributeValue;
+}
+
+export const LinearGradient = DomNodeCreator<LinearGradientProps>('linearGradient', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
+
+export interface RadialGradientProps extends SVGNodeProps {
+    cx?: AttributeValue;
+    cy?: AttributeValue;
+    r?: AttributeValue;
+    fx?: AttributeValue;
+    fy?: AttributeValue;
+    fr?: AttributeValue;
+}
+
+export const RadialGradient = DomNodeCreator<RadialGradientProps>(
+    'radialGradient',
+    ['cx', 'cy', 'r', 'fx', 'fy', 'fr', ...commonSvgProps],
+    undefined,
+    undefined,
+    true
+);
+
+export interface StopProps extends SVGNodeProps {
+    offset?: AttributeValue;
+    'stop-color'?: AttributeValue;
+    'stop-opacity'?: AttributeValue;
+}
+
+export const Stop = DomNodeCreator<StopProps>('stop', ['offset', 'stop-color', 'stop-opacity', ...commonSvgProps], undefined, undefined, true);
+
+export interface ClipPathProps extends SVGNodeProps {
+    clipPathUnits?: AttributeValue;
+}
+
+export const ClipPath = DomNodeCreator<ClipPathProps>('clipPath', ['clipPathUnits', ...commonSvgProps], undefined, undefined, true);
+
+export interface ForeignObjectProps extends SVGNodeProps {
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+}
+
+export const ForeignObject = DomNodeCreator<ForeignObjectProps>('foreignObject', ['x', 'y', 'width', 'height', ...commonSvgProps], undefined, undefined, true);
+
+export interface PatternProps extends SVGNodeProps {
+    x?: AttributeValue;
+    y?: AttributeValue;
+    width?: AttributeValue;
+    height?: AttributeValue;
+    patternUnits?: AttributeValue;
+    patternContentUnits?: AttributeValue;
+    patternTransform?: AttributeValue;
+    viewBox?: AttributeValue;
+    preserveAspectRatio?: AttributeValue;
+}
+
+export const Pattern = DomNodeCreator<PatternProps>(
+    'pattern',
+    ['x', 'y', 'width', 'height', 'patternUnits', 'patternContentUnits', 'patternTransform', 'viewBox', 'preserveAspectRatio', ...commonSvgProps],
+    undefined,
+    undefined,
+    true
+);
 
 /**
  * @internal
