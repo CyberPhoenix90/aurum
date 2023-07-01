@@ -510,10 +510,12 @@ function TreeEntryRenderable(
             }}
             onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry)}
             onClick={(event) => {
-                if (entry.open instanceof DataSource) {
-                    entry.open.update(!entry.open.value);
-                } else {
-                    entry.open.updateDownstream(!entry.open.value);
+                if(entry.open) {
+                    if (entry.open instanceof DataSource) {
+                        entry.open.update(!entry.open.value);
+                    } else {
+                        entry.open.updateDownstream(!entry.open.value);
+                    }
                 }
                 events.onEntryClicked?.(event, entry);
             }}
