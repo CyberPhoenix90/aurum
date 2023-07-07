@@ -1,7 +1,0 @@
-tsconfig.json
-.prettierrc
-dist_test
-coverage
-.history
-.vscode
-project.json

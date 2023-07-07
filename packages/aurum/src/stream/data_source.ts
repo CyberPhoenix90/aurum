@@ -3,6 +3,7 @@ import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
+import { promiseIterator } from '../utilities/iteration.js';
 import { getValueOf } from '../utilities/sources.js';
 import { dsDiff, dsTap } from './data_source_operators.js';
 import { DuplexDataSource } from './duplex_data_source.js';
@@ -286,6 +287,61 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
 
         return result;
+    }
+
+    public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): DataSource<T> {
+        const result = new DataSource<T>();
+
+        (async () => {
+            try {
+                for await (const item of iterator) {
+                    if (cancellation?.isCanceled) {
+                        return;
+                    }
+                    result.update(item);
+                }
+            } catch (e) {
+                result.emitError(e);
+            }
+        })();
+
+        return result;
+    }
+
+    public static fromPromise<T>(promise: Promise<T>, cancellation?: CancellationToken): DataSource<T> {
+        const result = new DataSource<T>();
+
+        promise.then((v) => {
+            if (cancellation?.isCanceled) {
+                return;
+            }
+            result.update(v);
+        }, result.emitError.bind(result));
+
+        return result;
+    }
+
+    public static fromPromiseArray<T>(promises: Promise<T>[], cancellation?: CancellationToken): DataSource<T> {
+        const result = new DataSource<T>();
+
+        (async () => {
+            for await (const promise of promiseIterator(promises, cancellation)) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                if (promise.status === 'fulfilled') {
+                    result.update(promise.value);
+                } else {
+                    result.emitError(promise.reason);
+                }
+            }
+        })();
+
+        return result;
+    }
+
+    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<T> {
+        return this.updateEvent.toAsyncIterator(cancellation);
     }
 
     /**
@@ -1186,6 +1242,40 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                 session.delete(item);
             }
         }
+    }
+
+    public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): ArrayDataSource<T> {
+        const result = new ArrayDataSource<T>();
+
+        (async () => {
+            for await (const item of iterator) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.push(item);
+            }
+        })();
+
+        return result;
+    }
+
+    public static fromPromiseArray<T>(promises: Promise<T>[], cancellation?: CancellationToken): ArrayDataSource<PromiseSettledResult<T>> {
+        const result = new ArrayDataSource<PromiseSettledResult<T>>();
+
+        (async () => {
+            for await (const promise of promiseIterator(promises, cancellation)) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.push(promise);
+            }
+        })();
+
+        return result;
+    }
+
+    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<CollectionChange<T>> {
+        return this.updateEvent.toAsyncIterator(cancellation);
     }
 
     public static toArrayDataSource<T>(value: T[] | ArrayDataSource<T>): ArrayDataSource<T> {
@@ -2624,6 +2714,10 @@ export class MapDataSource<K, V> {
         return result;
     }
 
+    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<MapChange<K, V>> {
+        return this.updateEvent.toAsyncIterator(cancellation);
+    }
+
     public pipe(target: MapDataSource<K, V>, cancellation?: CancellationToken): void {
         this.listenAndRepeat((c) => target.applyMapChange(c), cancellation);
     }
@@ -2950,6 +3044,25 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         syncSetDataSource(result, aurumServerInfo, cancellation);
 
         return result;
+    }
+
+    public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): SetDataSource<T> {
+        const result = new SetDataSource<T>();
+
+        (async () => {
+            for await (const item of iterator) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.add(item);
+            }
+        })();
+
+        return result;
+    }
+
+    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<SetChange<K>> {
+        return this.updateEvent.toAsyncIterator(cancellation);
     }
 
     /**

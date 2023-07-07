@@ -1,13 +1,7 @@
 import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter.js';
 import { AttributeValue, DataDrain } from '../utilities/common.js';
 
-/**
- * @internal
- */
 export const Code = DomNodeCreator<HTMLNodeProps<HTMLElement>>('code');
-/**
- * @internal
- */
 export const Div = DomNodeCreator<HTMLNodeProps<HTMLDivElement>>('div');
 
 /**

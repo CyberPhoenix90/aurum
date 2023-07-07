@@ -95,6 +95,7 @@ export * from './utilities/sources.js';
 export * from './utilities/transclusion.js';
 export * from './utilities/storage_stream.js';
 export * from './utilities/url_storage.js';
+export * from './utilities/iteration';
 
 export { aurumToHTML } from './builtin_components/dom_adapter.js';
 export { debugMode, enableDebugMode, enableDiagnosticMode } from './debug_mode.js';

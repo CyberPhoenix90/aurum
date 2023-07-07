@@ -2,6 +2,7 @@ import { AurumServerInfo, syncDuplexDataSource } from '../aurum_server/aurum_ser
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
+import { promiseIterator } from '../utilities/iteration.js';
 import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource } from './data_source.js';
 import { DataFlow, ddsOneWayFlow } from './duplex_data_source_operators.js';
 import {
@@ -34,9 +35,10 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     public name: string;
 
     /**
-     *
+     * The top can be viewed as the source of truth and bottom as the derived value. UpdateDownStream means the change is propagated from top to bottom or that the source of truth changed.
+     * UpdateUpstream means the change is propagated from bottom to top or that the derived value changed.
      * @param initialValue
-     * @param rootNode If a write is done propagate this update back down to all the consumers. Useful at the root node
+     * @param rootNode If a write is done propagate this update back down to all the consumers. Useful at the root node because in case of a tree structure changes from one branch won't propagate to the other without this
      */
     constructor(initialValue?: T, rootNode: boolean = true, name: string = 'RootDuplexDataSource') {
         this.name = name;
@@ -59,6 +61,65 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
         syncDuplexDataSource(result, aurumServerInfo, cancellation);
 
         return result;
+    }
+
+    public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): DuplexDataSource<T> {
+        const result = new DuplexDataSource<T>();
+
+        (async () => {
+            for await (const item of iterator) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.updateDownstream(item);
+            }
+        })();
+
+        return result;
+    }
+
+    public static fromPromise<T>(promise: Promise<T>, cancellation?: CancellationToken): DuplexDataSource<T> {
+        const result = new DuplexDataSource<T>();
+
+        promise.then(
+            (v) => {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.updateDownstream(v);
+            },
+            (e) => {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                result.emitError(e, DataFlow.DOWNSTREAM);
+            }
+        );
+
+        return result;
+    }
+
+    public static fromPromiseArray<T>(promises: Promise<T>[], cancellation?: CancellationToken): DuplexDataSource<T> {
+        const result = new DuplexDataSource<T>();
+
+        (async () => {
+            for await (const promise of promiseIterator(promises, cancellation)) {
+                if (cancellation?.isCanceled) {
+                    return;
+                }
+                if (promise.status === 'fulfilled') {
+                    result.updateDownstream(promise.value);
+                } else {
+                    result.emitError(promise.reason, DataFlow.DOWNSTREAM);
+                }
+            }
+        })();
+
+        return result;
+    }
+
+    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<T> {
+        return this.updateDownstreamEvent.toAsyncIterator(cancellation);
     }
 
     public static toDuplexDataSource<T>(value: T | DuplexDataSource<T>): DuplexDataSource<T> {

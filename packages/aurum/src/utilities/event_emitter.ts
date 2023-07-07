@@ -54,6 +54,44 @@ export class EventEmitter<T> {
         this.onAfterFire = [];
     }
 
+    public toAsyncIterator(cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
+        const that = this;
+
+        return {
+            [Symbol.asyncIterator](): AsyncIterableIterator<T> {
+                return this;
+            },
+            async next(): Promise<IteratorResult<T>> {
+                let currentResolve;
+                cancellationToken?.addCancelable(() => {
+                    if (currentResolve) {
+                        currentResolve({
+                            done: true,
+                            value: undefined
+                        });
+                    }
+                });
+                return new Promise<IteratorResult<T>>((resolve) => {
+                    currentResolve = resolve;
+                    if (cancellationToken?.isCanceled) {
+                        resolve({
+                            done: true,
+                            value: undefined
+                        });
+                        return;
+                    }
+
+                    that.subscribeOnce((value: T) => {
+                        resolve({
+                            done: false,
+                            value
+                        });
+                    }, cancellationToken);
+                });
+            }
+        };
+    }
+
     /**
      * Subscribe to the event. The callback will be called whenever the event fires an update
      */

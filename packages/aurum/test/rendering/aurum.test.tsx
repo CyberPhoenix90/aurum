@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { Aurum, DataSource, CancellationToken, MapDataSource, combineStyle, combineClass } from '../../src/aurumjs.js';
+
 describe('Aurum', () => {
     let clock: sinon.SinonFakeTimers;
     beforeEach(() => {
