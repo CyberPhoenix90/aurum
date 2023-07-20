@@ -55,38 +55,56 @@ export class EventEmitter<T> {
     }
 
     public toAsyncIterator(cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
-        const that = this;
+        const buffer = new Array<IteratorResult<T>>();
+        let sink: (value: IteratorResult<T>) => void;
+
+        cancellationToken?.addCancelable(() => {
+            if (sink) {
+                sink({
+                    done: true,
+                    value: undefined
+                });
+            } else {
+                buffer.push({
+                    done: true,
+                    value: undefined
+                });
+            }
+        });
+
+        this.subscribe((value) => {
+            if (sink) {
+                sink({
+                    done: false,
+                    value
+                });
+                sink = undefined;
+            } else {
+                buffer.push({
+                    done: false,
+                    value
+                });
+            }
+        }, cancellationToken);
 
         return {
             [Symbol.asyncIterator](): AsyncIterableIterator<T> {
                 return this;
             },
             async next(): Promise<IteratorResult<T>> {
-                let currentResolve;
-                cancellationToken?.addCancelable(() => {
-                    if (currentResolve) {
-                        currentResolve({
-                            done: true,
-                            value: undefined
-                        });
-                    }
-                });
-                return new Promise<IteratorResult<T>>((resolve) => {
-                    currentResolve = resolve;
-                    if (cancellationToken?.isCanceled) {
-                        resolve({
-                            done: true,
-                            value: undefined
-                        });
-                        return;
-                    }
+                if (cancellationToken?.isCanceled) {
+                    return {
+                        done: true,
+                        value: undefined
+                    };
+                }
 
-                    that.subscribeOnce((value: T) => {
-                        resolve({
-                            done: false,
-                            value
-                        });
-                    }, cancellationToken);
+                if (buffer.length > 0) {
+                    return buffer.shift();
+                }
+
+                return new Promise<IteratorResult<T>>((resolve) => {
+                    sink = resolve;
                 });
             }
         };

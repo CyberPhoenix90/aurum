@@ -1,3 +1,4 @@
+import { DataSource } from '../stream/data_source.js';
 import {
     DataSourceDelayFilterOperator,
     DataSourceFilterOperator,
@@ -5,8 +6,8 @@ import {
     DataSourceMapOperator,
     DataSourceOperator,
     OperationType
-} from '../stream/operator_model';
-import { CancellationToken } from './cancellation_token';
+} from '../stream/operator_model.js';
+import { CancellationToken } from './cancellation_token.js';
 
 const FILTERED = Symbol('filtered');
 export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
@@ -95,84 +96,38 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
 }
 
 export function promiseIterator<T>(promises: Promise<T>[], cancellation?: CancellationToken): AsyncIterableIterator<PromiseSettledResult<T>> {
-    let toResolve = promises.length;
-    let resolve: (value: PromiseSettledResult<T>) => void;
-    let promise = new Promise<PromiseSettledResult<T>>((res) => {
-        resolve = res;
-    });
-    for (const p of promises) {
-        p.then(
+    let pendingCount = promises.length;
+    const output = new DataSource<PromiseSettledResult<T>>();
+    cancellation = cancellation ?? new CancellationToken();
+
+    for (const promise of promises) {
+        promise.then(
             (v) => {
-                toResolve--;
-                resolve({
+                pendingCount--;
+
+                if (pendingCount === 0) {
+                    cancellation.cancel();
+                }
+
+                output.update({
                     status: 'fulfilled',
                     value: v
                 });
-                if (toResolve > 0) {
-                    promise = new Promise<PromiseSettledResult<T>>((res, rej) => {
-                        resolve = res;
-                    });
-                }
             },
             (e) => {
-                toResolve--;
-                resolve({
+                pendingCount--;
+
+                if (pendingCount === 0) {
+                    cancellation.cancel();
+                }
+
+                output.update({
                     status: 'rejected',
                     reason: e
                 });
-                if (toResolve > 0) {
-                    promise = new Promise<PromiseSettledResult<T>>((res, rej) => {
-                        resolve = res;
-                    });
-                }
             }
         );
     }
 
-    let currentResolve;
-    if (cancellation) {
-        cancellation.addCancelable(() => {
-            currentResolve({
-                done: true,
-                value: undefined
-            });
-        });
-    }
-
-    return {
-        [Symbol.asyncIterator](): AsyncIterableIterator<PromiseSettledResult<T>> {
-            return this;
-        },
-        next(): Promise<IteratorResult<PromiseSettledResult<T>>> {
-            if (cancellation?.isCanceled) {
-                return Promise.resolve({
-                    done: true,
-                    value: undefined
-                });
-            }
-
-            return new Promise((res, rej) => {
-                currentResolve = res;
-                if (toResolve === 0) {
-                    return {
-                        done: true,
-                        value: undefined
-                    };
-                }
-                return {
-                    done: false,
-                    value: promise.then(
-                        (v) => {
-                            currentResolve = undefined;
-                            return v;
-                        },
-                        (e) => {
-                            currentResolve = undefined;
-                            throw e;
-                        }
-                    )
-                };
-            });
-        }
-    };
+    return output.toAsyncIterator(cancellation);
 }

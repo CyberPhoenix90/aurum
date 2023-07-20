@@ -1,6 +1,6 @@
 {
     "name": "aurumjs",
-    "version": "0.9.8",
+    "version": "0.9.11",
     "type": "module",
     "main": "prebuilt/esnext/aurumjs.js",
     "typings": "prebuilt/esnext/aurumjs.d.ts",

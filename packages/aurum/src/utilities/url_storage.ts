@@ -1,4 +1,4 @@
-import { MapLike } from './common';
+import { MapLike } from './common.js';
 
 export class UrlStorage implements Storage {
     private state: MapLike<string>;
