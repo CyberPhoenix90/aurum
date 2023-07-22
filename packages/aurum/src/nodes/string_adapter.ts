@@ -1,4 +1,4 @@
-import { AurumElementModel, createAPI } from '../rendering/aurum_element.js';
+import { AurumElementModel, createAPI, Renderable } from '../rendering/aurum_element.js';
 import { ArrayDataSource, DataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
@@ -10,7 +10,7 @@ export interface AurumStringAdapterConfig {
     tagWhitelist?: string[];
 }
 
-export async function aurumToString(content: any, config: AurumStringAdapterConfig = {}): Promise<string> {
+export async function aurumToString(content: Renderable | Renderable[], config: AurumStringAdapterConfig = {}): Promise<string> {
     if (content === undefined || content === null) {
         return '';
     }

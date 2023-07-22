@@ -470,7 +470,10 @@ export function dsMicroDebounce<T>(): DataSourceDelayFilterOperator<T> {
             return new Promise((resolve) => {
                 if (!scheduled) {
                     scheduled = true;
-                    queueMicrotask(() => resolve(true));
+                    queueMicrotask(() => {
+                        scheduled = false;
+                        resolve(true);
+                    });
                 } else {
                     resolve(false);
                 }
