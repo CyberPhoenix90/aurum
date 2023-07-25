@@ -1,19 +1,19 @@
-import { ThenArg, Callback } from '../utilities/common.js';
+import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Callback, ThenArg } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
 import { ArrayDataSource, DataSource } from './data_source.js';
 import { DuplexDataSource } from './duplex_data_source.js';
-import { Stream } from './stream.js';
 import {
-    DataSourceMapOperator,
-    OperationType,
-    DataSourceFilterOperator,
-    DataSourceMapDelayOperator,
-    DataSourceMapDelayFilterOperator,
-    DataSourceDelayOperator,
     DataSourceDelayFilterOperator,
-    DataSourceNoopOperator
+    DataSourceDelayOperator,
+    DataSourceFilterOperator,
+    DataSourceMapDelayFilterOperator,
+    DataSourceMapDelayOperator,
+    DataSourceMapOperator,
+    DataSourceNoopOperator,
+    OperationType
 } from './operator_model.js';
-import { CancellationToken } from '../utilities/cancellation_token.js';
+import { Stream } from './stream.js';
 
 /**
  * Mutates an update
@@ -509,28 +509,21 @@ export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
 
 /**
  * May or may not block all updates based on the state provided by another source
- * When unblocked the last value that was blocked is passed through
  * lock state
- * true => updates pass through
- * false => latest update state is buffered and passes once unlocked
+ * false => updates pass through
+ * true => updates are blocked and dropped
+ * Not suitable for synchronization purposes. Use dsCriticalSection instead
  */
-export function dsLock<T>(state: DataSource<boolean>): DataSourceDelayOperator<T> {
+export function dsLock<T>(state: DataSource<boolean>): DataSourceFilterOperator<T> {
     return {
         name: 'lock',
-        operationType: OperationType.DELAY,
+        operationType: OperationType.FILTER,
         operation: (v) => {
-            return new Promise((resolve) => {
-                if (state.value) {
-                    resolve(v);
-                } else {
-                    const cancel = state.listen(() => {
-                        if (state.value) {
-                            cancel();
-                            resolve(v);
-                        }
-                    });
-                }
-            });
+            if (!state.value) {
+                return true;
+            } else {
+                return false;
+            }
         }
     };
 }

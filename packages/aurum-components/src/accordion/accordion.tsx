@@ -131,10 +131,10 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
         }
     });
 
-    const className = api.className({
+    const className = {
         'fit-content': props.sizeMode.type === 'fit-content',
         'even-share': props.sizeMode.type === 'even-share'
-    });
+    };
 
     return (
         <div

@@ -14,20 +14,15 @@ export function renderBottomDock(
     size: DataSource<number> | DuplexDataSource<number>,
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
-    className: any,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable {
     return (
         <div
-            class={combineClass(
-                cancellationToken,
-                model.props.class,
-                className({
-                    ['bottom-dock']: true,
-                    resizable: model.props.resizable
-                })
-            )}
+            class={combineClass(cancellationToken, model.props.class, {
+                ['bottom-dock']: true,
+                resizable: model.props.resizable
+            })}
             style={size.transform(dsMap((size) => `width:100%; height:${size}px`))}
         >
             {DataSource.toDataSource(model.props.resizable).transform(
@@ -47,19 +42,14 @@ export function renderBottomDock(
 export function renderTopDock(
     model: AurumElementModel<PanelElementProps>,
     size: DataSource<number> | DuplexDataSource<number>,
-    className: any,
     cancellationToken: CancellationToken
 ): Renderable {
     return (
         <div
-            class={combineClass(
-                cancellationToken,
-                model.props.class,
-                className({
-                    ['top-dock']: true,
-                    resizable: model.props.resizable
-                })
-            )}
+            class={combineClass(cancellationToken, model.props.class, {
+                ['top-dock']: true,
+                resizable: model.props.resizable
+            })}
             style={size.transform(dsMap((topSize) => `width:100%; height:${topSize}px`))}
         >
             {model.children}
@@ -72,7 +62,6 @@ export function renderLeftDock(
     size: DataSource<number> | DuplexDataSource<number>,
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
-    className: any,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -80,14 +69,10 @@ export function renderLeftDock(
 
     result.push(
         <div
-            class={combineClass(
-                cancellationToken,
-                model.props.class,
-                className({
-                    ['left-dock']: true,
-                    resizable: model.props.resizable
-                })
-            )}
+            class={combineClass(cancellationToken, model.props.class, {
+                ['left-dock']: true,
+                resizable: model.props.resizable
+            })}
             style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`)) as DataSource<string>}
         >
             {model.children}
@@ -117,7 +102,6 @@ export function renderRightDock(
     size: DataSource<number> | DuplexDataSource<number>,
     minSize: DataSource<number> | DuplexDataSource<number>,
     maxSize: DataSource<number> | DuplexDataSource<number>,
-    className: any,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -125,14 +109,10 @@ export function renderRightDock(
 
     result.push(
         <div
-            class={combineClass(
-                cancellationToken,
-                model.props.class,
-                className({
-                    ['right-dock']: true,
-                    resizable: model.props.resizable
-                })
-            )}
+            class={combineClass(cancellationToken, model.props.class, {
+                ['right-dock']: true,
+                resizable: model.props.resizable
+            })}
             style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`)) as DataSource<string>}
         >
             {model.children}

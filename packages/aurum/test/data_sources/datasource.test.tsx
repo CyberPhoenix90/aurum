@@ -1,11 +1,33 @@
 import { assert } from 'chai';
-import { ArrayDataSource, DataSource, CancellationToken, dsFilter, Aurum, dsReduce, dsPick, dsUnique, dsMap } from '../../src/aurumjs.js';
+import { SinonFakeTimers, useFakeTimers } from 'sinon';
+import {
+    ArrayDataSource,
+    Aurum,
+    CancellationToken,
+    DataSource,
+    dsCriticalSection,
+    dsDelay,
+    dsFilter,
+    dsForkInline,
+    dsLock,
+    dsMap,
+    dsPick,
+    dsReduce,
+    dsTap,
+    dsUnique
+} from '../../src/aurumjs.js';
 import { DuplexDataSource } from '../../src/stream/duplex_data_source.js';
 import { ddsFilter, ddsMap, ddsUnique } from '../../src/stream/duplex_data_source_operators.js';
 
 describe('Datasource', () => {
     let attachToken: CancellationToken;
+
+    let clock: SinonFakeTimers;
+    beforeEach(() => {
+        clock = useFakeTimers();
+    });
     afterEach(() => {
+        clock.uninstall();
         attachToken?.cancel();
         attachToken = undefined;
     });
@@ -215,6 +237,74 @@ describe('Datasource', () => {
         assert(pick.value === undefined);
     });
 
+    it('should lock updates when lock is set', () => {
+        let ds = new DataSource(123);
+        const lock = new DataSource(false);
+        const ds2 = ds.transform(dsLock(lock));
+
+        assert.equal(ds2.value, 123);
+
+        ds.update(100);
+        assert.equal(ds2.value, 100);
+
+        lock.update(true);
+
+        ds.update(200);
+        assert.equal(ds2.value, 100);
+
+        lock.update(false);
+
+        assert.equal(ds2.value, 100);
+
+        ds.update(300);
+
+        assert.equal(ds2.value, 300);
+    });
+
+    it('should prevent multiple updates from entering the critical section at once', async () => {
+        let ds = new DataSource<number>();
+
+        let valueOne: number | undefined = 0;
+        let valueTwo: number | undefined = 0;
+
+        ds.transform(
+            dsCriticalSection(
+                dsTap((v) => (valueOne = v)),
+                dsDelay(20),
+                dsTap((v) => (valueTwo = v))
+            )
+        );
+
+        ds.update(100);
+        clock.runAllAsync();
+        assert.equal(valueOne, 100);
+        assert.equal(valueTwo, 0);
+
+        clock.tick(20);
+        clock.runAllAsync();
+        await sleep(1);
+        assert.equal(valueOne, 100);
+        assert.equal(valueTwo, 100);
+
+        ds.update(200);
+        clock.runAllAsync();
+        assert.equal(valueOne, 200);
+        assert.equal(valueTwo, 100);
+        ds.update(300);
+        clock.runAllAsync();
+        assert.equal(valueOne, 200);
+
+        clock.tick(20);
+        clock.runAllAsync();
+        await sleep(1);
+        assert.equal(valueOne, 300);
+        assert.equal(valueTwo, 200);
+
+        await sleep(20);
+        assert.equal(valueOne, 300);
+        assert.equal(valueTwo, 300);
+    });
+
     it('should fire unique events', () => {
         return new Promise<void>((resolve) => {
             let i = 0;
@@ -236,6 +326,36 @@ describe('Datasource', () => {
             ds.update(100);
             ds.update(200);
         });
+    });
+
+    it('should allow forking the stream', async () => {
+        let truthy = 0;
+        let falsy = 0;
+        const ds = new DataSource<number>();
+        const ds2 = ds.transform(
+            dsForkInline(
+                (i) => i % 2 === 0,
+                dsTap(() => truthy++),
+                dsMap((v) => true)
+            ),
+            dsForkInline(
+                (i) => typeof i === 'number',
+                dsTap(() => falsy++),
+                dsMap((v) => false)
+            )
+        );
+
+        ds.update(0);
+        await sleep(1);
+        assert.equal(truthy, 1);
+        assert.equal(falsy, 0);
+        assert.equal(ds2.value, true);
+
+        ds.update(1);
+        await sleep(1);
+        assert.equal(truthy, 1);
+        assert.equal(falsy, 1);
+        assert.equal(ds2.value, false);
     });
 
     it('should fire unique events both ways', () => {
@@ -326,4 +446,10 @@ describe('Datasource', () => {
         filtered.updateUpstream(350);
         assert.equal(ds.value, 350);
     });
+    function sleep(ms: number): Promise<void> {
+        clock.uninstall();
+        return new Promise((resolve) => setTimeout(resolve, ms)).then(() => {
+            clock = useFakeTimers();
+        });
+    }
 });

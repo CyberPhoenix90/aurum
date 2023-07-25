@@ -2608,7 +2608,7 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
     }
 }
 
-export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): Callback<I> {
+export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): (input: I) => Promise<void> {
     return async (v: any) => {
         try {
             for (const operation of operations) {
@@ -3433,4 +3433,141 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     public toArray(): K[] {
         return Array.from(this.data.keys());
     }
+}
+
+/**
+ * Only allows one update to propagate through the operations at a time. If a new update comes in while the previous one is still being processed it will be buffered and processed after the previous one is done
+ */
+export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+    operationA: DataSourceOperator<T, A>,
+    operationB?: DataSourceOperator<A, B>,
+    operationC?: DataSourceOperator<B, C>,
+    operationD?: DataSourceOperator<C, D>,
+    operationE?: DataSourceOperator<D, E>,
+    operationF?: DataSourceOperator<E, F>,
+    operationG?: DataSourceOperator<F, G>,
+    operationH?: DataSourceOperator<G, H>,
+    operationI?: DataSourceOperator<H, I>,
+    operationJ?: DataSourceOperator<I, J>,
+    operationK?: DataSourceOperator<J, K>
+): DataSourceMapDelayFilterOperator<T, K> {
+    const lockState = new DataSource<boolean>(false);
+    const operations = [
+        operationA,
+        operationB,
+        operationC,
+        operationD,
+        operationE,
+        operationF,
+        operationG,
+        operationH,
+        operationI,
+        operationJ,
+        operationK
+    ].filter((v) => v !== undefined);
+    const buffer = [];
+
+    lockState.listen((v) => {
+        if (!v) {
+            if (buffer.length > 0) {
+                queueMicrotask(async () => {
+                    if (!lockState.value) {
+                        lockState.update(true);
+                        const item = buffer.shift();
+                        try {
+                            const value = await processInlineTransform(operations, item.value);
+                            item.resolve(value);
+                        } catch (e) {
+                            item.reject(e);
+                        } finally {
+                            lockState.update(false);
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    return {
+        name: `CriticalSection<${operations.map((v) => v.name).join(', ')}>`,
+        operationType: OperationType.MAP_DELAY_FILTER,
+        operation: async (v) => {
+            if (!lockState.value) {
+                lockState.update(true);
+                try {
+                    const result = await processInlineTransform(operations, v);
+                    return result;
+                } finally {
+                    lockState.update(false);
+                }
+            }
+            return new Promise((resolve, reject) => {
+                buffer.push({
+                    resolve,
+                    reject,
+                    value: v
+                });
+            });
+        }
+    };
+}
+
+export function dsForkInline<T, A1, B1 = A1, C1 = B1, D1 = C1, E1 = D1, F1 = E1, G1 = F1, H1 = G1, I1 = H1>(
+    condition: (value: T) => boolean,
+    operationA: DataSourceOperator<T, A1>,
+    operationB?: DataSourceOperator<A1, B1>,
+    operationC?: DataSourceOperator<B1, C1>,
+    operationD?: DataSourceOperator<C1, D1>,
+    operationE?: DataSourceOperator<D1, E1>,
+    operationF?: DataSourceOperator<E1, F1>,
+    operationG?: DataSourceOperator<F1, G1>,
+    operationH?: DataSourceOperator<G1, H1>,
+    operationI?: DataSourceOperator<H1, I1>
+): DataSourceMapDelayFilterOperator<T, T | I1> {
+    const ops = [
+        operationA,
+        operationB,
+        operationC,
+        operationD,
+        operationE,
+        operationF,
+        operationG,
+        operationH,
+        operationI
+    ].filter((v) => v !== undefined);
+
+    return {
+        name: 'fork-inline',
+        operationType: OperationType.MAP_DELAY_FILTER,
+        operation: async (v) => {
+            if (condition(v)) {
+                return processInlineTransform(ops, v);
+            } else {
+                return { item: v, cancelled: false };
+            }
+        }
+    };
+}
+
+async function processInlineTransform(operations: DataSourceOperator<any, any>[], value: any): Promise<{ item: any; cancelled: boolean }> {
+    let out;
+    let error;
+    let hasValue = false;
+
+    const sink = new DataSource();
+    sink.listen((result) => {
+        out = result;
+        hasValue = true;
+    });
+    sink.handleErrors((e) => {
+        error = e;
+    });
+
+    await processTransform(operations, sink)(value);
+
+    if (error) {
+        throw error;
+    }
+
+    return { item: out, cancelled: !hasValue };
 }

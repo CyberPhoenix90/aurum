@@ -33,7 +33,7 @@ export interface PanelProps {
     dragHandleThickness?: number;
 }
 
-export function PanelComponent(props: PanelProps, children: AurumElementModel<any>[], { className, cancellationToken }: AurumComponentAPI): Renderable {
+export function PanelComponent(props: PanelProps, children: AurumElementModel<any>[], { cancellationToken }: AurumComponentAPI): Renderable {
     const style = generateStyle(props);
 
     children = children.filter(Boolean);
@@ -129,14 +129,14 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
 
     return (
         <div style={props.style} class={style.transform(dsMap((e) => `${e} ${props.class ?? ''}`)) as DataSource<string>}>
-            {left ? renderLeftDock(left, leftDockSize, leftDockminSize, leftDockmaxSize, className, cancellationToken, props.dragHandleThickness) : undefined}
+            {left ? renderLeftDock(left, leftDockSize, leftDockminSize, leftDockmaxSize, cancellationToken, props.dragHandleThickness) : undefined}
             <div
                 style={leftDockSize.aggregate(
                     [rightDockSize],
                     (leftSize, rightSize) => `float:left;width:calc(100% - ${leftSize}px - ${rightSize}px); height:100%;`
                 )}
             >
-                {top ? renderTopDock(top, topDockSize, className, cancellationToken) : undefined}
+                {top ? renderTopDock(top, topDockSize, cancellationToken) : undefined}
                 <div
                     class={combineClass(cancellationToken, 'content', content.props?.class)}
                     style={topDockSize.aggregate(
@@ -152,12 +152,10 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
                     {content.children}
                 </div>
                 {bottom
-                    ? renderBottomDock(bottom, bottomDockSize, bottomDockminSize, bottomDockmaxSize, className, cancellationToken, props.dragHandleThickness)
+                    ? renderBottomDock(bottom, bottomDockSize, bottomDockminSize, bottomDockmaxSize, cancellationToken, props.dragHandleThickness)
                     : undefined}
             </div>
-            {right
-                ? renderRightDock(right, rightDockSize, rightDockminSize, rightDockmaxSize, className, cancellationToken, props.dragHandleThickness)
-                : undefined}
+            {right ? renderRightDock(right, rightDockSize, rightDockminSize, rightDockmaxSize, cancellationToken, props.dragHandleThickness) : undefined}
         </div>
     );
 }
