@@ -140,8 +140,8 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
                 <div
                     class={combineClass(cancellationToken, 'content', content.props?.class)}
                     style={topDockSize.aggregate(
-                        [leftDockSize, rightDockSize, bottomDockSize],
-                        (topSize, leftSize, rightSize, bottomSize) =>
+                        [bottomDockSize, leftDockSize],
+                        (topSize, bottomSize) =>
                             combineAttribute(
                                 cancellationToken,
                                 `float:left; width:100%;height:calc(100% - ${topSize}px - ${bottomSize}px);`,

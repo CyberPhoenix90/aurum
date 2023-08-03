@@ -310,22 +310,22 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     public aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     public aggregate<R, A, B>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator?: (self: T, second: A, third: B) => R,
+        combinator: (self: T, second: A, third: B) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator?: (self: T, second: A, third: B, fourth: C) => R,
+        combinator: (self: T, second: A, third: B, fourth: C) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F>(
@@ -337,7 +337,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G>(
@@ -350,7 +350,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G, H>(
@@ -364,7 +364,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
             ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G, H, I>(
@@ -379,10 +379,10 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
-    public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
+    public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
         cancellationToken = cancellationToken ?? new CancellationToken();
 
         const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s?.value)));
@@ -474,13 +474,35 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     }
 
     /**
+     * Like aggregate except that no combination method is needed as a result both parents must have the same type and the new stream just exposes the last update recieved from either parent
+     * @param otherSource Second parent for the new source
+     * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
+     */
+    public combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
+        cancellationToken = cancellationToken ?? new CancellationToken();
+
+        let combinedDataSource: DataSource<T> | DuplexDataSource<T>;
+        if (this.primed) {
+            combinedDataSource = new DataSource<T>(this.value);
+        } else {
+            combinedDataSource = new DataSource<T>();
+        }
+        this.pipe(combinedDataSource, cancellationToken);
+        for (const otherSource of otherSources) {
+            otherSource.pipe(combinedDataSource, cancellationToken);
+        }
+
+        return combinedDataSource;
+    }
+
+    /**
      * Forwards all updates from this source to another
      * @param targetDataSource datasource to pipe the updates to
      * @param cancellationToken  Cancellation token to cancel the subscriptions added to the datasources by this operation
      */
-    public pipe(targetDataSource: DuplexDataSource<T>, cancellationToken?: CancellationToken): this {
-        this.listenDownstream((newVal) => targetDataSource.updateDownstream(newVal), cancellationToken);
-        targetDataSource.listenUpstream((newVal) => this.updateUpstream(newVal), cancellationToken);
+    public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
+        this.listenDownstream((newVal) => targetDataSource.update(newVal), cancellationToken);
+        targetDataSource.listen((newVal) => this.updateUpstream(newVal), cancellationToken);
         return this;
     }
 

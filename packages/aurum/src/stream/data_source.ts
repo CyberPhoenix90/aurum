@@ -15,7 +15,6 @@ import {
     DataSourceOperator,
     OperationType
 } from './operator_model.js';
-import { Stream } from './stream.js';
 
 export interface ReadOnlyDataSource<T> {
     readonly value: T;
@@ -24,25 +23,26 @@ export interface ReadOnlyDataSource<T> {
     listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
     listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
+    combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     aggregate<R, A, B>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator?: (self: T, second: A, third: B) => R,
+        combinator: (self: T, second: A, third: B) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator?: (self: T, second: A, third: B, fourth: C) => R,
+        combinator: (self: T, second: A, third: B, fourth: C) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F>(
@@ -54,7 +54,7 @@ export interface ReadOnlyDataSource<T> {
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G>(
@@ -67,7 +67,7 @@ export interface ReadOnlyDataSource<T> {
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G, H>(
@@ -81,7 +81,7 @@ export interface ReadOnlyDataSource<T> {
             ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G, H, I>(
@@ -96,10 +96,12 @@ export interface ReadOnlyDataSource<T> {
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
-    aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
+    aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
+
+    pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this;
     transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
         operationA: DataSourceOperator<T, A>,
         operationB?: DataSourceOperator<A, B> | CancellationToken,
@@ -127,22 +129,22 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     aggregate<R, A, B>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator?: (self: T, second: A, third: B) => R,
+        combinator: (self: T, second: A, third: B) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator?: (self: T, second: A, third: B, fourth: C) => R,
+        combinator: (self: T, second: A, third: B, fourth: C) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F>(
@@ -154,7 +156,7 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G>(
@@ -167,7 +169,7 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G, H>(
@@ -181,7 +183,7 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
             ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R, A, B, C, D, E, F, G, H, I>(
@@ -196,10 +198,10 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
-    aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
+    aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
     transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
         operationA: DataSourceOperator<T, A>,
         operationB?: DataSourceOperator<A, B> | CancellationToken,
@@ -512,31 +514,38 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
 
         return result;
     }
+    public static fromCombination<T>(sources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
+        if (sources.length === 0) {
+            throw new Error('Cannot combine zero data sources');
+        }
 
-    public static fromAggregation<R, A>(sources: [ReadOnlyDataSource<A>], combinator?: (first: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
+        return sources[0].combine(sources.slice(1), cancellationToken);
+    }
+
+    public static fromAggregation<R, A>(sources: [ReadOnlyDataSource<A>], combinator: (first: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     public static fromAggregation<R, A, B>(
         sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator?: (first: A, second: B) => R,
+        combinator: (first: A, second: B) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C>(
         sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator?: (first: A, second: B, third: C) => R,
+        combinator: (first: A, second: B, third: C) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D>(
         sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator?: (first: A, second: B, third: C, fourth: D) => R,
+        combinator: (first: A, second: B, third: C, fourth: D) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D, E>(
         sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E) => R,
+        combinator: (first: A, second: B, third: C, fourth: D, fifth: E) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D, E, F>(
         sources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>, ReadOnlyDataSource<F>],
-        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F) => R,
+        combinator: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D, E, F, G>(
@@ -549,7 +558,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>
         ],
-        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G) => R,
+        combinator: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D, E, F, G, H>(
@@ -563,7 +572,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>
         ],
-        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H) => R,
+        combinator: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R, A, B, C, D, E, F, G, H, I>(
@@ -578,12 +587,12 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
-        combinator?: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H, ninth: I) => R,
+        combinator: (first: A, second: B, third: C, fourth: D, fifth: E, sixth: F, seventh: G, eigth: H, ninth: I) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public static fromAggregation<R>(
         sources: ReadOnlyDataSource<any>[],
-        combinator?: (...data: any[]) => R,
+        combinator: (...data: any[]) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R> {
         cancellationToken = cancellationToken ?? new CancellationToken();
@@ -608,22 +617,22 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     public aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     public aggregate<R, A, B>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator?: (self: T, second: A, third: B) => R,
+        combinator: (self: T, second: A, third: B) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator?: (self: T, second: A, third: B, fourth: C) => R,
+        combinator: (self: T, second: A, third: B, fourth: C) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E>(
         otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F>(
@@ -635,7 +644,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<E>,
             ReadOnlyDataSource<F>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G>(
@@ -648,7 +657,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<F>,
             ReadOnlyDataSource<G>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G, H>(
@@ -662,7 +671,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<G>,
             ReadOnlyDataSource<H>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     public aggregate<R, A, B, C, D, E, F, G, H, I>(
@@ -677,10 +686,10 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             ReadOnlyDataSource<H>,
             ReadOnlyDataSource<I>
         ],
-        combinator?: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
+        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
         cancellationToken?: CancellationToken
     ): DataSource<R>;
-    public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator?: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
+    public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
         cancellationToken = cancellationToken ?? new CancellationToken();
 
         const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s?.value)));
@@ -756,10 +765,10 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param otherSource Second parent for the new source
      * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
      */
-    public combine(otherSources: DataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
+    public combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
         cancellationToken = cancellationToken ?? new CancellationToken();
 
-        let combinedDataSource: DataSource<T> | DuplexDataSource<T> | Stream<T, any>;
+        let combinedDataSource: DataSource<T> | DuplexDataSource<T>;
         if (this.primed) {
             combinedDataSource = new DataSource<T>(this.value);
         } else {
@@ -1046,7 +1055,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             const item = sources[i];
             if (Array.isArray(item)) {
                 result.appendArray(item as T[]);
-            } else if (item instanceof DataSource || item instanceof DuplexDataSource || item instanceof Stream) {
+            } else if (item instanceof DataSource || item instanceof DuplexDataSource) {
                 let index = i;
                 item.transform(
                     dsDiff(),
@@ -2965,6 +2974,22 @@ export class MapDataSource<K, V> {
         }
     }
 
+    public merge(newData: Map<K, V> | MapDataSource<K, V>): void {
+        for (const key of newData.keys()) {
+            this.set(key, newData.get(key));
+        }
+
+        for (const key of this.keys()) {
+            if (!newData.has(key)) {
+                this.delete(key);
+            }
+        }
+    }
+
+    public entries(): IterableIterator<[K, V]> {
+        return this.data.entries();
+    }
+
     /**
      * Merge the key value pairs of an object into this object non recursively
      * @param newData
@@ -3524,17 +3549,7 @@ export function dsForkInline<T, A1, B1 = A1, C1 = B1, D1 = C1, E1 = D1, F1 = E1,
     operationH?: DataSourceOperator<G1, H1>,
     operationI?: DataSourceOperator<H1, I1>
 ): DataSourceMapDelayFilterOperator<T, T | I1> {
-    const ops = [
-        operationA,
-        operationB,
-        operationC,
-        operationD,
-        operationE,
-        operationF,
-        operationG,
-        operationH,
-        operationI
-    ].filter((v) => v !== undefined);
+    const ops = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI].filter((v) => v !== undefined);
 
     return {
         name: 'fork-inline',
