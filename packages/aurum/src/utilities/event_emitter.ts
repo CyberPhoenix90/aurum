@@ -92,13 +92,6 @@ export class EventEmitter<T> {
                 return this;
             },
             async next(): Promise<IteratorResult<T>> {
-                if (cancellationToken?.isCanceled) {
-                    return {
-                        done: true,
-                        value: undefined
-                    };
-                }
-
                 if (buffer.length > 0) {
                     return buffer.shift();
                 }

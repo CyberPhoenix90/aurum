@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { dsFilter, dsMap, transformAsyncIterator } from '../src/aurumjs';
+import { dsFilter, dsMap, promiseIterator, transformAsyncIterator } from '../src/aurumjs';
+import 'mocha';
 
 describe('Iterators', () => {
     async function* testGenerator(): AsyncGenerator<number> {
@@ -10,6 +11,18 @@ describe('Iterators', () => {
 
         return;
     }
+
+    it('should iterate over promises', async () => {
+        const promises = [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)];
+        let i = 0;
+        for await (const p of promiseIterator(promises)) {
+            i++;
+            expect(p.status).to.equal('fulfilled');
+            expect((p as PromiseFulfilledResult<number>).value).to.be.oneOf([1, 2, 3]);
+        }
+
+        expect(i).to.equal(3);
+    });
 
     it('should be able to map iterator', async () => {
         let i = 0;

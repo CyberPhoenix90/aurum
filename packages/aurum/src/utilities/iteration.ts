@@ -105,14 +105,14 @@ export function promiseIterator<T>(promises: Promise<T>[], cancellation?: Cancel
             (v) => {
                 pendingCount--;
 
-                if (pendingCount === 0) {
-                    cancellation.cancel();
-                }
-
                 output.update({
                     status: 'fulfilled',
                     value: v
                 });
+
+                if (pendingCount === 0) {
+                    cancellation.cancel();
+                }
             },
             (e) => {
                 pendingCount--;
