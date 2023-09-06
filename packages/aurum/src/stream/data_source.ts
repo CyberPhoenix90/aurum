@@ -825,6 +825,8 @@ export interface ReadOnlyArrayDataSource<T> {
     length: ReadOnlyDataSource<number>;
     getData(): ReadonlyArray<T>;
     get(index: number): T;
+    pickAt(index: number, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
+    limit(count: number, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<T>;
     indexOf(item: T): number;
     find(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): T;
     findIndex(predicate: (value: T, index: number, obj: T[]) => boolean, thisArg?: any): number;
@@ -900,6 +902,27 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     *[Symbol.iterator](): IterableIterator<T> {
         yield* this.getData();
         return;
+    }
+
+    /**
+     * Returns a datasource that always contains the item that is currently at the specified index
+     * @param index
+     * @param cancellationToken
+     * @returns
+     */
+    public pickAt(index: number, cancellationToken?: CancellationToken): ReadOnlyDataSource<T> {
+        if (index < 0) {
+            throw new Error('Index out of bounds');
+        }
+
+        const result = new DataSource<T>(this.data[index], this.name + `[${index}]`);
+        this.listen((change) => {
+            if (result.value !== change.newState[index]) {
+                result.update(change.newState[index]);
+            }
+        }, cancellationToken);
+
+        return result;
     }
 
     public toSetDataSource(cancellationToken: CancellationToken): ReadOnlySetDataSource<T> {
@@ -2129,6 +2152,12 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return view;
     }
 
+    public limit(count: number, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<T> {
+        const view = new LimitedArrayView(this, count, cancellationToken, this.name + '.limit()');
+
+        return view;
+    }
+
     public forEach(callbackfn: (value: T, index: number, array: T[]) => void): void {
         return this.data.forEach(callbackfn);
     }
@@ -2617,6 +2646,61 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
     }
 }
 
+export class LimitedArrayView<T> extends ArrayDataSource<T> {
+    constructor(parent: ArrayDataSource<T> | T[], sizeLimit: number, cancellationToken: CancellationToken = new CancellationToken(), name?: string) {
+        if (Array.isArray(parent)) {
+            parent = new ArrayDataSource(parent);
+        }
+        const initial = (parent as LimitedArrayView<T>).data.slice(0, sizeLimit);
+        super(initial, name);
+
+        parent.listen((change) => {
+            switch (change.operationDetailed) {
+                case 'clear':
+                    this.clear();
+                    break;
+                case 'removeLeft':
+                case 'removeRight':
+                case 'remove':
+                    if (change.index < sizeLimit) {
+                        this.removeRange(change.index, change.index + Math.min(sizeLimit, change.count));
+
+                        if (this.data.length < sizeLimit) {
+                            this.appendArray(change.newState.slice(this.data.length, sizeLimit));
+                        }
+                    }
+                    break;
+                case 'prepend':
+                    this.removeRight(Math.min(change.count, sizeLimit));
+                    this.unshift(...change.items.slice(0, sizeLimit));
+                    break;
+
+                case 'append':
+                    if (this.data.length < sizeLimit) {
+                        this.appendArray(change.items.slice(0, sizeLimit - this.data.length));
+                    }
+                    break;
+
+                case 'insert':
+                    if (change.index < sizeLimit) {
+                        this.removeRight(Math.min(change.count, sizeLimit - change.index));
+                        this.insertAt(change.index, ...change.items.slice(0, sizeLimit - change.index));
+                    }
+                    break;
+                case 'merge':
+                case 'swap':
+                    this.merge(change.newState.slice(0, sizeLimit));
+                    break;
+                case 'replace':
+                    if (change.index < sizeLimit) {
+                        this.set(change.index, change.items[0]);
+                    }
+                    break;
+            }
+        }, cancellationToken);
+    }
+}
+
 export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): (input: I) => Promise<void> {
     return async (v: any) => {
         try {
@@ -3032,6 +3116,7 @@ export interface ReadOnlySetDataSource<K> {
     map<D>(mapper: (key: K) => D): ReadOnlyArrayDataSource<D>;
     keys(): IterableIterator<K>;
     has(key: K): boolean;
+    pickKey(key: K, cancellationToken?: CancellationToken): DataSource<boolean>;
     toArray(): K[];
     toArrayDataSource(cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<K>;
     toSet(): Set<K>;
@@ -3383,6 +3468,18 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
      */
     public has(key: K): boolean {
         return this.data.has(key);
+    }
+
+    /**
+     * Returns a datasource that reflects if the key exists in the set
+     * @param key
+     * @param cancellationToken
+     * @returns
+     */
+    public pickKey(key: K, cancellationToken?: CancellationToken): DataSource<boolean> {
+        const result = new DataSource(this.has(key));
+        this.listenOnKey(key, (v) => result.update(v), cancellationToken);
+        return result;
     }
 
     /**

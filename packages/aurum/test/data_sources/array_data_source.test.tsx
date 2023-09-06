@@ -88,6 +88,76 @@ describe('ArrayDatasource', () => {
         }
     });
 
+    it('should allow listening to an item by index', () => {
+        let ds = new ArrayDataSource([1, 2, 3]);
+        const itemSource = ds.pickAt(1);
+
+        assert.deepEqual(itemSource.value, 2);
+
+        ds.set(1, 4);
+
+        assert.deepEqual(itemSource.value, 4);
+
+        ds.removeAt(1);
+
+        assert.deepEqual(itemSource.value, 3);
+
+        ds.insertAt(1, 5);
+
+        assert.deepEqual(itemSource.value, 5);
+
+        ds.removeLeft(1);
+
+        assert.deepEqual(itemSource.value, 3);
+
+        ds.push(6);
+
+        assert.deepEqual(itemSource.value, 3);
+
+        ds.unshift(7);
+
+        assert.deepEqual(itemSource.value, 5);
+    });
+
+    it('limit', () => {
+        let ds = new ArrayDataSource([1, 2, 3, 4, 5, 6]);
+        const limited = ds.limit(3);
+
+        assert.deepEqual(limited.toArray(), [1, 2, 3]);
+
+        ds.push(7);
+
+        assert.deepEqual(limited.toArray(), [1, 2, 3]);
+
+        ds.insertAt(2, 0);
+
+        assert.deepEqual(limited.toArray(), [1, 2, 0]);
+
+        ds.removeAt(0);
+
+        assert.deepEqual(limited.toArray(), [2, 0, 3]);
+
+        ds.removeLeft(2);
+
+        assert.deepEqual(limited.toArray(), [3, 4, 5]);
+
+        ds.removeRight(3);
+
+        assert.deepEqual(limited.toArray(), [3, 4]);
+
+        ds.push(5, 6);
+
+        assert.deepEqual(limited.toArray(), [3, 4, 5]);
+
+        ds.swap(0, 1);
+
+        assert.deepEqual(limited.toArray(), [4, 3, 5]);
+
+        ds.swap(0, 3);
+
+        assert.deepEqual(limited.toArray(), [6, 3, 5]);
+    });
+
     it('push', () => {
         let ds = new ArrayDataSource([1, 2, 3]);
         ds.push(4, 5);
