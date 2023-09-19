@@ -1,7 +1,7 @@
-import { AurumElementModel, createAPI, Renderable } from '../rendering/aurum_element.js';
-import { ArrayDataSource, DataSource } from '../stream/data_source.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
-import { CancellationToken } from '../utilities/cancellation_token.js';
+import { AurumElementModel, createAPI, Renderable } from '../aurum_element.js';
+import { ArrayDataSource, DataSource } from '../../stream/data_source.js';
+import { DuplexDataSource } from '../../stream/duplex_data_source.js';
+import { CancellationToken } from '../../utilities/cancellation_token.js';
 
 export interface AurumStringAdapterConfig {
     attributeBlacklist?: string[];

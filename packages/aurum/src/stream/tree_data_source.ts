@@ -38,7 +38,7 @@ export class TreeDataSource<T, K extends keyof T> {
 
     private watch(cancellationToken: CancellationToken): void {
         this.watchCount++;
-        cancellationToken.addCancelable(() => {
+        cancellationToken.addCancellable(() => {
             this.watchCount--;
             if (this.watchCount === 0) {
                 this.watchToken.cancel();

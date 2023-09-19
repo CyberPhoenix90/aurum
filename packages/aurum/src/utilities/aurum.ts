@@ -1,4 +1,4 @@
-import { HTMLNodeProps } from '../builtin_components/dom_adapter.js';
+import { HTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
 import { Input, InputProps } from '../nodes/input.js';
 import { Select, SelectProps } from '../nodes/select.js';
 import {
@@ -168,6 +168,8 @@ import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '..
 import { CancellationToken } from './cancellation_token.js';
 import { MapLike } from './common.js';
 
+export type AurumDecorator = (model: AurumElementModel<any>) => Renderable;
+
 const nodeMap = {
     address: Address,
     kbd: Kbd,
@@ -288,14 +290,14 @@ export class Aurum {
         const content = renderInternal(aurumRenderable, session);
         if (content instanceof AurumElement) {
             content.attachToDom(dom, dom.childNodes.length);
-            session.sessionToken.addCancelable(() => content.dispose());
+            session.sessionToken.addCancellable(() => content.dispose());
         } else if (Array.isArray(content)) {
             const root = new ArrayAurumElement(new ArrayDataSource(content), createAPI(session));
-            session.sessionToken.addCancelable(() => root.dispose());
+            session.sessionToken.addCancellable(() => root.dispose());
             root.attachToDom(dom, dom.childNodes.length);
         } else {
             dom.appendChild(content);
-            session.sessionToken.addCancelable(() => {
+            session.sessionToken.addCancellable(() => {
                 if (content.isConnected) {
                     dom.removeChild(content);
                 }
@@ -308,6 +310,9 @@ export class Aurum {
         return session.sessionToken;
     }
 
+    /**
+     * Fragment works through factory by checking if the node is equal to this function
+     */
     public static fragment() {}
 
     public static factory(
@@ -334,7 +339,7 @@ export class Aurum {
             name = node.name;
         }
 
-        return {
+        let model = {
             [aurumElementModelIdentitiy]: true,
             name,
             isIntrinsic: intrinsic,
@@ -342,11 +347,28 @@ export class Aurum {
             props: args,
             children: innerNodes
         };
+
+        if (args != undefined && args.decorate != undefined) {
+            if (Array.isArray(args.decorate)) {
+                for (const decorate of args.decorate) {
+                    model = decorate(model);
+                }
+            } else if (typeof args.decorate === 'function') {
+                model = args.decorate(model);
+            } else {
+                throw new Error('Decorate must be a function or an array of functions');
+            }
+        }
+
+        return model;
     }
 }
 
 export namespace Aurum {
     export namespace JSX {
+        export interface IntrinsicAttributes {
+            decorate?: AurumDecorator | AurumDecorator[];
+        }
         export interface IntrinsicElements {
             address: HTMLNodeProps<HTMLElement>;
             wbr: HTMLNodeProps<HTMLElement>;

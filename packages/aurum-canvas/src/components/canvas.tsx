@@ -145,8 +145,16 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             }}
             style={props.style}
             class={props.class}
-            width={typeof props.width !== 'object' ? props.width?.toString() : (props.width.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)}
-            height={typeof props.height !== 'object' ? props.height?.toString() : (props.height.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)}
+            width={
+                typeof props.width !== 'object'
+                    ? props.width?.toString()
+                    : (props.width.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)
+            }
+            height={
+                typeof props.height !== 'object'
+                    ? props.height?.toString()
+                    : (props.height.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)
+            }
         ></canvas>
     );
 
@@ -376,7 +384,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
 
             bind(canvas, renderResult, parent, bindToken);
             lc.onAttach();
-            bindToken.addCancelable(() => lc.onDetach());
+            bindToken.addCancellable(() => lc.onDetach());
             invalidate(canvas);
         }
     }

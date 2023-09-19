@@ -33,7 +33,7 @@ export class CancellationToken {
      * Attaches a new cancelable to this token
      * @param delegate
      */
-    public addCancelable(delegate: Delegate): this {
+    public addCancellable(delegate: Delegate): this {
         this.throwIfCancelled('attempting to add cancellable to token that is already cancelled');
 
         this.cancelables.push(delegate);
@@ -45,7 +45,7 @@ export class CancellationToken {
         return this;
     }
 
-    public removeCancelable(delegate: Delegate): this {
+    public removeCancellable(delegate: Delegate): this {
         this.throwIfCancelled('attempting to remove cancellable from token that is already cancelled');
 
         const index = this.cancelables.indexOf(delegate);
@@ -58,25 +58,25 @@ export class CancellationToken {
 
     public setTimeout(cb: Delegate, time: number = 0): void {
         const id = setTimeout(() => {
-            this.removeCancelable(cancelable);
+            this.removeCancellable(cancelable);
             cb();
         }, time);
         const cancelable = () => clearTimeout(id);
-        this.addCancelable(cancelable);
+        this.addCancellable(cancelable);
     }
 
     public setInterval(cb: Delegate, time: number): void {
         const id = setInterval(cb, time);
-        this.addCancelable(() => clearInterval(id));
+        this.addCancellable(() => clearInterval(id));
     }
 
     public requestAnimationFrame(cb: Callback<number>): void {
         const id: number = requestAnimationFrame(() => {
-            this.removeCancelable(cancelable);
+            this.removeCancellable(cancelable);
             cb();
         });
         const cancelable = () => cancelAnimationFrame(id);
-        this.addCancelable(cancelable);
+        this.addCancellable(cancelable);
     }
 
     public animationLoop(cb: Callback<number>): void {
@@ -94,14 +94,14 @@ export class CancellationToken {
         if (twoWays) {
             target.chain(this, false);
         } else {
-            target.addCancelable(() => {
+            target.addCancellable(() => {
                 if (!this.isCanceled) {
-                    this.removeCancelable(cancelable);
+                    this.removeCancellable(cancelable);
                 }
             });
         }
 
-        this.addCancelable(cancelable);
+        this.addCancellable(cancelable);
 
         return this;
     }
@@ -111,7 +111,21 @@ export class CancellationToken {
      */
     public registerDomEvent(eventEmitter: HTMLElement | Document | Window, event: string, callback: (e: Event) => void): this {
         (eventEmitter as HTMLElement).addEventListener(event, callback);
-        this.addCancelable(() => eventEmitter.removeEventListener(event, callback));
+        this.addCancellable(() => eventEmitter.removeEventListener(event, callback));
+
+        return this;
+    }
+
+    /**
+     * Registers an event using on and if you cancel the token the event will be canceled using off as well
+     */
+    public registerEmitterEvent<T>(
+        eventEmitter: { on: (event: string, cb: (e: T) => void) => void; off: (event: string, cb: (e: T) => void) => void },
+        event: string,
+        callback: (e: T) => void
+    ): this {
+        eventEmitter.on(event, callback);
+        this.addCancellable(() => eventEmitter.off(event, callback));
 
         return this;
     }
@@ -134,7 +148,7 @@ let looping = false;
 
 export function registerAnimationLoop(callback: (time: number) => void, token: CancellationToken): void {
     animationCbs.push(callback);
-    token.addCancelable(() => {
+    token.addCancellable(() => {
         animationCbs.splice(animationCbs.indexOf(callback), 1);
     });
     if (!looping) {
@@ -161,7 +175,7 @@ function loop(time: number): void {
     }
 }
 
-CancellationToken.forever.addCancelable = () => void 0;
+CancellationToken.forever.addCancellable = () => void 0;
 CancellationToken.forever.cancel = () => {
     throw new Error('Cannot cancel forever token');
 };

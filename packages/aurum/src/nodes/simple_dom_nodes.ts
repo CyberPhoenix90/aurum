@@ -1,4 +1,4 @@
-import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter.js';
+import { DomNodeCreator, HTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
 import { AttributeValue, DataDrain } from '../utilities/common.js';
 
 export const Code = DomNodeCreator<HTMLNodeProps<HTMLElement>>('code');

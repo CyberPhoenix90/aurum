@@ -1,7 +1,7 @@
 import { DataSource, GenericDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { DomNodeCreator, HTMLNodeProps } from '../builtin_components/dom_adapter.js';
+import { DomNodeCreator, HTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
 
 export interface SelectProps extends HTMLNodeProps<HTMLSelectElement> {
     value?: GenericDataSource<string> | string;
@@ -29,7 +29,7 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
                 childList: true
             });
 
-            cleanUp.addCancelable(() => {
+            cleanUp.addCancellable(() => {
                 mo.disconnect();
             });
         }
@@ -42,7 +42,7 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
                 childList: true
             });
 
-            cleanUp.addCancelable(() => {
+            cleanUp.addCancellable(() => {
                 mo.disconnect();
             });
         }

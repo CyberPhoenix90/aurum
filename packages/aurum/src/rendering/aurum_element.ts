@@ -1,4 +1,3 @@
-import { diagnosticMode } from '../debug_mode.js';
 import { ArrayDataSource, CollectionChange, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
@@ -341,15 +340,6 @@ export function renderInternal<T extends Renderable | Renderable[]>(element: T, 
                 renderSession: session
             } as any;
         }
-        if (!model.isIntrinsic && diagnosticMode) {
-            console.log(`Rendering ${model.name}`);
-            api.onAttach(() => {
-                console.log(`Attaching ${model.name}`);
-            });
-            api.onDetach(() => {
-                console.log(`Detaching ${model.name}`);
-            });
-        }
         let componentResult;
         if (model.isIntrinsic) {
             componentResult = model.factory(model.props, model.children, api);
@@ -381,7 +371,7 @@ export function createAPI(session: RenderSession): AurumComponentAPI {
                 token = new CancellationToken();
                 session.tokens.push(token);
             }
-            token.addCancelable(cb);
+            token.addCancellable(cb);
         },
         get cancellationToken() {
             if (!token) {
@@ -630,7 +620,7 @@ export class ArrayAurumElement extends AurumElement {
             return;
         }
         if (rendered instanceof AurumElement) {
-            s.sessionToken.addCancelable(() => rendered.dispose());
+            s.sessionToken.addCancellable(() => rendered.dispose());
         }
         this.renderSessions.set(rendered, s);
         attachCalls.push(...s.attachCalls);
@@ -658,7 +648,7 @@ export class SingularAurumElement extends AurumElement {
 
     constructor(dataSource: DataSource<any> | DuplexDataSource<any>, api: AurumComponentAPI) {
         super(dataSource, api);
-        this.api.cancellationToken.addCancelable(() => this.renderSession?.sessionToken.cancel());
+        this.api.cancellationToken.addCancellable(() => this.renderSession?.sessionToken.cancel());
         this.dataSource = dataSource;
     }
 
@@ -724,7 +714,7 @@ export class SingularAurumElement extends AurumElement {
         }
         for (const item of rendered) {
             if (item instanceof AurumElement) {
-                this.renderSession.sessionToken.addCancelable(() => {
+                this.renderSession.sessionToken.addCancellable(() => {
                     item.dispose();
                 });
             }

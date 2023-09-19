@@ -86,7 +86,7 @@ export function animate(cb: (progress: number) => void, time: number, cancellati
         if (cancellationToken) {
             cancellationToken.chain(animationToken);
         }
-        animationToken.addCancelable(resolve);
+        animationToken.addCancellable(resolve);
         let start = Date.now();
         registerAnimationLoop(() => {
             const progress = Math.min(1, (Date.now() - start) / time);

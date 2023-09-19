@@ -145,7 +145,7 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                         availableSpace.update(container.clientHeight);
                     });
                     rso.observe(container);
-                    api.cancellationToken.addCancelable(() => rso.disconnect());
+                    api.cancellationToken.addCancellable(() => rso.disconnect());
                 }
             }}
             class={combineClass(api.cancellationToken, style, props.class, className)}
@@ -206,7 +206,7 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                                         headerSpaceSize.update(header.clientHeight);
                                     });
                                     rso.observe(header);
-                                    token.addCancelable(() => rso.disconnect());
+                                    token.addCancellable(() => rso.disconnect());
                                 }
                             }}
                             onDetach={() => {
@@ -238,8 +238,8 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                                                     div.style.maxHeight = div.scrollHeight + 'px';
                                                 });
                                                 rso.observe(div.firstChild as HTMLElement);
-                                                openStateToken.addCancelable(() => rso.disconnect());
-                                                token.addCancelable(() => rso.disconnect());
+                                                openStateToken.addCancellable(() => rso.disconnect());
+                                                token.addCancellable(() => rso.disconnect());
                                             }
                                         }}
                                         class="content"

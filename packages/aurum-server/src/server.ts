@@ -48,7 +48,7 @@ export class AurumServer<T = void> {
         this.routers[route] = router;
         router.attach(this.wsServerClients);
 
-        cancellationToken?.addCancelable(() => {
+        cancellationToken?.addCancellable(() => {
             this.removeRouter(route);
         });
     }

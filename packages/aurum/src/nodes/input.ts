@@ -1,4 +1,4 @@
-import { HTMLNodeProps, DomNodeCreator } from '../builtin_components/dom_adapter.js';
+import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
 import { AttributeValue, DataDrain } from '../utilities/common.js';
 import { GenericDataSource, DataSource } from '../stream/data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';

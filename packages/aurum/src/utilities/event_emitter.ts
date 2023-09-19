@@ -58,7 +58,7 @@ export class EventEmitter<T> {
         const buffer = new Array<IteratorResult<T>>();
         let sink: (value: IteratorResult<T>) => void;
 
-        cancellationToken?.addCancelable(() => {
+        cancellationToken?.addCancellable(() => {
             if (sink) {
                 sink({
                     done: true,
@@ -222,7 +222,7 @@ export class EventEmitter<T> {
         };
 
         if (cancellationToken !== undefined) {
-            cancellationToken.addCancelable(() => that.cancel(subscription, channel));
+            cancellationToken.addCancellable(() => that.cancel(subscription, channel));
         }
         if (this.isFiring) {
             this.onAfterFire.push(() => channel.push(subscription));

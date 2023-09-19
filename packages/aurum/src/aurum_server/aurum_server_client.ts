@@ -263,7 +263,7 @@ class AurumServerClient {
         listenMessage: RemoteProtocol,
         cancelMessage: RemoteProtocol
     ) {
-        cancellation.addCancelable(() => {
+        cancellation.addCancellable(() => {
             const listenersByAuth = syncedSources.get(id);
             const listeners = listenersByAuth.get(authenticationToken);
             listeners.listeners.splice(listeners.listeners.findIndex((s) => s.source === source));
@@ -311,7 +311,7 @@ class AurumServerClient {
             host = resolveHost(host);
             const connection = new WebSocket(`${protocol}://${host}`);
             const client = new AurumServerClient(connection);
-            client.masterToken.addCancelable(() => {
+            client.masterToken.addCancellable(() => {
                 connections.delete(makeKey(protocol, host));
             });
 

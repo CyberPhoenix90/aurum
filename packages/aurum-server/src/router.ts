@@ -150,7 +150,7 @@ export class Router {
         });
 
         if (config.cancellationToken) {
-            config.cancellationToken.addCancelable(() => {
+            config.cancellationToken.addCancellable(() => {
                 this.exposedFunctions.delete(id);
             });
         }
@@ -176,7 +176,7 @@ export class Router {
         });
 
         if (config?.cancellationToken) {
-            config.cancellationToken.addCancelable(() => {
+            config.cancellationToken.addCancellable(() => {
                 this.clients?.forEach((c) => {
                     const subs = subscritionSelector(c);
                     if (subs.has(id)) {

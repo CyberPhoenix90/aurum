@@ -1,10 +1,10 @@
-import { handleClass, handleStyle } from '../nodes/rendering_helpers.js';
-import { AurumComponentAPI, AurumElement, createRenderSession, Renderable, Rendered, renderInternal } from '../rendering/aurum_element.js';
-import { DataSource } from '../stream/data_source.js';
-import { dsUnique } from '../stream/data_source_operators.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
-import { CancellationToken } from '../utilities/cancellation_token.js';
-import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StringSource, StyleType } from '../utilities/common.js';
+import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
+import { AurumComponentAPI, AurumElement, createRenderSession, Renderable, Rendered, renderInternal } from '../aurum_element.js';
+import { DataSource } from '../../stream/data_source.js';
+import { dsUnique } from '../../stream/data_source_operators.js';
+import { DuplexDataSource } from '../../stream/duplex_data_source.js';
+import { CancellationToken } from '../../utilities/cancellation_token.js';
+import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StringSource, StyleType } from '../../utilities/common.js';
 
 export interface HTMLNodeProps<T> {
     id?: AttributeValue;

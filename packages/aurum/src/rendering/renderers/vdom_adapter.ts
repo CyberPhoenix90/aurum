@@ -1,9 +1,9 @@
-import { EventEmitter } from '../aurumjs.js';
-import { AurumElementModel, createAPI, Renderable } from '../rendering/aurum_element.js';
-import { ArrayDataSource, DataSource } from '../stream/data_source.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
-import { CancellationToken } from '../utilities/cancellation_token.js';
-import { handleClass, handleStyle } from './rendering_helpers.js';
+import { AurumElementModel, createAPI, Renderable } from '../aurum_element.js';
+import { ArrayDataSource, DataSource } from '../../stream/data_source.js';
+import { DuplexDataSource } from '../../stream/duplex_data_source.js';
+import { CancellationToken } from '../../utilities/cancellation_token.js';
+import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
+import { EventEmitter } from '../../utilities/event_emitter.js';
 
 export class VDOM {
     roots: VDOMNode[];
@@ -55,7 +55,7 @@ export function aurumToVDOM(content: Renderable | Renderable[], sessionToken: Ca
         sessionToken
     });
     let renderToken = new CancellationToken();
-    sessionToken.addCancelable(() => {
+    sessionToken.addCancellable(() => {
         if (renderToken) {
             renderToken.cancel();
         }
@@ -170,11 +170,11 @@ function aurumToVDOMInternal(
             };
             const api = createAPI(session);
 
-            renderToken.addCancelable(() => {
+            renderToken.addCancellable(() => {
                 sessionToken.cancel();
             });
 
-            sessionToken.addCancelable(() => {
+            sessionToken.addCancellable(() => {
                 for (const token of session.tokens) {
                     token.cancel();
                 }
@@ -203,7 +203,7 @@ function aurumToVDOMInternal(
         }
 
         if (item.props?.onDetach) {
-            renderToken.addCancelable(() => {
+            renderToken.addCancellable(() => {
                 item.props.onDetach();
             });
         }

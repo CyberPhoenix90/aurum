@@ -2,7 +2,6 @@ import { DataSource } from './stream/data_source.js';
 import { EventEmitter } from './utilities/event_emitter.js';
 
 export let debugMode: boolean = false;
-export let diagnosticMode: boolean = false;
 
 const customWindow: Window & {
     __debugUpdates: EventEmitter<{
@@ -25,10 +24,6 @@ const customWindow: Window & {
 } = globalThis as any;
 
 let debugStreamData;
-
-export function enableDiagnosticMode(): void {
-    diagnosticMode = true;
-}
 
 /**
  * Initializes the debug features of aurum. Required for the use of aurum devtools
