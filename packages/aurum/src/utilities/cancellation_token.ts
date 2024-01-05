@@ -4,7 +4,7 @@ export class CancellationToken {
     private cancelables: Delegate[];
     private _isCancelled: boolean;
 
-    public get isCanceled(): boolean {
+    public get isCancelled(): boolean {
         return this._isCancelled;
     }
 
@@ -84,7 +84,7 @@ export class CancellationToken {
     }
 
     public throwIfCancelled(msg: string): void {
-        if (this.isCanceled) {
+        if (this.isCancelled) {
             throw new Error(msg || 'cancellation token is cancelled');
         }
     }
@@ -95,7 +95,7 @@ export class CancellationToken {
             target.chain(this, false);
         } else {
             target.addCancellable(() => {
-                if (!this.isCanceled) {
+                if (!this.isCancelled) {
                     this.removeCancellable(cancelable);
                 }
             });
@@ -134,7 +134,7 @@ export class CancellationToken {
      * Cancels everything attached to this token
      */
     public cancel(): void {
-        if (this.isCanceled) {
+        if (this.isCancelled) {
             return;
         }
         this._isCancelled = true;

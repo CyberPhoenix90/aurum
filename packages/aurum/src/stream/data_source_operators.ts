@@ -650,7 +650,7 @@ export function dsHistory<T>(
         operationType: OperationType.NOOP,
         name: `history`,
         operation: (v) => {
-            if (!cancellationToken.isCanceled) {
+            if (!cancellationToken.isCancelled) {
                 if (generations) {
                     if (reportTarget.length.value >= generations) {
                         reportTarget.removeLeft(reportTarget.length.value - generations);

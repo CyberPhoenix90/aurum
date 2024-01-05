@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { StorageStream } from '../src/utilities/storage_stream';
+import { StorageStream } from '../src/utilities/storage_stream.js';
 
 describe('StorageStream', () => {
     let storageStream: StorageStream;

@@ -68,7 +68,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 
         (async () => {
             for await (const item of iterator) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.updateDownstream(item);
@@ -83,13 +83,13 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 
         promise.then(
             (v) => {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.updateDownstream(v);
             },
             (e) => {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.emitError(e, DataFlow.DOWNSTREAM);
@@ -104,7 +104,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
 
         (async () => {
             for await (const promise of promiseIterator(promises, cancellation)) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 if (promise.status === 'fulfilled') {

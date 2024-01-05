@@ -297,7 +297,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         (async () => {
             try {
                 for await (const item of iterator) {
-                    if (cancellation?.isCanceled) {
+                    if (cancellation?.isCancelled) {
                         return;
                     }
                     result.update(item);
@@ -314,7 +314,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const result = new DataSource<T>();
 
         promise.then((v) => {
-            if (cancellation?.isCanceled) {
+            if (cancellation?.isCancelled) {
                 return;
             }
             result.update(v);
@@ -328,7 +328,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
 
         (async () => {
             for await (const promise of promiseIterator(promises, cancellation)) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 if (promise.status === 'fulfilled') {
@@ -1281,7 +1281,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
         (async () => {
             for await (const item of iterator) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.push(item);
@@ -1296,7 +1296,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
         (async () => {
             for await (const promise of promiseIterator(promises, cancellation)) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.push(promise);
@@ -1613,6 +1613,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             return this.clear();
         }
         if (newData === this.data) {
+            return;
+        }
+
+        if (newData.every((v, i) => v === this.data[i])) {
             return;
         }
 
@@ -2304,7 +2308,6 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
                                 source[i] = d;
                                 source[index] = c;
                             } else {
-                                //@ts-ignore
                                 this.data.splice(i, 0, this.mapper(change.newState[i]));
                                 source.splice(i, 0, change.newState[i]);
                             }
@@ -3161,7 +3164,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
         (async () => {
             for await (const item of iterator) {
-                if (cancellation?.isCanceled) {
+                if (cancellation?.isCancelled) {
                     return;
                 }
                 result.add(item);

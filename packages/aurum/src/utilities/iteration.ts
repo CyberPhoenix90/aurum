@@ -116,15 +116,13 @@ export function promiseIterator<T>(promises: Promise<T>[], cancellation?: Cancel
             },
             (e) => {
                 pendingCount--;
-
-                if (pendingCount === 0) {
-                    cancellation.cancel();
-                }
-
                 output.update({
                     status: 'rejected',
                     reason: e
                 });
+                if (pendingCount === 0) {
+                    cancellation.cancel();
+                }
             }
         );
     }

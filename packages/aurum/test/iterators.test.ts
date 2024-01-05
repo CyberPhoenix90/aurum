@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { dsFilter, dsMap, promiseIterator, transformAsyncIterator } from '../src/aurumjs';
+import { dsFilter, dsMap, promiseIterator, transformAsyncIterator } from '../src/aurumjs.js';
 import 'mocha';
 
 describe('Iterators', () => {

@@ -16,7 +16,7 @@ export function ErrorBoundary(props: ErrorBoundaryProps, children: Renderable[],
     api.onDetach(() => lc.onDetach());
 
     function onDone(res: any[]): void {
-        if (!api.cancellationToken.isCanceled) {
+        if (!api.cancellationToken.isCancelled) {
             data.update(res);
             lc.onAttach();
         }
@@ -24,7 +24,7 @@ export function ErrorBoundary(props: ErrorBoundaryProps, children: Renderable[],
 
     function onError(error: any): void {
         console.error(error);
-        if (!api.cancellationToken.isCanceled) {
+        if (!api.cancellationToken.isCancelled) {
             data.update(renderFallbackError(error));
         }
     }

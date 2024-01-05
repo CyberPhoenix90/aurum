@@ -99,10 +99,12 @@ export abstract class AurumElement {
         this.children = [];
         this.api = api;
         this.api.onAttach(() => {
-            if (this.hostNode === undefined) {
-                throw new Error('illegal state: Attach fired but not actually attached');
+            if (!this.api.cancellationToken.isCancelled) {
+                if (this.hostNode === undefined) {
+                    throw new Error('illegal state: Attach fired but not actually attached');
+                }
+                this.render(dataSource);
             }
-            this.render(dataSource);
         });
     }
 

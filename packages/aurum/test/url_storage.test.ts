@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { UrlStorage } from '../src/utilities/url_storage';
+import { UrlStorage } from '../src/utilities/url_storage.js';
 
 describe('UrlStorage', () => {
     beforeEach(() => {

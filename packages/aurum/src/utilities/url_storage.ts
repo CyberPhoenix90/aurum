@@ -13,7 +13,7 @@ export class UrlStorage implements Storage {
     }
 
     private observeUrl(): void {
-        this.originalReplaceState = history.replaceState;
+        this.originalReplaceState = history.replaceState.bind(history);
         history.replaceState = (...args: any[]) => {
             this.originalReplaceState.apply(history, args);
             this.checkUpdate();
