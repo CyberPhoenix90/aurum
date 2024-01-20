@@ -1617,7 +1617,12 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
 
         if (newData.every((v, i) => v === this.data[i])) {
-            return;
+            if (this.data.length > newData.length) {
+                this.removeRight(this.data.length - newData.length);
+                return;
+            } else {
+                return;
+            }
         }
 
         const old = this.data;

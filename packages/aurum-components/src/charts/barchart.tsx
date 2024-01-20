@@ -200,7 +200,7 @@ function computeBounds(
     series: Serie[] | ArrayDataSource<Serie>,
     cancellationToken: CancellationToken
 ): { startTs: DataSource<number>; endTs: DataSource<number>; maxValue: DataSource<number> } {
-    let token = new CancellationToken();
+    let token: CancellationToken = new CancellationToken();
     const startTs = new DataSource(Number.MAX_SAFE_INTEGER);
     const endTs = new DataSource(Number.MIN_SAFE_INTEGER);
     const maxValue = new DataSource(Number.MIN_SAFE_INTEGER);
@@ -209,7 +209,7 @@ function computeBounds(
 
     function rebuild() {
         token.cancel();
-        if (!cancellationToken.isCanceled) {
+        if (!cancellationToken.isCancelled) {
             token = new CancellationToken();
             cancellationToken.chain(token);
             performBoundComputation(startTs, endTs, maxValue, rebuild, series, cancellationToken);

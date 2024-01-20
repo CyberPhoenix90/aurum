@@ -1,6 +1,6 @@
 {
     "name": "aurum-components",
-    "version": "0.3.18",
+    "version": "0.3.19",
     "description": "",
     "main": "prebuilt/esnext/aurum-components.js",
     "type": "module",
@@ -35,12 +35,6 @@
         "jsx": "react"
     },
     "builds": [
-        {
-            "outdir": "dist/test",
-            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
-            "name": "test",
-            "platform": "browser"
-        },
         {
             "outdir": "prebuilt/esnext",
             "name": "esnext",

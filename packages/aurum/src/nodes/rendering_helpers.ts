@@ -45,6 +45,10 @@ export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<s
 
 function buildClass(data: (string | ReadOnlyDataSource<string>)[]): string {
     return (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
+        if (c == null) {
+            return p;
+        }
+
         if (typeof c === 'string') {
             return `${p} ${c}`;
         } else {

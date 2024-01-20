@@ -162,7 +162,7 @@ function verticalDragStart(
     orientation: number,
     dragHandleThickness: number = 2
 ): void {
-    if (dragToken && !dragToken.isCanceled) {
+    if (dragToken && !dragToken.isCancelled) {
         dragEnd();
     }
     dragStartPos = e.pageX;
@@ -195,7 +195,7 @@ function horizontalDragStart(
     orientation: number,
     dragHandleThickness: number = 2
 ): void {
-    if (dragToken && !dragToken.isCanceled) {
+    if (dragToken && !dragToken.isCancelled) {
         dragEnd();
     }
     dragStartPos = e.pageY;

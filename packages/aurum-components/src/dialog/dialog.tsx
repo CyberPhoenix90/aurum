@@ -32,7 +32,7 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
     });
 
     setTimeout(() => {
-        if (!api.cancellationToken.isCanceled) {
+        if (!api.cancellationToken.isCancelled) {
             api.cancellationToken.registerDomEvent(window, 'click', (e: MouseEvent) => {
                 let ptr = e.target;
                 while (ptr) {

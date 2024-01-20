@@ -1,6 +1,6 @@
 {
     "name": "aurumjs",
-    "version": "0.9.24",
+    "version": "0.9.26",
     "type": "module",
     "main": "prebuilt/esnext/aurumjs.js",
     "typings": "prebuilt/esnext/aurumjs.d.ts",
@@ -40,7 +40,7 @@
             "outdir": "dist/test",
             "name": "test",
             "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
-            "platform": "browser"
+            "platform": "isomorphic"
         }
     ]
 }

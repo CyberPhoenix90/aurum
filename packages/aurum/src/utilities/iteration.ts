@@ -25,7 +25,7 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
     operationK?: DataSourceOperator<J, K> | CancellationToken,
     cancellationToken?: CancellationToken
 ): AsyncGenerator<K> {
-    let token;
+    let token: CancellationToken;
     const operations: DataSourceOperator<any, any>[] = [
         operationA,
         operationB,
@@ -83,7 +83,7 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
     };
 
     for await (const v of asyncIterator) {
-        if (token?.isCanceled) {
+        if (token?.isCancelled) {
             return;
         }
         const i = await transform(v);

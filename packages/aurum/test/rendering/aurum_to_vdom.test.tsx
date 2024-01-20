@@ -275,7 +275,7 @@ describe('Aurum To VDOM', () => {
     });
 
     it('should cancel api token of component when unmounted', async () => {
-        let token;
+        let token: CancellationToken;
         const component = new DataSource(<TestComponent></TestComponent>);
         function TestComponent(props, children, api) {
             token = api.cancellationToken;
@@ -284,11 +284,12 @@ describe('Aurum To VDOM', () => {
 
         aurumToVDOM(<div>{component}</div>, sessionToken);
 
-        assert(token.isCanceled === false);
+        assert(token.isCancelled === false);
 
         component.update(undefined);
 
-        assert(token.isCanceled === true);
+        //@ts-ignore
+        assert(token.isCancelled === true);
     });
 
     it('should call onAttach and onDetach on api', async () => {

@@ -98,7 +98,7 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
     activeToast.listen((v) => {
         if (!v) {
             requestAnimationFrame(() => {
-                if (!api.cancellationToken.isCanceled) {
+                if (!api.cancellationToken.isCancelled) {
                     nextToast();
                 }
             });

@@ -5,8 +5,10 @@ import { dsUnique } from '../../stream/data_source_operators.js';
 import { DuplexDataSource } from '../../stream/duplex_data_source.js';
 import { CancellationToken } from '../../utilities/cancellation_token.js';
 import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StringSource, StyleType } from '../../utilities/common.js';
+import { AurumDecorator } from '../../utilities/aurum.js';
 
 export interface HTMLNodeProps<T> {
+    decorate?: AurumDecorator | AurumDecorator[];
     id?: AttributeValue;
     name?: AttributeValue;
     draggable?: AttributeValue;

@@ -19,7 +19,7 @@ describe('Decorators', () => {
         let i = 0;
         function testDecorator(model: AurumElementModel<any>): AurumElementModel<any> {
             i++;
-            assert(model.name === 'TestComponent');
+            assert.equal(model.name, 'TestComponent');
             return model;
         }
 
@@ -30,6 +30,19 @@ describe('Decorators', () => {
             </div>,
             document.getElementById('target')!
         );
+
+        assert(i === 1);
+    });
+
+    it('Should be able to decorate intrinsic elements', () => {
+        let i = 0;
+        function testDecorator(model: AurumElementModel<any>): AurumElementModel<any> {
+            i++;
+            assert.equal(model.name, 'div');
+            return model;
+        }
+
+        attachToken = Aurum.attach(<div decorate={testDecorator}></div>, document.getElementById('target')!);
 
         assert(i === 1);
     });
