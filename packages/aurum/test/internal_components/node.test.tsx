@@ -1,5 +1,5 @@
-import { Aurum, ArrayDataSource } from '../../src/aurumjs.js';
-import { assert } from 'chai';
+import { assert, describe, it } from 'vitest';
+import { ArrayDataSource, Aurum } from '../../src/aurumjs.js';
 
 describe('Nodes', () => {
     [

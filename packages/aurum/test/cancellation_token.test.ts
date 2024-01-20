@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { expect, describe, beforeEach, afterEach, it } from 'vitest';
 import * as sinon from 'sinon';
 import { SinonFakeTimers } from 'sinon';
 import { CancellationToken } from '../src/aurumjs.js';
@@ -15,7 +15,7 @@ describe('cancellation token', () => {
     it('setTimeout should not fire if cancel occurs first', () => {
         const token = new CancellationToken();
         token.setTimeout(() => {
-            assert(false);
+            expect(false).toBe(true);
         });
         token.cancel();
         clock.tick(100);
@@ -35,13 +35,13 @@ describe('cancellation token', () => {
     it('setTimeout should be removed from list of cancellables once fired', () => {
         const token = new CancellationToken();
         token.setTimeout(() => {});
-        assert.equal(token['cancelables'].length, 1);
+        expect(token['cancelables'].length).toBe(1);
         token.setTimeout(() => {});
-        assert.equal(token['cancelables'].length, 2);
+        expect(token['cancelables'].length).toBe(2);
         token.setTimeout(() => {});
-        assert.equal(token['cancelables'].length, 3);
+        expect(token['cancelables'].length).toBe(3);
         clock.tick(100);
-        assert.equal(token['cancelables'].length, 0);
+        expect(token['cancelables'].length).toBe(0);
         token.cancel();
     });
 });

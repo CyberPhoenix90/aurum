@@ -1,6 +1,6 @@
-import { assert } from 'chai';
 import { ArrayDataSource, aurumToVDOM, CancellationToken, DataSource } from '../../src/aurumjs.js';
 import { Aurum } from '../../src/utilities/aurum.js';
+import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 
 describe('Aurum To VDOM', () => {
     let sessionToken;

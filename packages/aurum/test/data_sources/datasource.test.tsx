@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import { SinonFakeTimers, useFakeTimers } from 'sinon';
 import {
     ArrayDataSource,

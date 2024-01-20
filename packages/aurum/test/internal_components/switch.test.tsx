@@ -1,5 +1,5 @@
-import { assert } from 'chai';
-import { Aurum, DataSource, Switch, DefaultSwitchCase, SwitchCase } from '../../src/aurumjs.js';
+import { afterEach, assert, describe, it } from 'vitest';
+import { Aurum, DataSource, DefaultSwitchCase, Switch, SwitchCase } from '../../src/aurumjs.js';
 
 describe('Switch', () => {
     let attachToken;
@@ -98,6 +98,7 @@ describe('Switch', () => {
 
         data.update('two');
         assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+        //@ts-ignore
         assert(document.getElementById('target').firstChild.childNodes[1].textContent === 'world');
 
         data.update('three');
@@ -140,6 +141,7 @@ describe('Switch', () => {
 
         data2.update('two');
         assert(Array.from(document.getElementById('target').firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 1);
+        //@ts-ignore
         assert(document.getElementById('target').firstChild.textContent === 'sub two');
         data2.update('one');
 

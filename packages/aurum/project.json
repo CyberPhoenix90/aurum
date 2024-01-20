@@ -15,17 +15,15 @@
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT",
     "devDependencies": {
-        "@types/chai": "^4.2.5",
-        "@types/mocha": "^8.2.0",
         "@types/sinon": "^9.0.4",
-        "chai": "^4.2.0",
-        "mocha": "^8.2.1",
-        "requirejs": "^2.3.6",
-        "sinon": "^9.0.3"
+        "sinon": "^9.0.3",
+        "vitest": "^1.2.1",
+        "@vitest/browser": "^1.2.1",
+        "webdriverio": "^8.28.8"
     },
     "defaultBuildSettings": {
         "assembly": "library",
-        "includes": ["src/**/*.ts"],
+        "includes": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"],
         "jsxFragmentFactory": "Aurum.fragment",
         "jsxFactory": "Aurum.factory",
         "jsx": "react"
@@ -34,12 +32,6 @@
         {
             "outdir": "prebuilt/esnext",
             "name": "esnext",
-            "platform": "isomorphic"
-        },
-        {
-            "outdir": "dist/test",
-            "name": "test",
-            "includes": ["test/**/*.ts", "test/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
             "platform": "isomorphic"
         }
     ]

@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { expect, describe, beforeEach, it } from 'vitest';
 import { StorageStream } from '../src/utilities/storage_stream.js';
 
 describe('StorageStream', () => {
@@ -36,11 +36,11 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsString(key, defaultValue);
 
-        expect(stream.value).to.equal(defaultValue);
+        expect(stream.value).toEqual(defaultValue);
 
         storage.setItem(key, newValue);
 
-        expect(stream.value).to.equal(newValue);
+        expect(stream.value).toEqual(newValue);
     });
 
     it('should remove storage item on stream update with default value', () => {
@@ -49,15 +49,15 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsString(key, defaultValue);
 
-        expect(stream.value).to.equal(defaultValue);
-        expect(storage.getItem(key)).to.be.undefined;
+        expect(stream.value).toEqual(defaultValue);
+        expect(storage.getItem(key)).toBeUndefined();
 
         stream.updateUpstream('test-new-value');
-        expect(storage.getItem(key)).to.equal('test-new-value');
+        expect(storage.getItem(key)).toEqual('test-new-value');
 
         stream.updateUpstream(defaultValue);
 
-        expect(storage.getItem(key)).to.be.undefined;
+        expect(storage.getItem(key)).toBeUndefined();
     });
 
     it('should remove storage item on stream update with undefined', () => {
@@ -66,15 +66,15 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsString(key, defaultValue);
 
-        expect(stream.value).to.equal(defaultValue);
-        expect(storage.getItem(key)).to.be.undefined;
+        expect(stream.value).toEqual(defaultValue);
+        expect(storage.getItem(key)).toBeUndefined();
 
         stream.updateUpstream('test-new-value');
-        expect(storage.getItem(key)).to.equal('test-new-value');
+        expect(storage.getItem(key)).toEqual('test-new-value');
 
         stream.updateUpstream(undefined);
 
-        expect(storage.getItem(key)).to.be.undefined;
+        expect(storage.getItem(key)).toBeUndefined();
     });
 
     it('should be able to listen to number values', () => {
@@ -83,13 +83,13 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsNumber(testField, defaultValue);
 
-        expect(stream.value).to.equal(defaultValue);
+        expect(stream.value).toEqual(defaultValue);
 
         storage.setItem(testField, '1');
-        expect(stream.value).to.equal(1);
+        expect(stream.value).toEqual(1);
 
         storage.setItem(testField, '2');
-        expect(stream.value).to.equal(2);
+        expect(stream.value).toEqual(2);
     });
 
     it('should be able to listen to number values with custom radix', () => {
@@ -98,13 +98,13 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsNumber(testField, defaultValue, undefined, 16);
 
-        expect(stream.value).to.equal(defaultValue);
+        expect(stream.value).toEqual(defaultValue);
 
         storage.setItem(testField, '1');
-        expect(stream.value).to.equal(1);
+        expect(stream.value).toEqual(1);
 
         storage.setItem(testField, '2');
-        expect(stream.value).to.equal(2);
+        expect(stream.value).toEqual(2);
     });
 
     it('should be able to listen to boolean values', () => {
@@ -113,13 +113,13 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsBoolean(testField, defaultValue);
 
-        expect(stream.value).to.equal(defaultValue);
+        expect(stream.value).toEqual(defaultValue);
 
         storage.setItem(testField, 'true');
-        expect(stream.value).to.equal(true);
+        expect(stream.value).toEqual(true);
 
         storage.setItem(testField, 'false');
-        expect(stream.value).to.equal(false);
+        expect(stream.value).toEqual(false);
     });
 
     it('should be able to listen to object values with a default value', () => {
@@ -128,10 +128,11 @@ describe('StorageStream', () => {
 
         const stream = storageStream.listenAsObject(testField, defaultValue);
 
-        expect(stream.value).to.deep.equal(defaultValue);
+        expect(stream.value).toEqual(defaultValue);
 
         storage.setItem(testField, JSON.stringify({ baz: 'qux' }));
-        expect(stream.value).to.deep.equal({ baz: 'qux' });
+        //@ts-ignore
+        expect(stream.value).toEqual({ baz: 'qux' });
     });
 
     it('should be able to listen to array values with a default value', () => {
@@ -140,9 +141,9 @@ describe('StorageStream', () => {
         const stream = storageStream.listenAsArray(testField);
 
         storage.setItem(testField, JSON.stringify([4, 5, 6]));
-        expect(stream.getData()).to.deep.equal([4, 5, 6]);
+        expect(stream.getData()).toEqual([4, 5, 6]);
 
         stream.push(7);
-        expect(storage.getItem(testField)).to.deep.equal('[4,5,6,7]');
+        expect(storage.getItem(testField)).toEqual('[4,5,6,7]');
     });
 });

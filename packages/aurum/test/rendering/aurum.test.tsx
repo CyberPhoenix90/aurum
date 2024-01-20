@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import * as sinon from 'sinon';
 import { Aurum, DataSource, CancellationToken, MapDataSource, combineStyle, combineClass } from '../../src/aurumjs.js';
 

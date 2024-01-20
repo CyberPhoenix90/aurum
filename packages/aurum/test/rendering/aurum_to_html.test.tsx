@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, describe, it } from 'vitest';
 import { aurumToHTML } from '../../src/aurumjs.js';
 import { Aurum } from '../../src/utilities/aurum.js';
 

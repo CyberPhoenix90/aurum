@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Karma",
+            "type": "shell",
+            "command": "karma start",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/packages/aurum"
+            },
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": {
+                    "regexp": "^(.*):\\s+(.*)$",
+                    "file": 1,
+                    "message": 2
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^[0-9]+ [0-9]+ [0-9]+ Karma v",
+                    "endsPattern": "Connected on socket"
+                }
+            },
+            "presentation": {
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

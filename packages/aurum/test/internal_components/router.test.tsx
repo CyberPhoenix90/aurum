@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { afterEach, assert, describe, it } from 'vitest';
 import { Aurum, AurumRouter, Route } from '../../src/aurumjs.js';
 
 describe('Router', () => {

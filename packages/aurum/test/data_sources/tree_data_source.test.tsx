@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import { ArrayDataSource, CancellationToken, TreeDataSource } from '../../src/aurumjs.js';
 
 describe('TreeDatasource', () => {

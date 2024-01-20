@@ -1,5 +1,5 @@
-import { assert } from 'chai';
-import { ErrorBoundary, CancellationToken, Renderable, Aurum } from '../../src/aurumjs.js';
+import { afterEach, assert, describe, it } from 'vitest';
+import { Aurum, CancellationToken, ErrorBoundary, Renderable } from '../../src/aurumjs.js';
 import { attachToTestRoot, getTestRoot, sleep } from '../test_utils.js';
 import { generateSuspenseTests } from './suspense.test.js';
 

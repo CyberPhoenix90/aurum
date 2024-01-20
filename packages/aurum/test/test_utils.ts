@@ -13,3 +13,7 @@ export function getTestRoot(): HTMLElement {
 export function attachToTestRoot(component: Renderable): CancellationToken {
     return Aurum.attach(component, document.getElementById('target'));
 }
+
+if (!document.getElementById('target')) {
+    document.body.appendChild(document.createElement('div')).id = 'target';
+}

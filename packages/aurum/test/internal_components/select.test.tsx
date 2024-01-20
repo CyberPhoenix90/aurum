@@ -1,5 +1,5 @@
-import { assert } from 'chai';
 import * as sinon from 'sinon';
+import { afterEach, assert, beforeEach, describe, it } from 'vitest';
 import { Aurum, DataSource } from '../../src/aurumjs.js';
 
 describe('Select', () => {

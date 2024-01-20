@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { expect, describe, it } from 'vitest';
 import { ObjectDataSource, unwrapObjectRecursive } from '../../src/aurumjs.js';
 import { ArrayDataSource, DataSource } from '../../src/stream/data_source.js';
 
@@ -18,7 +18,7 @@ describe('Data source utils', () => {
             })
         };
 
-        assert.deepEqual(unwrapObjectRecursive(wrapped), {
+        expect(unwrapObjectRecursive(wrapped)).toEqual({
             a: {
                 b: 1,
                 c: [2, 3]

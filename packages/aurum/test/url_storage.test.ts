@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { expect, describe, beforeEach, it } from 'vitest';
 import { UrlStorage } from '../src/utilities/url_storage.js';
 
 describe('UrlStorage', () => {
@@ -13,7 +13,7 @@ describe('UrlStorage', () => {
         const urlStorage = new UrlStorage();
         urlStorage.setItem(testKey, testValue);
 
-        expect(urlStorage.getItem(testKey)).to.equal(testValue);
+        expect(urlStorage.getItem(testKey)).toBe(testValue);
     });
 
     it('should be able to remove a value', () => {
@@ -23,11 +23,11 @@ describe('UrlStorage', () => {
         const urlStorage = new UrlStorage();
         urlStorage.setItem(testKey, testValue);
 
-        expect(urlStorage.getItem(testKey)).to.equal(testValue);
+        expect(urlStorage.getItem(testKey)).toBe(testValue);
 
         urlStorage.removeItem(testKey);
 
-        expect(urlStorage.getItem(testKey)).to.be.undefined;
+        expect(urlStorage.getItem(testKey)).toBeUndefined();
     });
 
     it('should be able to set and get values from the URL', () => {
@@ -37,10 +37,10 @@ describe('UrlStorage', () => {
         const urlStorage = new UrlStorage();
         urlStorage.setItem(testKey, testValue);
 
-        expect(window.location.search).to.equal(`?${testKey}=${testValue}`);
+        expect(window.location.search).toBe(`?${testKey}=${testValue}`);
 
         const newUrlStorage = new UrlStorage();
-        expect(newUrlStorage.getItem(testKey)).to.equal(testValue);
+        expect(newUrlStorage.getItem(testKey)).toBe(testValue);
     });
 
     it('should be able to remove a value from the URL', () => {
@@ -50,10 +50,10 @@ describe('UrlStorage', () => {
         const urlStorage = new UrlStorage();
         urlStorage.setItem(testKey, testValue);
 
-        expect(window.location.search).to.equal(`?${testKey}=${testValue}`);
+        expect(window.location.search).toBe(`?${testKey}=${testValue}`);
 
         urlStorage.removeItem(testKey);
 
-        expect(window.location.search).to.equal(``);
+        expect(window.location.search).toBe(``);
     });
 });

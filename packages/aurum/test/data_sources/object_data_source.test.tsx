@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, beforeEach, describe, it } from 'vitest';
 import { ObjectDataSource } from '../../src/stream/object_data_source.js';
 
 describe('object data source', () => {

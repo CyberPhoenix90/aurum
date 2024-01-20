@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import * as sinon from 'sinon';
 import { DataSource } from '../../src/stream/data_source.js';
 import { Aurum } from '../../src/utilities/aurum.js';

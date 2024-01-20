@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { afterEach, assert, describe, it } from 'vitest';
 import { AurumElementModel, Renderable, attachNotifier } from '../../src/aurumjs.js';
 import { Aurum } from '../../src/utilities/aurum.js';
 import { CancellationToken } from '../../src/utilities/cancellation_token.js';

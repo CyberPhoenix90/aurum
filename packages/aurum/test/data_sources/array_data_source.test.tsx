@@ -1,8 +1,8 @@
-import { assert } from 'chai';
+import { assert, describe, afterEach, it } from 'vitest';
 import { ArrayDataSource, Aurum, CancellationToken, DataSource, DuplexDataSource, SetDataSource } from '../../src/aurumjs.js';
 
 describe('ArrayDatasource', () => {
-    let attachToken: CancellationToken;
+    let attachToken: CancellationToken | undefined;
     afterEach(() => {
         attachToken?.cancel();
         attachToken = undefined;
