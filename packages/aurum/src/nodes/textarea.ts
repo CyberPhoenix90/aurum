@@ -62,7 +62,7 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
     textAreaEvents,
     (node: HTMLElement, props: TextAreaProps, cleanUp: CancellationToken) => {
         const textArea = node as HTMLTextAreaElement;
-        if (props.value) {
+        if (props?.value) {
             if (props.value instanceof DataSource) {
                 props.value.listenAndRepeat((v) => {
                     textArea.value = v;

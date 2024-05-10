@@ -32,6 +32,21 @@ describe('Datasource', () => {
         attachToken = undefined;
     });
 
+    it('should take 3 values', async () => {
+        let ds = new DataSource();
+        const generator = ds.take(3);
+        ds.update(1);
+        ds.update(2);
+        ds.update(3);
+
+        const values = [];
+        for await (const value of generator) {
+            values.push(value);
+        }
+
+        assert.deepEqual(values, [1, 2, 3]);
+    });
+
     it('should render the data source value', () => {
         const ds = new DataSource<any>(12);
         const ds2 = new DataSource<any>();

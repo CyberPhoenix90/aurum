@@ -4,7 +4,13 @@ import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.
 import { urlHashEmitter } from '../stream/emitters.js';
 import { resolveChildren } from '../utilities/transclusion.js';
 
-export function AurumRouter(props: {}, children: Renderable[], api: AurumComponentAPI) {
+export function AurumRouter(
+    props: {
+        hashRouting?: boolean;
+    },
+    children: Renderable[],
+    api: AurumComponentAPI
+) {
     const resolvedChildren = resolveChildren<AurumElementModel<RouteProps>>(children, api.cancellationToken, (c) => {
         if ((c as AurumElementModel<any>).factory !== Route && (c as AurumElementModel<any>).factory !== DefaultRoute) {
             throw new Error('Aurum Router only accepts Route and DefaultRoute instances as children');
@@ -31,7 +37,20 @@ export function AurumRouter(props: {}, children: Renderable[], api: AurumCompone
     const urlDataSource = new DataSource<string>();
 
     if (typeof window !== 'undefined') {
-        urlHashEmitter(urlDataSource, true, api.cancellationToken);
+        if (props.hashRouting) {
+            urlHashEmitter(urlDataSource, true, api.cancellationToken);
+        } else {
+            urlDataSource.update(window.location.pathname);
+            window.addEventListener('popstate', () => {
+                urlDataSource.update(window.location.pathname);
+            });
+            window.addEventListener('pushstate', () => {
+                urlDataSource.update(window.location.pathname);
+            });
+            window.addEventListener('replacestate', () => {
+                urlDataSource.update(window.location.pathname);
+            });
+        }
     }
 
     const activeRoute = new DataSource<AurumElementModel<RouteProps>>();

@@ -164,9 +164,11 @@ import {
     renderInternal,
     Renderable
 } from '../rendering/aurum_element.js';
-import { ArrayDataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 import { MapLike } from './common.js';
+import { HTMLSanitizeConfig, sanitizeHTML } from './sanitize.js';
+import { dsTap, dsUnique } from '../stream/data_source_operators.js';
 
 export type AurumDecorator = (model: AurumElementModel<any>) => Renderable;
 
@@ -285,7 +287,70 @@ export class Aurum {
         return Aurum.attach(aurumRenderable, target);
     }
 
+    /**
+     * Allows taking an HTML string for example from a server response and insert it into the page with options on how to deal with untrusted HTML sources
+     */
+    public static stringToInnerHTML(
+        content: string | DataSource<string> | ArrayDataSource<string>,
+        target: HTMLElement,
+        config?: HTMLSanitizeConfig
+    ): CancellationToken {
+        const token = new CancellationToken();
+        if (content instanceof DataSource) {
+            content.transform(
+                dsUnique(),
+                dsTap((v) => {
+                    target.innerHTML = sanitizeHTML(v, config);
+                }),
+                token
+            );
+        } else if (content instanceof ArrayDataSource) {
+            content.listenAndRepeat((change) => {
+                switch (change.operationDetailed) {
+                    case 'append':
+                        target.insertAdjacentHTML('beforeend', change.items.map((item) => sanitizeHTML(item, config)).join(''));
+                        break;
+                    case 'prepend':
+                        target.insertAdjacentHTML('afterbegin', change.items.map((item) => sanitizeHTML(item, config)).join(''));
+                        break;
+                    case 'clear':
+                        target.innerHTML = '';
+                        break;
+                    case 'insert':
+                    case 'merge':
+                    case 'removeLeft':
+                    case 'removeRight':
+                    case 'remove':
+                    case 'swap':
+                        target.innerHTML = content
+                            .getData()
+                            .map((item) => sanitizeHTML(item, config))
+                            .join('');
+                        break;
+                }
+            }, token);
+        } else {
+            target.innerHTML = sanitizeHTML(content, config);
+        }
+
+        token.addCancellable(() => {
+            target.innerHTML = '';
+        });
+
+        return token;
+    }
+
+    /**
+     * Creates a new Aurum rendering root attached to a dom element
+     * @param aurumRenderable the renderable to attach
+     * @param dom the dom element to attach to
+     * @returns a token that can be used to unmount the renderable
+     */
     public static attach(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
+        if (aurumRenderable == undefined) {
+            throw new Error('Cannot attach undefined renderable');
+        }
+
         const session = createRenderSession();
         const content = renderInternal(aurumRenderable, session);
         if (content instanceof AurumElement) {
@@ -295,6 +360,7 @@ export class Aurum {
             const root = new ArrayAurumElement(new ArrayDataSource(content), createAPI(session));
             session.sessionToken.addCancellable(() => root.dispose());
             root.attachToDom(dom, dom.childNodes.length);
+        } else if (content == undefined) {
         } else {
             dom.appendChild(content);
             session.sessionToken.addCancellable(() => {

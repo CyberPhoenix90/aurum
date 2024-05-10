@@ -73,7 +73,7 @@ export { SelectProps } from './nodes/select.js';
 export { TextAreaProps } from './nodes/textarea.js';
 
 export { aurumToHTML } from './rendering/renderers/dom_adapter.js';
-export { aurumToString, AurumStringAdapterConfig } from './rendering/renderers/string_adapter.js';
+export { aurumToString } from './rendering/renderers/string_adapter.js';
 export { aurumToVDOM, VDOM, VDOMNode } from './rendering/renderers/vdom_adapter.js';
 
 export * from './builtin_components/router.js';
@@ -99,9 +99,9 @@ export * from './utilities/transclusion.js';
 export * from './utilities/storage_stream.js';
 export * from './utilities/url_storage.js';
 export * from './utilities/iteration.js';
+export * from './utilities/sanitize.js';
 
 export * from './decorators/attach_notifier.js';
 
-export { debugMode, enableDebugMode } from './debug_mode.js';
 export { AttributeValue, ClassType, StyleType, DataDrain, StringSource } from './utilities/common.js';
 export { RemoteProtocol, getRemoteFunction } from './aurum_server/aurum_server_client.js';

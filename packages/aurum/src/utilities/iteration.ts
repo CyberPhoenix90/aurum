@@ -95,6 +95,41 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
     return;
 }
 
+export async function* readableStreamStringIterator(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    itemSeperatorSequence: string,
+    onDone?: () => void
+): AsyncGenerator<string> {
+    const decoder = new TextDecoder('utf-8');
+    let buffer: string = '';
+    for await (const chunk of readableStreamBinaryIterator(reader, onDone)) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const parts = buffer.split(itemSeperatorSequence);
+        for (let i = 0; i < parts.length - 1; i++) {
+            yield parts[i];
+        }
+        buffer = parts[parts.length - 1];
+    }
+
+    if (buffer.length > 0) {
+        yield buffer;
+    }
+}
+
+export async function* readableStreamBinaryIterator(reader: ReadableStreamDefaultReader<Uint8Array>, onDone?: () => void): AsyncGenerator<Uint8Array> {
+    while (true) {
+        const { done, value } = await reader.read();
+        if (!done) {
+            yield value;
+        } else {
+            if (onDone) {
+                onDone();
+                return;
+            }
+        }
+    }
+}
+
 export function promiseIterator<T>(promises: Promise<T>[], cancellation?: CancellationToken): AsyncIterableIterator<PromiseSettledResult<T>> {
     let pendingCount = promises.length;
     const output = new DataSource<PromiseSettledResult<T>>();

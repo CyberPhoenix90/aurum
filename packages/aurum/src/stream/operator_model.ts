@@ -47,7 +47,7 @@ export interface DataSourceMapOperator<T, M> extends DataSourceOperator<T, M> {
 
 export interface DataSourceNoopOperator<T> extends DataSourceOperator<T, T> {
     operationType: OperationType.NOOP;
-    operation: (value: T) => T;
+    operation: (value: T) => void;
 }
 
 export interface DataSourceDelayOperator<T> extends DataSourceOperator<T, T> {

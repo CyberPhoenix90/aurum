@@ -1,11 +1,10 @@
 import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
-import { debugDeclareUpdate, debugMode, debugRegisterConsumer, debugRegisterLink, debugRegisterStream } from '../debug_mode.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, Predicate } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
-import { promiseIterator } from '../utilities/iteration.js';
+import { promiseIterator, readableStreamStringIterator, transformAsyncIterator } from '../utilities/iteration.js';
 import { getValueOf } from '../utilities/sources.js';
-import { dsDiff, dsTap } from './data_source_operators.js';
+import { dsDiff, dsMap, dsTap } from './data_source_operators.js';
 import { DuplexDataSource } from './duplex_data_source.js';
 import {
     DataSourceDelayFilterOperator,
@@ -236,9 +235,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     constructor(initialValue?: T, name: string = 'RootDataSource') {
         this.name = name;
         this.value = initialValue;
-        if (debugMode) {
-            debugRegisterStream(this, new Error().stack);
-        }
         this.primed = initialValue !== undefined;
         this.errorEvent = new EventEmitter();
         this.updateEvent = new EventEmitter();
@@ -256,9 +252,91 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         }
     }
 
+    public static fromFetchText(response: Response, config: FetchStreamConfig = { itemSeperatorSequence: '\n' }): DataSource<string> {
+        return DataSource.fromAsyncIterator(
+            readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete),
+            undefined
+        );
+    }
+
+    public static fromFetchJSON<T>(
+        response: Response,
+        config: FetchStreamConfig & {
+            onParseError?: (error: Error, item: string) => T;
+        } = {
+            itemSeperatorSequence: '\n'
+        }
+    ): DataSource<T> {
+        return DataSource.fromAsyncIterator(
+            transformAsyncIterator(
+            readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete),
+            dsMap((v) => {
+                try {
+                    return JSON.parse(v);
+                } catch (e) {
+                    if (config.onParseError) {
+                        return config.onParseError(e, v);
+                    } else {
+                        throw e;
+                    }
+                }
+            })
+
+        ))
+    }
+
     public static fromEvent<T>(event: EventEmitter<T>, cancellation: CancellationToken): DataSource<T> {
         const result = new DataSource<T>();
         event.subscribe((v) => result.update(v), cancellation);
+        return result;
+    }
+
+    /**
+     * Creates a new `DataSource` from a callback function.
+     * The callback function is expected to take an `update` function as a parameter,
+     * which can be used to update the value of the `DataSource`.
+     * This is useful to create a `DataSource` that is updated with an event such as a button click.
+     * @example ```typescript
+     * const buttonClicks = DataSource.fromCallback((update) => {
+     *    button.addEventListener('click', update);
+     * });
+     * ```
+     *
+     * @template T - The type of the value emitted by the `DataSource`.
+     * @param callback - The callback function that provides the `update` function.
+     * @param cancellation - The cancellation token used to cancel the `DataSource`.
+     * @returns A new `DataSource` instance.
+     */
+    public static fromCallback<T>(callback: (update: (value: T) => void, token: CancellationToken) => void, cancellation: CancellationToken): DataSource<T> {
+        const result = new DataSource<T>();
+        callback(result.update.bind(result), cancellation);
+        return result;
+    }
+
+    public static fromDomEvent<T extends Event>(
+        element: {
+            addEventListener: (event: string, cb: (e: T) => void) => void;
+            removeEventListener: (event: string, cb: (e: T) => void) => void;
+        },
+        event: string,
+        cancellation: CancellationToken
+    ): DataSource<T> {
+        const result = new DataSource<T>();
+        cancellation.registerDomEvent(element, event, (e) => result.update(e as T));
+        return result;
+    }
+
+    public static fromNodeJsEvent<T>(
+        emitter: {
+            on(event: string, listener: (value: T) => void): void;
+            off(event: string, listener: (value: T) => void): void;
+        },
+        event: string,
+        cancellation: CancellationToken
+    ): DataSource<T> {
+        const result = new DataSource<T>();
+        emitter.on(event, (v) => result.update(v));
+        cancellation.addCancellable(() => emitter.off(event, result.update));
         return result;
     }
 
@@ -280,9 +358,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const result = new DataSource<T>();
 
         for (const s of sources) {
-            if (debugMode) {
-                debugRegisterLink(s as any, result);
-            }
             (s as any).listenInternal((v) => result.update(v), cancellation);
         }
 
@@ -410,9 +485,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         this.updating = true;
         this.value = newValue;
         this.updateEvent.fire(newValue);
-        if (debugMode) {
-            debugDeclareUpdate(this, newValue, new Error().stack);
-        }
         this.updating = false;
     }
 
@@ -452,9 +524,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
     public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        if (debugMode) {
-            debugRegisterConsumer(this, callback.toString(), new Error().stack);
-        }
         return this.listenInternal(callback, cancellationToken);
     }
 
@@ -506,9 +575,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             token = cancellationToken;
         }
         const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
-        if (debugMode) {
-            debugRegisterLink(this, result);
-        }
         (this.primed ? this.listenAndRepeatInternal : this.listenInternal).call(this, processTransform<T, K>(operations as any, result), token);
         this.onError((e) => result.emitError(e), token);
 
@@ -787,9 +853,38 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken
      */
     public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            cancellationToken?.addCancellable(() => reject(new Error('Cancelled')));
             this.listenOnce((value) => resolve(value), cancellationToken);
         });
+    }
+
+    public take(amount: number, cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
+        if (cancellationToken?.isCancelled) {
+            return {
+                [Symbol.asyncIterator](): AsyncIterableIterator<T> {
+                    return this;
+                },
+                next: async () => ({ done: true, value: undefined })
+            };
+        }
+        let taken = 0;
+        const done = new CancellationToken();
+        const iterator = this.toAsyncIterator(done.or(cancellationToken));
+
+        return {
+            [Symbol.asyncIterator](): AsyncIterableIterator<T> {
+                return this;
+            },
+            next: async () => {
+                if (taken >= amount) {
+                    done.cancel();
+                    return { done: true, value: undefined };
+                }
+                taken++;
+                return iterator.next();
+            }
+        };
     }
 
     /**
@@ -880,6 +975,11 @@ export interface ReadOnlyArrayDataSource<T> {
     pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken): void;
 }
 
+export interface FetchStreamConfig {
+    onComplete?: () => void;
+    itemSeperatorSequence: string;
+}
+
 export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     protected data: T[];
     protected updateEvent: EventEmitter<CollectionChange<T>>;
@@ -968,86 +1068,47 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return this.data.toString();
     }
 
-    public static fromFetchText(
-        response: Response,
-        config: { onComplete?: () => void; itemSeperatorSequence: string } = { itemSeperatorSequence: '\n' }
-    ): ArrayDataSource<string> {
-        const decoder = new TextDecoder('utf-8');
-        const stream = new ArrayDataSource<string>();
-        const { onComplete, itemSeperatorSequence } = config;
+    public static fromFetchText(response: Response, config: FetchStreamConfig = { itemSeperatorSequence: '\n' }): ArrayDataSource<string> {
+        const iterator = readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete);
 
-        let buffer: string = '';
-        const readerStream = response.body.getReader();
-        function read(reader: ReadableStreamDefaultReader<Uint8Array>): void {
-            reader.read().then(({ done, value }) => {
-                if (!done) {
-                    const data = (buffer + decoder.decode(value)).split(itemSeperatorSequence);
-                    buffer = data.splice(data.length - 1, 1)[0];
-                    stream.appendArray(data);
-                    read(reader);
-                } else {
-                    if (buffer.length) {
-                        stream.push(buffer);
-                    }
-                    onComplete?.();
-                }
-            });
-        }
-        read(readerStream);
+        const result = new ArrayDataSource<string>();
 
-        return stream;
+        (async () => {
+            for await (const item of iterator) {
+                result.push(item);
+            }
+        })();
+
+        return result;
     }
 
     public static fromFetchJSON<T>(
         response: Response,
-        config: {
-            onParseError?: (item) => T;
-            onComplete?: () => void;
-            itemSeperatorSequence?: string;
+        config: FetchStreamConfig & {
+            onParseError?: (error: Error, item: string) => T;
         } = {
             itemSeperatorSequence: '\n'
         }
     ): ArrayDataSource<T> {
-        const decoder = new TextDecoder('utf-8');
-        const stream = new ArrayDataSource<T>();
-        const { onParseError, onComplete, itemSeperatorSequence = '\n' } = config;
+        const iterator = readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete);
 
-        let buffer: string = '';
-        const readerStream = response.body.getReader();
-        function read(reader: ReadableStreamDefaultReader<Uint8Array>): void {
-            reader.read().then(({ done, value }) => {
-                if (!done) {
-                    const data = (buffer + decoder.decode(value)).split(itemSeperatorSequence);
-                    buffer = data.splice(data.length - 1, 1)[0];
+        const result = new ArrayDataSource<T>();
 
-                    for (const item of data) {
-                        parseAndPush(item);
-                    }
-
-                    read(reader);
-                } else {
-                    if (buffer.length) {
-                        parseAndPush(buffer);
-                    }
-                    onComplete?.();
-                }
-            });
-        }
-        read(readerStream);
-
-        function parseAndPush(item: string) {
-            try {
-                stream.push(JSON.parse(item));
-            } catch (e) {
+        (async () => {
+            for await (const item of iterator) {
                 try {
-                    stream.push(onParseError(item));
+                    result.push(JSON.parse(item));
                 } catch (e) {
-                    // Ignore item if it can't be parsed and/or no error handler is provided
+                    if (config.onParseError) {
+                        result.push(config.onParseError(e, item));
+                    } else {
+                        throw e;
+                    }
                 }
             }
-        }
+        })();
 
-        return stream;
+        return result;
     }
 
     /**
@@ -1262,7 +1323,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             }
 
             session.set(item, new CancellationToken());
-            cancellation.chain(session.get(item));
+            cancellation.addCancellable(session.get(item));
             item.listen((value) => {
                 result.set(arrayDataSource.indexOf(item as any), value);
             }, session.get(item));
@@ -2715,6 +2776,8 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
             for (const operation of operations) {
                 switch (operation.operationType) {
                     case OperationType.NOOP:
+                        (operation as DataSourceMapOperator<any, any>).operation(v);
+                        break;
                     case OperationType.MAP:
                         v = (operation as DataSourceMapOperator<any, any>).operation(v);
                         break;

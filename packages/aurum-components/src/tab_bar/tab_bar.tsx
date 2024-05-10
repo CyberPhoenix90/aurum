@@ -53,7 +53,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 
-export type TabsetLabelContent = string | { id: string; content: Renderable };
+export type TabsetLabelContent = string | { id: string; content: Renderable; title?: string };
 export type TabsetLabelContentSource = ArrayDataSource<TabsetLabelContent>;
 
 interface TabBarProps {
@@ -99,10 +99,12 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
 
     function renderTab(i: number, tab: TabsetLabelContent): any {
         let tabId: string, tabContent: Renderable;
+        let title: string | undefined = undefined;
         if (typeof tab === 'string') {
             tabId = tab;
             tabContent = tab;
         } else {
+            title = tab.title;
             tabId = tab.id;
             tabContent = tab.content;
         }
@@ -114,6 +116,7 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
 
         return (
             <div
+                title={title}
                 onDragStart={() => (heldItem = tabId)}
                 onDragEnter={() => onReorder?.(tabId, heldItem)}
                 draggable={canReorder ? 'true' : false}

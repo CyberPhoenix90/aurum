@@ -43,7 +43,6 @@ export function dsFork<T>(
             } else {
                 falsyPath.update(v);
             }
-            return v;
         }
     };
 }
@@ -615,7 +614,6 @@ export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T
             } else {
                 target.updateDownstream(v);
             }
-            return v;
         }
     };
 }
@@ -633,7 +631,6 @@ export function dsPipeUp<T>(target: DataSource<T> | DuplexDataSource<T> | Stream
             } else {
                 target.updateUpstream(v);
             }
-            return v;
         }
     };
 }
@@ -658,7 +655,6 @@ export function dsHistory<T>(
                 }
                 reportTarget.push(v);
             }
-            return v;
         }
     };
 }
@@ -682,7 +678,6 @@ export function dsThroughputMeter<T>(
         name: `throughput meter`,
         operation: (v) => {
             amount++;
-            return v;
         }
     };
 }
@@ -696,7 +691,6 @@ export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
         operationType: OperationType.NOOP,
         operation: (v) => {
             cb(v);
-            return v;
         }
     };
 }
@@ -720,8 +714,6 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
             } else {
                 target.updateDownstream(v);
             }
-
-            return v;
         }
     };
 }
@@ -735,7 +727,6 @@ export function dsLog<T>(prefix: string = '', suffix: string = ''): DataSourceNo
         operationType: OperationType.NOOP,
         operation: (v) => {
             console.log(`${prefix}${v}${suffix}`);
-            return v;
         }
     };
 }
@@ -752,7 +743,6 @@ export function dsPipeAll<T>(...sources: Array<DataSource<T> | DuplexDataSource<
                     source.updateDownstream(v);
                 }
             });
-            return v;
         }
     };
 }

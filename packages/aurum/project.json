@@ -1,6 +1,6 @@
 {
     "name": "aurumjs",
-    "version": "0.9.26",
+    "version": "0.9.31",
     "type": "module",
     "main": "prebuilt/esnext/aurumjs.js",
     "typings": "prebuilt/esnext/aurumjs.d.ts",
@@ -14,12 +14,15 @@
     "keywords": ["web-components", "webcomponents", "DOM", "stream", "rendering"],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT",
+    "scripts": {
+        "test": "vitest"
+    },
     "devDependencies": {
         "@types/sinon": "^9.0.4",
         "sinon": "^9.0.3",
-        "vitest": "^1.2.1",
-        "@vitest/browser": "^1.2.1",
-        "webdriverio": "^8.28.8"
+        "vitest": "^1.5.2",
+        "@vitest/browser": "^1.5.2",
+        "webdriverio": "^8.36.1"
     },
     "defaultBuildSettings": {
         "assembly": "library",
@@ -30,6 +33,12 @@
     },
     "builds": [
         {
+            "outdir": "dist_test",
+            "name": "test",
+            "platform": "isomorphic"
+        },
+        {
+            "includes": ["src/**/*.ts", "src/**/*.tsx"],
             "outdir": "prebuilt/esnext",
             "name": "esnext",
             "platform": "isomorphic"

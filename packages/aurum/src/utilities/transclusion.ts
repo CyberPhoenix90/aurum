@@ -2,6 +2,9 @@ import { Renderable } from '../rendering/aurum_element.js';
 import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 
+/**
+ * Simplifies the children of a component by resolving the different types of children into an array data source
+ */
 export function resolveChildren<T>(
     children: Renderable[],
     cancellationToken: CancellationToken,

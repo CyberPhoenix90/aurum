@@ -34,7 +34,7 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
             });
         }
 
-        if (props.selectedIndex instanceof DataSource || props.selectedIndex instanceof DuplexDataSource) {
+        if (props?.selectedIndex instanceof DataSource || props?.selectedIndex instanceof DuplexDataSource) {
             const mo = new MutationObserver(() => {
                 select.selectedIndex = (props.selectedIndex as GenericDataSource<number>).value;
             });
@@ -47,14 +47,14 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
             });
         }
 
-        if (props.value instanceof DataSource) {
+        if (props?.value instanceof DataSource) {
             props.value.listenAndRepeat((v) => {
                 select.value = v;
             }, cleanUp);
             select.addEventListener('change', () => {
                 (props.value as DataSource<string>).update(select.value);
             });
-        } else if (props.value instanceof DuplexDataSource) {
+        } else if (props?.value instanceof DuplexDataSource) {
             props.value.listenAndRepeat((v) => {
                 select.value = v;
             }, cleanUp);

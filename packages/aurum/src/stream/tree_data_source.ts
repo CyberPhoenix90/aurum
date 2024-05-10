@@ -60,7 +60,7 @@ export class TreeDataSource<T, K extends keyof T> {
                 for (const { node } of this.iterateLevelWithMetaData(root, this.roots.length.value)) {
                     if (node[this.childrenKey] instanceof ArrayDataSource) {
                         watchMap.set(node, new CancellationToken());
-                        this.watchToken.chain(watchMap.get(node));
+                        this.watchToken.addCancellable(watchMap.get(node));
                         (node[this.childrenKey] as any as ArrayDataSource<T>).listenAndRepeat((change) => {
                             this.watchHandleChange(change, node, watchMap);
                         }, watchMap.get(node));
@@ -83,7 +83,7 @@ export class TreeDataSource<T, K extends keyof T> {
                     });
                     if (item[this.childrenKey] instanceof ArrayDataSource) {
                         watchMap.set(item, new CancellationToken());
-                        this.watchToken.chain(watchMap.get(item));
+                        this.watchToken.addCancellable(watchMap.get(item));
                         (item[this.childrenKey] as any as ArrayDataSource<T>).listenAndRepeat((change) => {
                             this.watchHandleChange(change, item, watchMap);
                         }, watchMap.get(item));
@@ -214,7 +214,7 @@ export class TreeDataSource<T, K extends keyof T> {
     ): void {
         nodeList.push(item as any);
         adaptMap.set(item, new CancellationToken());
-        parentToken.chain(adaptMap.get(item));
+        parentToken.addCancellable(adaptMap.get(item));
         const list = ArrayDataSource.toArrayDataSource(item[this.childrenKey]);
         this.adaptNodeList(list, adaptMap.get(item), nodeList);
     }

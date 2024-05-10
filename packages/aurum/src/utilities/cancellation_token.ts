@@ -1,5 +1,11 @@
 import { Delegate, Callback } from './common.js';
 
+export interface ReadonlyCancellationToken {
+    readonly isCancelled: boolean;
+
+    hasCancellables(): boolean;
+}
+
 export class CancellationToken {
     private cancelables: Delegate[];
     private _isCancelled: boolean;
@@ -13,17 +19,8 @@ export class CancellationToken {
         this._isCancelled = false;
     }
 
+    public static expired = new CancellationToken();
     public static forever = new CancellationToken();
-
-    public static fromMultiple(tokens: CancellationToken[]): CancellationToken {
-        const result = new CancellationToken();
-
-        for (const token of tokens) {
-            token.chain(result);
-        }
-
-        return result;
-    }
 
     public hasCancellables(): boolean {
         return this.cancelables.length > 0;
@@ -33,8 +30,13 @@ export class CancellationToken {
      * Attaches a new cancelable to this token
      * @param delegate
      */
-    public addCancellable(delegate: Delegate): this {
+    public addCancellable(delegate: Delegate | CancellationToken): this {
         this.throwIfCancelled('attempting to add cancellable to token that is already cancelled');
+
+        if (delegate instanceof CancellationToken) {
+            this.addCancellable(() => delegate.cancel());
+            return this;
+        }
 
         this.cancelables.push(delegate);
 
@@ -89,28 +91,71 @@ export class CancellationToken {
         }
     }
 
-    public chain(target: CancellationToken, twoWays: boolean = false): CancellationToken {
-        const cancelable = () => target.cancel();
-        if (twoWays) {
-            target.chain(this, false);
-        } else {
-            target.addCancellable(() => {
-                if (!this.isCancelled) {
-                    this.removeCancellable(cancelable);
-                }
-            });
+    /**
+     *  Combines multiple tokens into one. If any of the tokens are cancelled the returned token will be cancelled as well
+     */
+    public or(...token: CancellationToken[]): CancellationToken {
+        if (token.every((t) => t === CancellationToken.forever || t == undefined)) {
+            return this;
         }
 
-        this.addCancellable(cancelable);
+        if (token.some((t) => t.isCancelled)) {
+            return CancellationToken.expired;
+        }
 
-        return this;
+        token = token.filter(Boolean);
+
+        const orToken = new CancellationToken();
+        this.addCancellable(() => orToken.cancel());
+        for (const t of token) {
+            t.addCancellable(() => orToken.cancel());
+        }
+
+        return orToken;
+    }
+
+    /**
+     *  Combines multiple tokens into one. If all of the tokens are cancelled the returned token will be cancelled as well
+     */
+    public and(...token: CancellationToken[]): CancellationToken {
+        if (token.every((t) => t.isCancelled || t == undefined)) {
+            return this;
+        }
+        if (token.some((t) => t === CancellationToken.forever)) {
+            return CancellationToken.forever;
+        }
+
+        token = token.filter(Boolean);
+
+        let cancelCount = 0;
+        const andToken = new CancellationToken();
+        const cancel = () => {
+            cancelCount++;
+            if (cancelCount === token.length + 1) {
+                andToken.cancel();
+            }
+        };
+
+        this.addCancellable(cancel);
+        for (const t of token) {
+            t.addCancellable(cancel);
+        }
+
+        return andToken;
     }
 
     /**
      * Registers an event using addEventListener and if you cancel the token the event will be canceled as well
      */
-    public registerDomEvent(eventEmitter: HTMLElement | Document | Window, event: string, callback: (e: Event) => void): this {
-        (eventEmitter as HTMLElement).addEventListener(event, callback);
+    public registerDomEvent<T extends Event>(
+        eventEmitter: {
+            addEventListener: (event: string, cb: (e: T) => void) => void;
+            removeEventListener: (event: string, cb: (e: T) => void) => void;
+        },
+        event: string,
+        callback: (e: T) => void
+    ): this {
+        eventEmitter.addEventListener(event, callback);
         this.addCancellable(() => eventEmitter.removeEventListener(event, callback));
 
         return this;
@@ -174,7 +219,9 @@ function loop(time: number): void {
         requestAnimationFrame(loop);
     }
 }
-
+// Token that is pre-cancelled. Signals that the operation should be cancelled immediately
+CancellationToken.expired.cancel();
+// Token that is never cancelled. Signals that the operation should never be cancelled or lasts for the whole process lifetime
 CancellationToken.forever.addCancellable = () => void 0;
 CancellationToken.forever.cancel = () => {
     throw new Error('Cannot cancel forever token');

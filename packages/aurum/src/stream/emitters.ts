@@ -84,7 +84,7 @@ export function animate(cb: (progress: number) => void, time: number, cancellati
     return new Promise((resolve) => {
         const animationToken = new CancellationToken();
         if (cancellationToken) {
-            cancellationToken.chain(animationToken);
+            cancellationToken.addCancellable(animationToken);
         }
         animationToken.addCancellable(resolve);
         let start = Date.now();

@@ -251,7 +251,7 @@ class AurumServerClient {
                     id
                 })
             );
-        }, CancellationToken.fromMultiple([cancellation, this.masterToken]));
+        }, cancellation.or(this.masterToken));
     }
 
     private syncSource(

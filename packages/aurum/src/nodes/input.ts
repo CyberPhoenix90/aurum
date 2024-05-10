@@ -73,7 +73,7 @@ const inputProps = [
  */
 export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents, (node: HTMLElement, props: InputProps, cleanUp: CancellationToken) => {
     const input = node as HTMLInputElement;
-    if (props.value) {
+    if (props?.value) {
         if (props.value instanceof DataSource) {
             props.value.listenAndRepeat((v) => {
                 input.value = v ?? '';
@@ -93,7 +93,7 @@ export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents
         }
     }
 
-    if (props.checked) {
+    if (props?.checked) {
         if (props.checked instanceof DataSource) {
             props.checked.listenAndRepeat((v) => {
                 input.checked = v ?? false;
