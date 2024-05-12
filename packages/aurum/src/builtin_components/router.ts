@@ -1,12 +1,16 @@
 import { AurumComponentAPI, AurumElementModel, Renderable } from '../rendering/aurum_element.js';
 import { DataSource, ReadOnlyArrayDataSource } from '../stream/data_source.js';
-import { dsDiff, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
-import { urlHashEmitter } from '../stream/emitters.js';
+import { dsDiff, dsFilter, dsMap, dsTap, dsUnique } from '../stream/data_source_operators.js';
+import { urlHashEmitter, urlPathEmitter } from '../stream/emitters.js';
 import { resolveChildren } from '../utilities/transclusion.js';
 
 export function AurumRouter(
     props: {
         hashRouting?: boolean;
+        urlPreprocessing?: (url: string) => string;
+        validateNavigation?: (url: string, route: AurumElementModel<RouteProps>) => boolean;
+        // For server side rendering or other cases where the url is not available from the browser. Can be useful for testing
+        urlProvider?: DataSource<string>;
     },
     children: Renderable[],
     api: AurumComponentAPI
@@ -36,20 +40,14 @@ export function AurumRouter(
 
     const urlDataSource = new DataSource<string>();
 
-    if (typeof window !== 'undefined') {
+    if (props.urlProvider) {
+        props.urlProvider.pipe(urlDataSource, api.cancellationToken);
+    } else if (typeof window !== 'undefined') {
         if (props.hashRouting) {
             urlHashEmitter(urlDataSource, true, api.cancellationToken);
         } else {
             urlDataSource.update(window.location.pathname);
-            window.addEventListener('popstate', () => {
-                urlDataSource.update(window.location.pathname);
-            });
-            window.addEventListener('pushstate', () => {
-                urlDataSource.update(window.location.pathname);
-            });
-            window.addEventListener('replacestate', () => {
-                urlDataSource.update(window.location.pathname);
-            });
+            urlPathEmitter(urlDataSource, api.cancellationToken);
         }
     }
 
@@ -71,15 +69,17 @@ export function AurumRouter(
     return urlDataSource
         .transform(dsUnique(), api.cancellationToken)
         .withInitial(urlDataSource.value)
-        .transform(dsMap((p) => selectRoute(p, resolvedChildren, activeRoute)));
+        .transform(
+            dsMap((url) => (props.urlPreprocessing ? props.urlPreprocessing(url) : url)),
+            dsMap((path) => ({ path, route: selectRoute(path, resolvedChildren) })),
+            dsFilter((r) => (props.validateNavigation ? props.validateNavigation(r.path, r.route) : true)),
+            dsTap((r) => activeRoute.update(r.route)),
+            dsMap((r) => r.route.children)
+        );
 }
 
-function selectRoute(
-    url: string,
-    routes: ReadOnlyArrayDataSource<AurumElementModel<RouteProps>>,
-    activeRoute: DataSource<AurumElementModel<RouteProps>>
-): Renderable[] {
-    let selected;
+function selectRoute(url: string, routes: ReadOnlyArrayDataSource<AurumElementModel<RouteProps>>): AurumElementModel<RouteProps> {
+    let selected: AurumElementModel<RouteProps>;
     if (url === undefined || url === null) {
         selected = routes.find((r) => r.factory === DefaultRoute);
     } else {
@@ -102,13 +102,7 @@ function selectRoute(
         }
     }
 
-    if (selected) {
-        activeRoute.update(selected);
-        return selected.children;
-    } else {
-        activeRoute.update(undefined);
-        return undefined;
-    }
+    return selected;
 }
 
 export interface RouteProps {

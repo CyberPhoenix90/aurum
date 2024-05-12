@@ -1,3 +1,4 @@
+import { urlHashEmitter, urlPathEmitter } from '../aurumjs.js';
 import { MapLike } from './common.js';
 
 export class UrlStorage implements Storage {
@@ -8,16 +9,15 @@ export class UrlStorage implements Storage {
     constructor() {
         this.state = {};
         this.observeUrl();
-        window.addEventListener('hashchange', () => this.checkUpdate());
+        urlHashEmitter(() => this.checkUpdate());
         this.checkUpdate();
     }
 
     private observeUrl(): void {
         this.originalReplaceState = history.replaceState.bind(history);
-        history.replaceState = (...args: any[]) => {
-            this.originalReplaceState.apply(history, args);
+        urlPathEmitter(() => {
             this.checkUpdate();
-        };
+        });
     }
 
     public get length(): number {

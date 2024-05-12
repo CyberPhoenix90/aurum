@@ -251,7 +251,7 @@ export abstract class AurumElement {
                         this.hostNode.appendChild(child);
                     }
                 } else {
-                    throw new Error('not implemented');
+                    throw invalidRenderableError(child);
                 }
             } else {
                 if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
@@ -263,7 +263,7 @@ export abstract class AurumElement {
                         this.hostNode.appendChild(child);
                     }
                 } else {
-                    throw new Error('not implemented');
+                    throw invalidRenderableError(child);
                 }
             }
         }
@@ -281,6 +281,31 @@ export interface RenderSession {
     attachCalls: Array<() => void>;
     tokens: CancellationToken[];
     sessionToken: CancellationToken;
+}
+
+function invalidRenderableError(child: never) {
+    return new Error(`Aurum was given an unsupported type to render "${
+        (child as any)?.constructor?.name ?? typeof child
+    }". This can happen if you pass a component function directly to Aurum instead of "rendering" it using JSX syntax or Aurum.factory
+Example:
+// Wrong
+<div>
+{LoginComponent}
+</div>
+
+vs
+
+// Correct
+<div>
+<LoginComponent/>
+</div>
+
+or
+
+// Correct
+<div>
+{Aurum.factory(LoginComponent, {})}
+</div>`);
 }
 
 /**

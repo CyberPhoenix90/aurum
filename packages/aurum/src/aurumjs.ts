@@ -76,6 +76,7 @@ export { aurumToHTML } from './rendering/renderers/dom_adapter.js';
 export { aurumToString } from './rendering/renderers/string_adapter.js';
 export { aurumToVDOM, VDOM, VDOMNode } from './rendering/renderers/vdom_adapter.js';
 
+export * from './builtin_components/lazy.js';
 export * from './builtin_components/router.js';
 export * from './builtin_components/suspense.js';
 export * from './builtin_components/error_boundary.js';

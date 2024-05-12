@@ -4,6 +4,7 @@ import { DuplexDataSource } from './duplex_data_source.js';
 import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token.js';
 import { ObjectDataSource } from './object_data_source.js';
 import { dsDebounce, dsTap } from './data_source_operators.js';
+import { EventEmitter } from '../aurumjs.js';
 
 /**
  * Convenience function to update a stream at fixed intervals
@@ -19,18 +20,54 @@ export function intervalEmitter<T = void>(
     }, interval);
 }
 
-function updateSource<T = void>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T>, value: T) {
+function updateSource<T = void>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T> | ((param: T) => void), value: T) {
     if (target instanceof ArrayDataSource) {
         target.push(value);
     } else if (target instanceof DuplexDataSource) {
         target.updateDownstream(value);
+    } else if (typeof target === 'function') {
+        target(value);
     } else {
         target.update(value);
     }
 }
 
+export function urlPathEmitter(
+    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string> | ((path: string) => void),
+    cancellationToken?: CancellationToken
+): void {
+    observeHistory();
+    historyEvent.subscribe(() => {
+        updateSource(target, location.pathname);
+    }, cancellationToken);
+}
+
+let historyEvent: EventEmitter<void>;
+function observeHistory() {
+    if (historyEvent) {
+        return;
+    }
+    historyEvent = new EventEmitter();
+    const originalReplaceState = history.replaceState.bind(history);
+    const originalPushState = history.pushState.bind(history);
+
+    window.addEventListener('popstate', () => {
+        historyEvent.fire();
+    });
+
+    history.replaceState = (...args: any[]) => {
+        originalReplaceState.apply(history, args);
+        historyEvent.fire();
+    };
+
+    history.pushState = (...args: any[]) => {
+        originalPushState.apply(history, args);
+        historyEvent.fire();
+    };
+}
+
 export function urlHashEmitter(
-    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string>,
+    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string> | ((path: string) => void),
     stripInHashParameters: boolean = false,
     cancellationToken?: CancellationToken
 ): void {
