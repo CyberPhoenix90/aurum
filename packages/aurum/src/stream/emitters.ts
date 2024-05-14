@@ -50,20 +50,35 @@ function observeHistory() {
     historyEvent = new EventEmitter();
     const originalReplaceState = history.replaceState.bind(history);
     const originalPushState = history.pushState.bind(history);
+    let hasFired = false;
 
     window.addEventListener('popstate', () => {
-        historyEvent.fire();
+        fireEvent();
     });
 
     history.replaceState = (...args: any[]) => {
         originalReplaceState.apply(history, args);
-        historyEvent.fire();
+        fireEvent();
     };
 
     history.pushState = (...args: any[]) => {
         originalPushState.apply(history, args);
-        historyEvent.fire();
+        fireEvent();
     };
+
+    function fireEvent() {
+        if (hasFired) {
+            queueMicrotask(() => {
+                historyEvent.fire();
+            });
+        } else {
+            historyEvent.fire();
+            hasFired = true;
+            queueMicrotask(() => {
+                hasFired = false;
+            });
+        }
+    }
 }
 
 export function urlHashEmitter(
