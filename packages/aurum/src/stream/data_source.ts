@@ -269,20 +269,20 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     ): DataSource<T> {
         return DataSource.fromAsyncIterator(
             transformAsyncIterator(
-            readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete),
-            dsMap((v) => {
-                try {
-                    return JSON.parse(v);
-                } catch (e) {
-                    if (config.onParseError) {
-                        return config.onParseError(e, v);
-                    } else {
-                        throw e;
+                readableStreamStringIterator(response.body.getReader(), config.itemSeperatorSequence, config.onComplete),
+                dsMap((v) => {
+                    try {
+                        return JSON.parse(v);
+                    } catch (e) {
+                        if (config.onParseError) {
+                            return config.onParseError(e, v);
+                        } else {
+                            throw e;
+                        }
                     }
-                }
-            })
-
-        ))
+                })
+            )
+        );
     }
 
     public static fromEvent<T>(event: EventEmitter<T>, cancellation: CancellationToken): DataSource<T> {
@@ -777,7 +777,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
      */
     public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
-        this.listen((v) => targetDataSource.update(v), cancellationToken);
+        (this.primed ? this.listenAndRepeat : this.listen).call(this, (v) => targetDataSource.update(v), cancellationToken);
 
         return this;
     }

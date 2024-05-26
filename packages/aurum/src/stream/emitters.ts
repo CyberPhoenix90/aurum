@@ -4,7 +4,7 @@ import { DuplexDataSource } from './duplex_data_source.js';
 import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token.js';
 import { ObjectDataSource } from './object_data_source.js';
 import { dsDebounce, dsTap } from './data_source_operators.js';
-import { EventEmitter } from '../aurumjs.js';
+import { EventEmitter } from '../utilities/event_emitter.js';
 
 /**
  * Convenience function to update a stream at fixed intervals
@@ -42,7 +42,7 @@ export function urlPathEmitter(
     }, cancellationToken);
 }
 
-let historyEvent: EventEmitter<void>;
+let historyEvent: EventEmitter<void> = undefined;
 function observeHistory() {
     if (historyEvent) {
         return;

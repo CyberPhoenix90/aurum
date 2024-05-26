@@ -1,5 +1,4 @@
-import { ArrayDataSource, DataSource, aurumToString } from '../../src/aurumjs.js';
-import { Aurum } from '../../src/utilities/aurum.js';
+import { ArrayDataSource, Aurum, DataSource, aurumToString } from '../../src/aurumjs.js';
 import { assert, describe, it } from 'vitest';
 
 describe('Aurum To string', () => {

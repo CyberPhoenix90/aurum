@@ -1,7 +1,5 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { AurumElementModel, Renderable, attachNotifier } from '../../src/aurumjs.js';
-import { Aurum } from '../../src/utilities/aurum.js';
-import { CancellationToken } from '../../src/utilities/cancellation_token.js';
+import { Aurum, AurumElementModel, CancellationToken, Renderable, attachNotifier } from '../../src/aurumjs.js';
 import { sleep } from '../test_utils.js';
 
 function TestComponent(props, children, api) {

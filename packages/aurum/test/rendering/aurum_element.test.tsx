@@ -1,9 +1,6 @@
 import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import * as sinon from 'sinon';
-import { DataSource } from '../../src/stream/data_source.js';
-import { Aurum } from '../../src/utilities/aurum.js';
-import { CancellationToken } from '../../src/utilities/cancellation_token.js';
-import { Switch, SwitchCase } from '../../src/builtin_components/switch.js';
+import { DataSource, Aurum, CancellationToken, Switch, SwitchCase } from '../../src/aurumjs.js';
 
 describe('Aurum Element', () => {
     let attachToken: CancellationToken;

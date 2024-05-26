@@ -1,5 +1,4 @@
-import { ArrayDataSource, aurumToVDOM, CancellationToken, DataSource } from '../../src/aurumjs.js';
-import { Aurum } from '../../src/utilities/aurum.js';
+import { ArrayDataSource, Aurum, aurumToVDOM, CancellationToken, DataSource } from '../../src/aurumjs.js';
 import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 
 describe('Aurum To VDOM', () => {

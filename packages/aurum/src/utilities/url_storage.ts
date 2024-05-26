@@ -1,4 +1,4 @@
-import { urlHashEmitter, urlPathEmitter } from '../aurumjs.js';
+import { urlHashEmitter, urlPathEmitter } from '../stream/emitters.js';
 import { MapLike } from './common.js';
 
 export class UrlStorage implements Storage {

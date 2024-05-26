@@ -1,6 +1,5 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { CancellationToken, aurumToString } from '../../src/aurumjs.js';
-import { Aurum } from '../../src/utilities/aurum.js';
+import { Aurum, CancellationToken, aurumToString } from '../../src/aurumjs.js';
 
 describe('String to HTML', () => {
     let attachToken: CancellationToken | undefined;

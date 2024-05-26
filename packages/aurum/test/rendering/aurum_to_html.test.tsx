@@ -1,6 +1,5 @@
 import { assert, describe, it } from 'vitest';
-import { aurumToHTML } from '../../src/aurumjs.js';
-import { Aurum } from '../../src/utilities/aurum.js';
+import { Aurum, aurumToHTML } from '../../src/aurumjs.js';
 
 describe('Aurum To HTML', () => {
     it('Should render HTML in place', () => {

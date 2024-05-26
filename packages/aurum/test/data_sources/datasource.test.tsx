@@ -5,6 +5,11 @@ import {
     Aurum,
     CancellationToken,
     DataSource,
+    DuplexDataSource,
+    ddsFilter,
+    ddsMap,
+    ddsUnique,
+    dsBuffer,
     dsCriticalSection,
     dsDelay,
     dsFilter,
@@ -16,8 +21,6 @@ import {
     dsTap,
     dsUnique
 } from '../../src/aurumjs.js';
-import { DuplexDataSource } from '../../src/stream/duplex_data_source.js';
-import { ddsFilter, ddsMap, ddsUnique } from '../../src/stream/duplex_data_source_operators.js';
 
 describe('Datasource', () => {
     let attachToken: CancellationToken;
@@ -154,13 +157,86 @@ describe('Datasource', () => {
         let ds = new DataSource(123);
         let ds2 = new DataSource(10);
         ds.pipe(ds2);
-        assert.equal(ds2.value, 10);
+        assert.equal(ds2.value, 123);
         ds.update(100);
         assert.equal(ds2.value, 100);
         ds.update(200);
         assert.equal(ds2.value, 200);
         ds.update(300);
         assert.equal(ds2.value, 300);
+    });
+
+    it('should buffer updates 1', async () => {
+        let ds = new DataSource(0);
+        let buffer = ds.transform(
+            dsBuffer({
+                maxBatchSize: 5
+            })
+        );
+
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(100);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(200);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(300);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(400);
+        await sleep(1);
+        assert.deepEqual(buffer.value, [0, 100, 200, 300, 400]);
+    });
+
+    it('should buffer updates 2', async () => {
+        let ds = new DataSource(0);
+        let buffer = ds.transform(
+            dsBuffer({
+                time: 5
+            })
+        );
+
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(100);
+        clock.tick(1);
+        clock.runAllAsync();
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(200);
+        clock.tick(1);
+        clock.runAllAsync();
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(300);
+        clock.tick(1);
+        clock.runAllAsync();
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(400);
+        await sleep(5);
+        clock.runAllAsync();
+        assert.deepEqual(buffer.value, [0, 100, 200, 300, 400]);
+    });
+
+    it('should buffer updates 3', async () => {
+        let ds = new DataSource(0);
+        let buffer = ds.transform(
+            dsBuffer({
+                canBatch: (a, b) => a + b.reduce((p, c) => p + c, 0) < 1000
+            })
+        );
+
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(100);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(200);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(300);
+        await sleep(1);
+        assert.deepEqual(buffer.value, undefined);
+        ds.update(400);
+        await sleep(1);
+        assert.deepEqual(buffer.value, [0, 100, 200, 300]);
     });
 
     it('should map updates', () => {

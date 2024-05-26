@@ -1,5 +1,5 @@
 import { expect, describe, beforeEach, it } from 'vitest';
-import { UrlStorage } from '../src/utilities/url_storage.js';
+import { UrlStorage } from '../src/aurumjs.js';
 
 describe('UrlStorage', () => {
     beforeEach(() => {

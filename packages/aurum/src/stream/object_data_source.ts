@@ -142,7 +142,7 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
         this.listenOnKey(
             key,
             (v) => {
-                if (subDataSource.value !== v.newValue) {
+                if (subDataSource.value !== v.newValue || (Number.isNaN(subDataSource.value) && Number.isNaN(v.newValue))) {
                     subDataSource.update(v.newValue);
                 }
             },

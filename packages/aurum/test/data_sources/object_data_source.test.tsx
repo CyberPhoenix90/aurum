@@ -1,5 +1,5 @@
 import { assert, beforeEach, describe, it } from 'vitest';
-import { ObjectDataSource } from '../../src/stream/object_data_source.js';
+import { ObjectDataSource } from '../../src/aurumjs.js';
 
 describe('object data source', () => {
     let testObject;

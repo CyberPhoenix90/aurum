@@ -1,5 +1,5 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { Aurum, AurumRouter, Route } from '../../src/aurumjs.js';
+import { Aurum, AurumRouter, DataSource, Route } from '../../src/aurumjs.js';
 
 describe('Router', () => {
     let attachToken;
@@ -11,9 +11,8 @@ describe('Router', () => {
     it('Should not break with undefined routes', () => {
         attachToken = Aurum.attach(
             <div>
-                <AurumRouter>
+                <AurumRouter urlProvider={new DataSource('/')}>
                     <Route href={'/'} />
-                    {undefined}
                 </AurumRouter>
             </div>,
             document.getElementById('target')

@@ -102,7 +102,7 @@ export async function* readableStreamStringIterator(
 ): AsyncGenerator<string> {
     const decoder = new TextDecoder('utf-8');
     let buffer: string = '';
-    for await (const chunk of readableStreamBinaryIterator(reader, onDone)) {
+    for await (const chunk of readableStreamBinaryIterator(reader)) {
         buffer += decoder.decode(chunk, { stream: true });
         const parts = buffer.split(itemSeperatorSequence);
         for (let i = 0; i < parts.length - 1; i++) {
@@ -114,6 +114,8 @@ export async function* readableStreamStringIterator(
     if (buffer.length > 0) {
         yield buffer;
     }
+
+    onDone?.();
 }
 
 export async function* readableStreamBinaryIterator(reader: ReadableStreamDefaultReader<Uint8Array>, onDone?: () => void): AsyncGenerator<Uint8Array> {

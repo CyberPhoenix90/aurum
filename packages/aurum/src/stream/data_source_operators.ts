@@ -293,7 +293,7 @@ export function dsUnique<T>(isEqual?: (valueA: T, valueB: T) => boolean): DataSo
         name: 'unique',
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (primed && (isEqual ? isEqual(last, v) : v === last)) {
+            if (primed && (isEqual ? isEqual(last, v) : v === last || (Number.isNaN(v) && Number.isNaN(last)))) {
                 return false;
             } else {
                 primed = true;
@@ -550,35 +550,84 @@ export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
 }
 
 /**
- * When an update occurs a timer is started, during that time all subsequent updates are collected in an array and then
- * once the timer runs out an update is made with all updates collected so far as an array
+ * Batches individual updates into an array based on either time, max batch size or a custom predicate
  */
-export function dsBuffer<T>(time: number): DataSourceMapDelayFilterOperator<T, T[]> {
+export function dsBuffer<T>(config: {
+    time?: number;
+    maxBatchSize?: number;
+    // custom predicate to determine if an item should be included in the batch. Return true to include the item in the batch and false to flush the batch and put the new item in a new batch
+    canBatch?: (item: T, batch: readonly T[]) => boolean;
+}): DataSourceMapDelayFilterOperator<T, T[]> {
     let buffer = [];
+    let resolve;
     let promise;
+    let timeout;
 
+    if (!config && !config.time && !config.maxBatchSize && !config.canBatch) {
+        throw new Error('At least one of time, maxBatchSize or batchPredicate must be provided');
+    }
+
+    const { time, maxBatchSize, canBatch } = config;
+    let name = 'buffer';
+    if (time) {
+        name += ` time ${time}ms`;
+    }
+
+    if (maxBatchSize) {
+        name += ` maxBatchSize ${maxBatchSize}`;
+    }
+
+    if (canBatch) {
+        name += ` custom predicate`;
+    }
     return {
-        name: `buffer ${time}ms`,
+        name,
         operationType: OperationType.MAP_DELAY_FILTER,
         operation: (v) => {
-            buffer.push(v);
+            let isNewBatch = promise === undefined;
             if (!promise) {
-                promise = new Promise((resolve) => {
-                    setTimeout(() => {
-                        promise = undefined;
-                        resolve({
-                            cancelled: false,
-                            item: buffer
-                        });
-                        buffer = [];
-                    }, time);
+                promise = new Promise((res) => {
+                    resolve = res;
                 });
+            }
+
+            if (canBatch && buffer.length > 0 && !canBatch(v, buffer)) {
+                flush();
+            }
+
+            buffer.push(v);
+
+            if (maxBatchSize && buffer.length >= maxBatchSize) {
+                flush();
+            }
+
+            if (time && isNewBatch) {
+                timeout = setTimeout(() => {
+                    flush();
+                }, time);
+            }
+
+            // The update is suspended until the batch is resolved
+            if (isNewBatch) {
                 return promise;
             } else {
+                // Updates coming in while the batch is being processed are added to the batch and cancelled from the stream
                 return Promise.resolve({
-                    cancelled: true,
-                    item: undefined
+                    cancelled: true
                 });
+            }
+
+            function flush() {
+                if (timeout) {
+                    clearTimeout(timeout);
+                    timeout = undefined;
+                }
+                resolve({
+                    cancelled: false,
+                    item: buffer
+                });
+                buffer = [];
+                promise = undefined;
             }
         }
     };

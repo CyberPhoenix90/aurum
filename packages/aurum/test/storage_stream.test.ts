@@ -1,5 +1,5 @@
 import { expect, describe, beforeEach, it } from 'vitest';
-import { StorageStream } from '../src/utilities/storage_stream.js';
+import { StorageStream } from '../src/aurumjs.js';
 
 describe('StorageStream', () => {
     let storageStream: StorageStream;
