@@ -72,8 +72,8 @@ function observeHistory() {
                 historyEvent.fire();
             });
         } else {
-            historyEvent.fire();
             hasFired = true;
+            historyEvent.fire();
             queueMicrotask(() => {
                 hasFired = false;
             });

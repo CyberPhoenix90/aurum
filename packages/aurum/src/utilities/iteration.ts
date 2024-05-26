@@ -126,8 +126,8 @@ export async function* readableStreamBinaryIterator(reader: ReadableStreamDefaul
         } else {
             if (onDone) {
                 onDone();
-                return;
             }
+            return;
         }
     }
 }
