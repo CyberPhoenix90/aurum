@@ -5,20 +5,21 @@ import { aurumify } from '../utils.js';
 
 const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2],
-        (fontFamily, size, highlightFont, color1, color3, color2) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor1, theme.themeColor3, theme.themeColor2],
+        (fontFamily, size, highlightFont, color0, color1, color3, color2) => css`
             position: relative;
             display: inline-flex;
             width: 200px;
 
             > input {
-                background-color: ${color1};
+                border-radius: 4px;
+                background-color: ${color0};
                 font-family: ${fontFamily};
                 font-size: ${size};
                 outline: none;
+                height: 24px;
                 color: ${highlightFont};
-                border-color: ${color3};
-                background-color: ${color2};
+                border-color: ${color2};
                 flex-grow: 1;
                 width: 100%;
             }

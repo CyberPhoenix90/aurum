@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import {
     AttributeValue,
     Aurum,
+    getValueOf,
     AurumComponentAPI,
     AurumElementModel,
     ClassType,
@@ -9,6 +10,7 @@ import {
     combineClass,
     DataSource,
     dsMap,
+    StyleType,
     DuplexDataSource,
     Renderable
 } from 'aurumjs';
@@ -28,8 +30,8 @@ import {
 } from './panel_dock.js';
 
 export interface PanelProps {
-    class?: string;
-    style?: string;
+    class?: ClassType;
+    style?: StyleType;
     dragHandleThickness?: number;
 }
 
@@ -81,15 +83,21 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
     }
 
     const leftDockSize =
-        left?.props.size instanceof DuplexDataSource || left?.props.size instanceof DataSource ? left.props.size : new DataSource(left?.props.size ?? 0);
+        left?.props.size instanceof DuplexDataSource || left?.props.size instanceof DataSource
+            ? left.props.size
+            : new DataSource(left?.props.size ?? getValueOf(left?.props.minSize) ?? getValueOf(left?.props.maxSize) ?? 0);
     const topDockSize =
-        top?.props.size instanceof DuplexDataSource || top?.props.size instanceof DataSource ? top.props.size : new DataSource(top?.props.size ?? 0);
+        top?.props.size instanceof DuplexDataSource || top?.props.size instanceof DataSource
+            ? top.props.size
+            : new DataSource(top?.props.size ?? getValueOf(top?.props.minSize) ?? getValueOf(top?.props.maxSize) ?? 0);
     const rightDockSize =
-        right?.props.size instanceof DataSource || right?.props.size instanceof DuplexDataSource ? right.props.size : new DataSource(right?.props.size ?? 0);
+        right?.props.size instanceof DataSource || right?.props.size instanceof DuplexDataSource
+            ? right.props.size
+            : new DataSource(right?.props.size ?? getValueOf(right?.props.minSize) ?? getValueOf(right?.props.maxSize) ?? 0);
     const bottomDockSize =
         bottom?.props.size instanceof DataSource || bottom?.props.size instanceof DuplexDataSource
             ? bottom.props.size
-            : new DataSource(bottom?.props.size ?? 0);
+            : new DataSource(bottom?.props.size ?? getValueOf(bottom?.props.minSize) ?? getValueOf(bottom?.props.maxSize) ?? 0);
 
     const leftDockminSize =
         left?.props.minSize instanceof DuplexDataSource || left?.props.minSize instanceof DataSource
@@ -137,20 +145,22 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
                 )}
             >
                 {top ? renderTopDock(top, topDockSize, cancellationToken) : undefined}
-                <div
-                    class={combineClass(cancellationToken, 'content', content.props?.class)}
-                    style={topDockSize.aggregate(
-                        [bottomDockSize, leftDockSize],
-                        (topSize, bottomSize) =>
-                            combineAttribute(
-                                cancellationToken,
-                                `float:left; width:100%;height:calc(100% - ${topSize}px - ${bottomSize}px);`,
-                                content.props?.style
-                            ) as any
-                    )}
-                >
-                    {content.children}
-                </div>
+                {content ? (
+                    <div
+                        class={combineClass(cancellationToken, 'content', content?.props?.class)}
+                        style={topDockSize.aggregate(
+                            [bottomDockSize, leftDockSize],
+                            (topSize, bottomSize) =>
+                                combineAttribute(
+                                    cancellationToken,
+                                    `float:left; width:100%;height:calc(100% - ${topSize}px - ${bottomSize}px);`,
+                                    content.props?.style
+                                ) as any
+                        )}
+                    >
+                        {content.children}
+                    </div>
+                ) : undefined}
                 {bottom
                     ? renderBottomDock(bottom, bottomDockSize, bottomDockminSize, bottomDockmaxSize, cancellationToken, props.dragHandleThickness)
                     : undefined}

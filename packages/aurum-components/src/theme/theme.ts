@@ -20,6 +20,7 @@ export interface Theme {
 
     boxShadow: DataSource<string>;
 
+    primary: DataSource<string>;
     success: DataSource<string>;
     warning: DataSource<string>;
     error: DataSource<string>;
@@ -43,6 +44,7 @@ export const darkTheme: Theme = {
     themeColor4: new DataSource('#474842'),
     highlightColor1: new DataSource('#094771'),
     boxShadow: new DataSource('0px 0px 8px 1px black'),
+    primary: new DataSource('#37474f'),
     success: new DataSource('#4caf50'),
     warning: new DataSource('#f8a700'),
     error: new DataSource('#e25252')
@@ -59,13 +61,14 @@ export const lightTheme: Theme = {
     highContrastFontColor: new DataSource('#000000'),
     disabledFontColor: new DataSource('#AFAFAF'),
     highlightFontColor: new DataSource('#0F0F0F'),
-    themeColor0: new DataSource('#EEEEF4'),
-    themeColor1: new DataSource('#E4E4E9'),
+    themeColor0: new DataSource('#FFFFFF'),
+    themeColor1: new DataSource('#ECEEF3'),
     themeColor2: new DataSource('#DEDEE4'),
     themeColor3: new DataSource('#D4D4D9'),
     themeColor4: new DataSource('#C9C9D4'),
     highlightColor1: new DataSource('#D4E4F9'),
     boxShadow: new DataSource('0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 2px 0px rgb(0 0 0 / 26%), 0px 2px 3px 0px rgb(0 0 0 / 12%)'),
+    primary: new DataSource('#4e769d'),
     success: new DataSource('#4caf50'),
     warning: new DataSource('#f8a500'),
     error: new DataSource('#e25252')

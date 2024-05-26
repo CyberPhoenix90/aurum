@@ -245,7 +245,9 @@ function renderValue(key: string, obj: any, props: JSONRendererBranchProps, id: 
                                     }}
                                 >
                                     {value.toString().substring(0, 600)}
-                                    <Button onClick={() => expanded.update(true)}>...</Button>
+                                    <Button buttonType="neutral" onClick={() => expanded.update(true)}>
+                                        ...
+                                    </Button>
                                 </span>
                             );
                         }
@@ -287,7 +289,9 @@ function renderObject(key: string, obj: any, props: JSONRendererBranchProps, id:
                                 '{}'
                             ) : (
                                 <>
-                                    <Button onClick={() => expanded.update(false)}>-</Button>
+                                    <Button buttonType="neutral" onClick={() => expanded.update(false)}>
+                                        -
+                                    </Button>
                                     <JSONRendererBranch id={id} {...props}>
                                         {obj[key]}
                                     </JSONRendererBranch>
@@ -302,7 +306,9 @@ function renderObject(key: string, obj: any, props: JSONRendererBranchProps, id:
                                             expanded.update(true);
                                         }}
                                     >
-                                        <Button onClick={() => expanded.update(true)}>+</Button>
+                                        <Button buttonType="neutral" onClick={() => expanded.update(true)}>
+                                            +
+                                        </Button>
                                         {renderPreview(obj[key], props)}
                                     </span>
                                 </>

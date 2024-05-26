@@ -1,15 +1,16 @@
 import { css } from '@emotion/css';
-import { Aurum, AurumComponentAPI, AurumElementModel, DataSource, dsMap, getValueOf, Renderable } from 'aurumjs';
+import { Aurum, ClassType, StyleType, AurumComponentAPI, AurumElementModel, combineClass, DataSource, dsMap, getValueOf, Renderable } from 'aurumjs';
 import { Button } from '../input/button.js';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.themeColor2, theme.themeColor4],
-        (fontFamily, size, fontColor, color1, color2, color4) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor0, theme.themeColor1, theme.themeColor4],
+        (fontFamily, size, fontColor, color0, color1, color4) => css`
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             position: fixed;
             color: ${fontColor};
             font-family: ${fontFamily};
@@ -21,7 +22,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 padding: 4px;
                 user-select: none;
                 justify-content: space-between;
-                background-color: ${color1};
+                background-color: ${color0};
                 min-height: 20px;
 
                 .window-actions {
@@ -33,12 +34,44 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             }
 
             .floating-body {
+                padding: 8px;
                 display: flex;
+                flex-direction: column;
                 height: 100%;
+                border-top: 1px solid ${color4};
                 border-left: 1px solid ${color4};
                 border-right: 1px solid ${color4};
                 border-bottom: 1px solid ${color4};
-                background-color: ${color2};
+                background-color: ${color1};
+
+                .row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                }
+            }
+
+            .floating-footer {
+                background-color: ${color0};
+                padding: 4px;
+                display: flex;
+                flex-direction: column;
+
+                .left {
+                    align-self: flex-start;
+                    display: flex;
+                    & > * {
+                        margin-right: 4px;
+                    }
+                }
+
+                .right {
+                    align-self: flex-end;
+                    display: flex;
+                    & > * {
+                        margin-left: 4px;
+                    }
+                }
             }
         `,
         lifecycleToken
@@ -78,6 +111,16 @@ export function FloatingWindow(
 ): Renderable {
     const title = children.find((c) => (c as AurumElementModel<any>).factory === WindowTitle);
     const content = children.find((c) => (c as AurumElementModel<any>).factory === WindowContent);
+    const footer = children.find((c) => (c as AurumElementModel<any>).factory === WindowFooter);
+
+    if (!title || !content) {
+        throw new Error('Floating window must have a title and a content');
+    }
+
+    if (children.length > 3 || (!footer && children.length > 2)) {
+        throw new Error('Floating window can only have title, content and footer');
+    }
+
     const x = props.x instanceof DataSource ? props.x : new DataSource(props.x);
     const y = props.y instanceof DataSource ? props.y : new DataSource(props.y);
     const w = props.w instanceof DataSource ? props.w : new DataSource(props.w);
@@ -111,8 +154,8 @@ export function FloatingWindow(
                 onMouseDown={(e) => {
                     if (getValueOf(props.draggable) && !maximized.value) {
                         dragging.update(true);
-                        anchorX = e.screenX;
-                        anchorY = e.screenY;
+                        anchorX = e.clientX;
+                        anchorY = e.clientY;
                         startX = x.value;
                         startY = y.value;
 
@@ -121,8 +164,8 @@ export function FloatingWindow(
                         });
                         api.cancellationToken.registerDomEvent(window, 'mousemove', (e: MouseEvent) => {
                             if (dragging.value) {
-                                x.update(startX + e.screenX - anchorX);
-                                y.update(startY + e.screenY - anchorY);
+                                x.update(startX + (e.clientX - anchorX));
+                                y.update(startY + (e.clientY - anchorY));
                             }
                         });
                     }
@@ -135,6 +178,7 @@ export function FloatingWindow(
                         dsMap((v) =>
                             v ? (
                                 <Button
+                                    buttonType="neutral"
                                     onClick={(e) => {
                                         if (maximized.value) {
                                             maximized.update(false);
@@ -152,10 +196,19 @@ export function FloatingWindow(
                             ) : undefined
                         )
                     )}
-                    {closable.transform(dsMap((v) => (v ? <Button onClick={(e) => props.onClose?.(e, this)}>⨯</Button> : undefined)))}
+                    {closable.transform(
+                        dsMap((v) =>
+                            v ? (
+                                <Button buttonType="neutral" onClick={(e) => props.onClose?.(e, this)}>
+                                    ⨯
+                                </Button>
+                            ) : undefined
+                        )
+                    )}
                 </div>
             </div>
             <div class="floating-body">{(content as AurumElementModel<any>).children}</div>
+            {footer ? <div class="floating-footer">{(footer as AurumElementModel<any>).children}</div> : undefined}
         </div>
     );
 
@@ -178,4 +231,23 @@ export function WindowTitle(props: {}, children: Renderable[]) {
 
 export function WindowContent(props: {}, children: Renderable[]) {
     return undefined;
+}
+
+export function WindowFooter(props: {}, children: Renderable[]) {
+    return undefined;
+}
+
+export function WindowContentRow(
+    props: {
+        class?: ClassType;
+        style?: StyleType;
+    },
+    children: Renderable[],
+    api: AurumComponentAPI
+) {
+    return (
+        <div class={combineClass(api.cancellationToken, props.class, 'row')} style={props?.style}>
+            {children}
+        </div>
+    );
 }

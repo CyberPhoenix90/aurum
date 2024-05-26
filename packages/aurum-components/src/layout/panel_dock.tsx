@@ -1,8 +1,22 @@
-import { AttributeValue, Aurum, AurumElementModel, CancellationToken, ClassType, combineClass, DataSource, dsMap, DuplexDataSource, Renderable } from 'aurumjs';
+import {
+    AttributeValue,
+    Aurum,
+    combineStyle,
+    AurumElementModel,
+    CancellationToken,
+    ClassType,
+    combineClass,
+    DataSource,
+    dsMap,
+    DuplexDataSource,
+    Renderable,
+    StyleType
+} from 'aurumjs';
 
 export type SizeTypes = DataSource<number> | DuplexDataSource<number> | number;
 export interface PanelElementProps {
     class?: ClassType;
+    style?: StyleType;
     size?: SizeTypes;
     minSize?: SizeTypes;
     maxSize?: SizeTypes;
@@ -23,7 +37,7 @@ export function renderBottomDock(
                 ['bottom-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={size.transform(dsMap((size) => `width:100%; height:${size}px`))}
+            style={combineStyle(cancellationToken, model.props.style, size.transform(dsMap((size) => `width:100%; height:${size}px`)))}
         >
             {DataSource.toDataSource(model.props.resizable).transform(
                 dsMap((v) =>
@@ -50,7 +64,7 @@ export function renderTopDock(
                 ['top-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={size.transform(dsMap((topSize) => `width:100%; height:${topSize}px`))}
+            style={combineStyle(cancellationToken, model.props.style, size.transform(dsMap((topSize) => `width:100%; height:${topSize}px`)))}
         >
             {model.children}
         </div>
@@ -73,7 +87,11 @@ export function renderLeftDock(
                 ['left-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`)) as DataSource<string>}
+            style={combineStyle(
+                cancellationToken,
+                model.props.style,
+                size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`))
+            )}
         >
             {model.children}
         </div>
@@ -113,7 +131,11 @@ export function renderRightDock(
                 ['right-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`)) as DataSource<string>}
+            style={combineStyle(
+                cancellationToken,
+                model.props.style,
+                size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`))
+            )}
         >
             {model.children}
         </div>

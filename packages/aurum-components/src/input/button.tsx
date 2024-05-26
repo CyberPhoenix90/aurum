@@ -5,29 +5,67 @@ import { aurumify } from '../utils.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highContrastFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2],
-        (fontFamily, size, highContrastFontColor, color1, color3, color2) => css`
-            background-color: ${color1};
+        [
+            theme.fontFamily,
+            theme.baseFontSize,
+            theme.themeColor0,
+            theme.themeColor1,
+            theme.themeColor4,
+            theme.highContrastFontColor,
+            theme.primary,
+            theme.error
+        ],
+        (fontFamily, size, color0, color1, color4, highContrastFontColor, action, error) => css`
             font-family: ${fontFamily};
             font-size: ${size};
             outline: none;
-            padding: 4px;
+            padding: 6px;
             user-select: none;
-            color: ${highContrastFontColor};
-            border-color: ${color3};
-            background-color: ${color2};
+            border-radius: 4px;
+            border-color: ${color1};
             display: flex;
             align-items: center;
 
             cursor: pointer;
+
+            &.action {
+                font-weight: 500;
+                background-color: ${action};
+                color: ${color0};
+            }
+
+            &.neutral {
+                background-color: ${color0};
+                color: ${highContrastFontColor};
+            }
+
+            &.destructive {
+                background-color: ${error};
+                color: ${highContrastFontColor};
+            }
         `,
         lifecycleToken
     )
 );
 
-export function Button(props: ButtonProps, children: Renderable[], api: AurumComponentAPI): Renderable {
+export interface ButtonComponentProps extends ButtonProps {
+    buttonType: 'neutral' | 'action' | 'destructive';
+    icon?: Renderable;
+}
+
+export function Button(props: ButtonComponentProps, children: Renderable[], api: AurumComponentAPI): Renderable {
+    const { buttonType, icon, ...rest } = props;
+
     return (
-        <button class={combineClass(api.cancellationToken, props.class, style)} {...props}>
+        <button
+            class={combineClass(api.cancellationToken, props.class, style, {
+                action: props.buttonType === 'action',
+                neutral: props.buttonType === 'neutral',
+                destructive: props.buttonType === 'destructive'
+            })}
+            {...rest}
+        >
+            {props.icon}
             {children}
         </button>
     );

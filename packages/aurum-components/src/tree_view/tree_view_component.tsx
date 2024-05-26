@@ -1,32 +1,22 @@
 import { css } from '@emotion/css';
 import {
     ArrayDataSource,
-    StyleType,
     Aurum,
-    aurumClassName,
     AurumComponentAPI,
     DataSource,
-    dsDiff,
-    dsMap,
-    getValueOf,
     ReadOnlyArrayDataSource,
     ReadOnlyDataSource,
-    Renderable
+    Renderable,
+    StyleType,
+    dsDiff,
+    dsMap,
+    getValueOf
 } from 'aurumjs';
-import { TextField } from '../input/text_field.js';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
 import { TreeEntry } from './tree_view_model.js';
-
-export enum TreeViewSorting {
-    NONE,
-    ALPHABETICAL_ASC,
-    ALPHABETICAL_DESC,
-    FOLDERS_ALPHABETICAL_ASC_FILES_NONE,
-    FOLDERS_ALPHABETICAL_DESC_FILES_NONE
-}
-
-export type FileTypePriority = 'none' | 'folders' | 'files';
+import { TreeEntryRenderable } from './tree_view_node.js';
+import { FileTypePriority, TreeViewSorting, sortItems } from './tree_view_common.js';
 
 export interface TreeViewComponentProps<T> {
     searchQuery?: ReadOnlyDataSource<string>;
@@ -68,7 +58,6 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             theme.highlightColor1
         ],
         (fontFamily, size, fontColor, highlightFont, color4, color1, color3, color2, highlightColor1) => css`
-            background-color: ${color1};
             height: 100%;
             color: ${fontColor};
             font-family: ${fontFamily};
@@ -108,6 +97,12 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 }
             }
 
+            .arrow-loading::before {
+                content: '⏳';
+                position: relative;
+                padding-right: 4px;
+            }
+
             .arrow-right::before {
                 position: relative;
                 padding-right: 4px;
@@ -136,12 +131,13 @@ export function TreeViewComponent<T>(props: TreeViewComponentProps<T>) {
                         <div style={props.style} class={[style, 'tree-view-component no-entries'] as any}>
                             {props.noEntriesMsg ?? 'No entries'}
                         </div>
-                    ) : undefined
+                    ) : (
+                        <div style={props.style} class={[style, 'tree-view-component'] as any}>
+                            <RenderTreeView {...props}></RenderTreeView>
+                        </div>
+                    )
                 )
             )}
-            <div style={props.style} class={[style, 'tree-view-component'] as any}>
-                <RenderTreeView {...props}></RenderTreeView>
-            </div>
         </>
     );
 }
@@ -337,312 +333,4 @@ function* iterateEntries(
     }
 
     return undefined;
-}
-
-function sortItems(a: TreeEntry<any>, b: TreeEntry<any>, sorting: TreeViewSorting, priority: FileTypePriority): number {
-    if (priority === 'files') {
-        if (isFile(a) && isDirectory(b)) {
-            return -1;
-        } else if (isDirectory(a) && isFile(b)) {
-            return 1;
-        }
-    } else if (priority === 'folders') {
-        if (isFile(a) && isDirectory(b)) {
-            return 1;
-        } else if (isDirectory(a) && isFile(b)) {
-            return -1;
-        }
-    }
-
-    switch (sorting) {
-        case TreeViewSorting.NONE:
-            return 1;
-        case TreeViewSorting.ALPHABETICAL_ASC:
-            return getValueOf(a.name).localeCompare(getValueOf(b.name));
-        case TreeViewSorting.ALPHABETICAL_DESC:
-            return getValueOf(b.name).localeCompare(getValueOf(a.name));
-        case TreeViewSorting.FOLDERS_ALPHABETICAL_ASC_FILES_NONE:
-            if (isDirectory(a) && isFile(b)) {
-                return -1;
-            } else if (isFile(a) && isDirectory(b)) {
-                return 1;
-            } else if (isDirectory(a) && isDirectory(b)) {
-                return getValueOf(a.name).localeCompare(getValueOf(b.name));
-            } else {
-                return 1;
-            }
-        case TreeViewSorting.FOLDERS_ALPHABETICAL_DESC_FILES_NONE:
-            if (isDirectory(a) && isFile(b)) {
-                return -1;
-            } else if (isFile(a) && isDirectory(b)) {
-                return 1;
-            } else if (isDirectory(a) && isDirectory(b)) {
-                return getValueOf(b.name).localeCompare(getValueOf(a.name));
-            } else {
-                return 1;
-            }
-        default:
-            throw new Error('Invalid sort option');
-    }
-}
-
-interface NodeEvents {
-    onEntryDoubleClicked;
-    onEntryClicked;
-    onArrowClicked;
-    onEntryRightClicked;
-    onKeyDown;
-    onKeyUp;
-}
-
-interface FocusData {
-    focusedEntry: DataSource<TreeEntry<any>>;
-    isActive: DataSource<boolean>;
-    allowFocus: boolean;
-}
-
-function TreeEntryRenderable(
-    props: {
-        fileTypePriority: FileTypePriority;
-        longFileNameBehavior: 'hscroll' | 'wrap' | 'elipsis';
-        canDrag(draggedEntry: TreeEntry<any>): boolean;
-        canDrop(draggedEntry: TreeEntry<any>, targetEntry: TreeEntry<any>): boolean;
-        onEntryDrop?(draggedEntry: TreeEntry<any>, targetEntry: TreeEntry<any>): void;
-        dragState: { src: DataSource<TreeEntry<void>>; target: DataSource<TreeEntry<void>> };
-        allowDragAndDrop: boolean;
-        entry: TreeEntry<any>;
-        focusData: FocusData;
-        events: NodeEvents;
-        renaming: DataSource<TreeEntry<any>>;
-        sorting: TreeViewSorting;
-        indentWidth: number;
-        indent?: number;
-    },
-    children: Renderable[],
-    api: AurumComponentAPI
-): Renderable[] {
-    const { entry, events, focusData, indent = 0, indentWidth, renaming, sorting, fileTypePriority } = props;
-    if (entry.open === undefined && isDirectory(entry)) {
-        entry.open = new DataSource(false);
-    }
-    const dropOk = new DataSource(false);
-
-    const className = aurumClassName({
-        node: true,
-        hasFocus: focusData.focusedEntry.transform(dsMap((s) => s === entry)),
-        isActive: focusData.isActive,
-        'drop-ok': dropOk
-    });
-
-    const result = [];
-    result.push(
-        <div
-            onDragEnter={(e) => {
-                if (props.dragState.src.value === entry) {
-                    return;
-                }
-                props.dragState.target.update(undefined);
-                if (props.canDrop(props.dragState.src.value, entry)) {
-                    props.dragState.target.update(entry);
-                    dropOk.update(true);
-                }
-            }}
-            onDragLeave={() => {
-                if (props.dragState.src.value === entry) {
-                    return;
-                }
-                dropOk.update(false);
-            }}
-            onDragStart={(e) => {
-                if (!props.canDrag(entry)) {
-                    e.preventDefault();
-                    return;
-                }
-
-                if (props.dragState.src.value === entry) {
-                    return;
-                }
-                props.dragState.src.update(entry);
-            }}
-            onDragEnd={() => {
-                if (!props.dragState.target.value) {
-                    return;
-                }
-                if (props.canDrop(props.dragState.src.value, props.dragState.target.value)) {
-                    props.onEntryDrop?.(props.dragState.src.value, props.dragState.target.value);
-                    props.dragState.src.update(undefined);
-                    props.dragState.target.update(undefined);
-                }
-            }}
-            draggable={props.allowDragAndDrop ? 'true' : 'false'}
-            onAttach={(n) => {
-                focusData.focusedEntry.listenAndRepeat((e) => {
-                    if (props.renaming?.value === undefined && e === entry) {
-                        n.focus();
-                    }
-                }, api.cancellationToken);
-            }}
-            class={className}
-            onMouseUp={() => {
-                if (focusData.allowFocus) {
-                    focusData.focusedEntry.update(entry);
-                    focusData.isActive.update(true);
-                }
-            }}
-            tabindex="-1"
-            onKeyDown={(e) => {
-                props.events.onKeyDown?.(e, entry);
-            }}
-            onKeyUp={(e) => {
-                props.events.onKeyUp?.(e, entry);
-            }}
-            onContextMenu={(e) => {
-                if (renaming?.value && renaming?.value.name === entry.name) {
-                    return;
-                } else if (renaming?.value) {
-                    renaming.update(undefined);
-                }
-                if (focusData.allowFocus) {
-                    focusData.focusedEntry.update(entry);
-                    focusData.isActive.update(true);
-                }
-                events.onEntryRightClicked?.(e, entry);
-            }}
-            onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry)}
-            onClick={(event) => {
-                if(entry.open) {
-                    if (entry.open instanceof DataSource) {
-                        entry.open.update(!entry.open.value);
-                    } else {
-                        entry.open.updateDownstream(!entry.open.value);
-                    }
-                }
-                events.onEntryClicked?.(event, entry);
-            }}
-            style={`padding-left:${indent * indentWidth}px; ${events.onEntryClicked ? 'cursor:pointer;' : ''}`}
-        >
-            <div
-                onClick={(event) => {
-                    events.onArrowClicked?.(event, entry);
-                }}
-                class={getArrowClass(entry)}
-            ></div>
-            {renaming?.withInitial(undefined).transform(
-                dsMap((ren) => {
-                    if (ren && ren.name === entry.name && entry.name instanceof DataSource) {
-                        const temp = new DataSource(getValueOf(entry.name));
-                        return (
-                            <TextField
-                                style="width: 100%;"
-                                onMouseDown={(e) => {
-                                    e.stopPropagation();
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
-                                onAttach={(input) => input.focus()}
-                                onBlur={() => {
-                                    if (renaming?.value) {
-                                        (entry.name as DataSource<string>).update(temp.value || getValueOf(entry.name));
-                                        renaming.update(undefined);
-                                    }
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Escape') {
-                                        renaming?.update(undefined);
-                                    } else if (e.key === 'Enter') {
-                                        (entry.name as DataSource<string>).update(temp.value || getValueOf(entry.name));
-                                        renaming?.update(undefined);
-                                    }
-                                }}
-                                value={temp}
-                            ></TextField>
-                        );
-                    } else {
-                        return renderEntryDom(entry, props.longFileNameBehavior === 'hscroll');
-                    }
-                }),
-                api.cancellationToken
-            ) ?? renderEntryDom(entry, props.longFileNameBehavior === 'hscroll')}
-        </div>
-    );
-    if (isDirectory(entry)) {
-        result.push(
-            entry.open.transform(
-                dsMap((open) => {
-                    if (open) {
-                        return (
-                            entry.children.sort(
-                                (a, b) => sortItems(a, b, sorting, fileTypePriority),
-                                getValueOf(entry.children)
-                                    .map((e) => e.name)
-                                    .filter((e) => e instanceof DataSource) as any as DataSource<TreeEntry<any>>[]
-                            ) as ArrayDataSource<TreeEntry<any>>
-                        ).map((c) => (
-                            <TreeEntryRenderable
-                                fileTypePriority={fileTypePriority}
-                                longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
-                                canDrag={props.canDrag}
-                                canDrop={props.canDrop}
-                                onEntryDrop={props.onEntryDrop}
-                                allowDragAndDrop={props.allowDragAndDrop}
-                                dragState={props.dragState}
-                                entry={c}
-                                renaming={renaming}
-                                sorting={sorting}
-                                focusData={focusData}
-                                events={events}
-                                indentWidth={indentWidth}
-                                indent={indent + 1}
-                            ></TreeEntryRenderable>
-                        ));
-                    } else {
-                        return undefined;
-                    }
-                })
-            )
-        );
-    }
-
-    return <div>{result}</div>;
-}
-
-function renderEntryDom(entry: TreeEntry<any>, nowrap: boolean): Renderable {
-    const name = aurumClassName({
-        'file-name-nowrap': nowrap
-    });
-
-    return entry.renderable ? (
-        entry.renderable
-    ) : (
-        <div title={entry.title} class={name}>
-            {entry.name}
-        </div>
-    );
-}
-
-function isFile(entry: TreeEntry<any>): boolean {
-    return !entry.children;
-}
-
-function isDirectory(entry: TreeEntry<any>): boolean {
-    return !!entry.children;
-}
-
-function getArrowClass(entry: TreeEntry<any>): DataSource<string> | string {
-    if (entry.children instanceof ArrayDataSource) {
-        if (isDirectory(entry)) {
-            return entry.children.length.aggregate([entry.open], (childrenCount, open) =>
-                childrenCount === 0 ? 'no-arrow' : open ? 'arrow-down' : 'arrow-right'
-            );
-        } else {
-            return 'no-arrow';
-        }
-    } else {
-        if (entry.children?.length) {
-            return entry.open.transform(dsMap((open) => (open ? 'arrow-down' : 'arrow-right')));
-        } else {
-            return 'no-arrow';
-        }
-    }
 }

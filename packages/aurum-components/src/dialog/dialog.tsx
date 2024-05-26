@@ -3,7 +3,7 @@ import { Aurum, AurumComponentAPI, ClassType, combineStyle, Renderable, StyleTyp
 export interface DialogProps {
     class?: ClassType;
     style?: StyleType;
-    blockContextMenu?: boolean;
+    blockNativeContextMenu?: boolean;
     onClickOutside?(e: MouseEvent): void;
     onClickInside?(e: MouseEvent): void;
     onEscape?(e: KeyboardEvent): void;
@@ -20,8 +20,6 @@ export interface DialogProps {
 export function Dialog(props: DialogProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     let posX: number;
     let posY: number;
-    let orientationX: number;
-    let orientationY: number;
 
     let root: HTMLDivElement;
 
@@ -67,15 +65,11 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
             class={props.class}
             onAttach={(node) => (root = node)}
             onContextMenu={(e) => {
-                if (props.blockContextMenu) {
+                if (props.blockNativeContextMenu) {
                     e.preventDefault();
                 }
             }}
-            style={combineStyle(
-                api.cancellationToken,
-                props.style,
-                `position:absolute; originX:${orientationX};originY:${orientationY}; left:${posX}px; top:${posY}px;`
-            )}
+            style={combineStyle(api.cancellationToken, props.style, `position:absolute; left:${posX}px; top:${posY}px;`)}
         >
             {children}
         </div>
@@ -85,46 +79,34 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
         switch (props?.layout?.direction ?? 'down') {
             case 'down':
                 posY = bb.bottom;
-                orientationY = 0;
                 if (props.layout) {
                     posX = bb.left + bb.width * pointToOrigin(props.layout.targetPoint ?? 'center');
-                    orientationX = pointToOrigin(props.layout.orientationX ?? 'center');
                 } else {
                     posX = bb.left + bb.width / 2;
-                    orientationX = 0.5;
                 }
                 break;
             case 'left':
                 posX = bb.left;
-                orientationX = 1;
                 if (props.layout) {
                     posY = bb.top + bb.height * pointToOrigin(props.layout.targetPoint ?? 'center');
-                    orientationY = pointToOrigin(props.layout.orientationY ?? 'center');
                 } else {
                     posY = bb.top + bb.height / 2;
-                    orientationY = 0.5;
                 }
                 break;
             case 'up':
                 posY = bb.top;
-                orientationY = 1;
                 if (props.layout) {
                     posX = bb.left + bb.width * pointToOrigin(props.layout.targetPoint ?? 'center');
-                    orientationX = pointToOrigin(props.layout.orientationX ?? 'center');
                 } else {
                     posX = bb.left + bb.width / 2;
-                    orientationX = 0.5;
                 }
                 break;
             case 'right':
                 posX = bb.right;
-                orientationX = 0;
                 if (props.layout) {
                     posY = bb.top + bb.height * pointToOrigin(props.layout.targetPoint ?? 'center');
-                    orientationY = pointToOrigin(props.layout.orientationY ?? 'center');
                 } else {
                     posY = bb.top + bb.height / 2;
-                    orientationY = 0.5;
                 }
                 break;
         }

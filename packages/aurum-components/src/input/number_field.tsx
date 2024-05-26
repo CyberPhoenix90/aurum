@@ -1,9 +1,11 @@
-import { Aurum, DataSource, DuplexDataSource, GenericDataSource } from 'aurumjs';
+import { Aurum, DataSource, DuplexDataSource, GenericDataSource, dsMap } from 'aurumjs';
 import { TextField, TextFieldProps } from './text_field.js';
 
-export interface NumberFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value'> {
+export interface NumberFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value' | 'min' | 'max'> {
     numberType?: NumberType;
     value: GenericDataSource<number> | number;
+    min: number | GenericDataSource<number>;
+    max: number | GenericDataSource<number>;
 }
 
 export enum NumberType {
@@ -12,8 +14,12 @@ export enum NumberType {
 }
 
 export function NumberField(props: NumberFieldProps) {
-    const { numberType, ...inputProps } = props;
+    const { numberType = NumberType.INTEGER, min, max, ...inputProps } = props;
+
     const valueSource = new DataSource(props.value.toString());
+    const resolvedMin = DataSource.toDataSource(props.min).transform(dsMap((v) => v.toString()));
+    const resolvedMax = DataSource.toDataSource(props.max).transform(dsMap((v) => v.toString()));
+
     valueSource.listen((newValue) => {
         if (numberType === NumberType.INTEGER) {
             if (props.value instanceof DataSource) {
@@ -30,5 +36,14 @@ export function NumberField(props: NumberFieldProps) {
         }
     });
 
-    return <TextField {...inputProps} value={valueSource} type="number" step={numberType === NumberType.INTEGER ? '1' : 'any'}></TextField>;
+    return (
+        <TextField
+            {...inputProps}
+            min={resolvedMin}
+            max={resolvedMax}
+            value={valueSource}
+            type="number"
+            step={numberType === NumberType.INTEGER ? '1' : 'any'}
+        ></TextField>
+    );
 }

@@ -2,20 +2,21 @@ import { css } from '@emotion/css';
 import { Aurum, Renderable } from 'aurumjs';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
+import { Dialog } from './dialog.js';
 
 export interface ContextMenuProps {}
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor2, theme.highlightColor1],
-        (fontFamily, size, fontColor, color2, highlight1) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.highlightColor1],
+        (fontFamily, size, fontColor, color1, highlight1) => css`
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
-            background-color: ${color2};
+            background-color: ${color1};
             user-select: none;
             padding: 4px 0;
-            box-shadow: 0px 0px 4px 1px black;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 
             ul {
                 margin-block-start: 0em;
@@ -49,5 +50,31 @@ export function ContextMenu(props: ContextMenuProps, children: Renderable[]) {
                 ))}
             </ul>
         </div>
+    );
+}
+
+export function spawnContextMenu(items: Renderable[], e: MouseEvent, onClose: () => void): Renderable {
+    return (
+        <Dialog
+            onClickOutside={() => {
+                onClose();
+            }}
+            onClickInside={() => {
+                onClose();
+            }}
+            onEscape={() => {
+                onClose;
+            }}
+            blockNativeContextMenu
+            target={e.target as HTMLElement}
+            layout={{
+                offset: { x: e.offsetX, y: e.offsetY },
+                direction: 'up',
+                targetPoint: 'start',
+                orientationX: 'left'
+            }}
+        >
+            <ContextMenu>{items}</ContextMenu>
+        </Dialog>
     );
 }
