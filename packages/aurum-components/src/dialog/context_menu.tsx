@@ -53,17 +53,34 @@ export function ContextMenu(props: ContextMenuProps, children: Renderable[]) {
     );
 }
 
-export function spawnContextMenu(items: Renderable[], e: MouseEvent, onClose: () => void): Renderable {
+export function spawnContextMenu(
+    items: Renderable[],
+    e: {
+        target: EventTarget;
+        offsetX: number;
+        offsetY: number;
+    },
+    config: {
+        unstyled?: boolean;
+        onClose?: () => void;
+        orientationX?: 'left' | 'right';
+        orientationY?: 'top' | 'bottom';
+        allowClickInside?: boolean;
+    }
+): Renderable {
+    const { onClose, orientationX = 'left', orientationY = 'top', unstyled = false, allowClickInside = false } = config;
     return (
         <Dialog
             onClickOutside={() => {
-                onClose();
+                onClose?.();
             }}
             onClickInside={() => {
-                onClose();
+                if (!allowClickInside) {
+                    onClose?.();
+                }
             }}
             onEscape={() => {
-                onClose;
+                onClose?.();
             }}
             blockNativeContextMenu
             target={e.target as HTMLElement}
@@ -71,10 +88,11 @@ export function spawnContextMenu(items: Renderable[], e: MouseEvent, onClose: ()
                 offset: { x: e.offsetX, y: e.offsetY },
                 direction: 'up',
                 targetPoint: 'start',
-                orientationX: 'left'
+                orientationX,
+                orientationY
             }}
         >
-            <ContextMenu>{items}</ContextMenu>
+            {unstyled ? <>{items}</> : <ContextMenu>{items}</ContextMenu>}
         </Dialog>
     );
 }

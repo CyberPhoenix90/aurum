@@ -205,13 +205,13 @@ function computeBounds(
     const endTs = new DataSource(Number.MIN_SAFE_INTEGER);
     const maxValue = new DataSource(Number.MIN_SAFE_INTEGER);
 
-    cancellationToken.chain(token);
+    cancellationToken.addCancellable(token);
 
     function rebuild() {
         token.cancel();
         if (!cancellationToken.isCancelled) {
             token = new CancellationToken();
-            cancellationToken.chain(token);
+            cancellationToken.addCancellable(token);
             performBoundComputation(startTs, endTs, maxValue, rebuild, series, cancellationToken);
         }
     }

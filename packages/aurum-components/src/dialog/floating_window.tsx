@@ -170,7 +170,8 @@ export function FloatingWindow(
                         });
                     }
                 }}
-                class="floating-title"
+                class={combineClass(api.cancellationToken, 'floating-title', (title as AurumElementModel<any>).props?.class)}
+                style={(title as AurumElementModel<any>).props?.style}
             >
                 <div>{(title as AurumElementModel<any>).children}</div>
                 <div class="window-actions">
@@ -207,8 +208,20 @@ export function FloatingWindow(
                     )}
                 </div>
             </div>
-            <div class="floating-body">{(content as AurumElementModel<any>).children}</div>
-            {footer ? <div class="floating-footer">{(footer as AurumElementModel<any>).children}</div> : undefined}
+            <div
+                class={combineClass(api.cancellationToken, 'floating-body', (content as AurumElementModel<any>).props?.class)}
+                style={(content as AurumElementModel<any>).props?.style}
+            >
+                {(content as AurumElementModel<any>).children}
+            </div>
+            {footer ? (
+                <div
+                    class={combineClass(api.cancellationToken, 'floating-footer', (footer as AurumElementModel<any>).props?.class)}
+                    style={(footer as AurumElementModel<any>).props?.style}
+                >
+                    {(footer as AurumElementModel<any>).children}
+                </div>
+            ) : undefined}
         </div>
     );
 
@@ -225,15 +238,33 @@ export function FloatingWindow(
     }
 }
 
-export function WindowTitle(props: {}, children: Renderable[]) {
+export function WindowTitle(
+    props: {
+        class?: ClassType;
+        style?: StyleType;
+    },
+    children: Renderable[]
+) {
     return undefined;
 }
 
-export function WindowContent(props: {}, children: Renderable[]) {
+export function WindowContent(
+    props: {
+        class?: ClassType;
+        style?: StyleType;
+    },
+    children: Renderable[]
+) {
     return undefined;
 }
 
-export function WindowFooter(props: {}, children: Renderable[]) {
+export function WindowFooter(
+    props: {
+        class?: ClassType;
+        style?: StyleType;
+    },
+    children: Renderable[]
+) {
     return undefined;
 }
 
