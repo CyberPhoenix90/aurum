@@ -529,21 +529,85 @@ export function dsLock<T>(state: DataSource<boolean>): DataSourceFilterOperator<
 
 /**
  * Allows at most one update per N milliseconds to pass through
+ * Supports nanosecond scale precision by using decimal numbers
  */
 export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
-    let cooldown = false;
+    let lastCall = 0;
     return {
         name: `throttle ${time}ms`,
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (!cooldown) {
-                cooldown = true;
-                setTimeout(() => {
-                    cooldown = false;
-                }, time);
+            if (performance.now() - lastCall > time) {
+                lastCall = performance.now();
                 return true;
             } else {
                 return false;
+            }
+        }
+    };
+}
+
+/**
+ * Allows at most one update per N milliseconds to pass through
+ * Supports nanosecond scale precision by using decimal numbers
+ * @param time time in milliseconds
+ * @param options buffer if true will buffer updates that come in while the throttle is active and release them when the throttle is released otherwise they are dropped
+ */
+export function dsThrottleBuffer<T>(
+    time: number,
+    options?: {
+        highWaterMark?: number;
+        onHighWaterMark?: () => void;
+        maxBufferSize: number;
+    }
+): DataSourceDelayFilterOperator<T> {
+    let lastCall = 0;
+    const buffer: Array<(result: boolean) => void> = [];
+    let nextScheduled = false;
+
+    function next() {
+        if (buffer.length > 0 && performance.now() - lastCall > time) {
+            const resolve = buffer.shift();
+            lastCall = performance.now();
+            resolve(true);
+        }
+        if (buffer.length > 0) {
+            nextScheduled = true;
+            setTimeout(() => {
+                next();
+            }, time - (performance.now() - lastCall));
+        } else {
+            nextScheduled = false;
+        }
+    }
+
+    return {
+        name: `throttle buffer ${time}ms`,
+        operationType: OperationType.DELAY_FILTER,
+        operation: async (v) => {
+            if (buffer.length === 0 && performance.now() - lastCall > time) {
+                lastCall = performance.now();
+                return true;
+            } else {
+                if (options.maxBufferSize && buffer.length >= options.maxBufferSize) {
+                    return false;
+                }
+
+                let res;
+                const promise = new Promise<boolean>((resolve) => {
+                    res = resolve;
+                });
+
+                buffer.push(res);
+
+                if (options.highWaterMark && buffer.length >= options.highWaterMark) {
+                    options.onHighWaterMark();
+                }
+
+                if (!nextScheduled) {
+                    next();
+                }
+                return promise;
             }
         }
     };

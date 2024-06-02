@@ -104,5 +104,5 @@ export * from './utilities/sanitize.js';
 
 export * from './decorators/attach_notifier.js';
 
-export { AttributeValue, ClassType, StyleType, DataDrain, StringSource } from './utilities/common.js';
+export { AttributeValue, ClassType, StyleType, DataDrain } from './utilities/common.js';
 export { RemoteProtocol, getRemoteFunction } from './aurum_server/aurum_server_client.js';

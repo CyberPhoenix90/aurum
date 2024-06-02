@@ -1,8 +1,7 @@
 import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 
-export type AttributeValue = string | ReadOnlyDataSource<string> | ReadOnlyDataSource<boolean> | boolean;
-export type StringSource = string | ReadOnlyDataSource<string>;
+export type AttributeValue = number | string | boolean | ReadOnlyDataSource<string> | ReadOnlyDataSource<boolean> | ReadOnlyDataSource<number>;
 export type ClassType =
     | string
     | ReadOnlyDataSource<string>

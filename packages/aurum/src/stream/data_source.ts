@@ -241,7 +241,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     }
 
     public toString(): string {
-        return this.value.toString();
+        return `${this.name}<${this.value.toString()}>`;
     }
 
     public static toDataSource<T>(value: T | DataSource<T>): DataSource<T> {
@@ -422,15 +422,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     }
 
     /**
-     * Allows tapping into the stream and calls a function for each value.
-     */
-    public tap(callback: (value: T) => void, cancellationToken?: CancellationToken): DataSource<T> {
-        this.listen((value) => {
-            callback(value);
-        }, cancellationToken);
-        return this;
-    }
-    /**
      * Assign a function to handle errors and map them back to regular values. Rethrow the error in case you want to fallback to emitting error
      */
     public handleErrors(callback: (error: any) => T): this {
@@ -579,13 +570,6 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         this.onError((e) => result.emitError(e), token);
 
         return result;
-    }
-    public static fromCombination<T>(sources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
-        if (sources.length === 0) {
-            throw new Error('Cannot combine zero data sources');
-        }
-
-        return sources[0].combine(sources.slice(1), cancellationToken);
     }
 
     public static fromAggregation<R, A>(sources: [ReadOnlyDataSource<A>], combinator: (first: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
@@ -787,7 +771,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param data Second parent for the new source
      * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
      */
-    public static dynamicAggregation<I, O>(
+    public static fromDynamicAggregation<I, O>(
         data: ReadOnlyArrayDataSource<ReadOnlyDataSource<I>>,
         aggregate: (items: readonly I[]) => O,
         cancellationToken?: CancellationToken
@@ -796,17 +780,11 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const session = new WeakMap<ReadOnlyDataSource<I>, CancellationToken>();
 
         const result = new DataSource<O>();
-        data.listenAndRepeat((change) => {
-            for (const item of change.items) {
-                listenToSubSource(item);
-            }
-            result.update(aggregate(data.getData().map((e) => e.value)));
-        });
-
         data.onItemsAdded.subscribe((items) => {
             for (const item of items) {
                 listenToSubSource(item);
             }
+            result.update(aggregate(data.getData().map((e) => e.value)));
         });
 
         data.onItemsRemoved.subscribe((items) => {
@@ -814,6 +792,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
                 session.get(item).cancel();
                 session.delete(item);
             }
+            result.update(aggregate(data.getData().map((e) => e.value)));
         });
 
         return result;
@@ -859,6 +838,9 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         });
     }
 
+    /**
+     * Returns an async iterator that will yield the next N values of the data source
+     */
     public take(amount: number, cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
         if (cancellationToken?.isCancelled) {
             return {
@@ -3705,6 +3687,9 @@ export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F
     };
 }
 
+/**
+ * Adds a list of operations that are only executed if the condition is met
+ */
 export function dsForkInline<T, A1, B1 = A1, C1 = B1, D1 = C1, E1 = D1, F1 = E1, G1 = F1, H1 = G1, I1 = H1>(
     condition: (value: T) => boolean,
     operationA: DataSourceOperator<T, A1>,

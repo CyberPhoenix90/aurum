@@ -4,7 +4,7 @@ import { DataSource } from '../../stream/data_source.js';
 import { dsUnique } from '../../stream/data_source_operators.js';
 import { DuplexDataSource } from '../../stream/duplex_data_source.js';
 import { CancellationToken } from '../../utilities/cancellation_token.js';
-import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StringSource, StyleType } from '../../utilities/common.js';
+import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType } from '../../utilities/common.js';
 import { AurumDecorator } from '../../utilities/aurum.js';
 
 export interface HTMLNodeProps<T> {
@@ -138,11 +138,13 @@ function connectChildren(target: HTMLElement, children: Rendered[]): void {
         } else {
             if (typeof child === 'function') {
                 throw new Error(
-                    'Unexpected child type passed to DOM Node: function. Did you mean to use a component? To use a component use JSX syntax such as <MyComponent/> it works even with function references. <props.myReference/>'
+                    `Unexpected child type passed to DOM Node: function. Did you mean to use a component? To use a component use JSX syntax such as <MyComponent/> it works even with function references. <props.myReference/>`
                 );
             }
 
-            throw new Error(`Unexpected child type passed to DOM Node: ${children}`);
+            throw new Error(
+                `Unexpected child type passed to DOM Node: ${children}. If this is a valid child type make sure you don't have 2 copies of Aurum loaded`
+            );
         }
     }
 }
@@ -241,16 +243,16 @@ export function aurumToHTML(content: Renderable, syncLifecycle?: AurumComponentA
     };
 }
 
-function assignStringSourceToAttribute(node: HTMLElement, data: StringSource, key: string, cleanUp: CancellationToken) {
-    if (typeof data === 'string') {
-        node.setAttribute(key, data);
+function assignStringSourceToAttribute(node: HTMLElement, data: AttributeValue, key: string, cleanUp: CancellationToken) {
+    if (typeof data === 'string' || typeof data === 'number') {
+        node.setAttribute(key, data.toString());
     } else if (typeof data === 'boolean') {
         if (data) {
             node.setAttribute(key, '');
         }
     } else if (data instanceof DataSource || data instanceof DuplexDataSource) {
-        if (typeof data.value === 'string') {
-            node.setAttribute(key, data.value);
+        if (typeof data.value === 'string' || typeof data.value === 'number') {
+            node.setAttribute(key, data.value.toString());
         } else if (typeof data.value === 'boolean') {
             if (data.value) {
                 node.setAttribute(key, '');

@@ -211,6 +211,6 @@ if (typeof sessionStorage !== 'undefined') {
     sessionStorageStream = new StorageStream(sessionStorage);
 }
 export let urlStorageStream: StorageStream;
-if (typeof location !== 'undefined') {
+if (typeof location !== 'undefined' && typeof History !== 'undefined' && typeof URLSearchParams !== 'undefined') {
     urlStorageStream = new StorageStream(new UrlStorage());
 }
