@@ -3,5 +3,5 @@ package-lock.json
 .history
 prebuilt
 dist
-package.json
+packages/**/package.json
 tsconfig.*
