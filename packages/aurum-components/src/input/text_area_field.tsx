@@ -5,8 +5,8 @@ import { aurumify } from '../utils.js';
 
 const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2],
-        (fontFamily, size, highlightFont, color1, color3, color2) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2, theme.primary],
+        (fontFamily, size, highlightFont, color1, color3, color2, primary) => css`
             position: relative;
             display: inline-flex;
             width: 300px;
@@ -21,6 +21,11 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
                 background-color: ${color2};
                 flex-grow: 1;
                 width: 100%;
+
+                &:focus {
+                    border-color: ${primary};
+                    border-width: 2px;
+                }
             }
         `,
         lifecycleToken

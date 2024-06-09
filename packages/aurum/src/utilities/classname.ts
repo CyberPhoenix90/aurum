@@ -2,7 +2,7 @@ import { ReadOnlyDataSource, DataSource, MapDataSource, ArrayDataSource } from '
 import { dsMap } from '../stream/data_source_operators.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from './cancellation_token.js';
-import { AttributeValue, ClassType, StyleType } from './common.js';
+import { AttributeValue, ClassType, StyleType, Styles } from './common.js';
 
 export function aurumClassName(
     data: { [key: string]: boolean | ReadOnlyDataSource<boolean> } | MapDataSource<string, boolean>,
@@ -179,7 +179,7 @@ export function combineAttribute(cancellationToken: CancellationToken, ...args: 
 export function combineStyle(cancellationToken: CancellationToken, ...args: StyleType[]): StyleType {
     let fixed: string = '';
     const sources: ReadOnlyDataSource<string>[] = [];
-    const maps: MapDataSource<string, string>[] = [];
+    const maps: MapDataSource<keyof Styles, string | number>[] = [];
 
     for (const attr of args) {
         if (typeof attr === 'string') {
@@ -221,7 +221,7 @@ export function combineStyle(cancellationToken: CancellationToken, ...args: Styl
     }
 }
 
-function computeResult(fixed: string, sources: ReadOnlyDataSource<string>[], maps: MapDataSource<string, string>[]) {
+function computeResult(fixed: string, sources: ReadOnlyDataSource<string>[], maps: MapDataSource<keyof Styles, string | number>[]) {
     let result = fixed;
     for (const source of sources) {
         result += source.value;
@@ -230,7 +230,7 @@ function computeResult(fixed: string, sources: ReadOnlyDataSource<string>[], map
     for (const map of maps) {
         for (const key of map.keys()) {
             if (map.get(key)) {
-                result += `${camelCaseToKebabCase(key)}:${map.get(key)};`;
+                result += `${camelCaseToKebabCase(key as string)}:${map.get(key)};`;
             }
         }
     }

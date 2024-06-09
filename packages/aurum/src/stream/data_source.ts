@@ -12,6 +12,7 @@ import {
     DataSourceMapDelayFilterOperator,
     DataSourceMapOperator,
     DataSourceOperator,
+    DataSourceSpreadOperator,
     OperationType
 } from './operator_model.js';
 
@@ -766,6 +767,13 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         return this;
     }
 
+    public static fromCombination<T>(sources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
+        if (sources.length === 0) {
+            throw new Error('Cannot combine zero data sources');
+        }
+
+        return sources[0].combine(sources.slice(1), cancellationToken);
+    }
     /**
      * Like aggregate except that it aggregates an array data source of datasources
      * @param data Second parent for the new source
@@ -2752,14 +2760,22 @@ export class LimitedArrayView<T> extends ArrayDataSource<T> {
     }
 }
 
-export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>): (input: I) => Promise<void> {
+export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>, startIndex = 0): (input: I) => Promise<void> {
     return async (v: any) => {
         try {
-            for (const operation of operations) {
+            for (let i = 0; i < operations.length; i++) {
+                const operation = operations[i];
                 switch (operation.operationType) {
                     case OperationType.NOOP:
                         (operation as DataSourceMapOperator<any, any>).operation(v);
                         break;
+                    case OperationType.SPREAD:
+                        // One to many operation
+                        v = (operation as DataSourceSpreadOperator<any, any[]>).operation(v);
+                        for (const item of v) {
+                            await processTransform(operations, result, i + 1)(item);
+                        }
+                        return;
                     case OperationType.MAP:
                         v = (operation as DataSourceMapOperator<any, any>).operation(v);
                         break;
@@ -3683,6 +3699,71 @@ export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F
                     value: v
                 });
             });
+        }
+    };
+}
+
+/**
+ * If any of the operations throws the operation is repeated
+ */
+export function dsRetry<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+    config: {
+        retryCount: number;
+        retryDelay?: number;
+        shouldRetry?(error: any): boolean;
+    },
+    operationA: DataSourceOperator<T, A>,
+    operationB?: DataSourceOperator<A, B>,
+    operationC?: DataSourceOperator<B, C>,
+    operationD?: DataSourceOperator<C, D>,
+    operationE?: DataSourceOperator<D, E>,
+    operationF?: DataSourceOperator<E, F>,
+    operationG?: DataSourceOperator<F, G>,
+    operationH?: DataSourceOperator<G, H>,
+    operationI?: DataSourceOperator<H, I>,
+    operationJ?: DataSourceOperator<I, J>,
+    operationK?: DataSourceOperator<J, K>
+): DataSourceMapDelayFilterOperator<T, K> {
+    const operations = [
+        operationA,
+        operationB,
+        operationC,
+        operationD,
+        operationE,
+        operationF,
+        operationG,
+        operationH,
+        operationI,
+        operationJ,
+        operationK
+    ].filter((v) => v !== undefined);
+
+    return {
+        name: `Retry<${operations.map((v) => v.name).join(', ')}>`,
+        operationType: OperationType.MAP_DELAY_FILTER,
+        operation: async (v) => {
+            try {
+                const result = await processInlineTransform(operations, v);
+                return result;
+            } catch (e) {
+                if (config.shouldRetry && !config.shouldRetry(e)) {
+                    throw e;
+                }
+                for (let i = 0; i < config.retryCount; i++) {
+                    if (config.retryDelay) {
+                        await new Promise((resolve) => setTimeout(resolve, config.retryDelay ?? 0));
+                    }
+                    try {
+                        const result = await processInlineTransform(operations, v);
+                        return result;
+                    } catch (e) {
+                        if (config.shouldRetry && !config.shouldRetry(e)) {
+                            throw e;
+                        }
+                    }
+                }
+                throw e;
+            }
         }
     };
 }

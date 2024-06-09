@@ -11,11 +11,13 @@ export * from './dialog/toaster.js';
 
 export * from './input/color_picker.js';
 export * from './input/number_field.js';
+export * from './input/toggle_field.js';
 export * from './input/text_field.js';
 export * from './input/text_area_field.js';
 export * from './input/button.js';
 export * from './input/drop_down_menu.js';
 export * from './input/json_renderer.js';
+export * from './input/form.js';
 
 export * from './charts/barchart.js';
 

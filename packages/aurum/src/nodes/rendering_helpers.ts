@@ -75,7 +75,7 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
     } else if (data instanceof MapDataSource) {
         return data.toEntriesArrayDataSource(cleanUp).reduce<string>(
             (p, c) => {
-                return `${p}${camelCaseToKebabCase(c[0])}:${c[1]};`;
+                return `${p}${camelCaseToKebabCase(c[0] as string)}:${transformStyle(c[0] as string, c[1])};`;
             },
             '',
             cleanUp
@@ -96,8 +96,47 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
             index++;
         }
 
-        return result.reduce<string>((p, c) => `${p}${camelCaseToKebabCase(c[0])}:${c[1]};`, '', cleanUp);
+        return result.reduce<string>((p, c) => `${p}${camelCaseToKebabCase(c[0])}:${transformStyle(c[0], c[1])};`, '', cleanUp);
     } else {
         return '';
     }
+}
+
+const stylesWithUnits = new Set([
+    'width',
+    'height',
+    'top',
+    'right',
+    'bottom',
+    'left',
+    'minWidth',
+    'minHeight',
+    'maxWidth',
+    'maxHeight',
+    'marginTop',
+    'marginRight',
+    'marginBottom',
+    'marginLeft',
+    'paddingLeft',
+    'paddingRight',
+    'paddingTop',
+    'paddingBottom',
+    'borderTopWidth',
+    'borderRightWidth',
+    'borderBottomWidth',
+    'borderLeftWidth',
+    'fontSize',
+    'gap',
+    'gridRowGap',
+    'gridColumnGap',
+    'borderRadius',
+    'borderWidth'
+]);
+
+function transformStyle(key: string, value: any): string {
+    if (typeof value === 'number' && value !== 0 && stylesWithUnits.has(key)) {
+        return value + 'px';
+    }
+
+    return value.toString();
 }

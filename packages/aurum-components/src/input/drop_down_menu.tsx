@@ -4,34 +4,49 @@ import {
     Aurum,
     AurumComponentAPI,
     AurumElementModel,
+    ClassType,
+    combineClass,
     DataSource,
     dsMap,
     DuplexDataSource,
     ReadOnlyArrayDataSource,
     Renderable,
-    resolveChildren
+    resolveChildren,
+    StyleType
 } from 'aurumjs';
 import { Dialog } from '../dialog/dialog.js';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
+import { FormType } from './form.js';
 
 const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor4],
-        (fontFamily, size, highlightFont, color1, color3, color4) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor2, theme.primary],
+        (fontFamily, size, highlightFont, color0, color2, primary) => css`
+            border-radius: 4px;
             position: relative;
             display: inline-flex;
             justify-content: space-between;
-
+            border: 2px solid ${color2};
+            box-sizing: border-box;
+            border-style: inset;
             padding: 4px;
             font-family: ${fontFamily};
             font-size: ${size};
             outline: none;
             color: ${highlightFont};
-            border-color: ${color4};
-            background-color: ${color3};
-            width: 100px;
+            background-color: ${color0};
+            width: 200px;
+            user-select: none;
             cursor: pointer;
+
+            .invalid {
+                border-color: red;
+            }
+
+            &:focus {
+                outline: ${primary} auto 5px;
+            }
         `,
         lifecycleToken
     )
@@ -39,16 +54,17 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
 
 const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor4],
-        (fontFamily, size, highlightFont, color1, color3, color4) => css`
+        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor3, theme.themeColor4, theme.highlightColor1],
+        (fontFamily, size, highlightFont, color0, color3, color4, highlightColor1) => css`
             position: relative;
             display: inline-flex;
             font-family: ${fontFamily};
             font-size: ${size};
             color: ${highlightFont};
             border: 1px solid ${color4};
-            background-color: ${color1};
-            width: 100px;
+            background-color: ${color0};
+            width: 200px;
+            user-select: none;
 
             ol {
                 margin: 0;
@@ -64,7 +80,7 @@ const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
             }
 
             li.highlight {
-                background-color: ${color3};
+                background-color: ${highlightColor1};
             }
         `,
         lifecycleToken
@@ -72,28 +88,44 @@ const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
 );
 
 export interface DropDownMenuProps<T> {
-    dialogSource: ArrayDataSource<Renderable>;
     selectedValue?: DuplexDataSource<T> | DataSource<T>;
-    selectedIndex?: DuplexDataSource<number>;
+    selectedIndex?: DuplexDataSource<number> | DataSource<number>;
     isOpen?: DataSource<boolean>;
+    class?: ClassType;
+    style?: StyleType;
+    form?: FormType<any>;
+    name?: string;
 
     onChange?(selectedValue: T, selectedIndex: number, previousIndex: number): void;
 }
 
 export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderable[], api: AurumComponentAPI) {
-    const childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>> = resolveChildren(
-        children,
-        api.cancellationToken,
-        (e) => (e as AurumElementModel<any>).factory === DropDownMenuOption
-    );
+    const childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>> =
+        props.form && props.name && (props.form.schema[props.name] as any).oneOf && children.length === 0
+            ? new ArrayDataSource((props.form.schema[props.name] as any).oneOf.map((c) => <DropDownMenuOption value={c}>{c}</DropDownMenuOption>))
+            : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<any>).factory === DropDownMenuOption);
+
+    if (!props.selectedValue && props.form && props.name) {
+        //@ts-ignore
+        props.selectedValue = props.form.schema[props.name].source;
+    }
 
     const isOpen = props.isOpen ?? new DataSource(false);
-    const selectedIndex = props.selectedIndex ?? new DuplexDataSource(0);
+    const selectedIndex =
+        props.selectedIndex ??
+        (props.selectedValue
+            ? new DataSource(
+                  props.selectedValue instanceof DataSource
+                      ? childSource.findIndex((c) => c.props.value === props.selectedValue.value)
+                      : childSource.findIndex((c) => c.props.value === props.selectedValue.value)
+              )
+            : new DataSource(0));
     const highlightIndex = new DataSource(selectedIndex.value);
 
     let root: HTMLDivElement;
     let childContainer: HTMLOListElement;
     let dialog;
+    const dialogSource = new DataSource();
 
     if (props.selectedValue) {
         selectedIndex.listen((index) => {
@@ -113,7 +145,13 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
         }
     }
 
-    childSource.listen(() => selectedIndex.updateDownstream(selectedIndex.value));
+    childSource.listen(() => {
+        if (selectedIndex instanceof DuplexDataSource) {
+            selectedIndex.updateDownstream(selectedIndex.value);
+        } else {
+            selectedIndex.update(selectedIndex.value);
+        }
+    });
 
     isOpen.listenAndRepeat((open) => {
         if (open) {
@@ -121,7 +159,10 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                 <Dialog
                     style={`width:${root.clientWidth}px;`}
                     class={dropdownStyle}
-                    target={root}
+                    target={{
+                        x: 0,
+                        y: root.clientHeight
+                    }}
                     layout={{
                         direction: 'down',
                         targetPoint: 'start',
@@ -143,7 +184,7 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                                 }}
                                 class={highlightIndex.transform(dsMap((v) => (childSource.indexOf(e) === v ? 'highlight' : '')))}
                                 onClick={() => {
-                                    selectedIndex.updateUpstream(childSource.indexOf(e));
+                                    update(selectedIndex, childSource.indexOf(e));
                                 }}
                             >
                                 {e.children}
@@ -153,9 +194,9 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                 </Dialog>
             );
 
-            props.dialogSource.push(dialog);
+            dialogSource.update(dialog);
         } else {
-            props.dialogSource.remove(dialog);
+            dialogSource.update(undefined);
         }
     });
 
@@ -178,9 +219,9 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                             }
                         } else {
                             if (selectedIndex.value < childSource.length.value - 1) {
-                                selectedIndex.updateUpstream(selectedIndex.value + 1);
+                                update(selectedIndex, selectedIndex.value + 1);
                             } else {
-                                selectedIndex.updateUpstream(0);
+                                update(selectedIndex, 0);
                             }
                         }
                         break;
@@ -193,16 +234,16 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                             }
                         } else {
                             if (selectedIndex.value > 0) {
-                                selectedIndex.updateUpstream(selectedIndex.value - 1);
+                                update(selectedIndex, selectedIndex.value - 1);
                             } else {
-                                selectedIndex.updateUpstream(childSource.length.value - 1);
+                                update(selectedIndex, childSource.length.value - 1);
                             }
                         }
                         break;
                     case 'Enter':
                     case ' ':
                         if (isOpen.value) {
-                            selectedIndex.updateUpstream(highlightIndex.value);
+                            update(selectedIndex, highlightIndex.value);
                             isOpen.update(false);
                         } else {
                             isOpen.update(true);
@@ -236,7 +277,8 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                 }
             }}
             onAttach={(e) => (root = e)}
-            class={theme}
+            class={combineClass(api.cancellationToken, theme, props.class)}
+            style={props.style}
         >
             <div>
                 {selectedIndex.transform(
@@ -244,18 +286,30 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                     api.cancellationToken
                 )}
             </div>
-            <div>˅</div>
+            <div>&#9660;</div>
+            {dialogSource}
         </div>
     );
 }
 
-function handleValueChange<T>(childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>>, selectedIndex: DuplexDataSource<number>): any {
-    return (value) => {
+function handleValueChange<T>(
+    childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>>,
+    selectedIndex: DataSource<number> | DuplexDataSource<number>
+): any {
+    return (value: T) => {
         const index = childSource.findIndex((c) => c.props.value === value);
         if (selectedIndex.value !== index) {
-            selectedIndex.updateUpstream(index);
+            update(selectedIndex, index);
         }
     };
+}
+
+function update<T>(source: DataSource<T> | DuplexDataSource<T>, value: T) {
+    if (source instanceof DataSource) {
+        source.update(value);
+    } else {
+        source.updateUpstream(value);
+    }
 }
 
 export function DropDownMenuOption<T>(props: { value: T }) {

@@ -2,6 +2,7 @@ export enum OperationType {
     FILTER,
     NOOP,
     MAP,
+    SPREAD,
     DELAY,
     MAP_DELAY,
     DELAY_FILTER,
@@ -43,6 +44,11 @@ export interface DuplexDataSourceMapOperator<T, M> extends DuplexDataSourceOpera
 export interface DataSourceMapOperator<T, M> extends DataSourceOperator<T, M> {
     operationType: OperationType.MAP;
     operation: (value: T) => M;
+}
+
+export interface DataSourceSpreadOperator<T, M> extends DataSourceOperator<T, M[]> {
+    operationType: OperationType.SPREAD;
+    operation: (value: T) => M[];
 }
 
 export interface DataSourceNoopOperator<T> extends DataSourceOperator<T, T> {

@@ -11,6 +11,7 @@ import {
     DataSourceMapDelayOperator,
     DataSourceMapOperator,
     DataSourceNoopOperator,
+    DataSourceSpreadOperator,
     OperationType
 } from './operator_model.js';
 import { Stream } from './stream.js';
@@ -609,6 +610,16 @@ export function dsThrottleBuffer<T>(
                 }
                 return promise;
             }
+        }
+    };
+}
+
+export function dsSpread<T>(): DataSourceSpreadOperator<T[], T> {
+    return {
+        name: 'spread',
+        operationType: OperationType.SPREAD,
+        operation: (v) => {
+            return v;
         }
     };
 }

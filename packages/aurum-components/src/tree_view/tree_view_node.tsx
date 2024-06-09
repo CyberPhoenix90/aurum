@@ -3,13 +3,13 @@ import { FileTypePriority, TreeViewSorting, isDirectory, sortItems } from './tre
 import { TreeEntry } from './tree_view_model.js';
 import { Aurum, ArrayDataSource, DataSource, dsMap, getValueOf, aurumClassName, Renderable, AurumComponentAPI } from 'aurumjs';
 
-interface NodeEvents {
-    onEntryDoubleClicked;
-    onEntryClicked;
-    onArrowClicked;
-    onEntryRightClicked;
-    onKeyDown;
-    onKeyUp;
+interface NodeEvents<T> {
+    onEntryDoubleClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
+    onEntryClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
+    onArrowClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
+    onEntryRightClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
+    onKeyDown?(e: KeyboardEvent, focusedEntry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
+    onKeyUp?(e: KeyboardEvent, focusedEntry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
 }
 
 interface FocusData {
@@ -19,6 +19,7 @@ interface FocusData {
 }
 
 interface TreeViewNodeProps {
+    ancestors: TreeEntry<any>[];
     fileTypePriority: FileTypePriority;
     longFileNameBehavior: 'hscroll' | 'wrap' | 'elipsis';
     canDrag(draggedEntry: TreeEntry<any>): boolean;
@@ -31,7 +32,7 @@ interface TreeViewNodeProps {
     allowDragAndDrop: boolean;
     entry: TreeEntry<any>;
     focusData: FocusData;
-    events: NodeEvents;
+    events: NodeEvents<any>;
     renaming: DataSource<TreeEntry<any>>;
     sorting: TreeViewSorting;
     indentWidth: number;
@@ -57,7 +58,9 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
             entry
                 .lazyLoad()
                 .then((children) => {
-                    (entry.children as ArrayDataSource<any>).push(...children);
+                    if (children) {
+                        (entry.children as ArrayDataSource<any>).push(...children);
+                    }
                 })
                 .finally(() => {
                     loading.update(false);
@@ -132,10 +135,10 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
             }}
             tabindex="-1"
             onKeyDown={(e) => {
-                props.events.onKeyDown?.(e, entry);
+                props.events.onKeyDown?.(e, entry, props.ancestors);
             }}
             onKeyUp={(e) => {
-                props.events.onKeyUp?.(e, entry);
+                props.events.onKeyUp?.(e, entry, props.ancestors);
             }}
             onContextMenu={(e) => {
                 if (renaming?.value && renaming?.value.name === entry.name) {
@@ -147,9 +150,9 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                     focusData.focusedEntry.update(entry);
                     focusData.isActive.update(true);
                 }
-                events.onEntryRightClicked?.(e, entry);
+                events.onEntryRightClicked?.(e, entry, props.ancestors);
             }}
-            onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry)}
+            onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry, props.ancestors)}
             onClick={(event) => {
                 if (entry.open) {
                     if (entry.open instanceof DataSource) {
@@ -158,13 +161,13 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                         entry.open.updateDownstream(!entry.open.value);
                     }
                 }
-                events.onEntryClicked?.(event, entry);
+                events.onEntryClicked?.(event, entry, props.ancestors);
             }}
             style={`padding-left:${indent * indentWidth}px; ${events.onEntryClicked ? 'cursor:pointer;' : ''}`}
         >
             <div
                 onClick={(event) => {
-                    events.onArrowClicked?.(event, entry);
+                    events.onArrowClicked?.(event, entry, props.ancestors);
                 }}
                 class={getArrowClass(entry, loading, loaded)}
             ></div>
@@ -215,6 +218,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
             entry.open.transform(
                 dsMap((open) => {
                     if (open) {
+                        const ancestors = [entry, ...props.ancestors];
                         return (
                             entry.children.sort(
                                 (a, b) => sortItems(a, b, sorting, fileTypePriority),
@@ -224,6 +228,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                             ) as ArrayDataSource<TreeEntry<any>>
                         ).map((c) => (
                             <TreeEntryRenderable
+                                ancestors={ancestors}
                                 fileTypePriority={fileTypePriority}
                                 longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                                 canDrag={props.canDrag}

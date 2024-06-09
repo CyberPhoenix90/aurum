@@ -26,6 +26,9 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             display: flex;
             align-items: center;
 
+            //center text horizontally
+            justify-content: center;
+
             cursor: pointer;
 
             &.action {

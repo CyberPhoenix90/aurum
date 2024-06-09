@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { Aurum, ClassType, StyleType, AurumComponentAPI, AurumElementModel, combineClass, DataSource, dsMap, getValueOf, Renderable } from 'aurumjs';
+import { Aurum, AurumComponentAPI, AurumElementModel, ClassType, DataSource, Renderable, StyleType, combineClass, dsMap, getValueOf } from 'aurumjs';
 import { Button } from '../input/button.js';
 import { currentTheme } from '../theme/theme.js';
 import { aurumify } from '../utils.js';
@@ -16,6 +16,28 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             font-family: ${fontFamily};
             font-size: ${size};
             box-shadow: 0px 0px 8px 1px black;
+            outline: none;
+
+            //fade in with spring
+            animation: fadein 0.2s ease;
+            @keyframes fadein {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fadeout {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+
             .floating-title {
                 font-size: 120%;
                 display: flex;
@@ -78,8 +100,8 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 export interface FloatingWindowProps {
-    x: DataSource<number> | number;
-    y: DataSource<number> | number;
+    x?: DataSource<number> | number;
+    y?: DataSource<number> | number;
     w: DataSource<number> | number;
     h: DataSource<number> | number;
 
@@ -91,6 +113,7 @@ export interface FloatingWindowProps {
     onClickOutside?(e: MouseEvent, windowRef: Renderable): void;
     onClickInside?(e: MouseEvent, windowRef: Renderable): void;
     onEscape?(e: KeyboardEvent, windowRef: Renderable): void;
+    onEnter?(e: KeyboardEvent, windowRef: Renderable): void;
     onClose?(e: MouseEvent, windowRef: Renderable): void;
 
     resizable?: boolean | DataSource<boolean>;
@@ -121,6 +144,14 @@ export function FloatingWindow(
         throw new Error('Floating window can only have title, content and footer');
     }
 
+    if (props.x == undefined) {
+        props.x = window.innerWidth / 2 - getValueOf(props.w) / 2;
+    }
+
+    if (props.y == undefined) {
+        props.y = window.innerHeight / 2 - getValueOf(props.h) / 2;
+    }
+
     const x = props.x instanceof DataSource ? props.x : new DataSource(props.x);
     const y = props.y instanceof DataSource ? props.y : new DataSource(props.y);
     const w = props.w instanceof DataSource ? props.w : new DataSource(props.w);
@@ -149,7 +180,21 @@ export function FloatingWindow(
     }
 
     return (
-        <div style={x.aggregate([y, w, h], (x, y, w, h) => `left:${x}px; top:${y}px; width:${w}px; height:${h}px`)} class={style}>
+        <div
+            onAttach={(e) => {
+                e.focus();
+            }}
+            tabindex={0}
+            onKeyUp={(e) => {
+                if (e.key === 'Escape') {
+                    props.onEscape?.(e, this);
+                } else if (e.key === 'Enter') {
+                    props.onEnter?.(e, this);
+                }
+            }}
+            style={x.aggregate([y, w, h], (x, y, w, h) => `left:${x}px; top:${y}px; width:${w}px; height:${h}px`)}
+            class={style}
+        >
             <div
                 onMouseDown={(e) => {
                     if (getValueOf(props.draggable) && !maximized.value) {

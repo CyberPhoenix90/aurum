@@ -69,7 +69,7 @@ export function Dialog(props: DialogProps, children: Renderable[], api: AurumCom
                     e.preventDefault();
                 }
             }}
-            style={combineStyle(api.cancellationToken, props.style, `position:absolute; left:${posX}px; top:${posY}px;`)}
+            style={combineStyle(api.cancellationToken, props.style, `position:absolute; z-index:1000; left:${posX}px; top:${posY}px;`)}
         >
             {children}
         </div>

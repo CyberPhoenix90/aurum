@@ -24,6 +24,7 @@ export interface HTMLNodeProps<T> {
     onClick?: DataDrain<MouseEvent>;
     onKeyDown?: DataDrain<KeyboardEvent>;
     onKeyUp?: DataDrain<KeyboardEvent>;
+    onKeyPress?: DataDrain<KeyboardEvent>;
     onMouseDown?: DataDrain<MouseEvent>;
     onMouseUp?: DataDrain<MouseEvent>;
     onMouseEnter?: DataDrain<MouseEvent>;
@@ -64,7 +65,7 @@ export const defaultEvents: MapLike<string> = {
     click: 'onClick',
     dblclick: 'onDblClick',
     keydown: 'onKeyDown',
-    keyhit: 'onKeyHit',
+    keyPress: 'onKeyPress',
     keyup: 'onKeyUp',
     contextmenu: 'onContextMenu',
     mousedown: 'onMouseDown',
@@ -209,13 +210,13 @@ export function createEventHandlers(node: HTMLElement, events: MapLike<string>, 
 
 function bindProps(node: HTMLElement, keys: string[], props: any, cleanUp: CancellationToken, dynamicProps?: string[]) {
     for (const key of keys) {
-        if (props[key]) {
+        if (props[key] != undefined) {
             assignStringSourceToAttribute(node, props[key], key, cleanUp);
         }
     }
     if (dynamicProps) {
         for (const key of dynamicProps) {
-            if (props[key]) {
+            if (props[key] != undefined) {
                 assignStringSourceToAttribute(node, props[key], key, cleanUp);
             }
         }

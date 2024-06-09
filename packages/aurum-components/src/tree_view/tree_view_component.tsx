@@ -40,7 +40,7 @@ export interface TreeViewComponentProps<T> {
     onEntryDoubleClicked?(e: MouseEvent, entry: TreeEntry<T>): void;
     onKeyDown?(e: KeyboardEvent, focusedEntry: TreeEntry<T>): void;
     onKeyUp?(e: KeyboardEvent, focusedEntry: TreeEntry<T>): void;
-    onEntryRightClicked?(e: MouseEvent, entry: TreeEntry<T>): void;
+    onEntryRightClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;
     onEntryDrop?(draggedEntry: TreeEntry<T>, targetEntry: TreeEntry<T>): void;
 }
 
@@ -169,6 +169,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
         )
         .map((e) => (
             <TreeEntryRenderable
+                ancestors={[]}
                 fileTypePriority={props.fileTypePriority}
                 longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}
                 dragState={dragState}

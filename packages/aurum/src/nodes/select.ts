@@ -2,10 +2,12 @@ import { DataSource, GenericDataSource } from '../stream/data_source.js';
 import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { DomNodeCreator, HTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
+import { DataDrain } from '../utilities/common.js';
 
 export interface SelectProps extends HTMLNodeProps<HTMLSelectElement> {
     value?: GenericDataSource<string> | string;
     selectedIndex?: GenericDataSource<number> | number;
+    onChange?: DataDrain<Event>;
 }
 
 /**
