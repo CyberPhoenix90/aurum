@@ -39,6 +39,8 @@ export function renderElipse(context: CanvasRenderingContext2D, child: ElipseCom
     const renderedState = resolveValues(child, elipseKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, rx, ry, rotation, startAngle, endAngle } = renderedState;
     child.renderedState = renderedState;
+    child.readWidth?.update(rx * 2);
+    child.readHeight?.update(ry * 2);
 
     child.onPreDraw?.(child.renderedState);
     context.globalAlpha = opacity;
@@ -59,6 +61,8 @@ export function renderElipse(context: CanvasRenderingContext2D, child: ElipseCom
 export function renderLine(context: CanvasRenderingContext2D, child: LineComponentModel, offsetX: number, offsetY: number): boolean {
     const renderedState = resolveValues(child, lineKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, tx, ty, lineWidth } = renderedState;
+    child.readWidth?.update(Math.abs(tx - x));
+    child.readHeight?.update(Math.abs(ty - y));
     child.renderedState = renderedState;
     child.onPreDraw?.(child.renderedState);
     const path2d = new Path2D();
@@ -178,6 +182,9 @@ export function renderPath(context: CanvasRenderingContext2D, child: PathCompone
 export function renderRegularPolygon(context: CanvasRenderingContext2D, child: PathComponentModel, offsetX: number, offsetY: number): boolean {
     const renderedState = resolveValues(child, regularPolygonKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, sides, radius } = renderedState;
+    child.readWidth?.update(radius * 2);
+    child.readHeight?.update(radius * 2);
+
     child.renderedState = renderedState;
 
     child.onPreDraw?.(child.renderedState);
@@ -257,15 +264,23 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
             let line = pieces.shift();
             while (pieces.length) {
                 const measuredWidth = context.measureText(line + ' ' + pieces[0]);
-                if (measuredWidth.width > child.renderedState.realWidth) {
-                    child.renderedState.realWidth = measuredWidth.width;
-                }
-                if (measuredWidth <= wrapWidth) {
+                if (measuredWidth.width <= wrapWidth) {
+                    if (measuredWidth.width > child.renderedState.realWidth) {
+                        child.renderedState.realWidth = measuredWidth.width;
+                    }
                     line += ' ' + pieces.shift();
                 } else {
+                    const measuredWidth = context.measureText(line);
+                    if (measuredWidth.width > child.renderedState.realWidth) {
+                        child.renderedState.realWidth = measuredWidth.width;
+                    }
                     lines.push(line);
                     line = pieces.shift();
                 }
+            }
+            const measuredWidth = context.measureText(line);
+            if (measuredWidth.width > child.renderedState.realWidth) {
+                child.renderedState.realWidth = measuredWidth.width;
             }
             lines.push(line);
         } else {
@@ -285,6 +300,9 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
         x -= Math.min(child.renderedState.realWidth, child.renderedState.width) * originX;
     }
 
+    child.readWidth?.update(child.renderedState.realWidth);
+    child.readHeight?.update(child.renderedState.lines.length * (lineHeight ?? 16));
+
     for (let i = 0; i < lines.length; i++) {
         if (fillColor) {
             context.fillStyle = fillColor;
@@ -302,6 +320,9 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
 export function renderRectangle(context: CanvasRenderingContext2D, child: RectangleComponentModel, offsetX: number, offsetY: number): boolean {
     const renderedState = resolveValues(child, rectangleKeys, offsetX, offsetY);
     const { x, y, width, height, idle, fillColor, strokeColor, opacity } = renderedState;
+    child.readWidth?.update(width);
+    child.readHeight?.update(height);
+
     child.renderedState = renderedState;
 
     child.onPreDraw?.(child.renderedState);

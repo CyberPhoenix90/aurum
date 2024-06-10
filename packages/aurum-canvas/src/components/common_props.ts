@@ -1,4 +1,4 @@
-import { ReadOnlyDataSource } from 'aurumjs';
+import { DataSource, ReadOnlyDataSource } from 'aurumjs';
 import { ComponentModel, RenderData } from './component_model.js';
 
 export enum ColorBlending {
@@ -33,6 +33,8 @@ export enum ColorBlending {
 export interface CommonProps extends InteractionProps {
     onAttach?(): void;
     onDetach?(): void;
+    readWidth?: DataSource<number>;
+    readHeight?: DataSource<number>;
     state?: string | ReadOnlyDataSource<string>;
     clip?: boolean | ReadOnlyDataSource<boolean>;
     originX?: number | ReadOnlyDataSource<number>;

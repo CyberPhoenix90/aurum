@@ -67,11 +67,25 @@ export interface AurumCanvasProps {
     onDetach?(): void;
     class?: ClassType;
     style?: StyleType;
+    /**
+     * Optional manual horizontal resoltution. If omitted the canvas will automatically sync its resolution to the css size
+     */
     width?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
+    /**
+     * Optional manual vertical resoltution. If omitted the canvas will automatically sync its resolution to the css size
+     */
     height?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
     features?: AurumnCanvasFeatures;
+    /**
+     * In case of auto size this will update to the current width of the canvas
+     */
+    readWidth?: DataSource<number>;
+    /**
+     * In case of auto size this will update to the current height of the canvas
+     */
+    readHeight?: DataSource<number>;
 }
 
 export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api: AurumComponentAPI): AurumElement {
@@ -87,6 +101,36 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
     return (
         <canvas
             onAttach={(canvas) => {
+                // Auto sync resolution to css size
+                if (!props.width || props.height) {
+                    const handleResize = () => {
+                        let dirty = false;
+                        if (!props.width) {
+                            if (canvas.width !== canvas.clientWidth) {
+                                canvas.width = canvas.clientWidth;
+                                props.readWidth?.update(canvas.clientWidth);
+                                dirty = true;
+                            }
+                        }
+                        if (!props.height) {
+                            if (canvas.height !== canvas.clientHeight) {
+                                canvas.height = canvas.clientHeight;
+                                props.readHeight?.update(canvas.clientHeight);
+                                dirty = true;
+                            }
+                        }
+
+                        if (dirty) {
+                            invalidate(canvas);
+                        }
+                    };
+                    const rso = new ResizeObserver(handleResize);
+
+                    rso.observe(canvas);
+                    handleResize();
+                    api.cancellationToken.addCancellable(() => rso.disconnect());
+                }
+
                 if (props.features) {
                     if (!props.scale) {
                         props.scale = new DataSource({ x: 1, y: 1 });

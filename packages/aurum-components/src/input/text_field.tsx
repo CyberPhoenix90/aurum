@@ -46,7 +46,7 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
 );
 
 export interface TextFieldProps extends InputProps {
-    form?: FormType<any>;
+    form?: FormType<any, any>;
     decorators?: Renderable;
 }
 

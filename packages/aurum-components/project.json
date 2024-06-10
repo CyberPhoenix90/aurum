@@ -1,6 +1,6 @@
 {
     "name": "aurum-components",
-    "version": "0.3.22",
+    "version": "0.3.23",
     "description": "",
     "main": "prebuilt/esnext/aurum-components.js",
     "type": "module",

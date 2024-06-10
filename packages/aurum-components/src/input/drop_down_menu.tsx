@@ -93,7 +93,7 @@ export interface DropDownMenuProps<T> {
     isOpen?: DataSource<boolean>;
     class?: ClassType;
     style?: StyleType;
-    form?: FormType<any>;
+    form?: FormType<any, any>;
     name?: string;
 
     onChange?(selectedValue: T, selectedIndex: number, previousIndex: number): void;

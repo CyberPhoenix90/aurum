@@ -51,7 +51,10 @@ export interface DateFieldSchema {
     customValidator?: (value: Date) => FormViolation | undefined;
 }
 
-export interface FormType<T> {
+export interface FormType<T, O> {
+    submitting: ReadOnlyDataSource<boolean>;
+    submitError: ReadOnlyDataSource<string>;
+    submit();
     schema: FormSchema<T>;
     violation: {
         [key in keyof T]: ReadOnlyDataSource<FormViolation>;
@@ -82,11 +85,35 @@ export enum FormViolation {
     Custom = 'custom'
 }
 
-export function createForm<T>(schema: FormSchema<T>): FormType<T> {
+export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object: T, markAsFailed: (error: string) => void) => Promise<O>): FormType<T, O> {
     //@ts-ignore
     const validationState: { [key in keyof T]: DataSource<FormViolation> } = {};
 
-    const api: FormType<T> = {
+    const api: FormType<T, O> = {
+        submit: async () => {
+            if (!api.isFullyValid()) {
+                return undefined;
+            }
+
+            const object = api.getFormObject();
+
+            (api.submitError as DataSource<string>).update('');
+            (api.submitting as DataSource<boolean>).update(true);
+            try {
+                return await onSubmit(object, (error) => {
+                    (api.submitError as DataSource<string>).update(error);
+                    (api.submitting as DataSource<boolean>).update(false);
+                });
+            } catch (e) {
+                (api.submitError as DataSource<string>).update(e.message);
+            } finally {
+                (api.submitting as DataSource<boolean>).update(false);
+            }
+
+            return undefined;
+        },
+        submitting: new DataSource(false),
+        submitError: new DataSource(''),
         schema,
         // Proper object will be built in the next step
         isValid: {} as any,
@@ -99,7 +126,7 @@ export function createForm<T>(schema: FormSchema<T>): FormType<T> {
         isFullyValid(): boolean {
             let isValid = true;
             for (const key in schema) {
-                if (this.validateField(key) !== undefined) {
+                if (api.validateField(key) !== undefined) {
                     isValid = false;
                     // do not return early as validation can have side effects
                 }
@@ -110,7 +137,7 @@ export function createForm<T>(schema: FormSchema<T>): FormType<T> {
         validateAll(): ValidationResult<T> {
             const result: Partial<ValidationResult<T>> = {};
             for (const key in schema) {
-                result[key] = this.validateField(key);
+                result[key] = api.validateField(key);
             }
 
             return result as ValidationResult<T>;

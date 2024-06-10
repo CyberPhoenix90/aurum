@@ -1,4 +1,4 @@
-import { ReadOnlyDataSource } from 'aurumjs';
+import { DataSource, ReadOnlyDataSource } from 'aurumjs';
 import { InteractionProps } from './common_props.js';
 import { StateComponentModel } from './drawables/state.js';
 
@@ -13,6 +13,8 @@ export interface ComponentModel extends InteractionProps {
     animationTime?: number;
     animations: StateComponentModel[];
     renderedState?: RenderData;
+    readWidth?: DataSource<number>;
+    readHeight?: DataSource<number>;
     onPreDraw?(props: RenderData);
 }
 
