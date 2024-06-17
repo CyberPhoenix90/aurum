@@ -1,4 +1,4 @@
-import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource, Renderable, DuplexDataSource } from 'aurumjs';
+import { ArrayDataSource, DataSource, ReadOnlyDataSource, Renderable, DuplexDataSource } from 'aurumjs';
 
 export interface TreeEntry<T> {
     tag?: T;
@@ -6,7 +6,7 @@ export interface TreeEntry<T> {
     name: string | ReadOnlyDataSource<string>;
     icon?: string | Renderable;
     renderable?: Renderable;
-    children?: ArrayDataSource<TreeEntry<T>> | ReadOnlyArrayDataSource<TreeEntry<T>> | TreeEntry<T>[];
+    children?: ArrayDataSource<TreeEntry<T>>;
     open?: DataSource<boolean> | DuplexDataSource<boolean>;
     lazyLoad?: () => Promise<TreeEntry<T>[]>;
 }

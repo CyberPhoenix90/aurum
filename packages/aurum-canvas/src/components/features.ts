@@ -1,7 +1,12 @@
-import { CancellationToken } from 'aurumjs';
+import { CancellationToken, EventEmitter } from 'aurumjs';
 import { AurumCanvasProps } from './canvas.js';
 
-export function initializeKeyboardPanningFeature(props: AurumCanvasProps, canvas: HTMLCanvasElement): void {
+export function initializeKeyboardPanningFeature(
+    props: AurumCanvasProps,
+    onKeyUp: EventEmitter<{ keyCode: number }>,
+    onKeyDown: EventEmitter<{ keyCode: number }>,
+    token: CancellationToken
+): void {
     let moveToken: CancellationToken;
     const keyDown = new Set();
     const moveVector = {
@@ -9,7 +14,7 @@ export function initializeKeyboardPanningFeature(props: AurumCanvasProps, canvas
         y: 0
     };
 
-    window.addEventListener('keyup', (e) => {
+    onKeyUp.subscribe((e) => {
         if (e.keyCode === props.features.panning.keyboard.leftKeyCode || e.keyCode === props.features.panning.keyboard.rightKeyCode) {
             moveVector.x = 0;
             keyDown.delete(e.keyCode);
@@ -24,9 +29,9 @@ export function initializeKeyboardPanningFeature(props: AurumCanvasProps, canvas
             moveToken.cancel();
             moveToken = undefined;
         }
-    });
+    }, token);
 
-    window.addEventListener('keydown', (e) => {
+    onKeyDown.subscribe((e) => {
         if (e.keyCode === props.features.panning.keyboard.leftKeyCode) {
             moveVector.x = props.features.panning.keyboard.pixelsPerFrame;
             keyDown.add(e.keyCode);
@@ -56,40 +61,50 @@ export function initializeKeyboardPanningFeature(props: AurumCanvasProps, canvas
                 });
             });
         }
-    });
+    }, token);
 }
 
-export function initializeMousePanningFeature(props: AurumCanvasProps, canvas: HTMLCanvasElement): void {
+export function initializeMousePanningFeature(
+    props: AurumCanvasProps,
+    onMouseDown: EventEmitter<{ clientX: number; clientY: number }>,
+    onMouseMove: EventEmitter<{ clientX: number; clientY: number }>,
+    onMouseUp: EventEmitter<{ clientX: number; clientY: number }>,
+    token: CancellationToken
+): void {
     let downX: number;
     let downY: number;
     let beforeX: number;
     let beforeY: number;
     let down: boolean = false;
 
-    canvas.addEventListener('mousedown', (e) => {
+    onMouseDown.subscribe((e) => {
         downX = e.clientX;
         downY = e.clientY;
         beforeX = props.translate.value.x;
         beforeY = props.translate.value.y;
         down = true;
-    });
+    }, token);
 
-    document.addEventListener('mousemove', (e) => {
+    onMouseMove.subscribe((e) => {
         if (down) {
             props.translate.update({
                 x: beforeX - (downX - e.clientX) / props.scale.value.x,
                 y: beforeY - (downY - e.clientY) / props.scale.value.y
             });
         }
-    });
+    }, token);
 
-    document.addEventListener('mouseup', (e) => {
+    onMouseUp.subscribe((e) => {
         down = false;
-    });
+    }, token);
 }
 
-export function initializeZoomFeature(props: AurumCanvasProps, canvas: HTMLCanvasElement): void {
-    canvas.addEventListener('wheel', (e) => {
+export function initializeZoomFeature(
+    props: AurumCanvasProps,
+    onWheel: EventEmitter<{ offsetX: number; offsetY: number; deltaY: number }>,
+    token: CancellationToken
+): void {
+    onWheel.subscribe((e) => {
         if (e.deltaY > 0) {
             if (props.scale.value.x < props.features.mouseWheelZoom.minZoom) {
                 return;
@@ -117,5 +132,5 @@ export function initializeZoomFeature(props: AurumCanvasProps, canvas: HTMLCanva
                 y: props.translate.value.y - (e.offsetY * (props.features.mouseWheelZoom.zoomIncrements - 1)) / props.scale.value.y
             });
         }
-    });
+    }, token);
 }

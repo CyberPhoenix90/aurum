@@ -19,6 +19,7 @@ import { css } from '@emotion/css';
 import { aurumify } from '../utils.js';
 import { Dialog } from '../dialog/dialog.js';
 import { ContextMenu } from '../dialog/context_menu.js';
+import { Button } from '../aurum-components.js';
 
 const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     aurumify(
@@ -41,7 +42,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 background-color: ${color4};
             }
 
-            > span.menu-strip-radio-button.active {
+            > span.menustrip-radio-button.active {
                 background-color: ${color4};
             }
         `,
@@ -53,7 +54,7 @@ export function MenuStrip(
     props: {
         style?: StyleType;
         class?: ClassType;
-        dialogSource: ArrayDataSource<Renderable>;
+        dialogSource: DataSource<Renderable> | ArrayDataSource<Renderable>;
     },
     children: Renderable[],
     api: AurumComponentAPI
@@ -66,7 +67,10 @@ export function MenuStrip(
     };
 
     const menus = children.filter(
-        (c) => (c as AurumElementModel<any>).factory === MenuStripMenu || (c as AurumElementModel<any>).factory === MenuStripRadioButton
+        (c) =>
+            (c as AurumElementModel<any>).factory === MenuStripMenu ||
+            (c as AurumElementModel<any>).factory === MenuStripRadioButton ||
+            (c as AurumElementModel<any>).factory === MenuStripButton
     );
     for (const menu of menus) {
         if (!(menu as AurumElementModel<any>).props) {
@@ -85,7 +89,7 @@ export function MenuStrip(
 interface MenuStripController {
     openId: DataSource<number>;
     openState: DataSource<boolean>;
-    dialogSource: ArrayDataSource<Renderable>;
+    dialogSource: ArrayDataSource<Renderable> | DataSource<Renderable>;
     activeRadioButton: DataSource<Renderable>;
 }
 
@@ -147,11 +151,29 @@ export function MenuStripRadioButton(
             class={combineClass(
                 api.cancellationToken,
                 props.class,
-                'menu-strip-radio-button',
+                'menustrip-radio-button',
                 controller.activeRadioButton.transform(dsMap((v) => (v === this ? 'active' : '')))
             )}
         >
             {children}
+        </span>
+    );
+}
+
+export function MenuStripButton(
+    props: {
+        onClick?: (e: MouseEvent) => void;
+        class?: ClassType;
+        style?: StyleType;
+        buttonType: 'neutral' | 'action' | 'destructive';
+    },
+    children: Renderable[]
+): Renderable {
+    return (
+        <span class={props.class} style={props.style}>
+            <Button buttonType={props.buttonType} onClick={props.onClick}>
+                {children}
+            </Button>
         </span>
     );
 }
@@ -195,9 +217,17 @@ export function MenuStripMenu(props: { class?: ClassType; style?: StyleType }, c
                         <ContextMenu>{(menuContent as AurumElementModel<any>).children}</ContextMenu>
                     </Dialog>
                 );
-                magic.dialogSource.push(dialog);
+                if (magic.dialogSource instanceof ArrayDataSource) {
+                    magic.dialogSource.push(dialog);
+                } else {
+                    magic.dialogSource.update(dialog);
+                }
             } else {
-                magic.dialogSource.remove(dialog);
+                if (magic.dialogSource instanceof ArrayDataSource) {
+                    magic.dialogSource.remove(dialog);
+                } else {
+                    magic.dialogSource.update(undefined);
+                }
                 dialog = undefined;
             }
         }, api.cancellationToken);

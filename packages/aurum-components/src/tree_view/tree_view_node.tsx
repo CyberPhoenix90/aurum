@@ -59,6 +59,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                 .lazyLoad()
                 .then((children) => {
                     if (children) {
+                        entry.lazyLoad = undefined;
                         (entry.children as ArrayDataSource<any>).push(...children);
                     }
                 })
@@ -66,7 +67,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                     loading.update(false);
                     loaded.update(true);
                 });
-        });
+        }, api.cancellationToken);
     }
 
     const dropOk = new DataSource(false);
@@ -291,31 +292,23 @@ function EntryIcon(props: { icon: string | Renderable }): Renderable {
 }
 
 function getArrowClass(entry: TreeEntry<any>, loading: DataSource<boolean>, loaded: DataSource<boolean>): DataSource<string> | string {
-    if (entry.children instanceof ArrayDataSource) {
-        if (isDirectory(entry)) {
-            return entry.children.length.aggregate([entry.open, loading, loaded], (childrenCount, open, loading, loaded) => {
-                if (loading) {
-                    return 'arrow-loading';
-                }
+    if (isDirectory(entry)) {
+        return entry.children.length.aggregate([entry.open, loading, loaded], (childrenCount, open, loading, loaded) => {
+            if (loading) {
+                return 'arrow-loading';
+            }
 
-                if (entry.lazyLoad && !loaded) {
-                    return 'arrow-right';
-                }
+            if (entry.lazyLoad && !loaded) {
+                return 'arrow-right';
+            }
 
-                if (childrenCount === 0) {
-                    return 'no-arrow';
-                }
+            if (childrenCount === 0) {
+                return 'no-arrow';
+            }
 
-                return open ? 'arrow-down' : 'arrow-right';
-            });
-        } else {
-            return 'no-arrow';
-        }
+            return open ? 'arrow-down' : 'arrow-right';
+        });
     } else {
-        if (entry.children?.length) {
-            return entry.open.transform(dsMap((open) => (open ? 'arrow-down' : 'arrow-right')));
-        } else {
-            return 'no-arrow';
-        }
+        return 'no-arrow';
     }
 }

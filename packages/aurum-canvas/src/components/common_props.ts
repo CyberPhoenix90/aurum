@@ -50,10 +50,20 @@ export interface CommonProps extends InteractionProps {
 }
 
 export interface InteractionProps {
-    onMouseEnter?(e: MouseEvent, target: ComponentModel): void;
-    onMouseLeave?(e: MouseEvent, target: ComponentModel): void;
-    onMouseDown?(e: MouseEvent, target: ComponentModel): void;
-    onMouseUp?(e: MouseEvent, target: ComponentModel): void;
-    onMouseClick?(e: MouseEvent, target: ComponentModel): void;
-    onMouseMove?(e: MouseEvent, target: ComponentModel): void;
+    onMouseEnter?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+    onMouseLeave?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+    onMouseDown?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+    onMouseUp?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+    onMouseClick?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+    onMouseMove?(e: SimplifiedMouseEvent, target: ComponentModel): void;
+}
+
+export interface SimplifiedMouseEvent {
+    clientX: number;
+    clientY: number;
+    offsetX: number;
+    offsetY: number;
+}
+export interface SimplifiedWheelEvent extends SimplifiedMouseEvent {
+    deltaY: number;
 }

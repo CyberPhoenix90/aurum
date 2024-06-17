@@ -1,5 +1,6 @@
 export * from './tree_view/tree_view_component.js';
 export * from './tree_view/tree_view_model.js';
+export { TreeViewSorting } from './tree_view/tree_view_common.js';
 
 export * from './accordion/accordion.js';
 
@@ -15,6 +16,7 @@ export * from './input/toggle_field.js';
 export * from './input/text_field.js';
 export * from './input/text_area_field.js';
 export * from './input/button.js';
+export * from './input/submit.js';
 export * from './input/drop_down_menu.js';
 export * from './input/json_renderer.js';
 export * from './input/form.js';

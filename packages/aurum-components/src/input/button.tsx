@@ -51,7 +51,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 
-export interface ButtonComponentProps extends ButtonProps {
+export interface ButtonComponentProps extends Omit<ButtonProps, 'form'> {
     buttonType: 'neutral' | 'action' | 'destructive';
     icon?: Renderable;
 }

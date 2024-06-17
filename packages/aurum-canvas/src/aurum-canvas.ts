@@ -8,3 +8,4 @@ export * from './components/drawables/aurum_path.js';
 export * from './components/drawables/state.js';
 export * from './components/drawables/aurum_image.js';
 export * from './components/drawables/aurum_regular_polygon.js';
+export * from './components/drawables/large_content_box.js';

@@ -166,7 +166,11 @@ export function combineAttribute(cancellationToken: CancellationToken, ...args: 
                 if (constants.length) {
                     return data.concat(constants).join(' ');
                 } else {
-                    return data.join(' ');
+                    if (data.length === 1) {
+                        return data[0];
+                    } else {
+                        return data.join(' ');
+                    }
                 }
             },
             cancellationToken

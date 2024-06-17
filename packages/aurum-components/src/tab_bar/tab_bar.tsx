@@ -1,7 +1,5 @@
 import {
-    ArrayDataSource,
     Aurum,
-    aurumClassName,
     combineClass,
     AurumComponentAPI,
     DataSource,
@@ -9,7 +7,9 @@ import {
     DuplexDataSource,
     Renderable,
     StyleType,
-    ClassType
+    ClassType,
+    resolveChildren,
+    AurumElementModel
 } from 'aurumjs';
 import { css } from '@emotion/css';
 import { currentTheme } from '../theme/theme.js';
@@ -53,76 +53,117 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
     )
 );
 
-export type TabsetLabelContent = string | { id: string; content: Renderable; title?: string };
-export type TabsetLabelContentSource = ArrayDataSource<TabsetLabelContent>;
-
-interface TabBarProps {
+interface TabBarProps<T> {
+    keyboardNavigation?: boolean;
     canReorder?: boolean;
     canClose?: boolean;
-    onClose?(tab: string, index: number): void;
-    onReorder?(tabA: string, tabB: string): void;
+    onClose?(tab: T, index: number): void;
+    onReorder?(tabA: T, tabB: T): void;
     class?: ClassType;
     style?: StyleType;
-    selected: DataSource<string> | DuplexDataSource<string>;
+    selected: DataSource<T> | DuplexDataSource<T>;
 }
 
-export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[], api: AurumComponentAPI): any {
+export function TabBar<T>(props: TabBarProps<T>, children: Renderable[], api: AurumComponentAPI): any {
     const { selected, canClose, canReorder, onClose, onReorder } = props;
 
-    children = children.flat();
-    let heldItem: string = undefined;
+    const resolvedChildren = resolveChildren<AurumElementModel<TabBarItemProps<T>>>(
+        children,
+        api.cancellationToken,
+        (c) => (c as AurumElementModel<any>)?.factory === TabBarItem
+    );
 
-    const tabs = new DataSource<TabsetLabelContent[]>();
-    for (const c of children) {
-        if (c instanceof ArrayDataSource) {
-            c.listen(() => rebuildTabs(tabs, children));
+    const modelToTabItem = resolvedChildren.indexByProvider((c) => c.props.id);
+
+    resolvedChildren.length.listen((v) => {
+        if (resolvedChildren.find((v) => v.props.id === selected.value) === undefined) {
+            if (v > 0) {
+                updateSelected(resolvedChildren.get(0).props.id);
+            } else {
+                updateSelected(undefined);
+            }
+        } else if (v > 0 && selected.value === undefined) {
+            if (selected instanceof DataSource) {
+                updateSelected(resolvedChildren.get(0).props.id);
+            }
         }
-    }
-    rebuildTabs(tabs, children);
+    }, api.cancellationToken);
+
+    let heldItem: T = undefined;
 
     if (canClose) {
-        api.cancellationToken.registerDomEvent(document, 'keydown', (e: KeyboardEvent) => {
-            if (e.key === 'w' && e.altKey) {
-                onClose?.(
-                    selected.value,
-                    tabs.value.findIndex((v) => v === selected.value)
-                );
-            }
-        });
+        if (props.keyboardNavigation) {
+            api.cancellationToken.registerDomEvent(document, 'keydown', (e: KeyboardEvent) => {
+                if (e.key === 'w' && e.altKey) {
+                    const selectedTab = modelToTabItem.get(props.selected.value);
+                    if (!selectedTab) {
+                        return;
+                    }
+
+                    const canClose = selectedTab.props.canClose ?? true;
+
+                    selectedTab.props.onClose?.(selectedTab.props.id);
+                    canClose &&
+                        onClose?.(
+                            selected.value,
+                            resolvedChildren.findIndex((v) => v.props.id === selected.value)
+                        );
+                } else if (e.key === ']' && e.ctrlKey) {
+                    e.preventDefault();
+                    const currentIndex = resolvedChildren.findIndex((v) => v.props.id === selected.value);
+                    const nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+                    if (nextIndex < 0) {
+                        updateSelected(resolvedChildren.get(resolvedChildren.length.value - 1).props.id);
+                    } else if (nextIndex >= resolvedChildren.length.value) {
+                        updateSelected(resolvedChildren.get(0).props.id);
+                    } else {
+                        updateSelected(resolvedChildren.get(nextIndex).props.id);
+                    }
+                } else if (e.key === '[' && e.ctrlKey) {
+                    e.preventDefault();
+                    const currentIndex = resolvedChildren.findIndex((v) => v.props.id === selected.value);
+                    const nextIndex = e.shiftKey ? currentIndex + 1 : currentIndex - 1;
+                    if (nextIndex < 0) {
+                        updateSelected(resolvedChildren.get(resolvedChildren.length.value - 1).props.id);
+                    } else if (nextIndex >= resolvedChildren.length.value) {
+                        updateSelected(resolvedChildren.get(0).props.id);
+                    } else {
+                        updateSelected(resolvedChildren.get(nextIndex).props.id);
+                    }
+                }
+            });
+        }
     }
 
     return (
         <div class={combineClass(api.cancellationToken, style, props.class)} style={props.style}>
-            {tabs.transform(dsMap((tabsValue) => tabsValue.map((c, i) => renderTab(i, c))))}
+            {resolvedChildren.map(renderTab)}
         </div>
     );
 
-    function renderTab(i: number, tab: TabsetLabelContent): any {
-        let tabId: string, tabContent: Renderable;
-        let title: string | undefined = undefined;
-        if (typeof tab === 'string') {
-            tabId = tab;
-            tabContent = tab;
+    function updateSelected(id: T) {
+        if (selected instanceof DataSource) {
+            selected.update(id);
         } else {
-            title = tab.title;
-            tabId = tab.id;
-            tabContent = tab.content;
+            selected.updateUpstream(id);
         }
+    }
 
-        const className = aurumClassName({
-            tab: true,
-            selected: selected.transform(dsMap((s) => s === tabId))
-        });
+    function renderTab(tab: AurumElementModel<TabBarItemProps<T>>): Renderable {
+        const tabId = tab.props.id;
 
         return (
             <div
-                title={title}
+                title={tab.props.title}
                 onDragStart={() => (heldItem = tabId)}
                 onDragEnter={() => onReorder?.(tabId, heldItem)}
                 draggable={canReorder ? 'true' : false}
                 onMouseUp={(e: MouseEvent) => {
                     if (e.button === 1 && canClose) {
-                        onClose?.(tabId, i);
+                        onClose?.(
+                            tabId,
+                            resolvedChildren.findIndex((e) => e.props.id === tabId)
+                        );
                     } else if (e.button === 0) {
                         if (selected instanceof DataSource) {
                             selected.update(tabId);
@@ -131,9 +172,12 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
                         }
                     }
                 }}
-                class={className}
+                class={{
+                    tab: true,
+                    selected: selected.transform(dsMap((v) => v === tab.props.id))
+                }}
             >
-                {tabContent}
+                {tab.children}
                 {canClose ? (
                     <span
                         class="close"
@@ -141,7 +185,10 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
                             e.stopPropagation();
                             //If we update the DOM synchronously this will trigger another click on another tab
                             requestAnimationFrame(() => {
-                                onClose?.(tabId, i);
+                                onClose?.(
+                                    tabId,
+                                    resolvedChildren.findIndex((e) => e.props.id === tabId)
+                                );
                             });
                         }}
                     >
@@ -153,20 +200,17 @@ export function TabBar(props: TabBarProps, children: TabsetLabelContentSource[],
     }
 }
 
-function rebuildTabs(tabs: DataSource<TabsetLabelContent[]>, children: TabsetLabelContentSource[]): void {
-    const result = [];
-    for (const child of children) {
-        if (child instanceof ArrayDataSource) {
-            result.push(...child.getData());
-        } else {
-            result.push(child);
-        }
-    }
+export interface TabBarItemProps<T> {
+    id: T;
+    title?: string;
+    style?: StyleType;
+    class?: ClassType;
+    canClose?: boolean;
+    onFocus?: (id: T) => void;
+    onBlur?: (id: T) => void;
+    onClose?: (id: T) => void;
+}
 
-    const bad = result.find((e) => !(typeof e === 'string') && (!e.id || !e.content));
-    if (bad) {
-        throw new Error('Tabbar children must be strings or objects with an id and a content props or a datasource with those objects in it');
-    }
-
-    tabs.update(result);
+export function TabBarItem<T>(props: TabBarItemProps<T>) {
+    return undefined;
 }

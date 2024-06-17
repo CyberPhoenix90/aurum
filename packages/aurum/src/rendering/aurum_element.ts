@@ -442,6 +442,9 @@ export class ArrayAurumElement extends AurumElement {
             return;
         }
         this.api.cancellationToken.cancel();
+        for (const children of this.children) {
+            this.renderSessions.get(children)?.sessionToken.cancel();
+        }
         super.dispose();
     }
 

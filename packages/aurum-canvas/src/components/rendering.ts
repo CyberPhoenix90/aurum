@@ -8,6 +8,7 @@ import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
 import { deref } from './utilities.js';
 import { ComponentModel } from './component_model.js';
 import { CommonProps } from './common_props.js';
+import { measureText } from './measure_text.js';
 
 const regularPolygonKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'sides', 'radius', 'originX', 'originY'];
 const pathKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'lineWidth', 'originX', 'originY'];
@@ -35,7 +36,12 @@ const textKeys = [
 ];
 const rectangleKeys = ['x', 'y', 'width', 'height', 'opacity', 'strokeColor', 'fillColor', 'originX', 'originY'];
 
-export function renderElipse(context: CanvasRenderingContext2D, child: ElipseComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderElipse(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: ElipseComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, elipseKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, rx, ry, rotation, startAngle, endAngle } = renderedState;
     child.renderedState = renderedState;
@@ -58,7 +64,12 @@ export function renderElipse(context: CanvasRenderingContext2D, child: ElipseCom
     return idle;
 }
 
-export function renderLine(context: CanvasRenderingContext2D, child: LineComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderLine(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: LineComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, lineKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, tx, ty, lineWidth } = renderedState;
     child.readWidth?.update(Math.abs(tx - x));
@@ -82,7 +93,12 @@ export function renderLine(context: CanvasRenderingContext2D, child: LineCompone
     return idle;
 }
 
-export function renderQuadraticCurve(context: CanvasRenderingContext2D, child: QuadraticCurveComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderQuadraticCurve(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: QuadraticCurveComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, quadraticCurveKeys, offsetX, offsetY);
     const { x, y, cx, cy, idle, fillColor, strokeColor, opacity, tx, ty, lineWidth } = renderedState;
     child.renderedState = renderedState;
@@ -104,7 +120,12 @@ export function renderQuadraticCurve(context: CanvasRenderingContext2D, child: Q
     return idle;
 }
 
-export function renderBezierCurve(context: CanvasRenderingContext2D, child: BezierCurveComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderBezierCurve(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: BezierCurveComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, bezierCurveKeys, offsetX, offsetY);
     const { x, y, cx, cy, c2x, c2y, idle, fillColor, strokeColor, opacity, tx, ty, lineWidth } = renderedState;
     child.renderedState = renderedState;
@@ -126,7 +147,13 @@ export function renderBezierCurve(context: CanvasRenderingContext2D, child: Bezi
     return idle;
 }
 
-function drawCanvasPath(child: CommonProps, context: CanvasRenderingContext2D, path2d: Path2D, fillColor: any, strokeColor: any) {
+function drawCanvasPath(
+    child: CommonProps,
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    path2d: Path2D,
+    fillColor: any,
+    strokeColor: any
+) {
     if (child.fillColor) {
         context.fillStyle = fillColor;
         context.fill(path2d);
@@ -141,7 +168,12 @@ function drawCanvasPath(child: CommonProps, context: CanvasRenderingContext2D, p
     }
 }
 
-export function renderPath(context: CanvasRenderingContext2D, child: PathComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderPath(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: PathComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, pathKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, path, lineWidth } = renderedState;
     child.renderedState = renderedState;
@@ -179,7 +211,12 @@ export function renderPath(context: CanvasRenderingContext2D, child: PathCompone
     return idle;
 }
 
-export function renderRegularPolygon(context: CanvasRenderingContext2D, child: PathComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderRegularPolygon(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: PathComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, regularPolygonKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, sides, radius } = renderedState;
     child.readWidth?.update(radius * 2);
@@ -218,7 +255,12 @@ export function renderRegularPolygon(context: CanvasRenderingContext2D, child: P
     return idle;
 }
 
-export function renderText(context: CanvasRenderingContext2D, child: TextComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderText(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: TextComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, textKeys, offsetX, offsetY, false);
     let {
         x,
@@ -263,14 +305,14 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
             const pieces: string[] = text.split(' ');
             let line = pieces.shift();
             while (pieces.length) {
-                const measuredWidth = context.measureText(line + ' ' + pieces[0]);
+                const measuredWidth = measureText(context, line + ' ' + pieces[0]);
                 if (measuredWidth.width <= wrapWidth) {
                     if (measuredWidth.width > child.renderedState.realWidth) {
                         child.renderedState.realWidth = measuredWidth.width;
                     }
                     line += ' ' + pieces.shift();
                 } else {
-                    const measuredWidth = context.measureText(line);
+                    const measuredWidth = measureText(context, line);
                     if (measuredWidth.width > child.renderedState.realWidth) {
                         child.renderedState.realWidth = measuredWidth.width;
                     }
@@ -278,16 +320,16 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
                     line = pieces.shift();
                 }
             }
-            const measuredWidth = context.measureText(line);
+            const measuredWidth = measureText(context, line);
             if (measuredWidth.width > child.renderedState.realWidth) {
                 child.renderedState.realWidth = measuredWidth.width;
             }
             lines.push(line);
         } else {
             if (!width) {
-                child.renderedState.realWidth = child.renderedState.width = context.measureText(text).width;
+                child.renderedState.realWidth = child.renderedState.width = measureText(context, text).width;
             } else {
-                child.renderedState.realWidth = context.measureText(text).width;
+                child.renderedState.realWidth = measureText(context, text).width;
             }
             lines.push(text);
         }
@@ -317,7 +359,12 @@ export function renderText(context: CanvasRenderingContext2D, child: TextCompone
     return idle;
 }
 
-export function renderRectangle(context: CanvasRenderingContext2D, child: RectangleComponentModel, offsetX: number, offsetY: number): boolean {
+export function renderRectangle(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: RectangleComponentModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
     const renderedState = resolveValues(child, rectangleKeys, offsetX, offsetY);
     const { x, y, width, height, idle, fillColor, strokeColor, opacity } = renderedState;
     child.readWidth?.update(width);

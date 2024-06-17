@@ -53,5 +53,6 @@ export enum ComponentType {
     PATH,
     QUADRATIC_CURVE,
     BEZIER_CURVE,
-    REGULAR_POLYGON
+    REGULAR_POLYGON,
+    LARGE_CONTENT_BOX
 }

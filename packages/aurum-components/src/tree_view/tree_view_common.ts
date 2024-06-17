@@ -12,11 +12,11 @@ export enum TreeViewSorting {
 export type FileTypePriority = 'none' | 'folders' | 'files';
 
 export function isFile(entry: TreeEntry<any>): boolean {
-    return !entry.children;
+    return !entry.children && !entry.lazyLoad;
 }
 
 export function isDirectory(entry: TreeEntry<any>): boolean {
-    return !!entry.children;
+    return !!entry.children || !!entry.lazyLoad;
 }
 
 export function sortItems(a: TreeEntry<any>, b: TreeEntry<any>, sorting: TreeViewSorting, priority: FileTypePriority): number {
