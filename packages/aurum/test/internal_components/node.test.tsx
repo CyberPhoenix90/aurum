@@ -50,6 +50,7 @@ describe('Nodes', () => {
         'html',
         'head',
         'header',
+        'blockquote',
         'footer',
         'nav',
         'b',

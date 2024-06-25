@@ -30,6 +30,7 @@ import {
     Details,
     Div,
     Em,
+    Blockquote,
     Footer,
     Form,
     FormProps,
@@ -220,6 +221,7 @@ const nodeMap = {
     html: Html,
     head: Head,
     header: Header,
+    blockquote: Blockquote,
     footer: Footer,
     nav: Nav,
     b: B,
@@ -482,6 +484,7 @@ export namespace Aurum {
             h5: HTMLNodeProps<HTMLElement>;
             h6: HTMLNodeProps<HTMLElement>;
             header: HTMLNodeProps<HTMLElement>;
+            blockquote: HTMLNodeProps<HTMLElement>;
             footer: HTMLNodeProps<HTMLElement>;
             nav: HTMLNodeProps<HTMLElement>;
             b: HTMLNodeProps<HTMLElement>;

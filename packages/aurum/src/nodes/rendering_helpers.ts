@@ -90,7 +90,7 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
                 (data[i] as ReadOnlyDataSource<string>).listen((v) => {
                     result.set(myIndex, [i, v]);
                 }, cleanUp);
-            } else {
+            } else if (data[i] !== undefined) {
                 result.push([i, data[i]]);
             }
             index++;

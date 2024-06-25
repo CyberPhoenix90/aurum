@@ -376,6 +376,10 @@ export const Em = DomNodeCreator<HTMLNodeProps<HTMLElement>>('em');
  * @internal
  */
 export const Footer = DomNodeCreator<HTMLNodeProps<HTMLElement>>('footer');
+/**
+ * @internal
+ */
+export const Blockquote = DomNodeCreator<HTMLNodeProps<HTMLElement>>('blockquote', ['cite']);
 
 /**
  * @internal
