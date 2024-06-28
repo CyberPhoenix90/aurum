@@ -521,6 +521,17 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     }
 
     /**
+     * If the datasource was never updated this will wait until the first update otherwise it will return the current value
+     */
+    public async getValueWhenAvailable(): Promise<T> {
+        if (this.primed) {
+            return this.value;
+        } else {
+            return await this.awaitNextUpdate();
+        }
+    }
+
+    /**
      * Remove all listeners
      */
     public cancelAll(): void {
