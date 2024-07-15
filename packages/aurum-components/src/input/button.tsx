@@ -31,28 +31,36 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 
             cursor: pointer;
 
+            &[disabled] {
+                pointer-events: none;
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
             &.action {
                 font-weight: 500;
                 background-color: ${action};
-                color: ${color0};
+                color: white;
             }
 
             &.neutral {
                 background-color: ${color0};
-                color: ${highContrastFontColor};
+                color: white;
             }
 
             &.destructive {
                 background-color: ${error};
-                color: ${highContrastFontColor};
+                color: white;
             }
         `,
         lifecycleToken
     )
 );
 
+export type ButtonType = 'neutral' | 'action' | 'destructive';
+
 export interface ButtonComponentProps extends Omit<ButtonProps, 'form'> {
-    buttonType: 'neutral' | 'action' | 'destructive';
+    buttonType: ButtonType;
     icon?: Renderable;
 }
 

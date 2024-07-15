@@ -316,7 +316,7 @@ class AurumServerClient {
             });
 
             pendingToken.setTimeout(() => {
-                connection.close(4001, 'no response');
+                connection.close(3008, 'no response');
                 reject();
                 client.masterToken.cancel();
             }, 5000);

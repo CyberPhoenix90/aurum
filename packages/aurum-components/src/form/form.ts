@@ -25,7 +25,7 @@ export interface StringFieldSchema {
     maxLength?: number;
     match?: RegExp;
     oneOf?: string[];
-    customValidator?: (value: string) => FormViolation | undefined;
+    customValidator?: (value: string) => FormViolation | Promise<FormViolation> | undefined;
 }
 
 export interface NumberFieldSchema {
@@ -34,13 +34,13 @@ export interface NumberFieldSchema {
     min?: number;
     max?: number;
     integer?: boolean;
-    customValidator?: (value: number) => FormViolation | undefined;
+    customValidator?: (value: number) => FormViolation | Promise<FormViolation> | undefined;
 }
 
 export interface BooleanFieldSchema {
     source: DataSource<boolean> | DuplexDataSource<boolean>;
     required?: boolean;
-    customValidator?: (value: boolean) => FormViolation | undefined;
+    customValidator?: (value: boolean) => FormViolation | Promise<FormViolation> | undefined;
 }
 
 export interface DateFieldSchema {
@@ -48,7 +48,7 @@ export interface DateFieldSchema {
     required?: boolean;
     min?: Date;
     max?: Date;
-    customValidator?: (value: Date) => FormViolation | undefined;
+    customValidator?: (value: Date) => FormViolation | Promise<FormViolation> | undefined;
 }
 
 export interface FormType<T, O> {
@@ -68,12 +68,17 @@ export interface FormType<T, O> {
     setValidationState(key: keyof T, violation: FormViolation | undefined): void;
     fieldsWithViolations: SetDataSource<keyof T>;
     isFullyValid(): boolean;
-    validateAll(): ValidationResult<T>;
+    validateAll(): Promise<ValidationResult<T>>;
     getFormObject(): T;
-    validateField(key: string): FormViolation;
+    validateField(key: string): FormViolation | Promise<FormViolation>;
 }
 
-export enum FormViolation {
+export interface FormViolation {
+    type: FormViolationType;
+    message?: string;
+}
+
+export enum FormViolationType {
     Min = 'min',
     Max = 'max',
     MinLength = 'minLength',
@@ -134,10 +139,10 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
 
             return isValid;
         },
-        validateAll(): ValidationResult<T> {
+        async validateAll(): Promise<ValidationResult<T>> {
             const result: Partial<ValidationResult<T>> = {};
             for (const key in schema) {
-                result[key] = api.validateField(key);
+                result[key] = await api.validateField(key);
             }
 
             return result as ValidationResult<T>;
@@ -150,103 +155,114 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
 
             return result as T;
         },
-        validateField(key: string): FormViolation | undefined {
+        validateField(key: string): FormViolation | Promise<FormViolation> | undefined {
             const field = schema[key];
             if (field.required && (!field.source.value || Number.isNaN(field.source.value) || !Number.isFinite(field.source.value))) {
-                validationState[key].update(FormViolation.Required);
-                return FormViolation.Required;
+                validationState[key].update({
+                    type: FormViolationType.Required
+                });
+                return validationState[key].value;
             }
             const value = field.source.value;
             if (field.customValidator) {
                 const result = field.customValidator(value);
-                validationState[key].update(result);
+
+                if (result instanceof Promise) {
+                    return result.then((r) => {
+                        validationState[key].update(r);
+                        return r;
+                    });
+                } else {
+                    validationState[key].update(result);
+                }
+
                 return result;
             }
 
             if (value === undefined || value === null) {
                 // we can't determine the type but if any assertion exists it's automatically invalid
                 if ('minLength' in field) {
-                    validationState[key].update(FormViolation.MinLength);
-                    return FormViolation.MinLength;
+                    validationState[key as keyof T].update({ type: FormViolationType.MinLength });
+                    return validationState[key].value;
                 }
 
                 if ('maxLength' in field) {
-                    validationState[key].update(FormViolation.MaxLength);
-                    return FormViolation.MaxLength;
+                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength });
+                    return validationState[key].value;
                 }
 
                 if ('match' in field) {
-                    validationState[key].update(FormViolation.Match);
-                    return FormViolation.Match;
+                    validationState[key as keyof T].update({ type: FormViolationType.Match });
+                    return validationState[key].value;
                 }
 
                 if ('min' in field) {
-                    validationState[key].update(FormViolation.Min);
-                    return FormViolation.Min;
+                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    return validationState[key].value;
                 }
 
                 if ('max' in field) {
-                    validationState[key].update(FormViolation.Max);
-                    return FormViolation.Max;
+                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    return validationState[key].value;
                 }
 
                 if ('oneof' in field) {
-                    validationState[key].update(FormViolation.OneOf);
-                    return FormViolation.OneOf;
+                    validationState[key as keyof T].update({ type: FormViolationType.OneOf });
+                    return validationState[key].value;
                 }
 
                 if ('integer' in field) {
-                    validationState[key].update(FormViolation.Integer);
-                    return FormViolation.Integer;
+                    validationState[key as keyof T].update({ type: FormViolationType.Integer });
+                    return validationState[key].value;
                 }
             }
 
             if (typeof value === 'string') {
                 if ('minLength' in field && value.length < field.minLength) {
-                    validationState[key].update(FormViolation.MinLength);
-                    return FormViolation.MinLength;
+                    validationState[key as keyof T].update({ type: FormViolationType.MinLength });
+                    return validationState[key].value;
                 }
 
                 if ('maxLength' in field && value.length > field.maxLength) {
-                    validationState[key].update(FormViolation.MaxLength);
-                    return FormViolation.MaxLength;
+                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength });
+                    return validationState[key].value;
                 }
 
                 if ('match' in field && !field.match.test(value)) {
-                    validationState[key].update(FormViolation.Match);
-                    return FormViolation.Match;
+                    validationState[key as keyof T].update({ type: FormViolationType.Match });
+                    return validationState[key].value;
                 }
 
                 if ('oneOf' in field && !field.oneOf.includes(value)) {
-                    validationState[key].update(FormViolation.OneOf);
-                    return FormViolation.OneOf;
+                    validationState[key as keyof T].update({ type: FormViolationType.OneOf });
+                    return validationState[key].value;
                 }
             } else if (typeof value === 'number') {
                 if ('min' in field && (value as number) < (field.min as number)) {
-                    validationState[key].update(FormViolation.Min);
-                    return FormViolation.Min;
+                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    return validationState[key].value;
                 }
 
                 if ('max' in field && (value as number) > (field.max as number)) {
-                    validationState[key].update(FormViolation.Max);
-                    return FormViolation.Max;
+                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    return validationState[key].value;
                 }
 
                 if ('integer' in field && field.integer && !Number.isInteger(value)) {
-                    validationState[key].update(FormViolation.Integer);
-                    return FormViolation.Integer;
+                    validationState[key as keyof T].update({ type: FormViolationType.Integer });
+                    return validationState[key].value;
                 }
             } else if (typeof value === 'boolean') {
                 // nothing to validate
             } else if (value instanceof Date) {
                 if ('min' in field && value < field.min) {
-                    validationState[key].update(FormViolation.Min);
-                    return FormViolation.Min;
+                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    return validationState[key].value;
                 }
 
                 if ('max' in field && value > field.max) {
-                    validationState[key].update(FormViolation.Max);
-                    return FormViolation.Max;
+                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    return validationState[key].value;
                 }
             }
 

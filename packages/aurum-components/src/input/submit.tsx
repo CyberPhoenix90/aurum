@@ -1,6 +1,6 @@
 import { Aurum, AurumComponentAPI, DataSource, DuplexDataSource, Renderable } from 'aurumjs';
 import { Button, ButtonComponentProps } from './button.js';
-import { FormType } from './form.js';
+import { FormType } from '../form/form.js';
 
 export interface SubmitButtonProps extends ButtonComponentProps {
     form: FormType<any, any>;

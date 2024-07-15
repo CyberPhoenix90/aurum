@@ -9,7 +9,9 @@ export * from './dialog/context_menu.js';
 export * from './dialog/floating_window.js';
 export * from './dialog/window_manager.js';
 export * from './dialog/toaster.js';
+export * from './dialog/simple_action_modal.js';
 
+export * from './input/file_picker.js';
 export * from './input/color_picker.js';
 export * from './input/number_field.js';
 export * from './input/toggle_field.js';
@@ -19,7 +21,10 @@ export * from './input/button.js';
 export * from './input/submit.js';
 export * from './input/drop_down_menu.js';
 export * from './input/json_renderer.js';
-export * from './input/form.js';
+
+export * from './form/form.js';
+export * from './form/loading_spinner.js';
+export * from './form/error_indicator.js';
 
 export * from './charts/barchart.js';
 
