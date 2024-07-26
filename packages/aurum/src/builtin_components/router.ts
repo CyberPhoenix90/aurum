@@ -74,7 +74,7 @@ export function AurumRouter(
             dsMap((path) => ({ path, route: selectRoute(path, resolvedChildren) })),
             dsFilter((r) => (props.validateNavigation ? props.validateNavigation(r.path, r.route) : true)),
             dsTap((r) => activeRoute.update(r.route)),
-            dsMap((r) => r.route.children)
+            dsMap((r) => r.route?.children)
         );
 }
 

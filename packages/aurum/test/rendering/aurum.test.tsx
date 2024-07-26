@@ -21,6 +21,14 @@ describe('Aurum', () => {
         assert(document.getElementById('target').firstChild !== null);
     });
 
+    it('should attach data source', () => {
+        const ds = new DataSource(<div>Hello World</div>);
+        attachToken = Aurum.attach(ds, document.getElementById('target'));
+        assert.equal(document.getElementById('target').textContent, 'Hello World');
+        ds.update('Hello World 2');
+        assert.equal(document.getElementById('target').textContent, 'Hello World 2');
+    });
+
     it('Should set inner text', () => {
         attachToken = Aurum.attach(<div>Hello World</div>, document.getElementById('target'));
         assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === 'Hello World');
@@ -209,6 +217,36 @@ describe('Aurum', () => {
         assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).hasAttribute('id') === true);
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).getAttribute('id') === '');
+    });
+
+    it('should accept numbers for attributes', () => {
+        attachToken = Aurum.attach(
+            <div>
+                <progress max={100} value={50}></progress>
+            </div>,
+            document.getElementById('target')
+        );
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLProgressElement);
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).max, 100);
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).value, 50);
+    });
+
+    it('should accept number datasources for attributes', () => {
+        const ds = new DataSource(50);
+        attachToken = Aurum.attach(
+            <div>
+                <progress max={100} value={ds}></progress>
+            </div>,
+            document.getElementById('target')
+        );
+        assert(document.getElementById('target').firstChild.firstChild instanceof HTMLProgressElement);
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).max, 100);
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).value, 50);
+
+        ds.update(75);
+
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).max, 100);
+        assert.equal((document.getElementById('target').firstChild.firstChild as HTMLProgressElement).value, 75);
     });
 
     it('should accept booleans datasources for attributes', () => {

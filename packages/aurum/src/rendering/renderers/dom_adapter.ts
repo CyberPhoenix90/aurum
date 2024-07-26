@@ -260,8 +260,8 @@ function assignStringSourceToAttribute(node: HTMLElement, data: AttributeValue, 
             }
         }
         data.transform(dsUnique(), cleanUp).listen((v) => {
-            if (typeof v === 'string') {
-                node.setAttribute(key, v);
+            if (typeof v === 'string' || typeof v === 'number') {
+                node.setAttribute(key, v.toString());
             } else if (typeof v === 'boolean') {
                 if (v) {
                     node.setAttribute(key, '');

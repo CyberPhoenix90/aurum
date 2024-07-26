@@ -169,7 +169,7 @@ import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSourc
 import { CancellationToken } from './cancellation_token.js';
 import { MapLike } from './common.js';
 import { HTMLSanitizeConfig, sanitizeHTML } from './sanitize.js';
-import { dsTap, dsUnique } from '../stream/data_source_operators.js';
+import { dsTap, dsUnique, dsUpdateToken } from '../stream/data_source_operators.js';
 
 export type AurumDecorator = (model: AurumElementModel<any>) => Renderable;
 
@@ -355,7 +355,28 @@ export class Aurum {
 
         const session = createRenderSession();
         const content = renderInternal(aurumRenderable, session);
-        if (content instanceof AurumElement) {
+        if (content instanceof DataSource) {
+            content.transform(dsUpdateToken()).listenAndRepeat(({ value, token }) => {
+                session.sessionToken.addCancellable(token);
+
+                if (value instanceof AurumElement) {
+                    value.attachToDom(dom, dom.childNodes.length);
+                    token.addCancellable(() => value.dispose());
+                } else if (Array.isArray(value)) {
+                    const root = new ArrayAurumElement(new ArrayDataSource(value), createAPI(session));
+                    token.addCancellable(() => root.dispose());
+                    root.attachToDom(dom, dom.childNodes.length);
+                } else if (value == undefined) {
+                } else {
+                    dom.appendChild(value);
+                    token.addCancellable(() => {
+                        if (value.isConnected) {
+                            dom.removeChild(value);
+                        }
+                    });
+                }
+            }, session.sessionToken);
+        } else if (content instanceof AurumElement) {
             content.attachToDom(dom, dom.childNodes.length);
             session.sessionToken.addCancellable(() => content.dispose());
         } else if (Array.isArray(content)) {

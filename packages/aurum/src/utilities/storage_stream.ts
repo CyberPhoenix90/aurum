@@ -154,7 +154,9 @@ export class StorageStream {
 
         this.onChange.subscribe((e) => {
             if (e.key === key || e.key === '*') {
-                stream.updateDownstream(e.value != undefined ? (e.value as unknown as T) : defaultValue);
+                stream.updateDownstream(
+                    e.value != undefined ? ((typeof defaultValue === 'number' ? parseInt(e.value) : e.value) as unknown as T) : defaultValue
+                );
             }
         }, cancellationToken);
 
