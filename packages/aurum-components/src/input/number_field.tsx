@@ -18,7 +18,7 @@ export function NumberField(props: NumberFieldProps) {
 
     if (props.form && props.name && !props.value) {
         //@ts-ignore
-        props.value = props.form.schema[getValueOf(props.name)].source;
+        props.value = props.form.schema.fields[getValueOf(props.name)].source;
     }
 
     const valueSource = new DataSource(getValueOf(props.value));

@@ -1,7 +1,18 @@
 import { DataSource, DuplexDataSource, ReadOnlyDataSource, SetDataSource, dsMap, dsTap, dsUnique } from 'aurumjs';
 
 export type FormSchema<T> = {
-    [key in keyof T]: FieldSchema<T[key]>;
+    defaultErrorMessages?: {
+        required?: string;
+        minLength?: string;
+        maxLength?: string;
+        match?: string;
+        oneOf?: string;
+        min?: string;
+        max?: string;
+        integer?: string;
+        custom?: string;
+    };
+    fields: { [key in keyof T]: FieldSchema<T[key]> };
 };
 
 export type ValidationResult<T> = {
@@ -67,7 +78,7 @@ export interface FormType<T, O> {
     };
     setValidationState(key: keyof T, violation: FormViolation | undefined): void;
     fieldsWithViolations: SetDataSource<keyof T>;
-    isFullyValid(): boolean;
+    isFullyValid(): Promise<boolean>;
     validateAll(): Promise<ValidationResult<T>>;
     getFormObject(): T;
     validateField(key: string): FormViolation | Promise<FormViolation>;
@@ -75,7 +86,7 @@ export interface FormType<T, O> {
 
 export interface FormViolation {
     type: FormViolationType;
-    message?: string;
+    message: string;
 }
 
 export enum FormViolationType {
@@ -94,9 +105,24 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
     //@ts-ignore
     const validationState: { [key in keyof T]: DataSource<FormViolation> } = {};
 
+    schema.defaultErrorMessages = Object.assign(
+        {
+            required: 'This field is required',
+            minLength: 'Too short',
+            maxLength: 'Too long',
+            match: 'Value does not match the required pattern',
+            oneOf: 'Value is not one of the allowed values',
+            min: 'Value is too low',
+            max: 'Value is too high',
+            integer: 'Value is not an integer',
+            custom: 'Invalid Value'
+        },
+        schema.defaultErrorMessages ?? {}
+    );
+
     const api: FormType<T, O> = {
         submit: async () => {
-            if (!api.isFullyValid()) {
+            if ((await api.isFullyValid()) === false) {
                 return undefined;
             }
 
@@ -128,10 +154,10 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
         setValidationState(key: keyof T, violation: FormViolation | undefined): void {
             validationState[key].update(violation);
         },
-        isFullyValid(): boolean {
+        async isFullyValid(): Promise<boolean> {
             let isValid = true;
-            for (const key in schema) {
-                if (api.validateField(key) !== undefined) {
+            for (const key in schema.fields) {
+                if ((await api.validateField(key)) !== undefined) {
                     isValid = false;
                     // do not return early as validation can have side effects
                 }
@@ -141,7 +167,7 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
         },
         async validateAll(): Promise<ValidationResult<T>> {
             const result: Partial<ValidationResult<T>> = {};
-            for (const key in schema) {
+            for (const key in schema.fields) {
                 result[key] = await api.validateField(key);
             }
 
@@ -149,14 +175,14 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
         },
         getFormObject(): T {
             const result: { [key: string]: any } = {};
-            for (const key in schema) {
-                result[key] = schema[key].source.value;
+            for (const key in schema.fields) {
+                result[key] = schema.fields[key].source.value;
             }
 
             return result as T;
         },
         validateField(key: string): FormViolation | Promise<FormViolation> | undefined {
-            const field = schema[key];
+            const field = schema.fields[key];
             if (field.required && (!field.source.value || Number.isNaN(field.source.value) || !Number.isFinite(field.source.value))) {
                 validationState[key].update({
                     type: FormViolationType.Required
@@ -180,88 +206,88 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
             }
 
             if (value === undefined || value === null) {
-                // we can't determine the type but if any assertion exists it's automatically invalid
+                // we can't determine the type due to lack of input but if any assertion exists it's automatically invalid
                 if ('minLength' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.MinLength });
+                    validationState[key as keyof T].update({ type: FormViolationType.MinLength, message: schema.defaultErrorMessages.minLength });
                     return validationState[key].value;
                 }
 
                 if ('maxLength' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength });
+                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength, message: schema.defaultErrorMessages.maxLength });
                     return validationState[key].value;
                 }
 
                 if ('match' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Match });
+                    validationState[key as keyof T].update({ type: FormViolationType.Match, message: schema.defaultErrorMessages.match });
                     return validationState[key].value;
                 }
 
                 if ('min' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    validationState[key as keyof T].update({ type: FormViolationType.Min, message: schema.defaultErrorMessages.min });
                     return validationState[key].value;
                 }
 
                 if ('max' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    validationState[key as keyof T].update({ type: FormViolationType.Max, message: schema.defaultErrorMessages.max });
                     return validationState[key].value;
                 }
 
                 if ('oneof' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.OneOf });
+                    validationState[key as keyof T].update({ type: FormViolationType.OneOf, message: schema.defaultErrorMessages.oneOf });
                     return validationState[key].value;
                 }
 
                 if ('integer' in field) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Integer });
+                    validationState[key as keyof T].update({ type: FormViolationType.Integer, message: schema.defaultErrorMessages.integer });
                     return validationState[key].value;
                 }
             }
 
             if (typeof value === 'string') {
                 if ('minLength' in field && value.length < field.minLength) {
-                    validationState[key as keyof T].update({ type: FormViolationType.MinLength });
+                    validationState[key as keyof T].update({ type: FormViolationType.MinLength, message: schema.defaultErrorMessages.minLength });
                     return validationState[key].value;
                 }
 
                 if ('maxLength' in field && value.length > field.maxLength) {
-                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength });
+                    validationState[key as keyof T].update({ type: FormViolationType.MaxLength, message: schema.defaultErrorMessages.maxLength });
                     return validationState[key].value;
                 }
 
                 if ('match' in field && !field.match.test(value)) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Match });
+                    validationState[key as keyof T].update({ type: FormViolationType.Match, message: schema.defaultErrorMessages.match });
                     return validationState[key].value;
                 }
 
                 if ('oneOf' in field && !field.oneOf.includes(value)) {
-                    validationState[key as keyof T].update({ type: FormViolationType.OneOf });
+                    validationState[key as keyof T].update({ type: FormViolationType.OneOf, message: schema.defaultErrorMessages.oneOf });
                     return validationState[key].value;
                 }
             } else if (typeof value === 'number') {
                 if ('min' in field && (value as number) < (field.min as number)) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    validationState[key as keyof T].update({ type: FormViolationType.Min, message: schema.defaultErrorMessages.min });
                     return validationState[key].value;
                 }
 
                 if ('max' in field && (value as number) > (field.max as number)) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    validationState[key as keyof T].update({ type: FormViolationType.Max, message: schema.defaultErrorMessages.max });
                     return validationState[key].value;
                 }
 
                 if ('integer' in field && field.integer && !Number.isInteger(value)) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Integer });
+                    validationState[key as keyof T].update({ type: FormViolationType.Integer, message: schema.defaultErrorMessages.integer });
                     return validationState[key].value;
                 }
             } else if (typeof value === 'boolean') {
                 // nothing to validate
             } else if (value instanceof Date) {
                 if ('min' in field && value < field.min) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Min });
+                    validationState[key as keyof T].update({ type: FormViolationType.Min, message: schema.defaultErrorMessages.min });
                     return validationState[key].value;
                 }
 
                 if ('max' in field && value > field.max) {
-                    validationState[key as keyof T].update({ type: FormViolationType.Max });
+                    validationState[key as keyof T].update({ type: FormViolationType.Max, message: schema.defaultErrorMessages.max });
                     return validationState[key].value;
                 }
             }
@@ -271,10 +297,11 @@ export function createForm<T, O = void>(schema: FormSchema<T>, onSubmit: (object
         }
     };
 
-    for (const key in schema) {
+    for (const key in schema.fields) {
         validationState[key] = new DataSource();
         api.violation[key] = validationState[key].transform(dsUnique());
         api.isValid[key] = validationState[key].transform(
+            dsMap((v) => v === undefined),
             dsUnique(),
             dsTap((v) => (v ? api.fieldsWithViolations.delete(key) : api.fieldsWithViolations.add(key))),
             dsMap((v) => v === undefined)

@@ -101,13 +101,13 @@ export interface DropDownMenuProps<T> {
 
 export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderable[], api: AurumComponentAPI) {
     const childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>> =
-        props.form && props.name && (props.form.schema[props.name] as any).oneOf && children.length === 0
-            ? new ArrayDataSource((props.form.schema[props.name] as any).oneOf.map((c) => <DropDownMenuOption value={c}>{c}</DropDownMenuOption>))
+        props.form && props.name && (props.form.schema.fields[props.name] as any).oneOf && children.length === 0
+            ? new ArrayDataSource((props.form.schema.fields[props.name] as any).oneOf.map((c) => <DropDownMenuOption value={c}>{c}</DropDownMenuOption>))
             : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<any>).factory === DropDownMenuOption);
 
     if (!props.selectedValue && props.form && props.name) {
         //@ts-ignore
-        props.selectedValue = props.form.schema[props.name].source;
+        props.selectedValue = props.form.schema.fields[props.name].source;
     }
 
     const isOpen = props.isOpen ?? new DataSource(false);

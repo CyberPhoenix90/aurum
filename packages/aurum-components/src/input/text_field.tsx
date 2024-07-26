@@ -54,46 +54,46 @@ export function TextField(props: TextFieldProps, children: Renderable[], api: Au
     let { decorators, style, name, form, value, ...inputProps } = props;
 
     if (form && name) {
-        if (!form.schema[getValueOf(name)]) {
+        if (!form.schema.fields[getValueOf(name)]) {
             throw new Error(`Field ${name} not found in form schema`);
         }
 
         if (!value) {
-            value = form.schema[getValueOf(name)].source as DataSource<any>;
+            value = form.schema.fields[getValueOf(name)].source as DataSource<any>;
         }
 
-        if (form.schema[getValueOf(name)].required) {
+        if (form.schema.fields[getValueOf(name)].required) {
             inputProps.required = true;
         }
 
         //@ts-ignore
-        if (form.schema[getValueOf(name)].minLength) {
+        if (form.schema.fields[getValueOf(name)].minLength) {
             //@ts-ignore
-            inputProps.minLength = form.schema[getValueOf(name)].minLength;
+            inputProps.minLength = form.schema.fields[getValueOf(name)].minLength;
         }
 
         //@ts-ignore
-        if (form.schema[getValueOf(name)].min) {
+        if (form.schema.fields[getValueOf(name)].min) {
             //@ts-ignore
-            inputProps.min = form.schema[getValueOf(name)].min;
+            inputProps.min = form.schema.fields[getValueOf(name)].min;
         }
 
         //@ts-ignore
-        if (form.schema[getValueOf(name)].max) {
+        if (form.schema.fields[getValueOf(name)].max) {
             //@ts-ignore
-            inputProps.max = form.schema[getValueOf(name)].max;
+            inputProps.max = form.schema.fields[getValueOf(name)].max;
         }
 
         //@ts-ignore
-        if (form.schema[getValueOf(name)].maxLength) {
+        if (form.schema.fields[getValueOf(name)].maxLength) {
             //@ts-ignore
-            inputProps.maxLength = form.schema[getValueOf(name)].maxLength;
+            inputProps.maxLength = form.schema.fields[getValueOf(name)].maxLength;
         }
 
         //@ts-ignore
-        if (form.schema[getValueOf(name)].match) {
+        if (form.schema.fields[getValueOf(name)].match) {
             //@ts-ignore
-            inputProps.pattern = form.schema[getValueOf(name)].match.source;
+            inputProps.pattern = form.schema.fields[getValueOf(name)].match.source;
         }
 
         inputProps.class = combineClass(api.cancellationToken, inputProps.class, {

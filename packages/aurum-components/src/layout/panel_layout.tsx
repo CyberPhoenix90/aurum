@@ -82,6 +82,26 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
         }
     }
 
+    if (left) {
+        left.props = left.props ?? {};
+    }
+
+    if (right) {
+        right.props = right.props ?? {};
+    }
+
+    if (top) {
+        top.props = top.props ?? {};
+    }
+
+    if (bottom) {
+        bottom.props = bottom.props ?? {};
+    }
+
+    if (content) {
+        content.props = content.props ?? {};
+    }
+
     const leftDockSize =
         left?.props?.size instanceof DuplexDataSource || left?.props?.size instanceof DataSource
             ? left.props?.size

@@ -1,11 +1,11 @@
 import { Aurum } from 'aurumjs';
 import { FormType } from './form.js';
 
-export interface ErrorIndicatorProps {
-    form: FormType<Object, any>;
+export interface ErrorIndicatorProps<T extends Object = Object> {
+    form: FormType<T, any>;
 }
 
-export function ErrorIndicator(props: ErrorIndicatorProps) {
+export function ErrorIndicator<T extends Object = Object>(props: ErrorIndicatorProps<T>) {
     return (
         <div
             style={{
@@ -13,13 +13,13 @@ export function ErrorIndicator(props: ErrorIndicatorProps) {
                 fontSize: '12px'
             }}
         >
-            <ol>
+            <ul>
                 {props.form.fieldsWithViolations.map((field) => (
                     <li>
-                        {props.form.violation[field].value
+                        [{field}] {props.form.violation[field].value.message}
                     </li>
                 ))}
-            </ol>
+            </ul>
             {props.form.submitError}
         </div>
     );
