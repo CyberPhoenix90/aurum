@@ -107,6 +107,31 @@ describe('StorageStream', () => {
         expect(stream.value).toEqual(2);
     });
 
+    it('should be able to listen to enum values', () => {
+        enum TestEnum {
+            FOO,
+            BAR,
+            BAZ
+        }
+
+        const testField = 'enum-test-key';
+        const defaultValue = TestEnum.FOO;
+
+        const stream = storageStream.listenAsEnum(testField, TestEnum, defaultValue);
+
+        debugger;
+        expect(stream.value).toEqual(defaultValue);
+
+        storage.setItem(testField, '1');
+        expect(stream.value).toEqual(TestEnum.BAR);
+
+        storage.setItem(testField, '2');
+        expect(stream.value).toEqual(TestEnum.BAZ);
+
+        storage.setItem(testField, '3');
+        expect(stream.value).toEqual(defaultValue);
+    });
+
     it('should be able to listen to boolean values', () => {
         const testField = 'test-key';
         const defaultValue = false;

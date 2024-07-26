@@ -149,14 +149,19 @@ export class StorageStream {
         return stream;
     }
 
-    public listenAsEnum<T>(key: string, defaultValue: T, cancellationToken?: CancellationToken): DuplexDataSource<T> {
-        const stream = new DuplexDataSource<T>().withInitial((this.storageAPI.getItem(key) as unknown as T) ?? defaultValue);
+    public listenAsEnum<T>(
+        key: string,
+        enumValues: {
+            [key: string]: T;
+        },
+        defaultValue: T,
+        cancellationToken?: CancellationToken
+    ): DuplexDataSource<T> {
+        const stream = new DuplexDataSource<T>().withInitial(parseValue(this.storageAPI.getItem(key)));
 
         this.onChange.subscribe((e) => {
             if (e.key === key || e.key === '*') {
-                stream.updateDownstream(
-                    e.value != undefined ? ((typeof defaultValue === 'number' ? parseInt(e.value) : e.value) as unknown as T) : defaultValue
-                );
+                stream.updateDownstream(parseValue(e.value));
             }
         }, cancellationToken);
 
@@ -169,6 +174,26 @@ export class StorageStream {
         }, cancellationToken);
 
         return stream;
+
+        function parseValue(value: any): T {
+            if (value === undefined || value === null) {
+                return defaultValue;
+            } else if (typeof defaultValue === 'number') {
+                const candidate = parseInt(value) as unknown as T;
+                if (Number.isNaN(candidate) || (candidate as any) in enumValues === false) {
+                    return defaultValue;
+                } else {
+                    return candidate;
+                }
+            } else {
+                const candidate = value as unknown as T;
+                if ((candidate as any) in enumValues === false) {
+                    return defaultValue;
+                } else {
+                    return candidate;
+                }
+            }
+        }
     }
 
     public listenAsArray<T>(key: string, cancellationToken?: CancellationToken): ArrayDataSource<T> {
