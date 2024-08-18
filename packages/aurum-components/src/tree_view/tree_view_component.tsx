@@ -58,7 +58,6 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             theme.highlightColor1
         ],
         (fontFamily, size, fontColor, highlightFont, color4, color1, color3, color2, highlightColor1) => css`
-            height: 100%;
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
@@ -84,8 +83,8 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                         background-color: ${highlightColor1};
                     }
 
-                    margin: -1px 0;
-                    border: 1px solid ${color4};
+                    outline: 1px solid ${color4};
+
                     border-width: 1px 0;
                     background-color: ${color1};
                 }
@@ -219,7 +218,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
                     }
                     break;
                 case 'ArrowRight':
-                    if (getValueOf(focusedEntry.value.children?.length)) {
+                    if (getValueOf(focusedEntry.value.children?.length) || focusedEntry.value.lazyLoad) {
                         if (focusedEntry.value.open.value) {
                             focusedEntry.update(next(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
                         } else {
