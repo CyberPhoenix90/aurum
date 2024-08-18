@@ -151,9 +151,7 @@ export class StorageStream {
 
     public listenAsEnum<T>(
         key: string,
-        enumValues: {
-            [key: string]: T;
-        },
+        enumValues: Record<string, string | number>,
         defaultValue: T,
         cancellationToken?: CancellationToken
     ): DuplexDataSource<T> {

@@ -11,7 +11,7 @@ import { CancellationToken } from './cancellation_token.js';
 
 const FILTERED = Symbol('filtered');
 export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
-    asyncIterator: AsyncGenerator<T>,
+    asyncIterator: Generator<T> | AsyncGenerator<T>,
     operationA: DataSourceOperator<T, A>,
     operationB?: DataSourceOperator<A, B> | CancellationToken,
     operationC?: DataSourceOperator<B, C> | CancellationToken,
