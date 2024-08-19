@@ -151,11 +151,12 @@ export class StorageStream {
 
     public listenAsEnum<T>(
         key: string,
-        enumValues: Record<string, string | number>,
+        enumObject: Record<string, string | number>,
         defaultValue: T,
         cancellationToken?: CancellationToken
     ): DuplexDataSource<T> {
         const stream = new DuplexDataSource<T>().withInitial(parseValue(this.storageAPI.getItem(key)));
+        const enumValues = Object.values(enumObject);
 
         this.onChange.subscribe((e) => {
             if (e.key === key || e.key === '*') {
@@ -178,14 +179,15 @@ export class StorageStream {
                 return defaultValue;
             } else if (typeof defaultValue === 'number') {
                 const candidate = parseInt(value) as unknown as T;
-                if (Number.isNaN(candidate) || (candidate as any) in enumValues === false) {
+                if (Number.isNaN(candidate) || (candidate as any) in enumObject === false) {
                     return defaultValue;
                 } else {
                     return candidate;
                 }
             } else {
                 const candidate = value as unknown as T;
-                if ((candidate as any) in enumValues === false) {
+                //@ts-ignore
+                if ((candidate as any) in enumObject === false && !enumValues.includes(candidate)) {
                     return defaultValue;
                 } else {
                     return candidate;

@@ -1136,6 +1136,16 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             `ArrayDataSource of (${sources.reduce((p, c) => p + (c instanceof ArrayDataSource ? c.name + ' ' : ''), '')})`
         );
 
+        // FromMultipleSources can create severe performance penalties on some operations so if we can avoid the complexity we should
+        // In these 2 cases we can avoid the complexity by returning a regular ArrayDataSource
+        if (Array.isArray(sources) && sources.length === 1) {
+            if (sources[0] instanceof ArrayDataSource) {
+                return sources[0] as ArrayDataSource<T>;
+            } else if (!(sources[0] instanceof DataSource && sources[0] instanceof DuplexDataSource)) {
+                return new ArrayDataSource<T>(sources[0] as T[]);
+            }
+        }
+
         for (let i = 0; i < sources.length; i++) {
             const item = sources[i];
             if (Array.isArray(item)) {
@@ -1672,7 +1682,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public merge(newData: T[]): void {
         if (newData.length === 0) {
-            return this.clear();
+            this.clear();
+            return;
         }
         if (newData === this.data) {
             return;
@@ -1706,6 +1717,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public removeRight(count: number): T[] {
+        // Optimization since clear is often a single operation vs removing items one by one
+        if (count >= this.data.length) {
+            return this.clear();
+        }
         const length = this.data.length;
         const result = this.data.splice(length - count, count);
         if (this.lengthSource.value !== this.data.length) {
@@ -1717,23 +1732,41 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return result;
     }
 
-    public removeLeft(count: number): void {
+    public removeLeft(count: number): T[] {
+        // Optimization since clear is often a single operation vs removing items one by one
+        if (count >= this.data.length) {
+            return this.clear();
+        }
+
         const removed = this.data.splice(0, count);
         if (this.lengthSource.value !== this.data.length) {
             this.lengthSource.update(this.data.length);
         }
         this.update({ operation: 'remove', operationDetailed: 'removeLeft', count, index: 0, items: removed, newState: this.data });
         this.onItemsRemoved.fire(removed);
+
+        return removed;
     }
 
-    public removeWhere(reject: (v: T) => boolean): void {
+    public removeWhere(reject: (v: T) => boolean): T[] {
         const removed = this.data.filter(reject);
+
+        if (removed.length === this.data.length) {
+            return this.clear();
+        }
+
         for (const item of removed) {
             this.remove(item);
         }
+
+        return removed;
     }
 
     public removeAt(index: number, count: number = 1): T[] {
+        if (index === 0 && count === this.data.length) {
+            return this.clear();
+        }
+
         const removed = this.data.splice(index, count);
         this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index, items: removed, newState: this.data });
         this.onItemsRemoved.fire(removed);
@@ -1745,14 +1778,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public removeRange(start: number, end: number): T[] {
-        const removed = this.data.splice(start, end - start);
-        if (this.lengthSource.value !== this.data.length) {
-            this.lengthSource.update(this.data.length);
-        }
-        this.update({ operation: 'remove', operationDetailed: 'remove', count: removed.length, index: start, items: removed, newState: this.data });
-        this.onItemsRemoved.fire(removed);
-
-        return removed;
+        return this.removeAt(start, end - start);
     }
 
     public remove(item: T): T {
@@ -1764,9 +1790,9 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
     }
 
-    public clear(): void {
+    public clear(): T[] {
         if (this.data.length === 0) {
-            return;
+            return [];
         }
 
         const items = this.data;
@@ -1786,6 +1812,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             newState: this.data
         });
         this.onItemsRemoved.fire(items);
+
+        return items;
     }
 
     public some(cb: (item: T, index: number, array: T[]) => boolean): boolean {
@@ -2334,9 +2362,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
                     this.removeRight(change.count);
                     break;
                 case 'remove':
-                    for (let i = 0; i < change.items.length; i++) {
-                        this.remove(this.data[change.index + i]);
-                    }
+                    this.removeAt(change.index, change.count);
                     break;
                 case 'clear':
                     this.clear();
