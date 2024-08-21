@@ -38,7 +38,7 @@ export function AurumRouter(
             }
         });
 
-    const urlDataSource = new DataSource<string>();
+    const urlDataSource = new DataSource<string>(undefined, 'Url Data Source');
 
     if (props.urlProvider) {
         props.urlProvider.pipe(urlDataSource, api.cancellationToken);
@@ -52,6 +52,15 @@ export function AurumRouter(
     }
 
     const activeRoute = new DataSource<AurumElementModel<RouteProps>>();
+    const router = urlDataSource.withInitial(urlDataSource.value).transform(
+        dsUnique(),
+        dsMap((url) => (props.urlPreprocessing ? props.urlPreprocessing(url) : url)),
+        dsMap((path) => ({ path, route: selectRoute(path, resolvedChildren) })),
+        dsFilter((r) => (props.validateNavigation ? props.validateNavigation(r.path, r.route) : true)),
+        dsTap((r) => activeRoute.update(r.route)),
+        dsMap((r) => r.route?.children),
+        api.cancellationToken
+    );
 
     activeRoute.transform(
         dsUnique(),
@@ -66,16 +75,7 @@ export function AurumRouter(
         })
     );
 
-    return urlDataSource
-        .transform(dsUnique(), api.cancellationToken)
-        .withInitial(urlDataSource.value)
-        .transform(
-            dsMap((url) => (props.urlPreprocessing ? props.urlPreprocessing(url) : url)),
-            dsMap((path) => ({ path, route: selectRoute(path, resolvedChildren) })),
-            dsFilter((r) => (props.validateNavigation ? props.validateNavigation(r.path, r.route) : true)),
-            dsTap((r) => activeRoute.update(r.route)),
-            dsMap((r) => r.route?.children)
-        );
+    return router;
 }
 
 function selectRoute(url: string, routes: ReadOnlyArrayDataSource<AurumElementModel<RouteProps>>): AurumElementModel<RouteProps> {

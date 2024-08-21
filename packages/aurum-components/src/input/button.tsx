@@ -10,12 +10,12 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             theme.baseFontSize,
             theme.themeColor0,
             theme.themeColor1,
-            theme.themeColor4,
+            theme.baseFontColor,
             theme.highContrastFontColor,
             theme.primary,
             theme.error
         ],
-        (fontFamily, size, color0, color1, color4, highContrastFontColor, action, error) => css`
+        (fontFamily, size, color0, color1, baseFontColor, highContrastFontColor, action, error) => css`
             font-family: ${fontFamily};
             font-size: ${size};
             outline: none;
@@ -45,7 +45,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 
             &.neutral {
                 background-color: ${color0};
-                color: white;
+                color: ${baseFontColor};
             }
 
             &.destructive {
