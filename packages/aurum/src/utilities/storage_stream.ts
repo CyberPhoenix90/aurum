@@ -155,8 +155,8 @@ export class StorageStream {
         defaultValue: T,
         cancellationToken?: CancellationToken
     ): DuplexDataSource<T> {
-        const stream = new DuplexDataSource<T>().withInitial(parseValue(this.storageAPI.getItem(key)));
         const enumValues = Object.values(enumObject);
+        const stream = new DuplexDataSource<T>().withInitial(parseValue(this.storageAPI.getItem(key)));
 
         this.onChange.subscribe((e) => {
             if (e.key === key || e.key === '*') {
