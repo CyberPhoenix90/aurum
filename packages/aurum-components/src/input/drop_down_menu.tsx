@@ -202,7 +202,7 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
 
     return (
         <div
-            tabindex="0"
+            tabIndex={0}
             onKeyDown={(e) => {
                 switch (e.key) {
                     case 'Escape':
@@ -211,33 +211,17 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                         }
                         break;
                     case 'ArrowDown':
-                        if (isOpen.value) {
-                            if (highlightIndex.value < childSource.length.value - 1) {
-                                highlightIndex.update(highlightIndex.value + 1);
-                            } else {
-                                highlightIndex.update(0);
-                            }
+                        if (highlightIndex.value < childSource.length.value - 1) {
+                            highlightIndex.update(highlightIndex.value + 1);
                         } else {
-                            if (selectedIndex.value < childSource.length.value - 1) {
-                                update(selectedIndex, selectedIndex.value + 1);
-                            } else {
-                                update(selectedIndex, 0);
-                            }
+                            highlightIndex.update(0);
                         }
                         break;
                     case 'ArrowUp':
-                        if (isOpen.value) {
-                            if (highlightIndex.value > 0) {
-                                highlightIndex.update(highlightIndex.value - 1);
-                            } else {
-                                highlightIndex.update(childSource.length.value - 1);
-                            }
+                        if (highlightIndex.value > 0) {
+                            highlightIndex.update(highlightIndex.value - 1);
                         } else {
-                            if (selectedIndex.value > 0) {
-                                update(selectedIndex, selectedIndex.value - 1);
-                            } else {
-                                update(selectedIndex, childSource.length.value - 1);
-                            }
+                            highlightIndex.update(childSource.length.value - 1);
                         }
                         break;
                     case 'Enter':

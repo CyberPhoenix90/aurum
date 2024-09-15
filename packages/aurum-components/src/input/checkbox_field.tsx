@@ -1,11 +1,11 @@
 import { Aurum, DataSource, DuplexDataSource, GenericDataSource, getValueOf } from 'aurumjs';
 import { TextField, TextFieldProps } from './text_field.js';
 
-export interface ToggleFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value' | 'min' | 'max'> {
+export interface CheckboxFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value' | 'min' | 'max'> {
     value?: GenericDataSource<boolean> | boolean;
 }
 
-export function ToggleField(props: ToggleFieldProps) {
+export function CheckboxField(props: CheckboxFieldProps) {
     const { ...inputProps } = props;
 
     if (props.form && props.name && !props.value) {

@@ -32,6 +32,7 @@ export interface TreeViewComponentProps<T> {
     noEntriesMsg?: string;
     renaming?: DataSource<TreeEntry<T>>;
     entries: ReadOnlyArrayDataSource<TreeEntry<T>> | ArrayDataSource<TreeEntry<T>>;
+    disableAutoOpenOnSelect?: boolean;
     canDrag?(draggedEntry: TreeEntry<T>): boolean;
     canDrop?(draggedEntry: TreeEntry<T>, targetEntry: TreeEntry<T>): boolean;
     onArrowClicked?(e: MouseEvent, entry: TreeEntry<T>): void;
@@ -182,6 +183,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
                     isActive,
                     allowFocus: props.allowFocus
                 }}
+                disableAutoOpenOnSelect={props.disableAutoOpenOnSelect ?? false}
                 events={{
                     onEntryDoubleClicked: props.onEntryDoubleClicked,
                     onEntryClicked: props.onEntryClicked,

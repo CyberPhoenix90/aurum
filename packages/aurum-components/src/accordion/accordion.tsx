@@ -173,7 +173,7 @@ export function Accordion(props: AccordionProps, children: Renderable[], api: Au
                 return (
                     <div class={['accordion-item', open.transform(dsMap((v) => (v ? 'open' : 'closed')))]}>
                         <div
-                            tabindex="0"
+                            tabIndex={0}
                             onKeyDown={(e) => {
                                 if (e.key === 'ArrowDown') {
                                     e.preventDefault();

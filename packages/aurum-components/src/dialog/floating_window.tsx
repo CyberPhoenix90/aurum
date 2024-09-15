@@ -184,7 +184,7 @@ export function FloatingWindow(
             onAttach={(e) => {
                 e.focus();
             }}
-            tabindex={0}
+            tabIndex={0}
             onKeyUp={(e) => {
                 if (e.key === 'Escape') {
                     props.onEscape?.(e, this);

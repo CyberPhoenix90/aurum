@@ -169,7 +169,7 @@ function renderKey(key: string, obj: any, props: JSONRendererBranchProps, id: st
                         class="clickable"
                         onClick={handleReadValueClick}
                         onFocus={handleReadValueClick}
-                        tabindex="0"
+                        tabIndex={0}
                     >
                         {renderValue(key, obj, props, id)}
                     </div>

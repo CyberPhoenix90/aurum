@@ -19,6 +19,7 @@ interface FocusData {
 }
 
 interface TreeViewNodeProps {
+    disableAutoOpenOnSelect: boolean;
     ancestors: TreeEntry<any>[];
     fileTypePriority: FileTypePriority;
     longFileNameBehavior: 'hscroll' | 'wrap' | 'elipsis';
@@ -134,7 +135,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                     focusData.isActive.update(true);
                 }
             }}
-            tabindex="-1"
+            tabIndex="-1"
             onKeyDown={(e) => {
                 props.events.onKeyDown?.(e, entry, props.ancestors);
             }}
@@ -155,7 +156,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
             }}
             onDblClick={(event) => events.onEntryDoubleClicked?.(event, entry, props.ancestors)}
             onClick={(event) => {
-                if (entry.open) {
+                if (entry.open && !props.disableAutoOpenOnSelect) {
                     if (entry.open instanceof DataSource) {
                         entry.open.update(!entry.open.value);
                     } else {
@@ -169,6 +170,15 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
             <div
                 onClick={(event) => {
                     events.onArrowClicked?.(event, entry, props.ancestors);
+                    if (props.disableAutoOpenOnSelect) {
+                        if (entry.open) {
+                            if (entry.open instanceof DataSource) {
+                                entry.open.update(!entry.open.value);
+                            } else {
+                                entry.open.updateDownstream(!entry.open.value);
+                            }
+                        }
+                    }
                 }}
                 class={getArrowClass(entry, loading, loaded)}
             ></div>
@@ -226,9 +236,10 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                                 getValueOf(entry.children)
                                     .map((e) => e.name)
                                     .filter((e) => e instanceof DataSource) as any as DataSource<TreeEntry<any>>[]
-                            ) as ArrayDataSource<TreeEntry<any>>
+                            ) as any as ArrayDataSource<TreeEntry<any>>
                         ).map((c) => (
                             <TreeEntryRenderable
+                                disableAutoOpenOnSelect={props.disableAutoOpenOnSelect}
                                 ancestors={ancestors}
                                 fileTypePriority={fileTypePriority}
                                 longFileNameBehavior={props.longFileNameBehavior ?? 'hscroll'}

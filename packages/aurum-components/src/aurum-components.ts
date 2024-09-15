@@ -14,13 +14,16 @@ export * from './dialog/simple_action_modal.js';
 export * from './input/file_picker.js';
 export * from './input/color_picker.js';
 export * from './input/number_field.js';
-export * from './input/toggle_field.js';
+export * from './input/checkbox_field.js';
 export * from './input/text_field.js';
 export * from './input/text_area_field.js';
 export * from './input/button.js';
+export * from './input/toggle_component.js';
 export * from './input/submit.js';
 export * from './input/drop_down_menu.js';
 export * from './input/json_renderer.js';
+
+export * from './list_select/list_select.js';
 
 export * from './form/form.js';
 export * from './form/loading_spinner.js';
