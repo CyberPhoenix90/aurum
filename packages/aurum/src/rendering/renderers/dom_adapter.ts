@@ -81,7 +81,7 @@ export const defaultEvents: MapLike<string> = {
 /**
  * @internal
  */
-export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabindex', 'role', 'contenteditable', 'slot', 'title'];
+export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabIndex', 'role', 'contenteditable', 'slot', 'title'];
 
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,
