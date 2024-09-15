@@ -13,7 +13,7 @@ export interface HTMLNodeProps<T> {
     name?: AttributeValue;
     draggable?: AttributeValue;
     class?: ClassType;
-    tabindex?: AttributeValue;
+    tabIndex?: AttributeValue;
     style?: StyleType;
     title?: AttributeValue;
     role?: AttributeValue;

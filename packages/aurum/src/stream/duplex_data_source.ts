@@ -119,7 +119,7 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
     }
 
     public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<T> {
-        return this.updateDownstreamEvent.toAsyncIterator(cancellation);
+        return this.updateDownstreamEvent.toAsyncIterator(undefined, cancellation);
     }
 
     public static toDuplexDataSource<T>(value: T | DuplexDataSource<T>): DuplexDataSource<T> {

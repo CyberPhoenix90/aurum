@@ -419,7 +419,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     }
 
     public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<T> {
-        return this.updateEvent.toAsyncIterator(cancellation);
+        return this.updateEvent.toAsyncIterator(this.errorEvent, cancellation);
     }
 
     /**
@@ -910,6 +910,10 @@ export interface CollectionChange<T> {
     previousState?: T[];
 }
 
+export interface ReadOnlyArrayDataSourceView<T> extends ReadOnlyArrayDataSource<T> {
+    refresh(): void;
+}
+
 export interface ReadOnlyArrayDataSource<T> {
     [Symbol.iterator](): IterableIterator<T>;
     onItemsAdded: EventEmitter<T[]>;
@@ -1379,7 +1383,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<CollectionChange<T>> {
-        return this.updateEvent.toAsyncIterator(cancellation);
+        return this.updateEvent.toAsyncIterator(undefined, cancellation);
     }
 
     public static toArrayDataSource<T>(value: T[] | ArrayDataSource<T>): ArrayDataSource<T> {
@@ -1844,7 +1848,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     public flat(
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
+    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSourceView<U> : ReadOnlyArrayDataSourceView<FlatArray<T, 1>> {
         const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
 
         return view as any;
@@ -1885,7 +1889,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return result;
     }
 
-    public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReversedArrayView<T> {
+    public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSourceView<T> {
         const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()', config);
 
         return view;
@@ -1910,7 +1914,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         dependencies: ReadOnlyDataSource<any>[] = [],
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): ReadOnlyArrayDataSource<T> {
+    ): ReadOnlyArrayDataSourceView<T> {
         const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()', config);
 
         dependencies.forEach((dep) => {
@@ -1956,7 +1960,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return view;
     }
 
-    public unique(cancellationToken?: CancellationToken, config?: ViewConfig): UniqueArrayView<T> {
+    public unique(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T> {
         return new UniqueArrayView(this, cancellationToken, this.name + '.unique()', config);
     }
 
@@ -2241,7 +2245,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         dependencies: ReadOnlyDataSource<any>[] = [],
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): ReadOnlyArrayDataSource<T> {
+    ): ReadOnlyArrayDataSourceView<T> {
         const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()', config);
 
         dependencies.forEach((dep) => {
@@ -2914,7 +2918,7 @@ export class MapDataSource<K, V> {
     }
 
     public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<MapChange<K, V>> {
-        return this.updateEvent.toAsyncIterator(cancellation);
+        return this.updateEvent.toAsyncIterator(undefined, cancellation);
     }
 
     public pipe(target: MapDataSource<K, V>, cancellation?: CancellationToken): void {
@@ -3278,7 +3282,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     }
 
     public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<SetChange<K>> {
-        return this.updateEvent.toAsyncIterator(cancellation);
+        return this.updateEvent.toAsyncIterator(undefined, cancellation);
     }
 
     /**

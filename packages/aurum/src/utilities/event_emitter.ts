@@ -54,20 +54,43 @@ export class EventEmitter<T> {
         this.onAfterFire = [];
     }
 
-    public toAsyncIterator(cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
-        const buffer = new Array<IteratorResult<T>>();
-        let sink: (value: IteratorResult<T>) => void;
+    public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>): EventEmitter<T> {
+        const event = new EventEmitter<T>();
+        (async () => {
+            for await (const value of iterator) {
+                event.fire(value);
+            }
+        })();
+        return event;
+    }
+
+    public toAsyncIterator(errorChannel: EventEmitter<Error>, cancellationToken?: CancellationToken): AsyncIterableIterator<T> {
+        const buffer = new Array<{ value?: IteratorResult<T>; error?: Error }>();
+        let sink: (arg: { value?: IteratorResult<T>; error?: Error }) => void;
+
+        errorChannel?.subscribe((error) => {
+            if (sink) {
+                sink({ error });
+                sink = undefined;
+            } else {
+                buffer.push({ error });
+            }
+        }, cancellationToken);
 
         cancellationToken?.addCancellable(() => {
             if (sink) {
                 sink({
-                    done: true,
-                    value: undefined
+                    value: {
+                        done: true,
+                        value: undefined
+                    }
                 });
             } else {
                 buffer.push({
-                    done: true,
-                    value: undefined
+                    value: {
+                        done: true,
+                        value: undefined
+                    }
                 });
             }
         });
@@ -75,14 +98,18 @@ export class EventEmitter<T> {
         this.subscribe((value) => {
             if (sink) {
                 sink({
-                    done: false,
-                    value
+                    value: {
+                        done: false,
+                        value
+                    }
                 });
                 sink = undefined;
             } else {
                 buffer.push({
-                    done: false,
-                    value
+                    value: {
+                        done: false,
+                        value
+                    }
                 });
             }
         }, cancellationToken);
@@ -93,11 +120,22 @@ export class EventEmitter<T> {
             },
             async next(): Promise<IteratorResult<T>> {
                 if (buffer.length > 0) {
-                    return buffer.shift();
+                    const next = buffer.shift();
+                    if (next.error) {
+                        throw next.error;
+                    } else {
+                        return next.value;
+                    }
                 }
 
-                return new Promise<IteratorResult<T>>((resolve) => {
-                    sink = resolve;
+                return new Promise<IteratorResult<T>>((resolve, reject) => {
+                    sink = (value) => {
+                        if (value.error) {
+                            reject(value.error);
+                        } else {
+                            resolve(value.value);
+                        }
+                    };
                 });
             }
         };
