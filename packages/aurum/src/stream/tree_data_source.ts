@@ -121,13 +121,13 @@ export class TreeDataSource<T, K extends keyof T> {
         }
     }
 
-    public listen(callback: Callback<TreeChange<T>>, cancellationToken: CancellationToken): Callback<void> {
+    public listen(callback: Callback<TreeChange<T>>, cancellationToken: CancellationToken): void {
         this.watch(cancellationToken);
 
-        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+        return this.updateEvent.subscribe(callback, cancellationToken);
     }
 
-    public listenAndRepeat(callback: Callback<TreeChange<T>>, cancellationToken: CancellationToken): Callback<void> {
+    public listenAndRepeat(callback: Callback<TreeChange<T>>, cancellationToken: CancellationToken): void {
         for (const { parent, node, index } of this.iterateLevelWithMetaData(this.roots as any, 0)) {
             callback({
                 changedNode: node,
@@ -137,7 +137,7 @@ export class TreeDataSource<T, K extends keyof T> {
             });
         }
 
-        return this.listen(callback, cancellationToken);
+        this.listen(callback, cancellationToken);
     }
 
     private adaptNodeList(nodes: ArrayDataSource<GenericTree<T, K>>, token: CancellationToken, nodeList = new ArrayDataSource<T>()): ArrayDataSource<T> {

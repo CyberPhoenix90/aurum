@@ -281,16 +281,16 @@ export class Stream<I, O = I> {
         return this.output;
     }
 
-    public listen(callback: Callback<O>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.output.listen(callback, cancellationToken);
+    public listen(callback: Callback<O>, cancellationToken?: CancellationToken): void {
+        this.output.listen(callback, cancellationToken);
     }
 
-    public listenAndRepeat(callback: Callback<O>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.output.listenAndRepeat(callback, cancellationToken);
+    public listenAndRepeat(callback: Callback<O>, cancellationToken?: CancellationToken): void {
+        this.output.listenAndRepeat(callback, cancellationToken);
     }
 
-    public listenOnce(callback: Callback<O>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.output.listenOnce(callback, cancellationToken);
+    public listenOnce(callback: Callback<O>, cancellationToken?: CancellationToken): void {
+        this.output.listenOnce(callback, cancellationToken);
     }
 
     public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<O> {

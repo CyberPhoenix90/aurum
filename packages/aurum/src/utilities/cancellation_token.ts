@@ -22,6 +22,20 @@ export class CancellationToken {
     public static expired = new CancellationToken();
     public static forever = new CancellationToken();
 
+    public static fromPromise<T>(promise: Promise<T>): CancellationToken {
+        const token = new CancellationToken();
+        promise.then(() => {
+            token.cancel();
+        });
+        return token;
+    }
+
+    public static fromTimeout(time: number): CancellationToken {
+        const token = new CancellationToken();
+        token.setTimeout(() => token.cancel(), time);
+        return token;
+    }
+
     public hasCancellables(): boolean {
         return this.cancelables.length > 0;
     }
@@ -183,7 +197,9 @@ export class CancellationToken {
             return;
         }
         this._isCancelled = true;
-        this.cancelables.forEach((c) => c());
+        for (const c of this.cancelables) {
+            c();
+        }
         this.cancelables = undefined;
     }
 }

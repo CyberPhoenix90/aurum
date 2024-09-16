@@ -18,11 +18,11 @@ export interface ReadOnlyObjectDataSource<T> {
     pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<FlatArray<T[K], 1>>;
     pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyDataSource<T[K]>;
     pickDuplex<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DuplexDataSource<T[K]>;
-    listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
-    listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
+    listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
+    listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
     map<D>(mapper: (key: keyof T) => D): ArrayDataSource<D>;
-    listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void>;
+    listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void;
+    listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
     keys(): string[];
     values(): any;
     get<K extends keyof T>(key: K): T[K];
@@ -191,8 +191,8 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
     /**
      * Listen to changes of the object
      */
-    public listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
     }
 
     public map<D>(mapper: (key: keyof T, value: T[keyof T]) => D): ArrayDataSource<D> {
@@ -220,8 +220,8 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
     /**
      * Same as listen but will immediately call the callback with the current value of each key
      */
-    public listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): Callback<void> {
-        const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
         for (const key in this.data) {
             callback({
                 key,
@@ -230,35 +230,30 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
                 deleted: false
             });
         }
-        return c;
     }
 
     /**
      * Same as listenOnKey but will immediately call the callback with the current value first
      */
-    public listenOnKeyAndRepeat<K extends keyof T>(
-        key: K,
-        callback: Callback<ObjectChange<T, keyof T>>,
-        cancellationToken?: CancellationToken
-    ): Callback<void> {
+    public listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
         callback({
             key,
             newValue: this.data[key],
             oldValue: undefined
         });
 
-        return this.listenOnKey(key, callback, cancellationToken);
+        this.listenOnKey(key, callback, cancellationToken);
     }
 
     /**
      * Listen to changes of a single key of the object
      */
-    public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void {
         if (!this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.set(key, new EventEmitter());
         }
         const event = this.updateEventOnKey.get(key);
-        return event.subscribe(callback as any, cancellationToken).cancel;
+        event.subscribe(callback as any, cancellationToken);
     }
 
     /**

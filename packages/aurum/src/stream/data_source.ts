@@ -19,9 +19,9 @@ import {
 export interface ReadOnlyDataSource<T> {
     readonly value: T;
     readonly name: string;
-    listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-    listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+    listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void;
+    listen(callback: Callback<T>, cancellationToken?: CancellationToken): void;
+    listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
     combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
@@ -121,9 +121,9 @@ export interface ReadOnlyDataSource<T> {
 export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
     readonly value: T;
     readonly name: string;
-    listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-    listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void>;
+    listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void;
+    listen(callback: Callback<T>, cancellationToken?: CancellationToken): void;
+    listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
     withInitial(value: T): this;
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
@@ -359,7 +359,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const result = new DataSource<T>();
 
         for (const s of sources) {
-            (s as any).listenInternal((v) => result.update(v), cancellation);
+            (s as any).listen((v) => result.update(v), cancellation);
         }
 
         result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
@@ -508,16 +508,11 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void {
         if (this.primed) {
             callback(this.value);
         }
-        return this.listen(callback, cancellationToken);
-    }
-
-    private listenAndRepeatInternal(callback: Callback<T>, cancellationToken?: CancellationToken, parent?: ReadOnlyDataSource<any>): Callback<void> {
-        callback(this.value);
-        return this.listenInternal(callback, cancellationToken, parent);
+        this.listen(callback, cancellationToken);
     }
 
     /**
@@ -526,14 +521,8 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.listenInternal(callback, cancellationToken);
-    }
-
-    private listenInternal(callback: Callback<T>, cancellationToken?: CancellationToken, parent?: ReadOnlyDataSource<any>): Callback<void> {
-        const cancel = this.updateEvent.subscribe(callback, cancellationToken).cancel;
-
-        return cancel;
+    public listen(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
     }
 
     /**
@@ -542,8 +531,8 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+    public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribeOnce(callback, cancellationToken);
     }
 
     public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
@@ -578,7 +567,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             token = cancellationToken;
         }
         const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
-        (this.primed ? this.listenAndRepeatInternal : this.listenInternal).call(this, processTransform<T, K>(operations as any, result), token);
+        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
         this.onError((e) => result.emitError(e), token);
 
         return result;
@@ -918,9 +907,9 @@ export interface ReadOnlyArrayDataSource<T> {
     [Symbol.iterator](): IterableIterator<T>;
     onItemsAdded: EventEmitter<T[]>;
     onItemsRemoved: EventEmitter<T[]>;
-    listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
-    listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void>;
+    listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void;
+    listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void;
+    listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<CollectionChange<T>>;
     length: ReadOnlyDataSource<number>;
     getData(): ReadonlyArray<T>;
@@ -1410,7 +1399,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     /**
      * Same as listen but will immediately call the callback with an append of all existing elements first
      */
-    public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void {
         if (this.data.length) {
             callback({
                 operation: 'add',
@@ -1421,7 +1410,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                 count: this.data.length
             });
         }
-        return this.listen(callback, cancellationToken);
+        this.listen(callback, cancellationToken);
     }
 
     /**
@@ -1446,12 +1435,12 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         });
     }
 
-    public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listen(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
     }
 
-    public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribeOnce(callback, cancellationToken).cancel;
+    public listenOnce(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribeOnce(callback, cancellationToken);
     }
 
     /**
@@ -2971,15 +2960,15 @@ export class MapDataSource<K, V> {
     /**
      * Listen to changes of the object
      */
-    public listen(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listen(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): void {
+        return this.updateEvent.subscribe(callback, cancellationToken);
     }
 
     /**
      * Same as listen but will immediately call the callback with the current value of each key
      */
-    public listenAndRepeat(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
-        const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listenAndRepeat(callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): void {
+        const c = this.updateEvent.subscribe(callback, cancellationToken);
         for (const key of this.data.keys()) {
             callback({
                 key,
@@ -3081,25 +3070,25 @@ export class MapDataSource<K, V> {
     /**
      * Same as listenOnKey but will immediately call the callback with the current value first
      */
-    public listenOnKeyAndRepeat(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenOnKeyAndRepeat(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): void {
         callback({
             key,
             newValue: this.data.get(key),
             oldValue: undefined
         });
 
-        return this.listenOnKey(key, callback, cancellationToken);
+        this.listenOnKey(key, callback, cancellationToken);
     }
 
     /**
      * Listen to changes of a single key of the object
      */
-    public listenOnKey(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenOnKey(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): void {
         if (!this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.set(key, new EventEmitter());
         }
         const event = this.updateEventOnKey.get(key);
-        return event.subscribe(callback, cancellationToken).cancel;
+        return event.subscribe(callback, cancellationToken);
     }
 
     /**
@@ -3219,10 +3208,10 @@ export interface ReadOnlySetDataSource<K> {
     isIdenticalTo(otherSet: ReadOnlySetDataSource<K> | Set<K>): boolean;
 
     pick(key: K, cancellationToken?: CancellationToken): DataSource<boolean>;
-    listen(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): Callback<void>;
-    listenAndRepeat(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnKeyAndRepeat(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): Callback<void>;
-    listenOnKey(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): Callback<void>;
+    listen(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): void;
+    listenAndRepeat(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): void;
+    listenOnKeyAndRepeat(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): void;
+    listenOnKey(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): void;
     map<D>(mapper: (key: K) => D): ReadOnlyArrayDataSource<D>;
     keys(): IterableIterator<K>;
     has(key: K): boolean;
@@ -3505,42 +3494,41 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     /**
      * Listen to changes of the object
      */
-    public listen(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listen(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
     }
 
     /**
      * Same as listen but will immediately call the callback with the current value of each key
      */
-    public listenAndRepeat(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): Callback<void> {
-        const c = this.updateEvent.subscribe(callback, cancellationToken).cancel;
+    public listenAndRepeat(callback: Callback<SetChange<K>>, cancellationToken?: CancellationToken): void {
+        this.updateEvent.subscribe(callback, cancellationToken);
         for (const key of this.data.keys()) {
             callback({
                 key,
                 exists: true
             });
         }
-        return c;
     }
 
     /**
      * Same as listenOnKey but will immediately call the callback with the current value first
      */
-    public listenOnKeyAndRepeat(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenOnKeyAndRepeat(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): void {
         callback(this.has(key));
 
-        return this.listenOnKey(key, callback, cancellationToken);
+        this.listenOnKey(key, callback, cancellationToken);
     }
 
     /**
      * Listen to changes of a single key of the object
      */
-    public listenOnKey(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenOnKey(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): void {
         if (!this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.set(key, new EventEmitter());
         }
         const event = this.updateEventOnKey.get(key);
-        return event.subscribe(callback, cancellationToken).cancel;
+        event.subscribe(callback, cancellationToken);
     }
 
     public toArrayDataSource(cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<K> {

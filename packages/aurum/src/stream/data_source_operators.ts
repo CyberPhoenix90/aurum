@@ -271,9 +271,10 @@ export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperat
                     state.update(state.value - 1);
                     resolve(v);
                 } else {
-                    const cancel = state.listen(() => {
+                    const token = new CancellationToken();
+                    state.listen(() => {
                         if (state.value > 0) {
-                            cancel();
+                            token.cancel();
                             state.update(state.value - 1);
                             resolve(v);
                         }
@@ -333,12 +334,13 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
             if (queue.length === 1) {
                 return processItem();
             } else {
-                const unsub = onDequeue.subscribe(async () => {
+                const token = new CancellationToken();
+                onDequeue.subscribe(async () => {
                     if (queue[0] === v) {
-                        unsub.cancel();
+                        token.cancel();
                         return processItem();
                     }
-                });
+                }, token);
             }
         }
     };

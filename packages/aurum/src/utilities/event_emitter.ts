@@ -4,29 +4,15 @@ import { Callback } from './common.js';
 /**
  * @internal
  */
-export interface EventSubscriptionFacade {
-    cancel(): void;
-}
-
-/**
- * @internal
- */
 export type EventCallback<T> = (data: T) => void;
-
-interface EventSubscription<T> {
-    callback: EventCallback<T>;
-}
 
 /**
  * Event emitter is at the core of aurums stream system. It's a basic pub sub style typesafe event system optimized for high update throughput
  */
 export class EventEmitter<T> {
+    private static id: number = 0;
     private isFiring: boolean;
     private onAfterFire: Array<() => void>;
-    /**
-     * Callback that if set is called when all subscriptions are removed
-     */
-    public onEmpty: Callback<void>;
 
     private static leakWarningThreshold: number;
 
@@ -42,14 +28,15 @@ export class EventEmitter<T> {
      * returns the count of subscriptions both one time and regular
      */
     public get subscriptions(): number {
-        return this.subscribeChannel.length + this.subscribeOnceChannel.length;
+        return this.subscribeChannel.size + this.subscribeOnceChannel.length;
     }
 
-    private subscribeChannel: EventSubscription<T>[];
-    private subscribeOnceChannel: EventSubscription<T>[];
+    private subscribeChannel: Map<number, Callback<T>>;
+    private subscribeOnceChannel: Callback<T>[];
+    private subscribeCache: Callback<T>[];
 
     constructor() {
-        this.subscribeChannel = [];
+        this.subscribeChannel = new Map();
         this.subscribeOnceChannel = [];
         this.onAfterFire = [];
     }
@@ -144,26 +131,22 @@ export class EventEmitter<T> {
     /**
      * Subscribe to the event. The callback will be called whenever the event fires an update
      */
-    public subscribe(callback: EventCallback<T>, cancellationToken?: CancellationToken): EventSubscriptionFacade {
-        const { facade } = this.createSubscription(callback, this.subscribeChannel, cancellationToken);
-        if (EventEmitter.leakWarningThreshold && this.subscribeChannel.length > EventEmitter.leakWarningThreshold) {
-            console.warn(`Observable has ${this.subscribeChannel.length} subscriptions. This could potentially indicate a memory leak`);
+    public subscribe(callback: EventCallback<T>, cancellationToken?: CancellationToken): void {
+        this.createSubscription(callback, cancellationToken);
+        if (EventEmitter.leakWarningThreshold && this.subscribeChannel.size > EventEmitter.leakWarningThreshold) {
+            console.warn(`Observable has ${this.subscribeChannel.size} subscriptions. This could potentially indicate a memory leak`);
         }
-
-        return facade;
     }
 
     /**
      * Subscribe to the event. The callback will be called when the event next fires an update after which the subscription is cancelled
      */
-    public subscribeOnce(callback: Callback<T>, cancellationToken?: CancellationToken) {
-        const { facade } = this.createSubscription(callback, this.subscribeOnceChannel, cancellationToken);
+    public subscribeOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.createSubscriptionOnce(callback, cancellationToken);
 
         if (EventEmitter.leakWarningThreshold && this.subscribeOnceChannel.length > EventEmitter.leakWarningThreshold) {
             console.warn(`Observable has ${this.subscribeOnceChannel.length} one time subscriptions. This could potentially indicate a memory leak`);
         }
-
-        return facade;
     }
 
     /**
@@ -178,14 +161,14 @@ export class EventEmitter<T> {
      */
     public cancelAll(): void {
         if (!this.isFiring) {
-            this.subscribeChannel.length = 0;
+            this.subscribeChannel.clear();
+            this.subscribeCache = undefined;
             this.subscribeOnceChannel.length = 0;
-            this.onEmpty?.();
         } else {
             this.onAfterFire.push(() => {
-                this.subscribeChannel.length = 0;
+                this.subscribeCache = undefined;
+                this.subscribeChannel.clear();
                 this.subscribeOnceChannel.length = 0;
-                this.onEmpty?.();
             });
         }
     }
@@ -203,7 +186,7 @@ export class EventEmitter<T> {
      * to all subscribers simply because of one faulty subscriber
      */
     public fire(data?: T): void {
-        const length = this.subscribeChannel.length;
+        const length = this.subscribeChannel.size;
         const lengthOnce = this.subscribeOnceChannel.length;
         if (length === 0 && lengthOnce === 0) {
             //Cut some overhead in the case nothing is listening
@@ -213,9 +196,13 @@ export class EventEmitter<T> {
         this.isFiring = true;
         let error = undefined;
 
+        if (this.subscribeCache === undefined) {
+            this.subscribeCache = Array.from(this.subscribeChannel.values());
+        }
+
         for (let i = 0; i < length; i++) {
             try {
-                this.subscribeChannel[i].callback(data);
+                this.subscribeCache[i](data);
             } catch (e) {
                 error = e;
                 console.error(e);
@@ -225,7 +212,7 @@ export class EventEmitter<T> {
         if (this.subscribeOnceChannel.length > 0) {
             for (let i = 0; i < lengthOnce; i++) {
                 try {
-                    this.subscribeOnceChannel[i].callback(data);
+                    this.subscribeOnceChannel[i](data);
                 } catch (e) {
                     error = e;
                     console.error(e);
@@ -242,46 +229,60 @@ export class EventEmitter<T> {
         }
     }
 
-    private createSubscription(
-        callback: EventCallback<T>,
-        channel: EventSubscription<T>[],
-        cancellationToken?: CancellationToken
-    ): { subscription: EventSubscription<T>; facade: EventSubscriptionFacade } {
-        const that: this = this;
-
-        const subscription: EventSubscription<T> = {
-            callback
-        };
-
-        const facade: EventSubscriptionFacade = {
-            cancel() {
-                that.cancel(subscription, channel);
-            }
-        };
-
+    private createSubscriptionOnce(callback: EventCallback<T>, cancellationToken?: CancellationToken): void {
         if (cancellationToken !== undefined) {
-            cancellationToken.addCancellable(() => that.cancel(subscription, channel));
+            cancellationToken.addCancellable(() => this.cancelOnce(callback));
         }
         if (this.isFiring) {
-            this.onAfterFire.push(() => channel.push(subscription));
+            this.onAfterFire.push(() => this.subscribeOnceChannel.push(callback));
         } else {
-            channel.push(subscription);
+            this.subscribeOnceChannel.push(callback);
         }
-
-        return { subscription, facade };
     }
 
-    private cancel(subscription: EventSubscription<T>, channel: EventSubscription<T>[]): void {
-        let index: number = channel.indexOf(subscription);
-        if (index >= 0) {
-            if (!this.isFiring) {
-                channel.splice(index, 1);
-                if (!this.hasSubscriptions()) {
-                    this.onEmpty?.();
+    private createSubscription(callback: EventCallback<T>, cancellationToken?: CancellationToken): void {
+        const id = EventEmitter.id++;
+
+        if (cancellationToken !== undefined) {
+            cancellationToken.addCancellable(() => this.cancel(id));
+        }
+        if (this.isFiring) {
+            this.onAfterFire.push(() => {
+                if (this.subscribeCache === undefined) {
+                    this.subscribeCache = Array.from(this.subscribeChannel.values());
                 }
-            } else {
-                this.onAfterFire.push(() => this.cancel(subscription, channel));
+                this.subscribeCache.push(callback);
+                this.subscribeChannel.set(id, callback);
+            });
+        } else {
+            if (this.subscribeCache === undefined) {
+                this.subscribeCache = Array.from(this.subscribeChannel.values());
             }
+            this.subscribeCache.push(callback);
+            this.subscribeChannel.set(id, callback);
+        }
+    }
+
+    private cancelOnce(subscription: Callback<T>): void {
+        if (!this.isFiring) {
+            let index: number = this.subscribeOnceChannel.indexOf(subscription);
+            if (index >= 0) {
+                this.subscribeOnceChannel.splice(index, 1);
+            } else {
+                this.onAfterFire.push(() => this.cancelOnce(subscription));
+            }
+        }
+    }
+
+    private cancel(id: number): void {
+        if (!this.isFiring) {
+            this.subscribeCache = undefined;
+            this.subscribeChannel.delete(id);
+        } else {
+            this.onAfterFire.push(() => {
+                this.subscribeCache = undefined;
+                this.cancel(id);
+            });
         }
     }
 }

@@ -227,11 +227,11 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void {
         if (this.primed) {
             callback(this.value);
         }
-        return this.listen(callback, cancellationToken);
+        this.listen(callback, cancellationToken);
     }
 
     /**
@@ -240,12 +240,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listen(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.listenInternal(callback, cancellationToken);
-    }
-
-    private listenInternal(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateDownstreamEvent.subscribe(callback, cancellationToken).cancel;
+    public listen(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateDownstreamEvent.subscribe(callback, cancellationToken);
     }
 
     /**
@@ -254,8 +250,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenUpstream(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateUpstreamEvent.subscribe(callback, cancellationToken).cancel;
+    public listenUpstream(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateUpstreamEvent.subscribe(callback, cancellationToken);
     }
 
     /**
@@ -264,12 +260,12 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenUpstreamAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
+    public listenUpstreamAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void {
         if (this.primed) {
             callback(this.value);
         }
 
-        return this.updateUpstreamEvent.subscribe(callback, cancellationToken).cancel;
+        this.updateUpstreamEvent.subscribe(callback, cancellationToken);
     }
 
     /**
@@ -278,8 +274,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenUpstreamOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateUpstreamEvent.subscribeOnce(callback, cancellationToken).cancel;
+    public listenUpstreamOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateUpstreamEvent.subscribeOnce(callback, cancellationToken);
     }
 
     /**
@@ -288,8 +284,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
      * @param cancellationToken Optional token to control the cancellation of the subscription
      * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
      */
-    public listenDownstream(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateDownstreamEvent.subscribe(callback, cancellationToken).cancel;
+    public listenDownstream(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateDownstreamEvent.subscribe(callback, cancellationToken);
     }
 
     public downStreamToDataSource(cancellationToken?: CancellationToken): DataSource<T> {
@@ -506,8 +502,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
         return this;
     }
 
-    public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): Callback<void> {
-        return this.updateDownstreamEvent.subscribeOnce(callback, cancellationToken).cancel;
+    public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
+        this.updateDownstreamEvent.subscribeOnce(callback, cancellationToken);
     }
 
     /**
