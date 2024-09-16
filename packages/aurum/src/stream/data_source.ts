@@ -1837,7 +1837,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     public flat(
         cancellationToken?: CancellationToken,
         config?: ViewConfig
-    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSourceView<U> : ReadOnlyArrayDataSourceView<FlatArray<T, 1>> {
+    ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
         const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
 
         return view as any;
