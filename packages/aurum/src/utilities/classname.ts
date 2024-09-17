@@ -196,7 +196,12 @@ export function combineStyle(cancellationToken: CancellationToken, ...args: Styl
             //@ts-ignore
             for (const key in attr) {
                 if (attr[key] instanceof DataSource) {
-                    sources.push(attr[key].transform((v) => `${camelCaseToKebabCase(key)}:${v};`, cancellationToken));
+                    sources.push(
+                        attr[key].transform(
+                            dsMap((v: string) => `${camelCaseToKebabCase(key)}:${v};`),
+                            cancellationToken
+                        )
+                    );
                 } else {
                     fixed += `${camelCaseToKebabCase(key)}:${attr[key]};`;
                 }

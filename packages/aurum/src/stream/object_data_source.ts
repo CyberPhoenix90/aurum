@@ -31,7 +31,7 @@ export interface ReadOnlyObjectDataSource<T> {
     toDataSource(): DataSource<T>;
 }
 
-export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
+export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSource<T> {
     protected data: T;
     private updateEvent: EventEmitter<ObjectChange<T, keyof T>>;
     private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
@@ -77,7 +77,7 @@ export class ObjectDataSource<T> implements ReadOnlyObjectDataSource<T> {
 
     public pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ObjectDataSource<T[K]> {
         if (typeof this.data[key] === 'object') {
-            const subDataSource: ObjectDataSource<T[K]> = new ObjectDataSource(this.data[key]);
+            const subDataSource: ObjectDataSource<T[K]> = new ObjectDataSource(this.data[key] as T[K]);
 
             subDataSource.listen((change) => {
                 if (change.deleted) {
