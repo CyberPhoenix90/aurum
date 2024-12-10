@@ -442,6 +442,14 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
         }
     }
 
+    if ('fillColor' in result && node.hoverFillColor && node.readIsHovering.value) {
+        result.fillColor = node.hoverFillColor;
+    }
+
+    if ('strokeColor' in result && node.hoverStrokeColor && node.readIsHovering.value) {
+        result.strokeColor = node.hoverStrokeColor;
+    }
+
     if ('tx' in result) {
         //@ts-ignore
         result.tx += offsetX;

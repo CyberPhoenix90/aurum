@@ -1,8 +1,8 @@
 import { DataSource, ReadOnlyDataSource } from 'aurumjs';
-import { InteractionProps } from './common_props.js';
+import { CommonProps, InteractionProps } from './common_props.js';
 import { StateComponentModel } from './drawables/state.js';
 
-export interface ComponentModel extends InteractionProps {
+export interface ComponentModel extends InteractionProps, CommonProps {
     type: ComponentType;
     state?: string | ReadOnlyDataSource<string>;
     clip?: boolean | ReadOnlyDataSource<boolean>;
@@ -15,6 +15,7 @@ export interface ComponentModel extends InteractionProps {
     renderedState?: RenderData;
     readWidth?: DataSource<number>;
     readHeight?: DataSource<number>;
+    readIsHovering: DataSource<boolean>;
     onPreDraw?(props: RenderData);
 }
 

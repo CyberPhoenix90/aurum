@@ -27,6 +27,7 @@ export function AurumGroup(props: AurumGroupProps, children: Renderable[], api: 
 
     const components = api.prerender(children, lc).filter((c) => !!c);
     return {
+        readIsHovering: new DataSource(),
         ...(props as Required<AurumGroupProps>),
         renderedState: undefined,
         children: components as any,

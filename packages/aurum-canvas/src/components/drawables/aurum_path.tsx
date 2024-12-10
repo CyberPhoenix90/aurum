@@ -1,4 +1,4 @@
-import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle } from 'aurumjs';
+import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle, DataSource } from 'aurumjs';
 import { ComponentModel, ComponentType } from '../component_model.js';
 import { CommonProps } from '../common_props.js';
 
@@ -27,6 +27,7 @@ export function AurumPath(props: AurumPathProps, children: Renderable[], api: Au
 
     const components = api.prerender(children, lc).filter((c) => !!c);
     return {
+        readIsHovering: new DataSource(),
         ...props,
         opacity: props.opacity ?? 1,
         renderedState: undefined,

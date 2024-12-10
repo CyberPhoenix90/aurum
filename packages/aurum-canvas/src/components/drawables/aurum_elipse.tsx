@@ -1,4 +1,4 @@
-import { AurumComponentAPI, createLifeCycle, ReadOnlyDataSource, Renderable } from 'aurumjs';
+import { AurumComponentAPI, createLifeCycle, DataSource, ReadOnlyDataSource, Renderable } from 'aurumjs';
 import { CommonProps } from '../common_props.js';
 import { ComponentModel, ComponentType } from '../component_model.js';
 
@@ -32,6 +32,7 @@ export function AurumElipse(props: AurumElipseProps, children: Renderable[], api
 
     const components = api.prerender(children, lc).filter((c) => !!c);
     return {
+        readIsHovering: new DataSource(),
         ...props,
         opacity: props.opacity ?? 1,
         renderedState: undefined,

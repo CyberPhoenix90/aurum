@@ -63,6 +63,8 @@ export interface AurumOffscreenCanvasProps {
     invalidate: EventEmitter<void>;
 }
 
+let cursorOwner: ComponentModel;
+
 export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children: Renderable[], api: AurumComponentAPI): void {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
@@ -228,22 +230,36 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 parent.animations.push(child as StateComponentModel);
                 continue;
             }
-            if ('onMouseEnter' in child || 'onMouseLeave' in child) {
-                let isInside = false;
-                props.onMouseMove.subscribe((e) => {
-                    if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                        if (!isInside && child.onMouseEnter) {
-                            child.onMouseEnter(e, child);
+            let isInside = false;
+            props.onMouseMove.subscribe((e) => {
+                if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
+                    if (!isInside) {
+                        child.readIsHovering.update(true);
+                        if (child.cursor && canvas instanceof HTMLCanvasElement) {
+                            cursorOwner = child;
+                            canvas.style.cursor = deref(child.cursor);
                         }
-                        isInside = true;
-                    } else {
-                        if (isInside && child.onMouseLeave) {
-                            child.onMouseLeave(e, child);
-                        }
-                        isInside = false;
                     }
-                }, cancellationToken);
-            }
+
+                    if (!isInside && child.onMouseEnter) {
+                        child.onMouseEnter(e, child);
+                    }
+                    isInside = true;
+                } else {
+                    if (isInside) {
+                        child.readIsHovering.update(false);
+                        if (child === cursorOwner && canvas instanceof HTMLCanvasElement) {
+                            cursorOwner = undefined;
+                            canvas.style.cursor = 'auto';
+                        }
+                    }
+
+                    if (isInside && child.onMouseLeave) {
+                        child.onMouseLeave(e, child);
+                    }
+                    isInside = false;
+                }
+            }, cancellationToken);
 
             for (const key in child) {
                 if (key === 'onMouseUp') {

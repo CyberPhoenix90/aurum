@@ -49,6 +49,7 @@ export function State(props: StateProps, children: Renderable[], api: AurumCompo
 
     const components = api.prerender(children, lc);
     return {
+        readIsHovering: new DataSource(),
         [stateSymbol]: true,
         x: undefined,
         y: undefined,

@@ -37,6 +37,7 @@ export function AurumBezierCurve(props: AurumBezierCurveProps, children: Rendera
 
     const components = api.prerender(children, lc).filter((c) => !!c);
     return {
+        readIsHovering: new DataSource(),
         ...props,
         opacity: props.opacity ?? 1,
         lineWidth: props.lineWidth ?? 1,

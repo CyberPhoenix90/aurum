@@ -35,6 +35,7 @@ export interface CommonProps extends InteractionProps {
     onDetach?(): void;
     readWidth?: DataSource<number>;
     readHeight?: DataSource<number>;
+    readIsHovering?: DataSource<boolean>;
     state?: string | ReadOnlyDataSource<string>;
     clip?: boolean | ReadOnlyDataSource<boolean>;
     originX?: number | ReadOnlyDataSource<number>;
@@ -43,6 +44,9 @@ export interface CommonProps extends InteractionProps {
     y: number | ReadOnlyDataSource<number>;
     strokeColor?: string | ReadOnlyDataSource<string> | CanvasGradient | ReadOnlyDataSource<CanvasGradient>;
     fillColor?: string | ReadOnlyDataSource<string> | CanvasGradient | ReadOnlyDataSource<CanvasGradient>;
+    hoverFillColor?: string | ReadOnlyDataSource<string> | CanvasGradient | ReadOnlyDataSource<CanvasGradient>;
+    hoverStrokeColor?: string | ReadOnlyDataSource<string> | CanvasGradient | ReadOnlyDataSource<CanvasGradient>;
+    cursor?: string | ReadOnlyDataSource<string>;
     opacity?: number | ReadOnlyDataSource<number>;
     rotation?: number | ReadOnlyDataSource<number>;
     colorBlending?: ColorBlending | ReadOnlyDataSource<ColorBlending>;

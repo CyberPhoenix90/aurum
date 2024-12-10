@@ -1,4 +1,4 @@
-import { AurumComponentAPI, createLifeCycle, ReadOnlyDataSource, Renderable } from 'aurumjs';
+import { AurumComponentAPI, createLifeCycle, DataSource, ReadOnlyDataSource, Renderable } from 'aurumjs';
 import { CommonProps } from '../common_props.js';
 import { ComponentModel, ComponentType } from '../component_model.js';
 
@@ -29,6 +29,7 @@ export function AurumLine(props: AurumLineProps, children: Renderable[], api: Au
 
     const components = api.prerender(children, lc).filter((c) => !!c);
     return {
+        readIsHovering: new DataSource(),
         ...props,
         opacity: props.opacity ?? 1,
         lineWidth: props.lineWidth ?? 1,
