@@ -48,6 +48,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
     const onMouseMove: EventEmitter<MouseEvent> = new EventEmitter();
     const onMouseUp: EventEmitter<MouseEvent> = new EventEmitter();
     const onMouseDown: EventEmitter<MouseEvent> = new EventEmitter();
+    const onMouseClick: EventEmitter<MouseEvent> = new EventEmitter();
     const onKeyDown: EventEmitter<KeyboardEvent> = new EventEmitter();
     const onKeyUp: EventEmitter<KeyboardEvent> = new EventEmitter();
     const onWheel: EventEmitter<WheelEvent> = new EventEmitter();
@@ -146,7 +147,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             onMouseDown.fire(e as MouseEvent);
         });
         api.cancellationToken.registerDomEvent(canvas, 'mouseup', (e) => {
-            onMouseUp.fire(e as MouseEvent);
+            onMouseClick.fire(e as MouseEvent);
         });
         api.cancellationToken.registerDomEvent(window, 'keydown', (e) => {
             onKeyDown.fire(e as KeyboardEvent);
@@ -165,6 +166,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 onMouseDown,
                 onMouseUp,
                 onKeyDown,
+                onMouseClick,
                 onKeyUp,
                 onWheel,
                 translate: props.translate,

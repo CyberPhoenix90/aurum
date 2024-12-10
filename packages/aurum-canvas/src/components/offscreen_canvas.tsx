@@ -50,6 +50,7 @@ export interface AurumOffscreenCanvasProps {
      */
     readHeight?: DataSource<number>;
     onMouseMove: EventEmitter<SimplifiedMouseEvent>;
+    onMouseClick: EventEmitter<SimplifiedMouseEvent>;
     onMouseUp: EventEmitter<SimplifiedMouseEvent>;
     onMouseDown: EventEmitter<SimplifiedMouseEvent>;
     onWheel: EventEmitter<SimplifiedWheelEvent>;
@@ -255,16 +256,16 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 }
 
                 if (key === 'onMouseDown') {
-                    props.onMouseUp.subscribe((e) => {
+                    props.onMouseDown.subscribe((e) => {
                         if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                            child.onMouseUp(e, child);
+                            child.onMouseDown(e, child);
                         }
                     }, cancellationToken);
                     continue;
                 }
 
                 if (key === 'onMouseClick') {
-                    props.onMouseUp.subscribe((e) => {
+                    props.onMouseClick.subscribe((e) => {
                         if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
                             child.onMouseClick(e, child);
                         }

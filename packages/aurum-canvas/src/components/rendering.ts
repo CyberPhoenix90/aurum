@@ -300,38 +300,38 @@ export function renderText(
     renderedState.height = fontSize;
 
     if (lines.length === 0) {
-        if (wrapWidth) {
-            child.renderedState.realWidth = 0;
-            const pieces: string[] = text.split(' ');
-            let line = pieces.shift();
-            while (pieces.length) {
-                const measuredWidth = measureText(context, line + ' ' + pieces[0]);
-                if (measuredWidth.width <= wrapWidth) {
-                    if (measuredWidth.width > child.renderedState.realWidth) {
-                        child.renderedState.realWidth = measuredWidth.width;
+        let longestMeasuredWidth = 0;
+        const inputLines = text.split('\n');
+        for (const inputLine of inputLines) {
+            if (wrapWidth) {
+                child.renderedState.realWidth = 0;
+                const pieces: string[] = inputLine.split(' ');
+                let line = pieces.shift();
+                while (pieces.length) {
+                    const measuredWidth = measureText(context, line + ' ' + pieces[0]);
+                    if (measuredWidth.width <= wrapWidth) {
+                        longestMeasuredWidth = Math.max(longestMeasuredWidth, measuredWidth.width);
+                        line += ' ' + pieces.shift();
+                    } else {
+                        const measuredWidth = measureText(context, line);
+                        longestMeasuredWidth = Math.max(longestMeasuredWidth, measuredWidth.width);
+                        lines.push(line);
+                        line = pieces.shift();
                     }
-                    line += ' ' + pieces.shift();
-                } else {
-                    const measuredWidth = measureText(context, line);
-                    if (measuredWidth.width > child.renderedState.realWidth) {
-                        child.renderedState.realWidth = measuredWidth.width;
-                    }
-                    lines.push(line);
-                    line = pieces.shift();
                 }
-            }
-            const measuredWidth = measureText(context, line);
-            if (measuredWidth.width > child.renderedState.realWidth) {
-                child.renderedState.realWidth = measuredWidth.width;
-            }
-            lines.push(line);
-        } else {
-            if (!width) {
-                child.renderedState.realWidth = child.renderedState.width = measureText(context, text).width;
+                const measuredWidth = measureText(context, line);
+                longestMeasuredWidth = Math.max(longestMeasuredWidth, measuredWidth.width);
+                lines.push(line);
             } else {
-                child.renderedState.realWidth = measureText(context, text).width;
+                longestMeasuredWidth = Math.max(longestMeasuredWidth, measureText(context, inputLine).width);
+
+                lines.push(inputLine);
             }
-            lines.push(text);
+        }
+        if (!width) {
+            child.renderedState.realWidth = child.renderedState.width = longestMeasuredWidth;
+        } else {
+            child.renderedState.realWidth = longestMeasuredWidth;
         }
     }
 
