@@ -1,8 +1,13 @@
 import { css } from '@emotion/css';
-import { Aurum, ReadOnlyDataSource, Renderable, dsMap } from 'aurumjs';
+import { Aurum, DataSource, ReadOnlyDataSource, Renderable, dsMap } from 'aurumjs';
 
-export function LoadingSpinner(props: { loading: ReadOnlyDataSource<boolean>; message: string; size?: number }): Renderable {
-    const { loading, message } = props;
+export function LoadingSpinner(props: { isLoading?: ReadOnlyDataSource<boolean>; message?: string; size?: number }): Renderable {
+    let { isLoading, message } = props;
+
+    if (isLoading == undefined) {
+        isLoading = new DataSource(true);
+    }
+
     const style = css`
         border: ${(props.size ?? 16) / 4}px solid #f3f3f3;
         border-radius: 50%;
@@ -32,7 +37,7 @@ export function LoadingSpinner(props: { loading: ReadOnlyDataSource<boolean>; me
     `;
     return (
         <div>
-            {loading.transform(
+            {isLoading.transform(
                 dsMap((v) =>
                     v ? (
                         <>

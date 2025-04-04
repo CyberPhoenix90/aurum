@@ -3,6 +3,7 @@ export * from './tree_view/tree_view_model.js';
 export { TreeViewSorting } from './tree_view/tree_view_common.js';
 
 export * from './accordion/accordion.js';
+export * from './alert/alert.js';
 
 export * from './dialog/dialog.js';
 export * from './dialog/context_menu.js';
@@ -23,7 +24,7 @@ export * from './input/submit.js';
 export * from './input/drop_down_menu.js';
 export * from './input/json_renderer.js';
 
-export * from './list_select/list_select.js';
+export * from './input/list_select.js';
 
 export * from './form/form.js';
 export * from './form/loading_spinner.js';
@@ -45,5 +46,6 @@ export * from './misc/currency.js';
 
 export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock.js';
 export * from './layout/panel_layout.js';
+export * from './layout/grid.js';
 
 export { aurumify } from './utils.js';
