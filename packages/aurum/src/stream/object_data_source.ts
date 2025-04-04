@@ -7,6 +7,7 @@ import { DuplexDataSource } from './duplex_data_source.js';
 
 export interface ObjectChange<T, K extends keyof T> {
     key: K;
+    path?: string[];
     oldValue: T[K];
     newValue: T[K];
     deleted?: boolean;
@@ -81,9 +82,17 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
 
             subDataSource.listen((change) => {
                 if (change.deleted) {
-                    delete this.data[key][change.key];
+                    if (this.data[key]) {
+                        delete this.data[key][change.key];
+                    }
                 } else {
                     this.get(key)[change.key] = change.newValue as any;
+                    this.updateEvent.fire({
+                        key: key,
+                        path: [(key as any).toString(), ...(change.path ? change.path : [(change.key as any).toString()])],
+                        oldValue: this.get(key),
+                        newValue: this.get(key)
+                    });
                 }
             }, cancellationToken);
 

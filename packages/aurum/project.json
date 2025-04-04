@@ -1,9 +1,14 @@
 {
     "name": "aurumjs",
-    "version": "0.9.50",
+    "version": "0.9.51",
     "type": "module",
     "main": "prebuilt/esnext/aurumjs.js",
     "typings": "prebuilt/esnext/aurumjs.d.ts",
+    "exports": {
+        "import": "./prebuilt/esnext/aurumjs.js",
+        "require": "./prebuilt/cjs/aurumjs.js"
+    },
+
     "description": "Stream based declarative DOM rendering library for javascript",
     "compiler": "typescript",
     "homepage": "https://cyberphoenix90.github.io/aurum-website/",
@@ -42,6 +47,14 @@
             "outdir": "prebuilt/esnext",
             "name": "esnext",
             "platform": "isomorphic"
+        },
+        {
+            "includes": ["src/**/*.ts", "src/**/*.tsx"],
+            "outdir": "prebuilt/cjs",
+            "module": "commonjs",
+            "name": "cjs",
+            "moduleResolution": "node",
+            "platform": "node"
         }
     ]
 }
