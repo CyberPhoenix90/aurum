@@ -38,7 +38,7 @@ export interface RenderData {
     originY?: number;
     opacity?: number;
     rotation?: number;
-    lineThickness?: number;
+    lineWidth?: number;
     fontSize?: number;
     font?: string;
 }

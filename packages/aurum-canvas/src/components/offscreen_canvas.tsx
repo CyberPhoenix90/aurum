@@ -32,7 +32,7 @@ import {
     renderText
 } from './rendering.js';
 import { deref } from './utilities.js';
-import { SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
+import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 
 const renderCache = new WeakMap();
 export interface AurumOffscreenCanvasProps {
@@ -54,12 +54,8 @@ export interface AurumOffscreenCanvasProps {
     onMouseUp: EventEmitter<SimplifiedMouseEvent>;
     onMouseDown: EventEmitter<SimplifiedMouseEvent>;
     onWheel: EventEmitter<SimplifiedWheelEvent>;
-    onKeyUp: EventEmitter<{
-        keyCode: number;
-    }>;
-    onKeyDown: EventEmitter<{
-        keyCode: number;
-    }>;
+    onKeyUp: EventEmitter<SimplifiedKeyboardEvent>;
+    onKeyDown: EventEmitter<SimplifiedKeyboardEvent>;
     invalidate: EventEmitter<void>;
 }
 
@@ -162,6 +158,16 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 } else {
                     return context.isPointInPath(target.renderedState.path, x, y);
                 }
+            case ComponentType.LINE:
+            case ComponentType.BEZIER_CURVE:
+            case ComponentType.QUADRATIC_CURVE:
+                const width = context.lineWidth;
+                context.lineWidth = target.renderedState.lineWidth;
+                try {
+                    return context.isPointInStroke(target.renderedState.path, x, y);
+                } finally {
+                    context.lineWidth = width;
+                }
             default:
                 if (!target.renderedState.path) {
                     return false;
@@ -232,6 +238,9 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             }
             let isInside = false;
             props.onMouseMove.subscribe((e) => {
+                if (e.stoppedPropagation) {
+                    return;
+                }
                 if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
                     if (!isInside) {
                         child.readIsHovering.update(true);
@@ -264,6 +273,9 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             for (const key in child) {
                 if (key === 'onMouseUp') {
                     props.onMouseUp.subscribe((e) => {
+                        if (e.stoppedPropagation) {
+                            return;
+                        }
                         if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
                             child.onMouseUp(e, child);
                         }
@@ -273,6 +285,9 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
                 if (key === 'onMouseDown') {
                     props.onMouseDown.subscribe((e) => {
+                        if (e.stoppedPropagation) {
+                            return;
+                        }
                         if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
                             child.onMouseDown(e, child);
                         }
@@ -282,6 +297,9 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
                 if (key === 'onMouseClick') {
                     props.onMouseClick.subscribe((e) => {
+                        if (e.stoppedPropagation) {
+                            return;
+                        }
                         if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
                             child.onMouseClick(e, child);
                         }

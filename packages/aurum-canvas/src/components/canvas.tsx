@@ -7,12 +7,13 @@ import {
     EventEmitter,
     ReadOnlyDataSource,
     Renderable,
+    StyleType,
     createLifeCycle,
     dsMap,
     dsUnique
 } from 'aurumjs';
-import { StyleType } from 'aurumjs/prebuilt/esnext/utilities/common.js';
 import { AurumnCanvasFeatures } from './canvas_feature_model.js';
+import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 import { AurumOffscreenCanvas } from './offscreen_canvas.js';
 
 export interface AurumCanvasProps {
@@ -21,6 +22,14 @@ export interface AurumCanvasProps {
     onDetach?(): void;
     class?: ClassType;
     style?: StyleType;
+    onMouseMove?(e: MouseEvent): void;
+    onMouseDown?(e: MouseEvent): void;
+    onMouseUp?(e: MouseEvent): void;
+    onMouseClick?(e: MouseEvent): void;
+    onKeyDown?(e: KeyboardEvent): void;
+    onKeyUp?(e: KeyboardEvent): void;
+    onWheel?(e: WheelEvent): void;
+
     /**
      * Optional manual horizontal resoltution. If omitted the canvas will automatically sync its resolution to the css size
      */
@@ -45,17 +54,18 @@ export interface AurumCanvasProps {
 export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api: AurumComponentAPI): AurumElement {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
-    const onMouseMove: EventEmitter<MouseEvent> = new EventEmitter();
-    const onMouseUp: EventEmitter<MouseEvent> = new EventEmitter();
-    const onMouseDown: EventEmitter<MouseEvent> = new EventEmitter();
-    const onMouseClick: EventEmitter<MouseEvent> = new EventEmitter();
-    const onKeyDown: EventEmitter<KeyboardEvent> = new EventEmitter();
-    const onKeyUp: EventEmitter<KeyboardEvent> = new EventEmitter();
-    const onWheel: EventEmitter<WheelEvent> = new EventEmitter();
+    const onMouseMove: EventEmitter<SimplifiedMouseEvent> = new EventEmitter();
+    const onMouseUp: EventEmitter<SimplifiedMouseEvent> = new EventEmitter();
+    const onMouseDown: EventEmitter<SimplifiedMouseEvent> = new EventEmitter();
+    const onMouseClick: EventEmitter<SimplifiedMouseEvent> = new EventEmitter();
+    const onKeyDown: EventEmitter<SimplifiedKeyboardEvent> = new EventEmitter();
+    const onKeyUp: EventEmitter<SimplifiedKeyboardEvent> = new EventEmitter();
+    const onWheel: EventEmitter<SimplifiedWheelEvent> = new EventEmitter();
     const invalidate = new EventEmitter<void>();
 
     return (
         <canvas
+            draggable={false}
             onAttach={(canvas) => {
                 // Auto sync resolution to css size
                 if (!props.width || props.height) {
@@ -137,26 +147,156 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
     );
 
     function bindCanvas(canvas: HTMLCanvasElement) {
-        api.cancellationToken.registerDomEvent(canvas, 'mouseleave', (e) => {
-            onMouseMove.fire(e as MouseEvent);
+        api.cancellationToken.registerDomEvent(canvas, 'mouseleave', (e: MouseEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onMouseMove.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onMouseMove?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(canvas, 'mousemove', (e) => {
-            onMouseMove.fire(e as MouseEvent);
+
+        api.cancellationToken.registerDomEvent(canvas, 'mousemove', (e: MouseEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onMouseMove.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onMouseMove?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(canvas, 'mousedown', (e) => {
-            onMouseDown.fire(e as MouseEvent);
+
+        api.cancellationToken.registerDomEvent(canvas, 'mousedown', (e: MouseEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onMouseDown.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onMouseDown?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(canvas, 'mouseup', (e) => {
-            onMouseClick.fire(e as MouseEvent);
+        api.cancellationToken.registerDomEvent(canvas, 'mouseup', (e: MouseEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onMouseUp.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onMouseUp?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(window, 'keydown', (e) => {
-            onKeyDown.fire(e as KeyboardEvent);
+        api.cancellationToken.registerDomEvent(canvas, 'click', (e: MouseEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onMouseClick.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onMouseClick?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(window, 'keyup', (e) => {
-            onKeyUp.fire(e as KeyboardEvent);
+        api.cancellationToken.registerDomEvent(window, 'keydown', (e: KeyboardEvent) => {
+            const virtualEvent = {
+                key: e.key,
+                keyCode: e.keyCode,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                metaKey: e.metaKey,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+
+            onKeyDown.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onKeyDown?.(e);
+            }
         });
-        api.cancellationToken.registerDomEvent(canvas, 'wheel', (e) => {
-            onWheel.fire(e as WheelEvent);
+        api.cancellationToken.registerDomEvent(window, 'keyup', (e: KeyboardEvent) => {
+            const virtualEvent = {
+                key: e.key,
+                keyCode: e.keyCode,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                metaKey: e.metaKey,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+
+            onKeyUp.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onKeyUp?.(e);
+            }
+        });
+        api.cancellationToken.registerDomEvent(canvas, 'wheel', (e: WheelEvent) => {
+            const virtualEvent = {
+                button: e.button,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                offsetX: e.offsetX,
+                offsetY: e.offsetY,
+                deltaY: e.deltaY,
+                stoppedPropagation: false,
+                stopPropagation: () => {
+                    e.stopPropagation();
+                    virtualEvent.stoppedPropagation = true;
+                }
+            };
+            onWheel.fire(virtualEvent);
+            if (!virtualEvent.stoppedPropagation) {
+                props.onWheel?.(e);
+            }
         });
 
         AurumOffscreenCanvas(

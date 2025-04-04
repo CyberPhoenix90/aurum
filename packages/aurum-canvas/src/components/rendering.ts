@@ -80,9 +80,9 @@ export function renderLine(
 
     context.globalAlpha = opacity;
     if (fillColor || strokeColor) {
+        context.lineWidth = lineWidth;
         path2d.moveTo(x, y);
         path2d.lineTo(tx, ty);
-        context.lineWidth = lineWidth;
         child.renderedState.path = path2d;
     } else {
         child.renderedState.path = undefined;

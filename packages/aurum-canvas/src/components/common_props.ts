@@ -62,12 +62,28 @@ export interface InteractionProps {
     onMouseMove?(e: SimplifiedMouseEvent, target: ComponentModel): void;
 }
 
-export interface SimplifiedMouseEvent {
+export interface VirtualEvents {
+    stoppedPropagation: boolean;
+    stopPropagation(): void;
+}
+
+export interface SimplifiedMouseEvent extends VirtualEvents {
+    button: number;
     clientX: number;
     clientY: number;
     offsetX: number;
     offsetY: number;
 }
+
+export interface SimplifiedKeyboardEvent extends VirtualEvents {
+    key: string;
+    keyCode: number;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+    altKey: boolean;
+    metaKey: boolean;
+}
+
 export interface SimplifiedWheelEvent extends SimplifiedMouseEvent {
     deltaY: number;
 }

@@ -1,8 +1,8 @@
 import { CancellationToken, EventEmitter } from 'aurumjs';
-import { AurumCanvasProps } from './canvas.js';
+import { AurumOffscreenCanvasProps } from './offscreen_canvas.js';
 
 export function initializeKeyboardPanningFeature(
-    props: AurumCanvasProps,
+    props: AurumOffscreenCanvasProps,
     onKeyUp: EventEmitter<{ keyCode: number }>,
     onKeyDown: EventEmitter<{ keyCode: number }>,
     token: CancellationToken
@@ -65,7 +65,7 @@ export function initializeKeyboardPanningFeature(
 }
 
 export function initializeMousePanningFeature(
-    props: AurumCanvasProps,
+    props: AurumOffscreenCanvasProps,
     onMouseDown: EventEmitter<{ clientX: number; clientY: number }>,
     onMouseMove: EventEmitter<{ clientX: number; clientY: number }>,
     onMouseUp: EventEmitter<{ clientX: number; clientY: number }>,
@@ -100,7 +100,7 @@ export function initializeMousePanningFeature(
 }
 
 export function initializeZoomFeature(
-    props: AurumCanvasProps,
+    props: AurumOffscreenCanvasProps,
     onWheel: EventEmitter<{ offsetX: number; offsetY: number; deltaY: number }>,
     token: CancellationToken
 ): void {
