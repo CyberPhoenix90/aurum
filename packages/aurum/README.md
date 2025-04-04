@@ -4,7 +4,6 @@
 
 # Fast and concise declarative DOM rendering library for javascript
 
-[![Build Status](https://travis-ci.com/CyberPhoenix90/aurum.svg?branch=master)](https://travis-ci.com/CyberPhoenix90/aurum)
 ![npm](https://img.shields.io/npm/dw/aurumjs)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/aurumjs)
 
