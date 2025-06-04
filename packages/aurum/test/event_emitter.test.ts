@@ -73,4 +73,18 @@ describe('EventEmitter', () => {
 
         expect(callback).not.toHaveBeenCalled();
     });
+
+    it('should throw from fire while still calling other subscribers', () => {
+        const emitter = new EventEmitter<string>();
+        const goodCallback = vi.fn();
+        const badCallback = vi.fn(() => {
+            throw new Error('bad');
+        });
+
+        emitter.subscribe(badCallback);
+        emitter.subscribe(goodCallback);
+
+        expect(() => emitter.fire('value')).toThrowError('bad');
+        expect(goodCallback).toHaveBeenCalledWith('value');
+    });
 });
