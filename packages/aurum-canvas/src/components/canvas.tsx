@@ -12,7 +12,7 @@ import {
     dsMap,
     dsUnique
 } from 'aurumjs';
-import { AurumnCanvasFeatures } from './canvas_feature_model.js';
+import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 import { AurumOffscreenCanvas } from './offscreen_canvas.js';
 
@@ -40,7 +40,7 @@ export interface AurumCanvasProps {
     height?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
-    features?: AurumnCanvasFeatures;
+    features?: AurumCanvasFeatures;
     /**
      * In case of auto size this will update to the current width of the canvas
      */

@@ -1,4 +1,4 @@
-export interface AurumnCanvasFeatures {
+export interface AurumCanvasFeatures {
     mouseWheelZoom?: {
         zoomIncrements: number;
         maxZoom: number;
