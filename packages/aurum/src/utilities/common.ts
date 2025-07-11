@@ -159,8 +159,8 @@ export interface Styles {
     flexBasis?: string | ReadOnlyDataSource<string>;
     flexDirection?: string | ReadOnlyDataSource<string>;
     flexFlow?: string | ReadOnlyDataSource<string>;
-    flexGrow?: string | ReadOnlyDataSource<string>;
-    flexShrink?: string | ReadOnlyDataSource<string>;
+    flexGrow?: string | number | ReadOnlyDataSource<string> | ReadOnlyDataSource<number>;
+    flexShrink?: string | number | ReadOnlyDataSource<string> | ReadOnlyDataSource<number>;
     flexWrap?: string | ReadOnlyDataSource<string>;
     float?: string | ReadOnlyDataSource<string>;
     font?: string | ReadOnlyDataSource<string>;
@@ -231,7 +231,7 @@ export interface Styles {
     listStylePosition?: string | ReadOnlyDataSource<string>;
     listStyleType?: string | ReadOnlyDataSource<string>;
 
-    margin?: string | ReadOnlyDataSource<string>;
+    margin?: string | ReadOnlyDataSource<string> | number | ReadOnlyDataSource<number>;
     marginBlock?: string | ReadOnlyDataSource<string>;
     marginBlockEnd?: string | ReadOnlyDataSource<string>;
     marginBlockStart?: string | ReadOnlyDataSource<string>;
@@ -288,7 +288,7 @@ export interface Styles {
     overscrollBehaviorX?: string | ReadOnlyDataSource<string>;
     overscrollBehaviorY?: string | ReadOnlyDataSource<string>;
 
-    padding?: string | ReadOnlyDataSource<string>;
+    padding?: string | ReadOnlyDataSource<string> | number | ReadOnlyDataSource<number>;
     paddingBlock?: string | ReadOnlyDataSource<string>;
     paddingBlockEnd?: string | ReadOnlyDataSource<string>;
     paddingBlockStart?: string | ReadOnlyDataSource<string>;

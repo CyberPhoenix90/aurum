@@ -1,5 +1,4 @@
 import {
-    AttributeValue,
     Aurum,
     combineStyle,
     AurumElementModel,
@@ -168,7 +167,7 @@ export function PanelDockRight(props: PanelElementProps, children: ChildNode[]):
 export function PanelDockBottom(props: PanelElementProps, children: ChildNode[]): Renderable {
     return undefined;
 }
-export function PanelContent(props: { class?: ClassType; style?: AttributeValue }, children: ChildNode[]): Renderable {
+export function PanelContent(props: { class?: ClassType; style?: StyleType }, children: ChildNode[]): Renderable {
     return undefined;
 }
 

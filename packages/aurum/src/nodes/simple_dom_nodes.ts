@@ -393,12 +393,19 @@ export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
     target?: AttributeValue;
     'accept-charset'?: AttributeValue;
     autocomplete?: AttributeValue;
+    onSubmit?: DataDrain<Event>;
+    onReset?: DataDrain<Event>;
+    onFormData?: DataDrain<FormDataEvent>;
 }
 
 /**
  * @internal
  */
-export const Form = DomNodeCreator<FormProps>('form', ['action', 'method', 'rel', 'enctype', 'novalidate', 'target', 'accept-charset', 'autocomplete']);
+export const Form = DomNodeCreator<FormProps>('form', ['action', 'method', 'rel', 'enctype', 'novalidate', 'target', 'accept-charset', 'autocomplete'], {
+    submit: 'onSubmit',
+    reset: 'onReset',
+    formdata: 'onFormData'
+});
 
 /**
  * @internal

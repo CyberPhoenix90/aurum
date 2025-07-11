@@ -3611,7 +3611,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
         }
     }
 
-    public merge(newData: Set<K> | SetDataSource<K> | K[] | ArrayDataSource<K>): void {
+    public merge(newData: Set<K> | SetDataSource<K> | ReadOnlySetDataSource<K> | K[] | ArrayDataSource<K> | ReadOnlyArrayDataSource<K>): void {
         let newItems: Set<K>;
         if (newData instanceof SetDataSource) {
             newItems = newData.data;
