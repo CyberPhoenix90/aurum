@@ -10,7 +10,7 @@ import {
     createLifeCycle,
     dsUnique
 } from 'aurumjs';
-import { AurumnCanvasFeatures } from './canvas_feature_model.js';
+import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { ComponentModel, ComponentType } from './component_model.js';
 import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
 import { ElipseComponentModel } from './drawables/aurum_elipse.js';
@@ -40,7 +40,7 @@ export interface AurumOffscreenCanvasProps {
     backgroundColor?: DataSource<string> | string;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
-    features?: AurumnCanvasFeatures;
+    features?: AurumCanvasFeatures;
     /**
      * In case of auto size this will update to the current width of the canvas
      */
