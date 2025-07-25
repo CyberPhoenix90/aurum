@@ -157,7 +157,7 @@ export class EventEmitter<T> {
     }
 
     /**
-     * Removes all currently active subscriptions. If called in the callback of a subscription will be defered until after the fire event finished
+     * Removes all currently active subscriptions. If called in the callback of a subscription will be deferred until after the fire event finished
      */
     public cancelAll(): void {
         if (!this.isFiring) {
