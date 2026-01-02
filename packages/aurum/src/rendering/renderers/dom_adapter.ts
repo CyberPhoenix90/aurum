@@ -19,6 +19,58 @@ export interface HTMLNodeProps<T> {
     role?: AttributeValue;
     slot?: AttributeValue;
     contenteditable?: AttributeValue;
+
+    ariaAtomic?: AttributeValue;
+    ariaAutoComplete?: AttributeValue;
+    ariaBrailleLabel?: AttributeValue;
+    ariaBrailleRoleDescription?: AttributeValue;
+    ariaBusy?: AttributeValue;
+    ariaChecked?: AttributeValue;
+    ariaColCount?: AttributeValue;
+    ariaColIndex?: AttributeValue;
+    ariaColIndexText?: AttributeValue;
+    ariaColSpan?: AttributeValue;
+    ariaControlsElements?: AttributeValue;
+    ariaCurrent?: AttributeValue;
+    ariaDescribedByElements?: AttributeValue;
+    ariaDescription?: AttributeValue;
+    ariaDetailsElements?: AttributeValue;
+    ariaDisabled?: AttributeValue;
+    ariaErrorMessageElements?: AttributeValue;
+    ariaExpanded?: AttributeValue;
+    ariaFlowToElements?: AttributeValue;
+    ariaHasPopup?: AttributeValue;
+    ariaHidden?: AttributeValue;
+    ariaInvalid?: AttributeValue;
+    ariaKeyShortcuts?: AttributeValue;
+    ariaLabel?: AttributeValue;
+    ariaLabelledByElements?: AttributeValue;
+    ariaLevel?: AttributeValue;
+    ariaLive?: AttributeValue;
+    ariaModal?: AttributeValue;
+    ariaMultiLine?: AttributeValue;
+    ariaMultiSelectable?: AttributeValue;
+    ariaOrientation?: AttributeValue;
+    ariaOwnsElements?: AttributeValue;
+    ariaPlaceholder?: AttributeValue;
+    ariaPosInSet?: AttributeValue;
+    ariaPressed?: AttributeValue;
+    ariaReadOnly?: AttributeValue;
+    ariaRelevant?: AttributeValue;
+    ariaRequired?: AttributeValue;
+    ariaRoleDescription?: AttributeValue;
+    ariaRowCount?: AttributeValue;
+    ariaRowIndex?: AttributeValue;
+    ariaRowIndexText?: AttributeValue;
+    ariaRowSpan?: AttributeValue;
+    ariaSelected?: AttributeValue;
+    ariaSetSize?: AttributeValue;
+    ariaSort?: AttributeValue;
+    ariaValueMax?: AttributeValue;
+    ariaValueMin?: AttributeValue;
+    ariaValueNow?: AttributeValue;
+    ariaValueText?: AttributeValue;
+
     onContextMenu?: DataDrain<MouseEvent>;
     onDblClick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
@@ -43,7 +95,45 @@ export interface HTMLNodeProps<T> {
     onDrop?: DataDrain<DragEvent>;
     onLoad?: DataDrain<Event>;
     onError?: DataDrain<ErrorEvent>;
-
+    onTransitionEnd?: DataDrain<TransitionEvent>;
+    onTransitionStart?: DataDrain<TransitionEvent>;
+    onTransitionRun?: DataDrain<TransitionEvent>;
+    onTransitionCancel?: DataDrain<TransitionEvent>;
+    onAnimationEnd?: DataDrain<AnimationEvent>;
+    onAnimationStart?: DataDrain<AnimationEvent>;
+    onAnimationIteration?: DataDrain<AnimationEvent>;
+    onAnimationCancel?: DataDrain<AnimationEvent>;
+    onAuxClick?: DataDrain<PointerEvent>;
+    onBeforeInput?: DataDrain<InputEvent>;
+    onBeforeMatch?: DataDrain<Event>;
+    onCompositionEnd?: DataDrain<CompositionEvent>;
+    onCompositionStart?: DataDrain<CompositionEvent>;
+    onCompositionUpdate?: DataDrain<CompositionEvent>;
+    onContentVisibilityAutoStateChange?: DataDrain<Event>;
+    onCopy?: DataDrain<ClipboardEvent>;
+    onCut?: DataDrain<ClipboardEvent>;
+    onPaste?: DataDrain<ClipboardEvent>;
+    onFocusIn?: DataDrain<FocusEvent>;
+    onFocusOut?: DataDrain<FocusEvent>;
+    onFullscreenChange?: DataDrain<Event>;
+    onFullscreenError?: DataDrain<ErrorEvent>;
+    onGotPointerCapture?: DataDrain<PointerEvent>;
+    onLostPointerCapture?: DataDrain<PointerEvent>;
+    onPointerCancel?: DataDrain<PointerEvent>;
+    onPointerDown?: DataDrain<PointerEvent>;
+    onPointerEnter?: DataDrain<PointerEvent>;
+    onPointerLeave?: DataDrain<PointerEvent>;
+    onPointerMove?: DataDrain<PointerEvent>;
+    onPointerOut?: DataDrain<PointerEvent>;
+    onPointerOver?: DataDrain<PointerEvent>;
+    onPointerUp?: DataDrain<PointerEvent>;
+    onScroll?: DataDrain<UIEvent>;
+    onScrollEnd?: DataDrain<UIEvent>;
+    onSecurityPolicyViolation?: DataDrain<SecurityPolicyViolationEvent>;
+    onTouchCancel?: DataDrain<TouchEvent>;
+    onTouchEnd?: DataDrain<TouchEvent>;
+    onTouchMove?: DataDrain<TouchEvent>;
+    onTouchStart?: DataDrain<TouchEvent>;
     onAttach?: Callback<T>;
     onDetach?: Callback<T>;
 }
@@ -75,13 +165,113 @@ export const defaultEvents: MapLike<string> = {
     mouseleave: 'onMouseLeave',
     mousewheel: 'onMouseWheel',
     load: 'onLoad',
-    error: 'onError'
+    error: 'onError',
+    transitionend: 'onTransitionEnd',
+    transitionstart: 'onTransitionStart',
+    transitionrun: 'onTransitionRun',
+    transitioncancel: 'onTransitionCancel',
+    animationend: 'onAnimationEnd',
+    animationstart: 'onAnimationStart',
+    animationiteration: 'onAnimationIteration',
+    animationcancel: 'onAnimationCancel',
+    auxclick: 'onAuxClick',
+    beforeinput: 'onBeforeInput',
+    beforematch: 'onBeforeMatch',
+    compositionend: 'onCompositionEnd',
+    compositionstart: 'onCompositionStart',
+    compositionupdate: 'onCompositionUpdate',
+    contentvisibilityautostatechange: 'onContentVisibilityAutoStateChange',
+    copy: 'onCopy',
+    cut: 'onCut',
+    paste: 'onPaste',
+    focusin: 'onFocusIn',
+    focusout: 'onFocusOut',
+    fullscreenchange: 'onFullscreenChange',
+    fullscreenerror: 'onFullscreenError',
+    gotpointercapture: 'onGotPointerCapture',
+    lostpointercapture: 'onLostPointerCapture',
+    pointercancel: 'onPointerCancel',
+    pointerdown: 'onPointerDown',
+    pointerenter: 'onPointerEnter',
+    pointerleave: 'onPointerLeave',
+    pointermove: 'onPointerMove',
+    pointerout: 'onPointerOut',
+    pointerover: 'onPointerOver',
+    pointerup: 'onPointerUp',
+    scroll: 'onScroll',
+    scrollend: 'onScrollEnd',
+    securitypolicyviolation: 'onSecurityPolicyViolation',
+    touchcancel: 'onTouchCancel',
+    touchend: 'onTouchEnd',
+    touchmove: 'onTouchMove',
+    touchstart: 'onTouchStart',
+    attach: 'onAttach',
+    detach: 'onDetach'
 };
 
 /**
  * @internal
  */
-export const defaultAttributes: string[] = ['id', 'name', 'draggable', 'tabIndex', 'role', 'contenteditable', 'slot', 'title'];
+export const defaultAttributes: string[] = [
+    'id',
+    'name',
+    'draggable',
+    'tabIndex',
+    'role',
+    'contenteditable',
+    'slot',
+    'title',
+    'ariaAtomic',
+    'ariaAutoComplete',
+    'ariaBrailleLabel',
+    'ariaBrailleRoleDescription',
+    'ariaBusy',
+    'ariaChecked',
+    'ariaColCount',
+    'ariaColIndex',
+    'ariaColIndexText',
+    'ariaColSpan',
+    'ariaControlsElements',
+    'ariaCurrent',
+    'ariaDescribedByElements',
+    'ariaDescription',
+    'ariaDetailsElements',
+    'ariaDisabled',
+    'ariaErrorMessageElements',
+    'ariaExpanded',
+    'ariaFlowToElements',
+    'ariaHasPopup',
+    'ariaHidden',
+    'ariaInvalid',
+    'ariaKeyShortcuts',
+    'ariaLabel',
+    'ariaLabelledByElements',
+    'ariaLevel',
+    'ariaLive',
+    'ariaModal',
+    'ariaMultiLine',
+    'ariaMultiSelectable',
+    'ariaOrientation',
+    'ariaOwnsElements',
+    'ariaPlaceholder',
+    'ariaPosInSet',
+    'ariaPressed',
+    'ariaReadOnly',
+    'ariaRelevant',
+    'ariaRequired',
+    'ariaRoleDescription',
+    'ariaRowCount',
+    'ariaRowIndex',
+    'ariaRowIndexText',
+    'ariaRowSpan',
+    'ariaSelected',
+    'ariaSetSize',
+    'ariaSort',
+    'ariaValueMax',
+    'ariaValueMin',
+    'ariaValueNow',
+    'ariaValueText'
+];
 
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,

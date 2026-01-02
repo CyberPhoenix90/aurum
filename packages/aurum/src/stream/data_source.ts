@@ -491,6 +491,16 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         this.updating = false;
     }
 
+    public updateIfChanged(newValue: T): void {
+        if (newValue !== this.value) {
+            this.update(newValue);
+        }
+    }
+
+    public updateWith(fn: (oldValue: T) => T): void {
+        this.update(fn(this.value));
+    }
+
     /**
      * Updates the data source with a value if it has never had a value before
      */

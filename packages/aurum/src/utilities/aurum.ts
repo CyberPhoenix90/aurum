@@ -547,8 +547,8 @@ export namespace Aurum {
             rect: RectProps;
             defs: HTMLNodeProps<SVGDefsElement>;
             g: HTMLNodeProps<SVGGElement>;
-            text: HTMLNodeProps<SVGTextElement>;
-            tspan: HTMLNodeProps<SVGTSpanElement>;
+            text: SvgProps;
+            tspan: SvgProps;
             circle: CircleProps;
             ellipse: EllipseProps;
             polygon: PolygonProps;
@@ -558,8 +558,8 @@ export namespace Aurum {
             symbol: SymbolProps;
             use: UseProps;
             stop: StopProps;
-            linearGradient: LinearGradientProps;
-            radialGradient: RadialGradientProps;
+            lineargradient: LinearGradientProps;
+            radialgradient: RadialGradientProps;
             clipPath: ClipPathProps;
             pattern: PatternProps;
             mask: MaskProps;

@@ -994,7 +994,7 @@ export interface LinearGradientProps extends SVGNodeProps {
     y2?: AttributeValue;
 }
 
-export const LinearGradient = DomNodeCreator<LinearGradientProps>('linearGradient', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
+export const LinearGradient = DomNodeCreator<LinearGradientProps>('lineargradient', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
 
 export interface RadialGradientProps extends SVGNodeProps {
     cx?: AttributeValue;
@@ -1006,7 +1006,7 @@ export interface RadialGradientProps extends SVGNodeProps {
 }
 
 export const RadialGradient = DomNodeCreator<RadialGradientProps>(
-    'radialGradient',
+    'radialgradient',
     ['cx', 'cy', 'r', 'fx', 'fy', 'fr', ...commonSvgProps],
     undefined,
     undefined,
