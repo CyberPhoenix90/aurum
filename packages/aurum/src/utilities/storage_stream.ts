@@ -122,8 +122,8 @@ export class StorageStream {
             this.storageAPI.getItem(key)
                 ? JSON.parse(this.storageAPI.getItem(key))
                 : typeof defaultValueOrProvider === 'function'
-                ? (defaultValueOrProvider as () => T)()
-                : defaultValueOrProvider
+                  ? (defaultValueOrProvider as () => T)()
+                  : defaultValueOrProvider
         );
 
         this.onChange.subscribe((e) => {
@@ -132,8 +132,8 @@ export class StorageStream {
                     e.value != undefined
                         ? JSON.parse(e.value)
                         : typeof defaultValueOrProvider === 'function'
-                        ? (defaultValueOrProvider as () => T)()
-                        : defaultValueOrProvider
+                          ? (defaultValueOrProvider as () => T)()
+                          : defaultValueOrProvider
                 );
             }
         }, cancellationToken);
@@ -229,13 +229,38 @@ export class StorageStream {
     }
 }
 
+function isObservableStorage(storageAPI: unknown): storageAPI is Storage {
+    if (storageAPI === null || typeof storageAPI !== 'object') {
+        return false;
+    }
+
+    const candidate = storageAPI as Partial<Storage>;
+    return (
+        typeof candidate.getItem === 'function' &&
+        typeof candidate.setItem === 'function' &&
+        typeof candidate.removeItem === 'function' &&
+        typeof candidate.clear === 'function'
+    );
+}
+
+function createGlobalStorageStream(storageProvider: () => unknown): StorageStream | undefined {
+    try {
+        const storageAPI = storageProvider();
+        return isObservableStorage(storageAPI) ? new StorageStream(storageAPI) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 export let localStorageStream: StorageStream;
-if (typeof localStorage !== 'undefined') {
-    localStorageStream = new StorageStream(localStorage);
+const localStorageCandidate = createGlobalStorageStream(() => localStorage);
+if (localStorageCandidate) {
+    localStorageStream = localStorageCandidate;
 }
 export let sessionStorageStream: StorageStream;
-if (typeof sessionStorage !== 'undefined') {
-    sessionStorageStream = new StorageStream(sessionStorage);
+const sessionStorageCandidate = createGlobalStorageStream(() => sessionStorage);
+if (sessionStorageCandidate) {
+    sessionStorageStream = sessionStorageCandidate;
 }
 export let urlStorageStream: StorageStream;
 if (typeof location !== 'undefined' && typeof History !== 'undefined' && typeof URLSearchParams !== 'undefined') {
