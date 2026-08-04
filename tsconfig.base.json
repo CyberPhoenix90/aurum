@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "ES2020",
+        "moduleResolution": "Node",
+        "lib": ["ES2019", "DOM", "DOM.Iterable"],
+        "jsx": "react",
+        "jsxFactory": "Aurum.factory",
+        "jsxFragmentFactory": "Aurum.fragment",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "alwaysStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "newLine": "lf"
+    }
+}

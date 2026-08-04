@@ -1,0 +1,36 @@
+{
+    "name": "aurum-server",
+    "version": "0.0.37",
+    "description": "WebSocket-powered server for synchronizing Aurum data sources between a server and client",
+    "type": "module",
+    "main": "./prebuilt/esnext/aurum-server.js",
+    "types": "./prebuilt/esnext/aurum-server.d.ts",
+    "exports": {
+        ".": {
+            "types": "./prebuilt/esnext/aurum-server.d.ts",
+            "import": "./prebuilt/esnext/aurum-server.js"
+        }
+    },
+    "files": ["prebuilt", "README.md", "LICENSE"],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "test": "tsc -p tsconfig.build.json --noEmit --declaration false --declarationMap false",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "aurumjs": "^0.9.55",
+        "ws": "^7.3.1"
+    },
+    "devDependencies": {
+        "@types/node": "^14.14.41",
+        "@types/ws": "^7.2.7"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum.git",
+        "directory": "packages/aurum-server"
+    },
+    "keywords": ["aurumjs"],
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT"
+}

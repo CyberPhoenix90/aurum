@@ -8,5 +8,6 @@
     "semi": true,
     "useTabs": false,
     "arrowParens": "always",
-    "jsxSingleQuote": false
+    "jsxSingleQuote": false,
+    "endOfLine": "lf"
 }

@@ -1,0 +1,34 @@
+{
+    "name": "aurum-components",
+    "version": "0.3.27",
+    "description": "Component library for Aurum",
+    "type": "module",
+    "main": "./prebuilt/esnext/aurum-components.js",
+    "types": "./prebuilt/esnext/aurum-components.d.ts",
+    "exports": {
+        ".": {
+            "types": "./prebuilt/esnext/aurum-components.d.ts",
+            "import": "./prebuilt/esnext/aurum-components.js"
+        }
+    },
+    "files": ["prebuilt", "README.md", "LICENSE"],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "test": "tsc -p tsconfig.build.json --noEmit --declaration false --declarationMap false",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "@emotion/css": "^11.1.3",
+        "aurum-canvas": "^0.0.54",
+        "aurumjs": "^0.9.55"
+    },
+    "homepage": "https://cyberphoenix90.github.io/aurum-website/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum.git",
+        "directory": "packages/aurum-components"
+    },
+    "keywords": ["aurumjs", "components"],
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT"
+}

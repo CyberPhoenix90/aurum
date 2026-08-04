@@ -1,0 +1,32 @@
+{
+    "name": "aurum-canvas",
+    "version": "0.0.54",
+    "description": "Aurum style scene graph management for rendering in canvas",
+    "type": "module",
+    "main": "./prebuilt/esnext/aurum-canvas.js",
+    "types": "./prebuilt/esnext/aurum-canvas.d.ts",
+    "exports": {
+        ".": {
+            "types": "./prebuilt/esnext/aurum-canvas.d.ts",
+            "import": "./prebuilt/esnext/aurum-canvas.js"
+        }
+    },
+    "files": ["prebuilt", "README.md", "LICENSE"],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "test": "tsc -p tsconfig.build.json --noEmit --declaration false --declarationMap false",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "aurumjs": "^0.9.55"
+    },
+    "homepage": "https://aurumjs.org/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CyberPhoenix90/aurum.git",
+        "directory": "packages/aurum-canvas"
+    },
+    "keywords": ["aurumjs", "scenegraph", "canvas", "rendering"],
+    "author": "Joao Santos (CyberPhoenix)",
+    "license": "MIT"
+}

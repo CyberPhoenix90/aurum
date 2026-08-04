@@ -1,6 +1,0 @@
-{
-    "folderBlacklist": ["node_modules", ".history"],
-    "typescript": {
-        "tsdk": "node_modules/typescript"
-    }
-}

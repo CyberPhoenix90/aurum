@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "prebuilt/esnext",
+        "lib": ["ES2019"],
+        "types": ["node"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
