@@ -18,8 +18,7 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/streams": "^0.1.0",
-        "aurumjs": "^0.9.55"
+        "@aurum/streams": "^0.1.0"
     },
     "license": "MIT"
 }

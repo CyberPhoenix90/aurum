@@ -37,11 +37,6 @@
 </script>
     <script src="dist/test/aurum-canvas.test.js"></script>
     <script>
-          requirejs.config({
-            paths: {
-              'aurumjs':"/node_modules/aurumjs/prebuilt/amd/aurumjs"
-            }
-          });
           require(files.filter(f => f.startsWith('test/')), () => {
             mocha.run();
 

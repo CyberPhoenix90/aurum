@@ -27,7 +27,7 @@
         "url": "git+https://github.com/CyberPhoenix90/aurum.git",
         "directory": "packages/aurum-components"
     },
-    "keywords": ["aurumjs", "components"],
+    "keywords": ["aurum", "components"],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT"
 }

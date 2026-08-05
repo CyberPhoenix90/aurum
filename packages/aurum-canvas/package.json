@@ -31,13 +31,12 @@
         "@vitest/browser-playwright": "^4.0.16",
         "vitest": "^4.0.16"
     },
-    "homepage": "https://aurumjs.org/",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/CyberPhoenix90/aurum.git",
         "directory": "packages/aurum-canvas"
     },
-    "keywords": ["aurumjs", "scenegraph", "canvas", "rendering"],
+    "keywords": ["aurum", "scenegraph", "canvas", "rendering"],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT"
 }

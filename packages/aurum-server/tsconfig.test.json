@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "dist_test",
+        "declaration": false,
+        "declarationMap": false,
+        "lib": ["ES2019", "DOM"],
+        "types": ["node"]
+    },
+    "include": ["src/**/*.ts", "test/**/*.ts"]
+}

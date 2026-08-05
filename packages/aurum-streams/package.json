@@ -17,8 +17,6 @@
         "test": "tsc -p tsconfig.test.json --noEmit --declaration false --declarationMap false",
         "prepack": "npm run build"
     },
-    "dependencies": {
-        "aurumjs": "^0.9.55"
-    },
+    "dependencies": {},
     "license": "MIT"
 }

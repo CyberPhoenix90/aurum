@@ -14,23 +14,26 @@
     "files": ["prebuilt", "README.md", "LICENSE"],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "test": "tsc -p tsconfig.build.json --noEmit --declaration false --declarationMap false",
+        "test": "tsc -p tsconfig.test.json && vitest run",
+        "benchmark": "tsc -p tsconfig.bench.json && node dist_bench/bench/run.js",
         "prepack": "npm run build"
     },
     "dependencies": {
+        "@aurum/remote": "^0.1.0",
         "@aurum/streams": "^0.1.0",
         "ws": "^7.3.1"
     },
     "devDependencies": {
         "@types/node": "^14.14.41",
-        "@types/ws": "^7.2.7"
+        "@types/ws": "^7.2.7",
+        "vitest": "^4.0.16"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/CyberPhoenix90/aurum.git",
         "directory": "packages/aurum-server"
     },
-    "keywords": ["aurumjs"],
+    "keywords": ["aurum", "websocket", "rpc"],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT"
 }
