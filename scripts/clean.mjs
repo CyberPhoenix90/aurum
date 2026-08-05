@@ -5,6 +5,8 @@ const paths = [
     'packages/aurum/prebuilt',
     'packages/aurum/dist_test',
     'packages/aurum-canvas/prebuilt',
+    'packages/aurum-canvas/dist_test',
+    'packages/aurum-canvas/dist_bench',
     'packages/aurum-components/prebuilt',
     'packages/aurum-server/prebuilt'
 ];

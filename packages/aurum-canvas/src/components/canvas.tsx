@@ -9,15 +9,14 @@ import {
     Renderable,
     StyleType,
     createLifeCycle,
-    dsMap,
-    dsUnique
+    dsMap
 } from '@aurum/html';
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 import { AurumOffscreenCanvas } from './offscreen_canvas.js';
 
 export interface AurumCanvasProps {
-    backgroundColor?: DataSource<string> | string;
+    backgroundColor?: ReadOnlyDataSource<string> | string;
     onAttach?(canvas: HTMLCanvasElement): void;
     onDetach?(): void;
     class?: ClassType;
@@ -29,15 +28,17 @@ export interface AurumCanvasProps {
     onKeyDown?(e: KeyboardEvent): void;
     onKeyUp?(e: KeyboardEvent): void;
     onWheel?(e: WheelEvent): void;
+    /** The canvas is keyboard-focusable by default so keyboard features are scoped to the active canvas. */
+    tabIndex?: number;
 
     /**
      * Optional manual horizontal resoltution. If omitted the canvas will automatically sync its resolution to the css size
      */
-    width?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
+    width?: ReadOnlyDataSource<string | number> | string | number;
     /**
      * Optional manual vertical resoltution. If omitted the canvas will automatically sync its resolution to the css size
      */
-    height?: ReadOnlyDataSource<string | number> | ReadOnlyDataSource<string> | ReadOnlyDataSource<number> | string | number;
+    height?: ReadOnlyDataSource<string | number> | string | number;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
     features?: AurumCanvasFeatures;
@@ -66,9 +67,10 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
     return (
         <canvas
             draggable={false}
+            tabIndex={props.tabIndex ?? 0}
             onAttach={(canvas) => {
                 // Auto sync resolution to css size
-                if (!props.width || props.height) {
+                if (props.width === undefined || props.height === undefined) {
                     const handleResize = () => {
                         let dirty = false;
                         if (!props.width) {
@@ -98,34 +100,20 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 }
 
                 if (props.width instanceof DataSource) {
-                    props.width.listen(() => {
-                        invalidate.fire();
-                    }, api.cancellationToken);
-                }
-
-                if (props.backgroundColor instanceof DataSource) {
-                    props.backgroundColor.listen(() => {
+                    props.width.listen((width) => {
+                        props.readWidth?.update(Number(width));
                         invalidate.fire();
                     }, api.cancellationToken);
                 }
 
                 if (props.height instanceof DataSource) {
-                    props.height.listen(() => {
+                    props.height.listen((height) => {
+                        props.readHeight?.update(Number(height));
                         invalidate.fire();
                     }, api.cancellationToken);
                 }
 
                 bindCanvas(canvas);
-                if (props.translate) {
-                    props.translate.transform(dsUnique(), api.cancellationToken).listen((v) => {
-                        invalidate.fire();
-                    });
-                }
-                if (props.scale) {
-                    props.scale.transform(dsUnique(), api.cancellationToken).listen((v) => {
-                        invalidate.fire();
-                    });
-                }
                 props.onAttach?.(canvas);
             }}
             onDetach={() => {
@@ -136,12 +124,18 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
             width={
                 typeof props.width !== 'object'
                     ? props.width?.toString()
-                    : (props.width.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)
+                    : (props.width.transform(
+                          dsMap<string | number, string>((v) => v.toString()),
+                          api.cancellationToken
+                      ) as DataSource<string>)
             }
             height={
                 typeof props.height !== 'object'
                     ? props.height?.toString()
-                    : (props.height.transform(dsMap<string | number, string>((v) => v.toString())) as DataSource<string>)
+                    : (props.height.transform(
+                          dsMap<string | number, string>((v) => v.toString()),
+                          api.cancellationToken
+                      ) as DataSource<string>)
             }
         ></canvas>
     );
@@ -152,8 +146,8 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 button: e.button,
                 clientX: e.clientX,
                 clientY: e.clientY,
-                offsetX: e.offsetX,
-                offsetY: e.offsetY,
+                offsetX: Number.NEGATIVE_INFINITY,
+                offsetY: Number.NEGATIVE_INFINITY,
                 stoppedPropagation: false,
                 stopPropagation: () => {
                     e.stopPropagation();
@@ -161,9 +155,6 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 }
             };
             onMouseMove.fire(virtualEvent);
-            if (!virtualEvent.stoppedPropagation) {
-                props.onMouseMove?.(e);
-            }
         });
 
         api.cancellationToken.registerDomEvent(canvas, 'mousemove', (e: MouseEvent) => {
@@ -186,6 +177,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
         });
 
         api.cancellationToken.registerDomEvent(canvas, 'mousedown', (e: MouseEvent) => {
+            canvas.focus();
             const virtualEvent = {
                 button: e.button,
                 clientX: e.clientX,
@@ -239,7 +231,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 props.onMouseClick?.(e);
             }
         });
-        api.cancellationToken.registerDomEvent(window, 'keydown', (e: KeyboardEvent) => {
+        api.cancellationToken.registerDomEvent(canvas, 'keydown', (e: KeyboardEvent) => {
             const virtualEvent = {
                 key: e.key,
                 keyCode: e.keyCode,
@@ -259,7 +251,7 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 props.onKeyDown?.(e);
             }
         });
-        api.cancellationToken.registerDomEvent(window, 'keyup', (e: KeyboardEvent) => {
+        api.cancellationToken.registerDomEvent(canvas, 'keyup', (e: KeyboardEvent) => {
             const virtualEvent = {
                 key: e.key,
                 keyCode: e.keyCode,
@@ -311,6 +303,9 @@ export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api
                 onWheel,
                 translate: props.translate,
                 scale: props.scale,
+                backgroundColor: props.backgroundColor,
+                readWidth: props.readWidth,
+                readHeight: props.readHeight,
                 features: props.features,
                 invalidate
             },

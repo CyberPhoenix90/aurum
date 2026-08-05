@@ -2,13 +2,15 @@ import {
     ArrayDataSource,
     AurumComponentAPI,
     CancellationToken,
+    ComponentLifeCycle,
     DataSource,
     EventEmitter,
+    ReadOnlyDataSource,
     Renderable,
     aurumElementModelIdentitiy,
     createLifeCycle,
     dsUnique
-} from '@aurum/html';
+} from '@aurum/rendering';
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { ComponentModel, ComponentType } from './component_model.js';
 import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
@@ -23,6 +25,8 @@ import { initializeKeyboardPanningFeature, initializeMousePanningFeature, initia
 import {
     renderBezierCurve,
     renderElipse,
+    renderImage,
+    renderLargeContentBox,
     renderLine,
     renderPath,
     renderQuadraticCurve,
@@ -32,11 +36,13 @@ import {
 } from './rendering.js';
 import { deref } from './utilities.js';
 import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
+import { ImageComponentModel } from './drawables/aurum_image.js';
+import { LargeContentBoxModel } from './drawables/large_content_box.js';
 
-const renderCache = new WeakMap();
+const renderCache = new WeakMap<object, { rendered: unknown; lifeCycle: ComponentLifeCycle }>();
 export interface AurumOffscreenCanvasProps {
     canvas: OffscreenCanvas | HTMLCanvasElement;
-    backgroundColor?: DataSource<string> | string;
+    backgroundColor?: ReadOnlyDataSource<string> | string;
     translate?: DataSource<{ x: number; y: number }>;
     scale?: DataSource<{ x: number; y: number }>;
     features?: AurumCanvasFeatures;
@@ -58,14 +64,26 @@ export interface AurumOffscreenCanvasProps {
     invalidate: EventEmitter<void>;
 }
 
-let cursorOwner: ComponentModel;
-
 export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children: Renderable[], api: AurumComponentAPI): void {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     const components = api.prerender(children, lc);
     let pendingRerender: number | undefined;
     const cancellationToken: CancellationToken = new CancellationToken();
+    let cursorOwner: ComponentModel | undefined;
+    let paintOrder: ComponentModel[] = [];
+    let hovered = new Set<ComponentModel>();
+    const requestRender = () => {
+        if (!cancellationToken.isCancelled) {
+            invalidate(props.canvas);
+        }
+    };
+    api.cancellationToken.addCancellable(cancellationToken);
+    cancellationToken.addCancellable(() => {
+        if (pendingRerender !== undefined) {
+            cancelAnimationFrame(pendingRerender);
+        }
+    });
 
     props.readHeight?.update(props.canvas.height);
     props.readWidth?.update(props.canvas.width);
@@ -96,6 +114,8 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
         }, api.cancellationToken);
     }
 
+    props.invalidate.subscribe(() => invalidate(props.canvas), cancellationToken);
+
     bind(props.canvas, components, undefined, cancellationToken);
     render(props.canvas, components);
     if (props.translate) {
@@ -109,16 +129,75 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
         });
     }
 
+    props.onMouseMove.subscribe((event) => {
+        const nextHovered = new Set<ComponentModel>();
+        const targets = hitTargets(event);
+
+        for (const target of hovered) {
+            if (!targets.includes(target)) {
+                target.readIsHovering.update(false);
+                target.onMouseLeave?.(event, target);
+            }
+        }
+
+        for (const target of targets) {
+            nextHovered.add(target);
+            if (!hovered.has(target)) {
+                target.readIsHovering.update(true);
+                target.onMouseEnter?.(event, target);
+            }
+            target.onMouseMove?.(event, target);
+            if (event.stoppedPropagation) {
+                break;
+            }
+        }
+
+        hovered = nextHovered;
+        const cursorTarget = [...nextHovered].find((target) => target.cursor !== undefined);
+        if (cursorTarget !== cursorOwner) {
+            cursorOwner = cursorTarget;
+            setCursor(cursorTarget ? deref(cursorTarget.cursor) : 'auto');
+        }
+    }, cancellationToken);
+
+    subscribePointerEvent(props.onMouseDown, 'onMouseDown');
+    subscribePointerEvent(props.onMouseUp, 'onMouseUp');
+    subscribePointerEvent(props.onMouseClick, 'onMouseClick');
+
+    function subscribePointerEvent(
+        emitter: EventEmitter<SimplifiedMouseEvent>,
+        handler: 'onMouseDown' | 'onMouseUp' | 'onMouseClick'
+    ): void {
+        emitter.subscribe((event) => {
+            for (const target of hitTargets(event)) {
+                target[handler]?.(event, target);
+                if (event.stoppedPropagation) {
+                    return;
+                }
+            }
+        }, cancellationToken);
+    }
+
+    function hitTargets(event: SimplifiedMouseEvent): ComponentModel[] {
+        const context = props.canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+        return paintOrder.filter((target) => isOnTopOf(event, target, context)).reverse();
+    }
+
+    function setCursor(cursor: string): void {
+        const canvasWithStyle = props.canvas as OffscreenCanvas & { style?: { cursor: string } };
+        if (canvasWithStyle.style) {
+            canvasWithStyle.style.cursor = cursor;
+        }
+    }
+
     function isOnTopOf(e: SimplifiedMouseEvent, target: ComponentModel, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D): boolean {
         if (!target.renderedState) {
             return false;
         }
-        let x = e.offsetX - (props.translate?.value.x ? props.translate?.value.x * (props.scale?.value?.x ?? 1) : 0);
-        let y = e.offsetY - (props.translate?.value.y ? props.translate?.value.y * (props.scale?.value?.x ?? 1) : 0);
-        if (props.scale) {
-            x /= props.scale.value.x;
-            y /= props.scale.value.y;
-        }
+        const scaleX = props.scale?.value.x ?? 1;
+        const scaleY = props.scale?.value.y ?? 1;
+        const x = e.offsetX / scaleX - (props.translate?.value.x ?? 0);
+        let y = e.offsetY / scaleY - (props.translate?.value.y ?? 0);
 
         if (target.type === ComponentType.TEXT) {
             const label = target as TextComponentModel;
@@ -147,8 +226,8 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 return (
                     x >= target.renderedState.x &&
                     y >= target.renderedState.y &&
-                    x <= target.renderedState.x + target.renderedState.width * (props.scale?.value.x ?? 1) &&
-                    y <= target.renderedState.y + target.renderedState.height * (props.scale?.value.y ?? 1)
+                    x <= target.renderedState.x + target.renderedState.width &&
+                    y <= target.renderedState.y + target.renderedState.height
                 );
             case ComponentType.ELIPSE:
             case ComponentType.REGULAR_POLYGON:
@@ -178,36 +257,51 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
     function bind(canvas: OffscreenCanvas | HTMLCanvasElement, children: ComponentModel[], parent: ComponentModel, cancellationToken: CancellationToken): void {
         for (const child of children) {
+            if (Array.isArray(child)) {
+                bind(canvas, child, parent, cancellationToken);
+                continue;
+            }
             if (child instanceof ArrayDataSource) {
                 child.listen(() => invalidate(canvas), cancellationToken);
-                const tokenMap = new Map<any, CancellationToken>();
+                const itemTokens: CancellationToken[] = [];
+                cancellationToken.addCancellable(() => itemTokens.forEach((token) => token.cancel()));
                 child.listenAndRepeat((change) => {
                     switch (change.operation) {
                         case 'add':
-                            for (const item of change.items) {
-                                tokenMap.set(item, new CancellationToken());
-                                bindDynamicEntity(item, child, tokenMap.get(item));
+                            for (let itemIndex = 0; itemIndex < change.items.length; itemIndex++) {
+                                const itemToken = new CancellationToken();
+                                itemTokens.splice(change.index + itemIndex, 0, itemToken);
+                                bindDynamicEntity(change.items[itemIndex], parent, itemToken);
                             }
                             break;
                         case 'remove':
-                            for (const item of change.items) {
-                                tokenMap.get(item).cancel();
-                                tokenMap.delete(item);
+                            for (const itemToken of itemTokens.splice(change.index, change.items.length)) {
+                                itemToken.cancel();
                             }
                             break;
 
                         case 'replace':
-                            tokenMap.get(change.target).cancel();
-                            tokenMap.delete(change.target);
-                            tokenMap.set(change.items[0], new CancellationToken());
-                            bindDynamicEntity(change.items[0], child, tokenMap.get(change.items[0]));
+                            itemTokens[change.index]?.cancel();
+                            itemTokens[change.index] = new CancellationToken();
+                            bindDynamicEntity(change.items[0], parent, itemTokens[change.index]);
                             break;
                         case 'swap':
+                            if (change.index2 !== undefined) {
+                                [itemTokens[change.index], itemTokens[change.index2]] = [itemTokens[change.index2], itemTokens[change.index]];
+                            }
                             break;
                         case 'merge':
-                            throw new Error('Operation not supported');
+                            for (const itemToken of itemTokens.splice(0)) {
+                                itemToken.cancel();
+                            }
+                            for (const item of change.newState) {
+                                const itemToken = new CancellationToken();
+                                itemTokens.push(itemToken);
+                                bindDynamicEntity(item, parent, itemToken);
+                            }
+                            break;
                     }
-                });
+                }, cancellationToken);
                 continue;
             }
 
@@ -215,6 +309,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 child.listen(() => invalidate(canvas), cancellationToken);
                 let bindToken: CancellationToken;
                 let value: any;
+                cancellationToken.addCancellable(() => bindToken?.cancel());
                 child.listenAndRepeat((newValue) => {
                     if (value !== newValue) {
                         value = newValue;
@@ -222,9 +317,9 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                             bindToken.cancel();
                         }
                         bindToken = new CancellationToken();
-                        bindDynamicEntity(value, child, bindToken);
+                        bindDynamicEntity(value, parent, bindToken);
                     }
-                });
+                }, cancellationToken);
                 continue;
             }
 
@@ -235,78 +330,11 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 parent.animations.push(child as StateComponentModel);
                 continue;
             }
-            let isInside = false;
-            props.onMouseMove.subscribe((e) => {
-                if (e.stoppedPropagation) {
-                    return;
-                }
-                if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                    if (!isInside) {
-                        child.readIsHovering.update(true);
-                        if (child.cursor && canvas instanceof HTMLCanvasElement) {
-                            cursorOwner = child;
-                            canvas.style.cursor = deref(child.cursor);
-                        }
-                    }
-
-                    if (!isInside && child.onMouseEnter) {
-                        child.onMouseEnter(e, child);
-                    }
-                    isInside = true;
-                } else {
-                    if (isInside) {
-                        child.readIsHovering.update(false);
-                        if (child === cursorOwner && canvas instanceof HTMLCanvasElement) {
-                            cursorOwner = undefined;
-                            canvas.style.cursor = 'auto';
-                        }
-                    }
-
-                    if (isInside && child.onMouseLeave) {
-                        child.onMouseLeave(e, child);
-                    }
-                    isInside = false;
-                }
-            }, cancellationToken);
-
             for (const key in child) {
                 const dynamicChild = child as unknown as Record<string, any>;
-                if (key === 'onMouseUp') {
-                    props.onMouseUp.subscribe((e) => {
-                        if (e.stoppedPropagation) {
-                            return;
-                        }
-                        if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                            child.onMouseUp(e, child);
-                        }
-                    }, cancellationToken);
+                if (key === 'readWidth' || key === 'readHeight') {
                     continue;
                 }
-
-                if (key === 'onMouseDown') {
-                    props.onMouseDown.subscribe((e) => {
-                        if (e.stoppedPropagation) {
-                            return;
-                        }
-                        if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                            child.onMouseDown(e, child);
-                        }
-                    }, cancellationToken);
-                    continue;
-                }
-
-                if (key === 'onMouseClick') {
-                    props.onMouseClick.subscribe((e) => {
-                        if (e.stoppedPropagation) {
-                            return;
-                        }
-                        if (isOnTopOf(e, child, (canvas as OffscreenCanvas).getContext('2d'))) {
-                            child.onMouseClick(e, child);
-                        }
-                    }, cancellationToken);
-                    continue;
-                }
-
                 if (dynamicChild[key] instanceof DataSource) {
                     let value: any = dynamicChild[key].value;
                     let lastState: any;
@@ -340,28 +368,40 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
         function bindDynamicEntity(value: any, parent: ComponentModel, bindToken: CancellationToken) {
             const arrayedValue = Array.isArray(value) ? value : [value];
-            const lc = createLifeCycle();
-            const renderResult = [];
+            const renderResult: ComponentModel[] = [];
+            const lifeCycles: ComponentLifeCycle[] = [];
             for (const piece of arrayedValue) {
                 if (!piece) {
                     continue;
                 }
 
-                if (!renderCache.has(piece)) {
-                    renderCache.set(piece, api.prerender(piece, lc));
+                if ((typeof piece !== 'object' && typeof piece !== 'function') || piece === null) {
+                    continue;
                 }
-                renderResult.push(renderCache.get(piece));
+                if (!renderCache.has(piece)) {
+                    const lifeCycle = createLifeCycle();
+                    renderCache.set(piece, { rendered: api.prerender(piece, lifeCycle), lifeCycle });
+                }
+                const cached = renderCache.get(piece)!;
+                const rendered = cached.rendered;
+                lifeCycles.push(cached.lifeCycle);
+                if (Array.isArray(rendered)) {
+                    renderResult.push(...(rendered as ComponentModel[]));
+                } else if (rendered) {
+                    renderResult.push(rendered as ComponentModel);
+                }
             }
 
             bind(canvas, renderResult, parent, bindToken);
-            lc.onAttach();
-            bindToken.addCancellable(() => lc.onDetach());
+            lifeCycles.forEach((lifeCycle) => lifeCycle.onAttach());
+            bindToken.addCancellable(() => lifeCycles.forEach((lifeCycle) => lifeCycle.onDetach()));
             invalidate(canvas);
         }
+
     }
 
     function invalidate(canvas: HTMLCanvasElement | OffscreenCanvas): void {
-        if (!pendingRerender) {
+        if (pendingRerender === undefined) {
             pendingRerender = requestAnimationFrame(() => {
                 pendingRerender = undefined;
                 render(canvas, components as any);
@@ -371,6 +411,10 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
     function render(canvas: HTMLCanvasElement | OffscreenCanvas, components: ComponentModel[]): void {
         const context = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+        if (!context) {
+            throw new Error('Canvas 2D rendering context is unavailable');
+        }
+        paintOrder = [];
         if (props.backgroundColor === undefined) {
             context.clearRect(0, 0, canvas.width, canvas.height);
         } else {
@@ -422,7 +466,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             if (!renderCache.has(child)) {
                 throw new Error('illegal state: unrendered aurum element made it into the canvas render phase');
             }
-            child = renderCache.get(child);
+            child = renderCache.get(child)!.rendered;
         }
         if (child instanceof ArrayDataSource) {
             for (const node of child.getData()) {
@@ -437,7 +481,10 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
         }
 
         context.save();
-        let idle: boolean;
+        let idle = true;
+        if (child.colorBlending !== undefined) {
+            context.globalCompositeOperation = deref(child.colorBlending);
+        }
         switch (child.type) {
             case ComponentType.PATH:
                 idle = renderPath(context, child as PathComponentModel, offsetX, offsetY);
@@ -463,15 +510,25 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             case ComponentType.ELIPSE:
                 idle = renderElipse(context, child as ElipseComponentModel, offsetX, offsetY);
                 break;
+            case ComponentType.IMAGE:
+                idle = renderImage(context, child as ImageComponentModel, offsetX, offsetY, requestRender);
+                break;
+            case ComponentType.LARGE_CONTENT_BOX:
+                idle = renderLargeContentBox(context, child as LargeContentBoxModel, offsetX, offsetY);
+                break;
             case ComponentType.GROUP:
                 idle = true;
                 break;
+            default:
+                idle = true;
+                break;
         }
+        paintOrder.push(child);
         if (!idle) {
             invalidate(context.canvas);
         }
 
-        for (const subChild of child.children) {
+        for (const subChild of child.children ?? []) {
             renderChild(context, subChild, deref(child.x) + offsetX, deref(child.y) + offsetY);
         }
         context.restore();

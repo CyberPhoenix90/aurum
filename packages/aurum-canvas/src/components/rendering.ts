@@ -9,6 +9,8 @@ import { deref } from './utilities.js';
 import { ComponentModel } from './component_model.js';
 import { CommonProps } from './common_props.js';
 import { measureText } from './measure_text.js';
+import { ImageComponentModel } from './drawables/aurum_image.js';
+import { LargeContentBoxModel } from './drawables/large_content_box.js';
 
 const regularPolygonKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'sides', 'radius', 'originX', 'originY'];
 const pathKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'lineWidth', 'originX', 'originY'];
@@ -35,6 +37,82 @@ const textKeys = [
     'originY'
 ];
 const rectangleKeys = ['x', 'y', 'width', 'height', 'opacity', 'strokeColor', 'fillColor', 'originX', 'originY'];
+const imageKeys = ['x', 'y', 'width', 'height', 'opacity', 'src', 'originX', 'originY'];
+const imageCache = new Map<string, { image: HTMLImageElement; loaded: boolean; invalidations: Set<() => void> }>();
+
+export function renderImage(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: ImageComponentModel,
+    offsetX: number,
+    offsetY: number,
+    invalidate: () => void
+): boolean {
+    const renderedState = resolveValues(child, imageKeys, offsetX, offsetY);
+    child.renderedState = renderedState;
+    child.onPreDraw?.(renderedState);
+
+    if (!renderedState.src || typeof Image === 'undefined') {
+        return true;
+    }
+
+    let cached = imageCache.get(renderedState.src);
+    if (!cached) {
+        const image = new Image();
+        cached = { image, loaded: false, invalidations: new Set() };
+        imageCache.set(renderedState.src, cached);
+        image.addEventListener('load', () => {
+            cached.loaded = true;
+            for (const requestRender of cached.invalidations) {
+                requestRender();
+            }
+            cached.invalidations.clear();
+        });
+        image.addEventListener('error', () => cached.invalidations.clear());
+        image.src = renderedState.src;
+    }
+
+    if (!cached.loaded) {
+        cached.invalidations.add(invalidate);
+        return true;
+    }
+
+    const width = renderedState.width ?? cached.image.naturalWidth;
+    const height = renderedState.height ?? cached.image.naturalHeight;
+    renderedState.width = width;
+    renderedState.height = height;
+    updateOutput(child.readWidth, width);
+    updateOutput(child.readHeight, height);
+    context.globalAlpha = renderedState.opacity;
+    context.drawImage(cached.image, renderedState.x, renderedState.y, width, height);
+    return true;
+}
+
+export function renderLargeContentBox(
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    child: LargeContentBoxModel,
+    offsetX: number,
+    offsetY: number
+): boolean {
+    const renderedState = resolveValues(child, rectangleKeys, offsetX, offsetY);
+    const { x, y, width, height, fillColor, strokeColor, opacity } = renderedState;
+    child.renderedState = renderedState;
+    updateOutput(child.readWidth, width);
+    updateOutput(child.readHeight, height);
+    child.onPreDraw?.(renderedState);
+    context.globalAlpha = opacity;
+    if (fillColor) {
+        context.fillStyle = fillColor;
+        context.fillRect(x, y, width, height);
+    }
+    if (strokeColor) {
+        context.strokeStyle = strokeColor;
+        context.strokeRect(x, y, width, height);
+    }
+    context.beginPath();
+    context.rect(x, y, width, height);
+    context.clip();
+    return renderedState.idle;
+}
 
 export function renderElipse(
     context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -45,14 +123,14 @@ export function renderElipse(
     const renderedState = resolveValues(child, elipseKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, rx, ry, rotation, startAngle, endAngle } = renderedState;
     child.renderedState = renderedState;
-    child.readWidth?.update(rx * 2);
-    child.readHeight?.update(ry * 2);
+    updateOutput(child.readWidth, rx * 2);
+    updateOutput(child.readHeight, ry * 2);
 
     child.onPreDraw?.(child.renderedState);
     context.globalAlpha = opacity;
     const path2d = new Path2D();
 
-    if ((fillColor || strokeColor) && rx > 0.01 && ry > 0.01 && (startAngle ?? 0 !== endAngle)) {
+    if ((fillColor || strokeColor || deref(child.clip)) && rx > 0.01 && ry > 0.01 && (startAngle ?? 0) !== endAngle) {
         path2d.ellipse(x, y, rx, ry, rotation ?? 0, startAngle ?? 0, endAngle ?? Math.PI * 2);
         child.renderedState.path = path2d;
     } else {
@@ -72,8 +150,8 @@ export function renderLine(
 ): boolean {
     const renderedState = resolveValues(child, lineKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, tx, ty, lineWidth } = renderedState;
-    child.readWidth?.update(Math.abs(tx - x));
-    child.readHeight?.update(Math.abs(ty - y));
+    updateOutput(child.readWidth, Math.abs(tx - x));
+    updateOutput(child.readHeight, Math.abs(ty - y));
     child.renderedState = renderedState;
     child.onPreDraw?.(child.renderedState);
     const path2d = new Path2D();
@@ -154,16 +232,16 @@ function drawCanvasPath(
     fillColor: any,
     strokeColor: any
 ) {
-    if (child.fillColor) {
+    if (fillColor) {
         context.fillStyle = fillColor;
         context.fill(path2d);
     }
-    if (child.strokeColor) {
+    if (strokeColor) {
         context.strokeStyle = strokeColor;
         context.stroke(path2d);
     }
 
-    if (child.clip) {
+    if (deref(child.clip)) {
         context.clip(path2d);
     }
 }
@@ -181,7 +259,7 @@ export function renderPath(
 
     let path2d: Path2D;
     context.globalAlpha = opacity;
-    if (fillColor || strokeColor) {
+    if (path && (fillColor || strokeColor || deref(child.clip))) {
         context.lineWidth = lineWidth;
         path2d = new Path2D(path);
         child.renderedState.path = path2d;
@@ -189,20 +267,20 @@ export function renderPath(
         child.renderedState.path = undefined;
     }
 
-    if (child.fillColor) {
+    if (fillColor) {
         context.translate(x, y);
         context.fillStyle = fillColor;
         context.fill(path2d);
         context.translate(-x, -y);
     }
-    if (child.strokeColor) {
+    if (strokeColor) {
         context.translate(x, y);
         context.strokeStyle = strokeColor;
         context.stroke(path2d);
         context.translate(-x, -y);
     }
 
-    if (child.clip) {
+    if (deref(child.clip)) {
         context.translate(x, y);
         context.clip(path2d);
         context.translate(-x, -y);
@@ -219,8 +297,8 @@ export function renderRegularPolygon(
 ): boolean {
     const renderedState = resolveValues(child, regularPolygonKeys, offsetX, offsetY);
     const { x, y, idle, fillColor, strokeColor, opacity, sides, radius } = renderedState;
-    child.readWidth?.update(radius * 2);
-    child.readHeight?.update(radius * 2);
+    updateOutput(child.readWidth, radius * 2);
+    updateOutput(child.readHeight, radius * 2);
 
     child.renderedState = renderedState;
 
@@ -342,8 +420,8 @@ export function renderText(
         x -= Math.min(child.renderedState.realWidth, child.renderedState.width) * originX;
     }
 
-    child.readWidth?.update(child.renderedState.realWidth);
-    child.readHeight?.update(child.renderedState.lines.length * (lineHeight ?? 16));
+    updateOutput(child.readWidth, child.renderedState.realWidth);
+    updateOutput(child.readHeight, child.renderedState.lines.length * (lineHeight ?? 16));
 
     for (let i = 0; i < lines.length; i++) {
         if (fillColor) {
@@ -367,14 +445,14 @@ export function renderRectangle(
 ): boolean {
     const renderedState = resolveValues(child, rectangleKeys, offsetX, offsetY);
     const { x, y, width, height, idle, fillColor, strokeColor, opacity } = renderedState;
-    child.readWidth?.update(width);
-    child.readHeight?.update(height);
+    updateOutput(child.readWidth, width);
+    updateOutput(child.readHeight, height);
 
     child.renderedState = renderedState;
 
     child.onPreDraw?.(child.renderedState);
 
-    if (opacity <= 0 && !child.clip) {
+    if (opacity <= 0 && !deref(child.clip)) {
         return idle;
     }
 
@@ -389,7 +467,7 @@ export function renderRectangle(
         context.strokeRect(x, y, width, height);
     }
 
-    if (child.clip) {
+    if (deref(child.clip)) {
         context.beginPath();
         context.rect(x, y, width, height);
         context.clip();
@@ -411,15 +489,18 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
         const baseValue = deref(dynamicNode[key]);
         const state = node.animationStates?.find((n) => (n as unknown as Record<string, any>)[key] != undefined);
         if (state) {
-            let progress;
+            let progress: number;
             if (!state.transitionTime) {
                 progress = 1;
             } else {
                 progress = Math.min(1, (Date.now() - node.animationTime) / deref(state.transitionTime));
             }
-            const targetValue = (state as unknown as Record<string, any>)[key];
-            result[key] = baseValue + (targetValue - baseValue) * progress;
-            if (progress < 1) {
+            const rawProgress = progress;
+            const easing = state.easing ?? ((value: number) => value);
+            progress = easing(rawProgress);
+            const targetValue = deref((state as unknown as Record<string, any>)[key]);
+            result[key] = typeof baseValue === 'number' && typeof targetValue === 'number' ? baseValue + (targetValue - baseValue) * progress : targetValue;
+            if (rawProgress < 1) {
                 idle = false;
             }
         } else {
@@ -444,11 +525,11 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
     }
 
     if ('fillColor' in result && node.hoverFillColor && node.readIsHovering.value) {
-        result.fillColor = node.hoverFillColor;
+        result.fillColor = deref(node.hoverFillColor);
     }
 
     if ('strokeColor' in result && node.hoverStrokeColor && node.readIsHovering.value) {
-        result.strokeColor = node.hoverStrokeColor;
+        result.strokeColor = deref(node.hoverStrokeColor);
     }
 
     if ('tx' in result) {
@@ -479,4 +560,10 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
     }
     result.idle = idle;
     return result;
+}
+
+function updateOutput(source: { value: number; update(value: number): void } | undefined, value: number): void {
+    if (source && source.value !== value) {
+        source.update(value);
+    }
 }

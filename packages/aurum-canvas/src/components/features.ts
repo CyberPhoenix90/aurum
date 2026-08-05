@@ -1,4 +1,4 @@
-import { CancellationToken, EventEmitter } from '@aurum/html';
+import { CancellationToken, EventEmitter } from '@aurum/rendering';
 import { AurumOffscreenCanvasProps } from './offscreen_canvas.js';
 
 export function initializeKeyboardPanningFeature(
@@ -8,11 +8,12 @@ export function initializeKeyboardPanningFeature(
     token: CancellationToken
 ): void {
     let moveToken: CancellationToken;
-    const keyDown = new Set();
+    const keyDown = new Set<number>();
     const moveVector = {
         x: 0,
         y: 0
     };
+    token.addCancellable(() => moveToken?.cancel());
 
     onKeyUp.subscribe((e) => {
         if (e.keyCode === props.features.panning.keyboard.leftKeyCode || e.keyCode === props.features.panning.keyboard.rightKeyCode) {
@@ -105,32 +106,22 @@ export function initializeZoomFeature(
     token: CancellationToken
 ): void {
     onWheel.subscribe((e) => {
-        if (e.deltaY > 0) {
-            if (props.scale.value.x < props.features.mouseWheelZoom.minZoom) {
-                return;
-            }
-
-            props.translate.update({
-                x: props.translate.value.x + (e.offsetX * (props.features.mouseWheelZoom.zoomIncrements - 1)) / props.scale.value.x,
-                y: props.translate.value.y + (e.offsetY * (props.features.mouseWheelZoom.zoomIncrements - 1)) / props.scale.value.y
-            });
-            props.scale.update({
-                x: props.scale.value.x / props.features.mouseWheelZoom.zoomIncrements,
-                y: props.scale.value.y / props.features.mouseWheelZoom.zoomIncrements
-            });
-        } else {
-            if (props.scale.value.x > props.features.mouseWheelZoom.maxZoom) {
-                return;
-            }
-
-            props.scale.update({
-                x: props.scale.value.x * props.features.mouseWheelZoom.zoomIncrements,
-                y: props.scale.value.y * props.features.mouseWheelZoom.zoomIncrements
-            });
-            props.translate.update({
-                x: props.translate.value.x - (e.offsetX * (props.features.mouseWheelZoom.zoomIncrements - 1)) / props.scale.value.x,
-                y: props.translate.value.y - (e.offsetY * (props.features.mouseWheelZoom.zoomIncrements - 1)) / props.scale.value.y
-            });
+        const oldScale = props.scale.value;
+        const zoomFactor = e.deltaY > 0 ? 1 / props.features.mouseWheelZoom.zoomIncrements : props.features.mouseWheelZoom.zoomIncrements;
+        const newScale = {
+            x: Math.min(props.features.mouseWheelZoom.maxZoom, Math.max(props.features.mouseWheelZoom.minZoom, oldScale.x * zoomFactor)),
+            y: Math.min(props.features.mouseWheelZoom.maxZoom, Math.max(props.features.mouseWheelZoom.minZoom, oldScale.y * zoomFactor))
+        };
+        if (newScale.x === oldScale.x && newScale.y === oldScale.y) {
+            return;
         }
+
+        const worldX = e.offsetX / oldScale.x - props.translate.value.x;
+        const worldY = e.offsetY / oldScale.y - props.translate.value.y;
+        props.scale.update(newScale);
+        props.translate.update({
+            x: e.offsetX / newScale.x - worldX,
+            y: e.offsetY / newScale.y - worldY
+        });
     }, token);
 }

@@ -1,4 +1,4 @@
-import { DataSource, AurumComponentAPI, Renderable, createLifeCycle } from '@aurum/html';
+import { DataSource, AurumComponentAPI, Renderable, createLifeCycle } from '@aurum/rendering';
 import { ComponentModel, ComponentType } from '../component_model.js';
 import { InteractionProps } from '../common_props.js';
 

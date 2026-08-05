@@ -9,16 +9,27 @@
         ".": {
             "types": "./prebuilt/esnext/aurum-canvas.d.ts",
             "import": "./prebuilt/esnext/aurum-canvas.js"
+        },
+        "./core": {
+            "types": "./prebuilt/esnext/core.d.ts",
+            "import": "./prebuilt/esnext/core.js"
         }
     },
     "files": ["prebuilt", "README.md", "LICENSE"],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "test": "tsc -p tsconfig.build.json --noEmit --declaration false --declarationMap false",
+        "test": "tsc -p tsconfig.test.json && vitest run",
+        "benchmark": "tsc -p tsconfig.bench.json && node dist_bench/bench/run.js",
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/html": "^0.1.0"
+        "@aurum/html": "^0.1.0",
+        "@aurum/rendering": "^0.1.0"
+    },
+    "devDependencies": {
+        "@vitest/browser": "^4.0.16",
+        "@vitest/browser-playwright": "^4.0.16",
+        "vitest": "^4.0.16"
     },
     "homepage": "https://aurumjs.org/",
     "repository": {

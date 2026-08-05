@@ -1,6 +1,7 @@
 
 /node_modules
 dist_test
+dist_bench
 coverage
 /.vscode/settings.json
 .history
