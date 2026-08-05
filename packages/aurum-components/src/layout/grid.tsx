@@ -1,5 +1,4 @@
-import { css } from '@emotion/css';
-import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI } from 'aurumjs';
+import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI, css } from 'aurumjs';
 
 interface GridProps {
     columns?: number;

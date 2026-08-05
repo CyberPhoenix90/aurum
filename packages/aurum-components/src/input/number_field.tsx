@@ -1,9 +1,11 @@
-import { Aurum, DataSource, DuplexDataSource, GenericDataSource, dsMap, getValueOf } from 'aurumjs';
-import { TextField, TextFieldProps } from './text_field.js';
+import { Aurum, AurumComponentAPI, BindableSource, DataSource, GenericDataSource, dsMap, getValueOf } from 'aurumjs';
+import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
+import { getFormFieldSource } from '../form/form.js';
 
-export interface NumberFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value' | 'min' | 'max'> {
+export interface NumberFieldProps<T extends object = Record<string, number>>
+    extends Omit<FormFieldInputProps<T, number>, 'type' | 'step' | 'value' | 'min' | 'max'> {
     numberType?: NumberType;
-    value?: GenericDataSource<number> | number;
+    value?: BindableSource<number> | number;
     min?: number | GenericDataSource<number>;
     max?: number | GenericDataSource<number>;
 }
@@ -13,42 +15,51 @@ export enum NumberType {
     FLOAT = 'FLOAT'
 }
 
-export function NumberField(props: NumberFieldProps) {
+export function NumberField<T extends object = Record<string, number>>(props: NumberFieldProps<T>, _children: unknown[], api: AurumComponentAPI) {
     const { numberType = NumberType.INTEGER, min, max, ...inputProps } = props;
 
-    if (props.form && props.name && !props.value) {
-        //@ts-ignore
-        props.value = props.form.schema.fields[getValueOf(props.name)].source;
+    if (props.form && props.name && props.value === undefined) {
+        const fieldName = getValueOf(props.name);
+        props.value = getFormFieldSource<T, number>(props.form, fieldName);
     }
 
-    const valueSource = new DataSource(getValueOf(props.value));
-    const resolvedMin = DataSource.toDataSource(props.min).transform(dsMap((v) => v.toString()));
-    const resolvedMax = DataSource.toDataSource(props.max).transform(dsMap((v) => v.toString()));
+    const valueSource = new DataSource(getValueOf(props.value)?.toString() ?? '');
+    const resolvedMin = props.min === undefined ? undefined : DataSource.toDataSource(props.min).transform(dsMap((v) => v.toString()));
+    const resolvedMax = props.max === undefined ? undefined : DataSource.toDataSource(props.max).transform(dsMap((v) => v.toString()));
+    const boundValue = typeof props.value === 'number' ? undefined : props.value;
+    let synchronizingFromBoundValue = false;
 
-    valueSource.listen((newValue) => {
-        if (numberType === NumberType.INTEGER) {
-            if (props.value instanceof DataSource) {
-                props.value.update(parseInt(newValue));
-            } else if (props.value instanceof DuplexDataSource) {
-                props.value.updateUpstream(parseInt(newValue));
-            }
-        } else {
-            if (props.value instanceof DataSource) {
-                props.value.update(parseFloat(newValue));
-            } else if (props.value instanceof DuplexDataSource) {
-                props.value.updateUpstream(parseFloat(newValue));
+    boundValue?.listen((newValue) => {
+        const renderedValue = newValue?.toString() ?? '';
+        if (valueSource.value !== renderedValue) {
+            synchronizingFromBoundValue = true;
+            try {
+                valueSource.update(renderedValue);
+            } finally {
+                synchronizingFromBoundValue = false;
             }
         }
-    });
+    }, api.cancellationToken);
+
+    valueSource.listen((newValue) => {
+        if (synchronizingFromBoundValue || !boundValue) {
+            return;
+        }
+        if (numberType === NumberType.INTEGER) {
+            boundValue.write(parseInt(newValue));
+        } else {
+            boundValue.write(parseFloat(newValue));
+        }
+    }, api.cancellationToken);
 
     return (
-        <TextField
+        <FormFieldInput
             {...inputProps}
             min={resolvedMin}
             max={resolvedMax}
             value={valueSource}
             type="number"
             step={numberType === NumberType.INTEGER ? '1' : 'any'}
-        ></TextField>
+        ></FormFieldInput>
     );
 }

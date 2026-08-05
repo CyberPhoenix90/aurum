@@ -90,7 +90,7 @@ export function AurumText(props: AurumTexteProps, children: Renderable[], api: A
     }
     updateText(text, content as any);
 
-    const result = {
+    const result: TextComponentModel = {
         readIsHovering: new DataSource<boolean>(),
         ...props,
         opacity: props.opacity ?? 1,

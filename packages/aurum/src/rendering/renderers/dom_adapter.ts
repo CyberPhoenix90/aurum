@@ -2,9 +2,8 @@ import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
 import { AurumComponentAPI, AurumElement, createRenderSession, Renderable, Rendered, renderInternal } from '../aurum_element.js';
 import { DataSource } from '../../stream/data_source.js';
 import { dsUnique } from '../../stream/data_source_operators.js';
-import { DuplexDataSource } from '../../stream/duplex_data_source.js';
 import { CancellationToken } from '../../utilities/cancellation_token.js';
-import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType } from '../../utilities/common.js';
+import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType, writeTo } from '../../utilities/common.js';
 import { AurumDecorator } from '../../utilities/aurum.js';
 
 export interface HTMLNodeProps<T> {
@@ -281,9 +280,9 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     svg: boolean = false
 ) {
     return function (props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
-        let node;
+        let node: HTMLElement;
         if (svg) {
-            node = document.createElementNS('http://www.w3.org/2000/svg', nodeName);
+            node = document.createElementNS('http://www.w3.org/2000/svg', nodeName) as unknown as HTMLElement;
         } else {
             node = document.createElement(nodeName);
         }
@@ -384,16 +383,8 @@ export function processHTMLNode(
 export function createEventHandlers(node: HTMLElement, events: MapLike<string>, props: any) {
     for (const key in events) {
         if (props[events[key]]) {
-            if (props[events[key]] instanceof DataSource) {
-                //@ts-ignore
-                node.addEventListener(key, (e: MouseEvent) => props[events[key]].update(e));
-            } else if (props[events[key]] instanceof DuplexDataSource) {
-                //@ts-ignore
-                node.addEventListener(key, (e: MouseEvent) => props[events[key]].updateDownstream(e));
-            } else if (typeof props[events[key]] === 'function') {
-                //@ts-ignore
-                node.addEventListener(key, (e: MouseEvent) => props[events[key]](e));
-            }
+            //@ts-ignore
+            node.addEventListener(key, (e: MouseEvent) => writeTo(props[events[key]], e));
         }
     }
 }
@@ -441,7 +432,7 @@ function assignStringSourceToAttribute(node: HTMLElement, data: AttributeValue, 
         if (data) {
             node.setAttribute(key, '');
         }
-    } else if (data instanceof DataSource || data instanceof DuplexDataSource) {
+    } else if (data instanceof DataSource) {
         if (typeof data.value === 'string' || typeof data.value === 'number') {
             node.setAttribute(key, data.value.toString());
         } else if (typeof data.value === 'boolean') {

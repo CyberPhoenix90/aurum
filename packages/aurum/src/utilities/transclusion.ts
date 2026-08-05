@@ -32,7 +32,7 @@ export function resolveChildren<T>(
 
 function process<T>(children: Renderable[]): Array<ArrayDataSource<T> | T[]> {
     const chunks: Array<ArrayDataSource<T> | T[]> = [];
-    let currentChunk = [];
+    let currentChunk: T[] = [];
     for (const child of children) {
         if (child instanceof ArrayDataSource) {
             if (currentChunk.length) {
@@ -41,15 +41,11 @@ function process<T>(children: Renderable[]): Array<ArrayDataSource<T> | T[]> {
             }
             chunks.push(child as any as ArrayDataSource<T>);
         } else if (child instanceof DataSource) {
-            currentChunk.push(child);
-        } else if (child instanceof DataSource) {
-            currentChunk.push(child);
-        } else if (child instanceof DataSource) {
-            currentChunk.push(child);
+            currentChunk.push(child as unknown as T);
         } else if (Array.isArray(child)) {
             chunks.push(...process<T>(child));
         } else {
-            currentChunk.push(child);
+            currentChunk.push(child as unknown as T);
         }
     }
     if (currentChunk.length) {

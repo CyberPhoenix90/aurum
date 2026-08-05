@@ -3,7 +3,6 @@ import {
     AurumComponentAPI,
     CancellationToken,
     DataSource,
-    DuplexDataSource,
     EventEmitter,
     Renderable,
     aurumElementModelIdentitiy,
@@ -65,7 +64,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     const components = api.prerender(children, lc);
-    let pendingRerender;
+    let pendingRerender: number | undefined;
     const cancellationToken: CancellationToken = new CancellationToken();
 
     props.readHeight?.update(props.canvas.height);
@@ -212,10 +211,10 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 continue;
             }
 
-            if (child instanceof DataSource || child instanceof DuplexDataSource) {
+            if (child instanceof DataSource) {
                 child.listen(() => invalidate(canvas), cancellationToken);
                 let bindToken: CancellationToken;
-                let value;
+                let value: any;
                 child.listenAndRepeat((newValue) => {
                     if (value !== newValue) {
                         value = newValue;
@@ -229,7 +228,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                 continue;
             }
 
-            if (child[stateSymbol]) {
+            if ((child as StateComponentModel)[stateSymbol]) {
                 if (!parent) {
                     throw new Error('Cannot use <State> nodes at root level');
                 }
@@ -271,6 +270,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             }, cancellationToken);
 
             for (const key in child) {
+                const dynamicChild = child as unknown as Record<string, any>;
                 if (key === 'onMouseUp') {
                     props.onMouseUp.subscribe((e) => {
                         if (e.stoppedPropagation) {
@@ -307,17 +307,17 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
                     continue;
                 }
 
-                if (child[key] instanceof DataSource) {
-                    let value = child[key].value;
-                    let lastState;
+                if (dynamicChild[key] instanceof DataSource) {
+                    let value: any = dynamicChild[key].value;
+                    let lastState: any;
                     if (key === 'state') {
-                        const value = deref(child[key]);
+                        const value = deref(dynamicChild[key]);
                         lastState = value;
                         child.animationStates = child.animations.filter((e) => e.id === value);
                         child.animationTime = Date.now();
                     }
 
-                    child[key].listen((newValue) => {
+                    dynamicChild[key].listen((newValue: any) => {
                         if (value !== newValue) {
                             value = newValue;
                             if (key === 'state') {
@@ -402,7 +402,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
         }
     }
 
-    function renderChild(context: OffscreenCanvasRenderingContext2D, child: ComponentModel, offsetX: number, offsetY: number): void {
+    function renderChild(context: OffscreenCanvasRenderingContext2D, child: any, offsetX: number, offsetY: number): void {
         if (child === undefined || child === null) {
             return;
         }
@@ -431,7 +431,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             return;
         }
 
-        if (child instanceof DataSource || child instanceof DuplexDataSource) {
+        if (child instanceof DataSource) {
             renderChild(context, child.value, offsetX, offsetY);
             return;
         }

@@ -1,27 +1,26 @@
-import { css } from '@emotion/css';
 import {
     ArrayDataSource,
     Aurum,
     AurumComponentAPI,
     AurumElementModel,
+    BindableSource,
     ClassType,
     combineClass,
     DataSource,
     dsMap,
-    DuplexDataSource,
+    MutableSource,
     ReadOnlyArrayDataSource,
+    ReadOnlyDataSource,
     Renderable,
     resolveChildren,
-    StyleType
+    StyleType,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
-import { FormType } from '../form/form.js';
+import { theme } from '../theme/theme.js';
+import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
-const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor2, theme.primary, theme.highlightColor1],
-        (fontFamily, size, highlightFont, color0, color2, primary, highlightColor1) => css`
+const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor0: color0, themeColor2: color2, primary, highlightColor1 } = theme;
+const listStyle = css`
             border-radius: 4px;
             position: relative;
             display: inline-flex;
@@ -58,40 +57,36 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
             &:focus {
                 outline: ${primary} auto 5px;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
-export interface ListSelectProps<T> {
-    selectedValue?: DuplexDataSource<T> | DataSource<T>;
-    selectedIndex?: DuplexDataSource<number> | DataSource<number>;
+export interface ListSelectProps<T, F extends object = Record<string, T>> {
+    selectedValue?: BindableSource<T>;
+    selectedIndex?: MutableSource<number>;
     class?: ClassType;
     style?: StyleType;
-    form?: FormType<any, any>;
-    name?: string;
+    form?: FormType<F, unknown>;
+    name?: FormFieldName<F, T>;
 
     onChange?(selectedValue: T, selectedIndex: number, previousIndex: number): void;
 }
 
-export function ListSelect<T>(props: ListSelectProps<T>, children: Renderable[], api: AurumComponentAPI) {
+export function ListSelect<T, F extends object = Record<string, T>>(props: ListSelectProps<T, F>, children: Renderable[], api: AurumComponentAPI) {
+    const formField = props.form && props.name ? props.form.schema.fields[props.name] : undefined;
+    const formOptions = formField && 'oneOf' in formField ? (formField.oneOf as readonly T[] | undefined) : undefined;
     const childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>> =
-        props.form && props.name && (props.form.schema.fields[props.name] as any).oneOf && children.length === 0
-            ? new ArrayDataSource((props.form.schema.fields[props.name] as any).oneOf.map((c) => <ListSelectOption value={c}>{c}</ListSelectOption>))
-            : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<any>).factory === ListSelectOption);
+        formOptions && children.length === 0
+            ? new ArrayDataSource(formOptions.map((c) => <ListSelectOption value={c}>{c}</ListSelectOption>))
+            : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<{ value: T }>).factory === ListSelectOption);
 
-    if (!props.selectedValue && props.form && props.name) {
-        //@ts-ignore
-        props.selectedValue = props.form.schema.fields[props.name].source;
+    if (!props.selectedValue && formField) {
+        props.selectedValue = getFormFieldSource<F, T>(props.form, props.name);
     }
 
-    const selectedIndex =
+    const selectedIndex: MutableSource<number> =
         props.selectedIndex ??
         (props.selectedValue
             ? new DataSource(
-                  props.selectedValue instanceof DataSource
-                      ? childSource.findIndex((c) => c.props.value === props.selectedValue.value)
-                      : childSource.findIndex((c) => c.props.value === props.selectedValue.value)
+                  childSource.findIndex((c) => c.props.value === props.selectedValue.value)
               )
             : new DataSource(0));
     let childContainer: HTMLUListElement;
@@ -100,30 +95,18 @@ export function ListSelect<T>(props: ListSelectProps<T>, children: Renderable[],
         selectedIndex.listen((index) => {
             const value = childSource.get(index)?.props.value;
             if (props.selectedValue.value !== value) {
-                if (props.selectedValue instanceof DataSource) {
-                    props.selectedValue.update(value);
-                } else {
-                    props.selectedValue.updateUpstream(value);
-                }
+                props.selectedValue.write(value);
             }
         }, api.cancellationToken);
-        if (props.selectedValue instanceof DataSource) {
-            props.selectedValue.listen(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
-        } else {
-            props.selectedValue.listenDownstream(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
-        }
+        props.selectedValue.listen(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
     }
 
     childSource.listen(() => {
-        if (selectedIndex instanceof DuplexDataSource) {
-            selectedIndex.updateDownstream(selectedIndex.value);
-        } else {
-            selectedIndex.update(selectedIndex.value);
-        }
+        selectedIndex.publish(selectedIndex.value);
     });
 
     return (
-        <div class={combineClass(api.cancellationToken, theme, props.class)} style={props.style}>
+        <div class={combineClass(api.cancellationToken, listStyle, props.class)} style={props.style}>
             <ul
                 tabIndex="0"
                 onKeyDown={(e) => {
@@ -174,7 +157,9 @@ export function ListSelect<T>(props: ListSelectProps<T>, children: Renderable[],
             >
                 {childSource.map((e) => (
                     <li
-                        class={selectedIndex.transform(dsMap((v) => (childSource.indexOf(e) === v ? 'highlight' : '')))}
+                        class={
+                            selectedIndex.transform(dsMap<number, string>((v) => (childSource.indexOf(e) === v ? 'highlight' : ''))) as ReadOnlyDataSource<string>
+                        }
                         onClick={() => {
                             update(selectedIndex, childSource.indexOf(e));
                         }}
@@ -189,8 +174,8 @@ export function ListSelect<T>(props: ListSelectProps<T>, children: Renderable[],
 
 function handleValueChange<T>(
     childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>>,
-    selectedIndex: DataSource<number> | DuplexDataSource<number>
-): any {
+    selectedIndex: BindableSource<number>
+): (value: T) => void {
     return (value: T) => {
         const index = childSource.findIndex((c) => c.props.value === value);
         if (selectedIndex.value !== index) {
@@ -199,14 +184,10 @@ function handleValueChange<T>(
     };
 }
 
-function update<T>(source: DataSource<T> | DuplexDataSource<T>, value: T) {
-    if (source instanceof DataSource) {
-        source.update(value);
-    } else {
-        source.updateUpstream(value);
-    }
+function update<T>(source: BindableSource<T>, value: T) {
+    source.write(value);
 }
 
-export function ListSelectOption<T>(props: { value: T }) {
+export function ListSelectOption<T>(props: { value: T }): undefined {
     return undefined;
 }

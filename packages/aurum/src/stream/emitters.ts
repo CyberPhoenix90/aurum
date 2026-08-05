@@ -1,16 +1,18 @@
 import { DataSource, ArrayDataSource } from './data_source.js';
-import { Stream } from './stream.js';
-import { DuplexDataSource } from './duplex_data_source.js';
+import { Channel } from './channel.js';
 import { CancellationToken, registerAnimationLoop } from '../utilities/cancellation_token.js';
 import { ObjectDataSource } from './object_data_source.js';
 import { dsDebounce, dsTap } from './data_source_operators.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
+import { DataPublisher } from '../utilities/common.js';
+
+type EmissionTarget<T> = DataPublisher<T> | ArrayDataSource<T>;
 
 /**
  * Convenience function to update a stream at fixed intervals
  */
 export function intervalEmitter<T = void>(
-    target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T>,
+    target: EmissionTarget<T>,
     interval: number,
     value: T,
     cancellationToken?: CancellationToken
@@ -20,20 +22,18 @@ export function intervalEmitter<T = void>(
     }, interval);
 }
 
-function updateSource<T = void>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any> | ArrayDataSource<T> | ((param: T) => void), value: T) {
+function updateSource<T = void>(target: EmissionTarget<T> | ((param: T) => void), value: T) {
     if (target instanceof ArrayDataSource) {
         target.push(value);
-    } else if (target instanceof DuplexDataSource) {
-        target.updateDownstream(value);
     } else if (typeof target === 'function') {
         target(value);
     } else {
-        target.update(value);
+        target.publish(value);
     }
 }
 
 export function urlPathEmitter(
-    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string> | ((path: string) => void),
+    target: EmissionTarget<string> | ((path: string) => void),
     cancellationToken?: CancellationToken
 ): void {
     observeHistory();
@@ -82,7 +82,7 @@ function observeHistory() {
 }
 
 export function urlHashEmitter(
-    target: DataSource<string> | DuplexDataSource<string> | Stream<string, any> | ArrayDataSource<string> | ((path: string) => void),
+    target: EmissionTarget<string> | ((path: string) => void),
     stripInHashParameters: boolean = false,
     cancellationToken?: CancellationToken
 ): void {
@@ -154,14 +154,14 @@ export function animate(cb: (progress: number) => void, time: number, cancellati
  * Convenience function to stream animate to a datasource
  */
 export function tweenEmitter(
-    target: DataSource<number> | DuplexDataSource<number> | Stream<number, any> | ArrayDataSource<number>,
+    target: EmissionTarget<number>,
     duration: number,
     startValue: number,
     endValue: number,
     interpolation?: (v: number) => number,
     cancellationToken?: CancellationToken
 ): Promise<void> {
-    if (target instanceof DataSource || target instanceof DuplexDataSource || target instanceof Stream) {
+    if (target instanceof DataSource || target instanceof Channel) {
         if (startValue === endValue) {
             return new Promise((res) => setTimeout(res, duration));
         }
@@ -174,10 +174,8 @@ export function tweenEmitter(
             const value = startValue + (endValue - startValue) * progress;
             if (target instanceof ArrayDataSource) {
                 target.push(value);
-            } else if (target instanceof DuplexDataSource) {
-                target.updateDownstream(value);
             } else {
-                target.update(value);
+                target.publish(value);
             }
         },
         duration,

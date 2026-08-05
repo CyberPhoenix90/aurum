@@ -1,4 +1,3 @@
-export * from './rendering/webcomponent.js';
 export {
     Renderable,
     SingularAurumElement,
@@ -88,7 +87,7 @@ export * from './stream/tree_data_source.js';
 export * from './stream/data_source_operators.js';
 export * from './stream/duplex_data_source_operators.js';
 export * from './stream/operator_model.js';
-export * from './stream/stream.js';
+export * from './stream/channel.js';
 export * from './stream/emitters.js';
 
 export * from './utilities/aurum.js';
@@ -101,8 +100,9 @@ export * from './utilities/storage_stream.js';
 export * from './utilities/url_storage.js';
 export * from './utilities/iteration.js';
 export * from './utilities/sanitize.js';
+export * from './utilities/styling.js';
 
 export * from './decorators/attach_notifier.js';
 
-export { AttributeValue, ClassType, StyleType, DataDrain, Styles } from './utilities/common.js';
+export { AttributeValue, ClassType, StyleType, DataDrain, DataPublisher, DataWriter, Styles, publishTo, writeTo } from './utilities/common.js';
 export { RemoteProtocol, getRemoteFunction } from './aurum_server/aurum_server_client.js';

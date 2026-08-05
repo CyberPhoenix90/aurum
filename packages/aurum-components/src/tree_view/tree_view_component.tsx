@@ -1,4 +1,3 @@
-import { css } from '@emotion/css';
 import {
     ArrayDataSource,
     Aurum,
@@ -10,10 +9,10 @@ import {
     StyleType,
     dsDiff,
     dsMap,
-    getValueOf
+    getValueOf,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 import { TreeEntry } from './tree_view_model.js';
 import { TreeEntryRenderable } from './tree_view_node.js';
 import { FileTypePriority, TreeViewSorting, sortItems } from './tree_view_common.js';
@@ -45,20 +44,8 @@ export interface TreeViewComponentProps<T> {
     onEntryDrop?(draggedEntry: TreeEntry<T>, targetEntry: TreeEntry<T>): void;
 }
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [
-            theme.fontFamily,
-            theme.baseFontSize,
-            theme.baseFontColor,
-            theme.highlightFontColor,
-            theme.themeColor4,
-            theme.themeColor1,
-            theme.themeColor3,
-            theme.themeColor2,
-            theme.highlightColor1
-        ],
-        (fontFamily, size, fontColor, highlightFont, color4, color1, color3, color2, highlightColor1) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor4: color4, themeColor1: color1, highlightColor1 } = theme;
+const style = css`
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
@@ -117,10 +104,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             .no-arrow {
                 padding-left: 18px;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export function TreeViewComponent<T>(props: TreeViewComponentProps<T>) {
     return (
@@ -128,11 +112,11 @@ export function TreeViewComponent<T>(props: TreeViewComponentProps<T>) {
             {props.entries.length.transform(
                 dsMap((length) =>
                     length === 0 ? (
-                        <div style={props.style} class={[style, 'tree-view-component no-entries'] as any}>
+                        <div style={props.style} class={[style, 'tree-view-component no-entries']}>
                             {props.noEntriesMsg ?? 'No entries'}
                         </div>
                     ) : (
-                        <div style={props.style} class={[style, 'tree-view-component'] as any}>
+                        <div style={props.style} class={[style, 'tree-view-component']}>
                             <RenderTreeView {...props}></RenderTreeView>
                         </div>
                     )
@@ -210,7 +194,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
                             if (focusedEntry.value.open instanceof DataSource) {
                                 focusedEntry.value.open.update(false);
                             } else {
-                                focusedEntry.value.open.updateDownstream(false);
+                                focusedEntry.value.open.write(false);
                             }
                         } else {
                             focusedEntry.update(parentOf(focusedEntry.value, props.entries, props.sorting, props.fileTypePriority) ?? focusedEntry.value);
@@ -227,7 +211,7 @@ function RenderTreeView<T>(props: TreeViewComponentProps<T>, children: Renderabl
                             if (focusedEntry.value.open instanceof DataSource) {
                                 focusedEntry.value.open.update(true);
                             } else {
-                                focusedEntry.value.open.updateDownstream(true);
+                                focusedEntry.value.open.write(true);
                             }
                         }
                     }

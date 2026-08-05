@@ -111,10 +111,10 @@ export interface RouteProps {
     onNavigateFrom?: () => void;
 }
 
-export function Route(props: RouteProps, children): undefined {
+export function Route(props: RouteProps, children: Renderable[]): undefined {
     return undefined;
 }
 
-export function DefaultRoute(props: Omit<RouteProps, 'href'>, children): undefined {
+export function DefaultRoute(props: Omit<RouteProps, 'href'>, children: Renderable[]): undefined {
     return undefined;
 }

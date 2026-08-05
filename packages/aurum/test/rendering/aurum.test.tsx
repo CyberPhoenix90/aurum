@@ -1,6 +1,6 @@
 import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 import * as sinon from 'sinon';
-import { Aurum, DataSource, CancellationToken, MapDataSource, combineStyle, combineClass } from '../../src/aurumjs.js';
+import { Aurum, DataSource, CancellationToken, MapDataSource, Renderable, combineStyle, combineClass } from '../../src/aurumjs.js';
 
 describe('Aurum', () => {
     let clock: sinon.SinonFakeTimers;
@@ -132,7 +132,7 @@ describe('Aurum', () => {
     });
 
     it('Should support fragments in transclusion', () => {
-        function TestComponent(_, c) {
+        function TestComponent(_: object, c: Renderable[]) {
             return c;
         }
 
@@ -158,7 +158,7 @@ describe('Aurum', () => {
 
     it('Should support datasources in fragments in transclusion', () => {
         const ds = new DataSource('State1');
-        function TestComponent(_, c) {
+        function TestComponent(_: object, c: Renderable[]) {
             return c;
         }
 

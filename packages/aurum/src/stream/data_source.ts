@@ -1,11 +1,9 @@
 import { AurumServerInfo, syncArrayDataSource, syncDataSource, syncMapDataSource, syncSetDataSource } from '../aurum_server/aurum_server_client.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { Callback, Predicate } from '../utilities/common.js';
+import { Callback, DataPublisher, DataWriter, Predicate } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
 import { promiseIterator, readableStreamStringIterator, transformAsyncIterator } from '../utilities/iteration.js';
-import { getValueOf } from '../utilities/sources.js';
 import { dsDiff, dsMap, dsTap } from './data_source_operators.js';
-import { DuplexDataSource } from './duplex_data_source.js';
 import {
     DataSourceDelayFilterOperator,
     DataSourceFilterOperator,
@@ -22,6 +20,7 @@ export interface ReadOnlyDataSource<T> {
     listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void;
     listen(callback: Callback<T>, cancellationToken?: CancellationToken): void;
     listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void;
+    onError(callback: Callback<Error>, cancellationToken?: CancellationToken): void;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
     combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
@@ -117,6 +116,9 @@ export interface ReadOnlyDataSource<T> {
         cancellationToken?: CancellationToken
     ): ReadOnlyDataSource<K>;
 }
+
+export type BindableSource<T> = ReadOnlyDataSource<T> & DataWriter<T>;
+export type MutableSource<T> = ReadOnlyDataSource<T> & DataWriter<T> & DataPublisher<T>;
 
 export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
     readonly value: T;
@@ -221,13 +223,13 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
 /**
  * Datasources wrap a value and allow you to update it in an observable way. Datasources can be manipulated like streams and can be bound directly in the JSX syntax and will update the html whenever the value changes
  */
-export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T> {
+export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T>, DataWriter<T>, DataPublisher<T> {
     /**
      * The current value of this data source, can be changed through update
      */
     public value: T;
-    private primed: boolean;
-    private updating: boolean;
+    protected primed: boolean;
+    protected updating: boolean;
     public name: string;
     protected updateEvent: EventEmitter<T>;
     protected errorHandler: (error: any) => T;
@@ -336,8 +338,9 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         cancellation: CancellationToken
     ): DataSource<T> {
         const result = new DataSource<T>();
-        emitter.on(event, (v) => result.update(v));
-        cancellation.addCancellable(() => emitter.off(event, result.update));
+        const listener = (value: T) => result.update(value);
+        emitter.on(event, listener);
+        cancellation.addCancellable(() => emitter.off(event, listener));
         return result;
     }
 
@@ -359,7 +362,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const result = new DataSource<T>();
 
         for (const s of sources) {
-            (s as any).listen((v) => result.update(v), cancellation);
+            s.listen((v: T) => result.update(v), cancellation);
         }
 
         result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
@@ -487,8 +490,20 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         }
         this.updating = true;
         this.value = newValue;
-        this.updateEvent.fire(newValue);
-        this.updating = false;
+        try {
+            this.updateEvent.fire(newValue);
+        } finally {
+            this.updating = false;
+        }
+    }
+
+    /** Consumer-originated writes and source publications are equivalent for a one-way source. */
+    public write(newValue: T): void {
+        this.update(newValue);
+    }
+
+    public publish(newValue: T): void {
+        this.update(newValue);
     }
 
     public updateIfChanged(newValue: T): void {
@@ -772,7 +787,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
      */
     public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
-        (this.primed ? this.listenAndRepeat : this.listen).call(this, (v) => targetDataSource.update(v), cancellationToken);
+        (this.primed ? this.listenAndRepeat : this.listen).call(this, (v: T) => targetDataSource.update(v), cancellationToken);
 
         return this;
     }
@@ -795,7 +810,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         cancellationToken?: CancellationToken
     ): DataSource<O> {
         cancellationToken = cancellationToken ?? new CancellationToken();
-        const session = new WeakMap<ReadOnlyDataSource<I>, CancellationToken>();
+        const session = new WeakMap<ReadOnlyDataSource<I>, { token: CancellationToken; references: number }>();
 
         const result = new DataSource<O>();
         data.onItemsAdded.subscribe((items) => {
@@ -803,23 +818,42 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
                 listenToSubSource(item);
             }
             result.update(aggregate(data.getData().map((e) => e.value)));
-        });
+        }, cancellationToken);
 
         data.onItemsRemoved.subscribe((items) => {
             for (const item of items) {
-                session.get(item).cancel();
-                session.delete(item);
+                const itemSession = session.get(item);
+                if (itemSession) {
+                    itemSession.references--;
+                    if (itemSession.references === 0) {
+                        itemSession.token.cancel();
+                        session.delete(item);
+                    }
+                }
             }
             result.update(aggregate(data.getData().map((e) => e.value)));
-        });
+        }, cancellationToken);
+
+        for (const item of data) {
+            listenToSubSource(item);
+        }
+        result.update(aggregate(data.getData().map((item) => item.value)));
 
         return result;
 
         function listenToSubSource(item: ReadOnlyDataSource<I>) {
-            session.set(item, new CancellationToken());
+            const existingSession = session.get(item);
+            if (existingSession) {
+                existingSession.references++;
+                return;
+            }
+
+            const itemToken = new CancellationToken();
+            session.set(item, { token: itemToken, references: 1 });
+            cancellationToken.addCancellable(itemToken);
             item.listen(() => {
                 result.update(aggregate(data.getData().map((e) => e.value)));
-            }, session.get(item));
+            }, itemToken);
         }
     }
 
@@ -831,7 +865,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     public combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
         cancellationToken = cancellationToken ?? new CancellationToken();
 
-        let combinedDataSource: DataSource<T> | DuplexDataSource<T>;
+        let combinedDataSource: DataSource<T>;
         if (this.primed) {
             combinedDataSource = new DataSource<T>(this.value);
         } else {
@@ -1144,7 +1178,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         if (Array.isArray(sources) && sources.length === 1) {
             if (sources[0] instanceof ArrayDataSource) {
                 return sources[0] as ArrayDataSource<T>;
-            } else if (!(sources[0] instanceof DataSource && sources[0] instanceof DuplexDataSource)) {
+            } else if (!(sources[0] instanceof DataSource)) {
                 return new ArrayDataSource<T>(sources[0] as T[]);
             }
         }
@@ -1153,7 +1187,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             const item = sources[i];
             if (Array.isArray(item)) {
                 result.appendArray(item as T[]);
-            } else if (item instanceof DataSource || item instanceof DuplexDataSource) {
+            } else if (item instanceof DataSource) {
                 let index = i;
                 item.transform(
                     dsDiff(),
@@ -1225,7 +1259,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                             }
                             break;
                         case 'merge':
-                            const lengthDiff = change.newState.length + change.previousState.length;
+                            const lengthDiff = change.newState.length - change.previousState.length;
                             result.removeRange(change.index + boundaries[index], change.index + boundaries[index] + change.previousState.length);
                             result.insertAt(change.index + boundaries[index], ...change.newState);
                             if (lengthDiff != 0) {
@@ -1260,25 +1294,25 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             | ReadOnlyArrayDataSource<DataSource<T> | T>
             | ReadOnlyArrayDataSource<DataSource<T>>
             | ReadOnlyArrayDataSource<ReadOnlyDataSource<T>>
-            | ReadOnlyArrayDataSource<GenericDataSource<T>>
-            | ReadOnlyArrayDataSource<DuplexDataSource<T>>,
+            | ReadOnlyArrayDataSource<GenericDataSource<T>>,
         cancellation: CancellationToken
     ): ReadOnlyArrayDataSource<T> {
         const result = new ArrayDataSource<T>();
-        const session = new WeakMap<any, CancellationToken>();
-        arrayDataSource.listenAndRepeat(({ operationDetailed, index, index2, count, items, previousState, newState, target }) => {
+        const session = new WeakMap<any, { token: CancellationToken; references: number }>();
+        arrayDataSource.listenAndRepeat((change: CollectionChange<any>) => {
+            const { operationDetailed, index, index2, count, items, previousState, newState, target } = change;
             switch (operationDetailed) {
                 case 'append':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.appendArray(items.map((item) => getValueOf(item)));
+                    result.appendArray(items.map((item) => getSourceValue(item)));
                     break;
                 case 'prepend':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.unshift(...items.map((item) => getValueOf(item)));
+                    result.unshift(...items.map((item) => getSourceValue(item)));
                     break;
                 case 'merge':
                     for (const item of previousState) {
@@ -1287,13 +1321,13 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                     for (const item of newState) {
                         listenToItem(item);
                     }
-                    result.merge(newState.map((i) => getValueOf(i)));
+                    result.merge(newState.map((i) => getSourceValue(i)));
                     break;
                 case 'insert':
                     for (const item of items) {
                         listenToItem(item);
                     }
-                    result.insertAt(index, ...items.map((item) => getValueOf(item)));
+                    result.insertAt(index, ...items.map((item) => getSourceValue(item)));
                     break;
                 case 'clear':
                     for (const item of previousState) {
@@ -1322,7 +1356,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                 case 'replace':
                     stopLitenToItem(target);
                     listenToItem(items[0]);
-                    result.set(index, getValueOf(items[0]));
+                    result.set(index, getSourceValue(items[0]));
                     break;
                 case 'swap':
                     result.swap(index, index2);
@@ -1331,23 +1365,44 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }, cancellation);
         return result;
 
-        function listenToItem(item: ReadOnlyDataSource<T> | T | DataSource<T> | GenericDataSource<T> | DuplexDataSource<T>) {
+        function listenToItem(item: ReadOnlyDataSource<T> | T | DataSource<T> | GenericDataSource<T>) {
             if (typeof item !== 'object' || !('listen' in item)) {
                 return;
             }
 
-            session.set(item, new CancellationToken());
-            cancellation.addCancellable(session.get(item));
+            const existingSession = session.get(item);
+            if (existingSession) {
+                existingSession.references++;
+                return;
+            }
+
+            const itemToken = new CancellationToken();
+            session.set(item, { token: itemToken, references: 1 });
+            cancellation.addCancellable(itemToken);
             item.listen((value) => {
-                result.set(arrayDataSource.indexOf(item as any), value);
-            }, session.get(item));
+                const sourceData = arrayDataSource.getData();
+                for (let index = 0; index < sourceData.length; index++) {
+                    if (sourceData[index] === item) {
+                        result.set(index, value);
+                    }
+                }
+            }, itemToken);
         }
 
         function stopLitenToItem(item: ReadOnlyDataSource<T> | T) {
-            if (session.has(item)) {
-                session.get(item).cancel();
+            const itemSession = session.get(item);
+            if (itemSession) {
+                itemSession.references--;
+                if (itemSession.references > 0) {
+                    return;
+                }
+                itemSession.token.cancel();
                 session.delete(item);
             }
+        }
+
+        function getSourceValue(item: ReadOnlyDataSource<T> | T): T {
+            return typeof item === 'object' && item !== null && 'value' in item ? item.value : (item as T);
         }
     }
 
@@ -1619,7 +1674,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public splice(index: number, deleteCount: number, ...insertion: T[]): T[] {
-        let removed = [];
+        let removed: T[] = [];
         if (deleteCount > 0) {
             removed = this.removeAt(index, deleteCount);
         }
@@ -1917,8 +1972,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()', config);
 
         dependencies.forEach((dep) => {
-            dep.listen(() => view.refresh());
-        }, cancellationToken);
+            dep.listen(() => view.refresh(), cancellationToken);
+        });
 
         return view;
     }
@@ -1953,8 +2008,8 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()', config);
 
         dependencies.forEach((dep) => {
-            dep.listen(() => view.refresh());
-        }, cancellationToken);
+            dep.listen(() => view.refresh(), cancellationToken);
+        });
 
         return view;
     }
@@ -2553,7 +2608,7 @@ export class UniqueArrayView<T> extends ArrayDataSource<T> {
                     this.clear();
                     break;
                 case 'prepend':
-                    filteredItems = change.items.filter((e) => !this.data.includes(e));
+                    filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
                     this.unshift(...filteredItems);
                     break;
                 case 'append':
@@ -2561,20 +2616,26 @@ export class UniqueArrayView<T> extends ArrayDataSource<T> {
                     this.appendArray(filteredItems);
                     break;
                 case 'insert':
-                    filteredItems = change.items.filter((e) => !this.data.includes(e));
-                    this.insertAt(change.index, ...filteredItems);
+                    filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
+                    this.insertAt(Math.min(change.index, this.data.length), ...filteredItems);
                     break;
                 case 'merge':
                     this.merge(Array.from(new Set(parent.getData())));
                     break;
                 case 'swap':
-                    this.swap(change.index, change.index2);
                     break;
                 case 'replace':
-                    if (this.data.includes(change.items[0])) {
-                        this.remove(change.target);
-                    } else {
-                        this.set(change.index, change.items[0]);
+                    const targetStillExists = parent.includes(change.target);
+                    const replacementExists = this.data.includes(change.items[0]);
+                    if (!targetStillExists) {
+                        const targetIndex = this.indexOf(change.target);
+                        if (replacementExists) {
+                            this.removeAt(targetIndex);
+                        } else {
+                            this.set(targetIndex, change.items[0]);
+                        }
+                    } else if (!replacementExists) {
+                        this.insertAt(Math.min(change.index, this.data.length), change.items[0]);
                     }
                     break;
             }
@@ -2682,9 +2743,9 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
                 case 'removeLeft':
                 case 'removeRight':
                 case 'remove':
-                    for (const item of change.items) {
-                        this.remove(item);
-                    }
+                    const removeIndex = change.newState.slice(0, change.index).filter(this.viewFilter).length;
+                    const removeCount = change.items.filter(this.viewFilter).length;
+                    this.removeAt(removeIndex, removeCount);
                     break;
                 case 'prepend':
                     filteredItems = change.items.filter(this.viewFilter);
@@ -2696,27 +2757,25 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
                     break;
                 case 'insert':
                     filteredItems = change.items.filter(this.viewFilter);
-                    this.insertAt(change.index, ...filteredItems);
+                    const insertIndex = change.newState.slice(0, change.index).filter(this.viewFilter).length;
+                    this.insertAt(insertIndex, ...filteredItems);
                     break;
                 case 'merge':
                     this.merge(change.items.filter(this.viewFilter));
                     break;
                 case 'swap':
-                    const indexA = this.data.indexOf(change.items[0]);
-                    const indexB = this.data.indexOf(change.items[1]);
-                    if (indexA !== -1 && indexB !== -1) {
-                        this.swap(indexA, indexB);
-                    }
+                    this.merge(change.newState.filter(this.viewFilter));
                     break;
                 case 'replace':
-                    const index = this.data.indexOf(change.target);
-                    if (index !== -1) {
-                        const acceptNew = this.viewFilter(change.items[0]);
-                        if (acceptNew) {
-                            this.set(index, change.items[0]);
-                        } else {
-                            this.remove(change.target);
-                        }
+                    const index = change.newState.slice(0, change.index).filter(this.viewFilter).length;
+                    const acceptOld = this.viewFilter(change.target);
+                    const acceptNew = this.viewFilter(change.items[0]);
+                    if (acceptOld && acceptNew) {
+                        this.set(index, change.items[0]);
+                    } else if (acceptOld) {
+                        this.removeAt(index);
+                    } else if (acceptNew) {
+                        this.insertAt(index, change.items[0]);
                     }
                     break;
             }
@@ -2803,7 +2862,7 @@ export class LimitedArrayView<T> extends ArrayDataSource<T> {
 export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>, startIndex = 0): (input: I) => Promise<void> {
     return async (v: any) => {
         try {
-            for (let i = 0; i < operations.length; i++) {
+            for (let i = startIndex; i < operations.length; i++) {
                 const operation = operations[i];
                 switch (operation.operationType) {
                     case OperationType.NOOP:
@@ -2891,24 +2950,21 @@ export class MapDataSource<K, V> {
 
     public static fromMultipleMaps<K, V>(maps: MapDataSource<K, V>[], cancellationToken?: CancellationToken): MapDataSource<K, V> {
         const result = new MapDataSource<K, V>();
-        let i = 0;
         for (const map of maps) {
-            let index = i;
             result.assign(map);
             map.listen((change) => {
-                let isOverwritten = false;
-                for (let j = index + 1; j < maps.length; j++) {
-                    if (maps[j].has(change.key)) {
-                        isOverwritten = true;
+                let valueSource: MapDataSource<K, V>;
+                for (let index = maps.length - 1; index >= 0; index--) {
+                    if (maps[index].has(change.key)) {
+                        valueSource = maps[index];
                         break;
                     }
                 }
-                if (!isOverwritten) {
-                    if (change.deleted) {
-                        result.delete(change.key);
-                    } else {
-                        result.set(change.key, change.newValue);
-                    }
+
+                if (valueSource) {
+                    result.set(change.key, valueSource.get(change.key));
+                } else {
+                    result.delete(change.key);
                 }
             }, cancellationToken);
         }
@@ -2941,9 +2997,9 @@ export class MapDataSource<K, V> {
     }
 
     public applyMapChange(change: MapChange<K, V>) {
-        if (change.deleted && this.data.has(change.key)) {
+        if (change.deleted) {
             this.delete(change.key);
-        } else if (!change.deleted && !this.data.has(change.key)) {
+        } else {
             this.set(change.key, change.newValue);
         }
     }
@@ -3289,13 +3345,15 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
      */
     public cancelAll(): void {
         this.updateEvent.cancelAll();
+        this.updateEventOnKey.forEach((event) => event.cancelAll());
+        this.updateEventOnKey.clear();
     }
 
     public applySetChange(change: SetChange<K>): void {
-        if (change.exists && !this.has(change.key)) {
-            this.data.add(change.key);
-        } else if (!change.exists && this.has(change.key)) {
-            this.data.delete(change.key);
+        if (change.exists) {
+            this.add(change.key);
+        } else {
+            this.delete(change.key);
         }
     }
 
@@ -3695,7 +3753,11 @@ export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F
         operationJ,
         operationK
     ].filter((v) => v !== undefined);
-    const buffer = [];
+    const buffer: Array<{
+        value: T;
+        resolve: (value: { item: K; cancelled: boolean }) => void;
+        reject: (reason?: unknown) => void;
+    }> = [];
 
     lockState.listen((v) => {
         if (!v) {

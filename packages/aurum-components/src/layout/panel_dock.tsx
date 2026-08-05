@@ -5,14 +5,14 @@ import {
     CancellationToken,
     ClassType,
     combineClass,
+    BindableSource,
     DataSource,
     dsMap,
-    DuplexDataSource,
     Renderable,
     StyleType
 } from 'aurumjs';
 
-export type SizeTypes = DataSource<number> | DuplexDataSource<number> | number;
+export type SizeTypes = BindableSource<number> | number;
 export interface PanelElementProps {
     class?: ClassType;
     style?: StyleType;
@@ -24,9 +24,9 @@ export interface PanelElementProps {
 
 export function renderBottomDock(
     model: AurumElementModel<PanelElementProps>,
-    size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
+    minSize: BindableSource<number>,
+    maxSize: BindableSource<number>,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable {
@@ -54,7 +54,7 @@ export function renderBottomDock(
 
 export function renderTopDock(
     model: AurumElementModel<PanelElementProps>,
-    size: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
     cancellationToken: CancellationToken
 ): Renderable {
     return (
@@ -72,9 +72,9 @@ export function renderTopDock(
 
 export function renderLeftDock(
     model: AurumElementModel<PanelElementProps>,
-    size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
+    minSize: BindableSource<number>,
+    maxSize: BindableSource<number>,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -116,9 +116,9 @@ export function renderLeftDock(
 
 export function renderRightDock(
     model: AurumElementModel<PanelElementProps>,
-    size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
+    minSize: BindableSource<number>,
+    maxSize: BindableSource<number>,
     cancellationToken: CancellationToken,
     dragHandleThickness: number = 2
 ): Renderable[] {
@@ -177,9 +177,9 @@ let dragToken: CancellationToken;
 
 function verticalDragStart(
     e: MouseEvent,
-    size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
+    minSize: BindableSource<number>,
+    maxSize: BindableSource<number>,
     orientation: number,
     dragHandleThickness: number = 2
 ): void {
@@ -191,13 +191,7 @@ function verticalDragStart(
     dragToken = new CancellationToken();
     dragToken.registerDomEvent(window, 'mousemove', (event: MouseEvent) => {
         event.preventDefault();
-        if (size instanceof DuplexDataSource) {
-            size.updateUpstream(
-                Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageX - dragStartPos)))
-            );
-        } else {
-            size.update(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageX - dragStartPos))));
-        }
+        size.write(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageX - dragStartPos))));
     });
     dragToken.registerDomEvent(window, 'mouseup', (event: MouseEvent) => {
         dragEnd();
@@ -210,9 +204,9 @@ function dragEnd(): void {
 
 function horizontalDragStart(
     e: MouseEvent,
-    size: DataSource<number> | DuplexDataSource<number>,
-    minSize: DataSource<number> | DuplexDataSource<number>,
-    maxSize: DataSource<number> | DuplexDataSource<number>,
+    size: BindableSource<number>,
+    minSize: BindableSource<number>,
+    maxSize: BindableSource<number>,
     orientation: number,
     dragHandleThickness: number = 2
 ): void {
@@ -224,13 +218,7 @@ function horizontalDragStart(
     dragToken = new CancellationToken();
     dragToken.registerDomEvent(window, 'mousemove', (event: MouseEvent) => {
         event.preventDefault();
-        if (size instanceof DuplexDataSource) {
-            size.updateUpstream(
-                Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageY - dragStartPos)))
-            );
-        } else {
-            size.update(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageY - dragStartPos))));
-        }
+        size.write(Math.min(maxSize.value, Math.max(dragHandleThickness, minSize.value, dragSizeInitial + orientation * (event.pageY - dragStartPos))));
     });
     dragToken.registerDomEvent(window, 'mouseup', (event: MouseEvent) => {
         dragEnd();

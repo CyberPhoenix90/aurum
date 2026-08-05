@@ -1,6 +1,5 @@
-import { AurumElementModel, createAPI, Renderable } from '../aurum_element.js';
+import { AurumElementModel, createAPI, Renderable, RenderSession } from '../aurum_element.js';
 import { ArrayDataSource, DataSource } from '../../stream/data_source.js';
-import { DuplexDataSource } from '../../stream/duplex_data_source.js';
 import { CancellationToken } from '../../utilities/cancellation_token.js';
 import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
 import { EventEmitter } from '../../utilities/event_emitter.js';
@@ -84,7 +83,7 @@ function aurumToVDOMInternal(
     }
 
     if (Array.isArray(content)) {
-        const result = {
+        const result: { insertAt: number; insertCount: number; tokens: CancellationToken[] } = {
             insertAt: -1,
             insertCount: 0,
             tokens: []
@@ -123,7 +122,7 @@ function aurumToVDOMInternal(
         return {
             tokens: []
         };
-    } else if (content instanceof DataSource || content instanceof DuplexDataSource) {
+    } else if (content instanceof DataSource) {
         const virtualNode: VDOMNode = {
             type: 'virtual',
             children: []
@@ -163,7 +162,7 @@ function aurumToVDOMInternal(
         const item = content as AurumElementModel<any>;
         if (!item.isIntrinsic) {
             const sessionToken = new CancellationToken();
-            const session = {
+            const session: RenderSession = {
                 attachCalls: [],
                 sessionToken: sessionToken,
                 tokens: []
@@ -226,7 +225,7 @@ function observeAttributes(
 ): { [key: string]: string } {
     const result: { [key: string]: string } = {};
     for (const key in props) {
-        let element;
+        let element: any;
         if (props.hasOwnProperty(key)) {
             if (key === 'style') {
                 element = handleStyle(props[key], renderToken);
@@ -237,14 +236,6 @@ function observeAttributes(
             }
 
             if (element instanceof DataSource) {
-                element.listen(() => {
-                    result[key] = element.value;
-                    change.fire({
-                        changedNode: node
-                    });
-                }, renderToken);
-                result[key] = element.value;
-            } else if (element instanceof DuplexDataSource) {
                 element.listen(() => {
                     result[key] = element.value;
                     change.fire({

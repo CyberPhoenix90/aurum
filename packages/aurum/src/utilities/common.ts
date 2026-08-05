@@ -1,12 +1,13 @@
-import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
+import type { ArrayDataSource, MapDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
+import type { AurumStyleClass } from './styling.js';
 
 export type AttributeValue = number | string | boolean | ReadOnlyDataSource<string> | ReadOnlyDataSource<boolean> | ReadOnlyDataSource<number>;
 export type ClassType =
     | string
+    | AurumStyleClass
     | ReadOnlyDataSource<string>
     | ReadOnlyDataSource<string[]>
-    | Array<string | ReadOnlyDataSource<string>>
+    | Array<string | AurumStyleClass | ReadOnlyDataSource<string>>
     | MapLike<boolean | ReadOnlyDataSource<boolean>>
     | MapDataSource<string, boolean>
     | ArrayDataSource<string>;
@@ -22,7 +23,24 @@ export type Comparator<T1, T2> = (value1: T1, value2: T2) => boolean;
 export type Constructor<T> = new (...args: any[]) => T;
 export type MapLike<T> = { [key: string]: T };
 
-export type DataDrain<T> = Callback<T> | DataSource<T> | DuplexDataSource<T>;
+export interface DataWriter<T> {
+    write(value: T): void;
+}
+
+export interface DataPublisher<T> {
+    publish(value: T): void;
+}
+
+export type DataDrain<T> = Callback<T> | DataWriter<T>;
+
+export function writeTo<T>(target: DataDrain<T>, value: T): void {
+    if (typeof target === 'function') target(value);
+    else target.write(value);
+}
+
+export function publishTo<T>(target: DataPublisher<T>, value: T): void {
+    target.publish(value);
+}
 export declare type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
 export interface Styles {

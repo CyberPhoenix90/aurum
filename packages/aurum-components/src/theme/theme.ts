@@ -1,4 +1,4 @@
-import { DataSource } from 'aurumjs';
+import { CancellationToken, DataSource, ReadOnlyDataSource } from 'aurumjs';
 
 export interface Theme {
     highlightColor1: DataSource<string>;
@@ -81,3 +81,25 @@ export const lightTheme: Theme = {
 };
 
 export const currentTheme: DataSource<Theme> = new DataSource(darkTheme);
+
+export type ReactiveTheme = {
+    readonly [K in keyof Theme]: ReadOnlyDataSource<string>;
+};
+
+/** Stable projections that follow both active-theme changes and individual theme value updates. */
+export const theme = Object.fromEntries(
+    (Object.keys(darkTheme) as Array<keyof Theme>).map((key) => [key, followThemeValue(key)])
+) as ReactiveTheme;
+
+function followThemeValue(key: keyof Theme): ReadOnlyDataSource<string> {
+    const result = new DataSource(currentTheme.value[key].value);
+    let activeThemeToken: CancellationToken | undefined;
+
+    currentTheme.listenAndRepeat((activeTheme) => {
+        activeThemeToken?.cancel();
+        activeThemeToken = new CancellationToken();
+        activeTheme[key].listenAndRepeat((value) => result.update(value), activeThemeToken);
+    });
+
+    return result;
+}

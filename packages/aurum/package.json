@@ -33,8 +33,6 @@
         "directory": "packages/aurum"
     },
     "keywords": [
-        "web-components",
-        "webcomponents",
         "DOM",
         "stream",
         "rendering"

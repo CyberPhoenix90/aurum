@@ -1,61 +1,41 @@
-import { css } from '@emotion/css';
-import { ButtonProps, Aurum, Renderable, combineClass, AurumComponentAPI } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { ButtonProps, Aurum, Renderable, combineClass, AurumComponentAPI, css } from 'aurumjs';
+import { theme } from '../theme/theme.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [
-            theme.fontFamily,
-            theme.baseFontSize,
-            theme.themeColor0,
-            theme.themeColor1,
-            theme.baseFontColor,
-            theme.highContrastFontColor,
-            theme.primary,
-            theme.error
-        ],
-        (fontFamily, size, color0, color1, baseFontColor, highContrastFontColor, action, error) => css`
-            font-family: ${fontFamily};
-            font-size: ${size};
-            outline: none;
-            padding: 6px;
-            user-select: none;
-            border-radius: 4px;
-            border-color: ${color1};
-            display: flex;
-            align-items: center;
+const style = css`
+    font-family: ${theme.fontFamily};
+    font-size: ${theme.baseFontSize};
+    outline: none;
+    padding: 6px;
+    user-select: none;
+    border-radius: 4px;
+    border-color: ${theme.themeColor1};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 
-            //center text horizontally
-            justify-content: center;
+    &[disabled] {
+        pointer-events: none;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
-            cursor: pointer;
+    &.action {
+        font-weight: 500;
+        background-color: ${theme.primary};
+        color: white;
+    }
 
-            &[disabled] {
-                pointer-events: none;
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
+    &.neutral {
+        background-color: ${theme.themeColor0};
+        color: ${theme.baseFontColor};
+    }
 
-            &.action {
-                font-weight: 500;
-                background-color: ${action};
-                color: white;
-            }
-
-            &.neutral {
-                background-color: ${color0};
-                color: ${baseFontColor};
-            }
-
-            &.destructive {
-                background-color: ${error};
-                color: white;
-            }
-        `,
-        lifecycleToken
-    )
-);
+    &.destructive {
+        background-color: ${theme.error};
+        color: white;
+    }
+`;
 
 export type ButtonType = 'neutral' | 'action' | 'destructive';
 

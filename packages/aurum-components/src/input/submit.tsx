@@ -1,12 +1,16 @@
-import { Aurum, AurumComponentAPI, DataSource, DuplexDataSource, Renderable } from 'aurumjs';
+import { Aurum, AurumComponentAPI, Renderable, writeTo } from 'aurumjs';
 import { Button, ButtonComponentProps } from './button.js';
 import { FormType } from '../form/form.js';
 
-export interface SubmitButtonProps extends ButtonComponentProps {
-    form: FormType<any, any>;
+export interface SubmitButtonProps<T extends object = Record<string, unknown>, O = unknown> extends ButtonComponentProps {
+    form: FormType<T, O>;
 }
 
-export function Submit(props: SubmitButtonProps, children: Renderable[], api: AurumComponentAPI): Renderable {
+export function Submit<T extends object = Record<string, unknown>, O = unknown>(
+    props: SubmitButtonProps<T, O>,
+    children: Renderable[],
+    api: AurumComponentAPI
+): Renderable {
     const { disabled, form, onClick, ...rest } = props;
 
     return (
@@ -15,10 +19,8 @@ export function Submit(props: SubmitButtonProps, children: Renderable[], api: Au
                 form.submit();
                 if (typeof onClick === 'function') {
                     onClick(e);
-                } else if (onClick instanceof DataSource) {
-                    onClick.update(e);
-                } else if (onClick instanceof DuplexDataSource) {
-                    onClick.updateDownstream(e);
+                } else if (onClick) {
+                    writeTo(onClick, e);
                 }
             }}
             disabled={props.disabled ?? form.submitting}

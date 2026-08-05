@@ -1,11 +1,11 @@
 import { Aurum } from 'aurumjs';
 import { FormType } from './form.js';
 
-export interface ErrorIndicatorProps<T extends Object = Object> {
-    form: FormType<T, any>;
+export interface ErrorIndicatorProps<T extends object = Record<string, unknown>, O = unknown> {
+    form: FormType<T, O>;
 }
 
-export function ErrorIndicator<T extends Object = Object>(props: ErrorIndicatorProps<T>) {
+export function ErrorIndicator<T extends object = Record<string, unknown>, O = unknown>(props: ErrorIndicatorProps<T, O>) {
     return (
         <div
             style={{

@@ -1,8 +1,7 @@
 import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
 import { AttributeValue, DataDrain } from '../utilities/common.js';
-import { GenericDataSource, DataSource } from '../stream/data_source.js';
+import { BindableSource } from '../stream/data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
 
 export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
     placeholder?: AttributeValue;
@@ -10,12 +9,12 @@ export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
     disabled?: AttributeValue;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
-    value?: GenericDataSource<string> | string;
+    value?: BindableSource<string> | string;
     accept?: AttributeValue;
     alt?: AttributeValue;
     autocomplete?: AttributeValue;
     autofocus?: AttributeValue;
-    checked?: GenericDataSource<boolean> | boolean;
+    checked?: BindableSource<boolean> | boolean;
     formAction?: AttributeValue;
     formEnctype?: AttributeValue;
     formMethod?: AttributeValue;
@@ -73,40 +72,28 @@ const inputProps = [
  */
 export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents, (node: HTMLElement, props: InputProps, cleanUp: CancellationToken) => {
     const input = node as HTMLInputElement;
-    if (props?.value) {
-        if (props.value instanceof DataSource) {
-            props.value.listenAndRepeat((v) => {
+    if (props?.value !== undefined) {
+        if (typeof props.value !== 'string') {
+            const value = props.value as BindableSource<string>;
+            value.listenAndRepeat((v) => {
                 input.value = v ?? '';
             }, cleanUp);
             input.addEventListener('input', () => {
-                (props.value as DataSource<string>).update(input.value);
-            });
-        } else if (props.value instanceof DuplexDataSource) {
-            props.value.listenAndRepeat((v) => {
-                input.value = v ?? '';
-            }, cleanUp);
-            input.addEventListener('input', () => {
-                (props.value as DuplexDataSource<string>).updateUpstream(input.value);
+                value.write(input.value);
             });
         } else {
             input.value = props.value as string;
         }
     }
 
-    if (props?.checked) {
-        if (props.checked instanceof DataSource) {
-            props.checked.listenAndRepeat((v) => {
+    if (props?.checked !== undefined) {
+        if (typeof props.checked !== 'boolean') {
+            const checked = props.checked as BindableSource<boolean>;
+            checked.listenAndRepeat((v) => {
                 input.checked = v ?? false;
             }, cleanUp);
             input.addEventListener('change', () => {
-                (props.checked as DataSource<boolean>).update(input.checked);
-            });
-        } else if (props.checked instanceof DuplexDataSource) {
-            props.checked.listenAndRepeat((v) => {
-                input.checked = v ?? false;
-            }, cleanUp);
-            input.addEventListener('change', () => {
-                (props.checked as DuplexDataSource<boolean>).updateUpstream(input.checked);
+                checked.write(input.checked);
             });
         } else {
             input.checked = props.checked as boolean;

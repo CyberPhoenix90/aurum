@@ -1,15 +1,17 @@
 import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { dsMap, dsUnique } from '../stream/data_source_operators.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { aurumClassName, camelCaseToKebabCase } from '../utilities/classname.js';
-import { ClassType, StyleType } from '../utilities/common.js';
+import { ClassType, StyleType, Styles } from '../utilities/common.js';
 import { Data } from '../utilities/sources.js';
+import { isAurumStyleClass } from '../utilities/styling.js';
 
 export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<string> {
     if (typeof data === 'string') {
         return data;
-    } else if (data instanceof DataSource || data instanceof DuplexDataSource) {
+    } else if (isAurumStyleClass(data)) {
+        return data.attach(cleanUp);
+    } else if (data instanceof DataSource) {
         return data
             .transform(
                 dsUnique(),
@@ -29,12 +31,12 @@ export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<s
         const result = aurumClassName(data as any, cleanUp);
         return handleClass(result, cleanUp);
     } else {
-        const result = new DataSource<string>(buildClass(data));
+        const result = new DataSource<string>(buildClass(data, cleanUp));
 
         for (const i of data as Array<string | ReadOnlyDataSource<string>>) {
             if (i instanceof DataSource) {
                 i.transform(dsUnique(), cleanUp).listen((v) => {
-                    result.update(buildClass(data));
+                    result.update(buildClass(data, cleanUp));
                 }, cleanUp);
             }
         }
@@ -43,14 +45,16 @@ export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<s
     }
 }
 
-function buildClass(data: (string | ReadOnlyDataSource<string>)[]): string {
-    return (data as Array<string | ReadOnlyDataSource<string>>).reduce<string>((p, c) => {
+function buildClass(data: Array<string | import('../utilities/styling.js').AurumStyleClass | ReadOnlyDataSource<string>>, cleanUp: CancellationToken): string {
+    return data.reduce<string>((p, c) => {
         if (c == null) {
             return p;
         }
 
         if (typeof c === 'string') {
             return `${p} ${c}`;
+        } else if (isAurumStyleClass(c)) {
+            return `${p} ${c.attach(cleanUp)}`;
         } else {
             if (c.value) {
                 return `${p} ${c.value}`;
@@ -64,7 +68,7 @@ function buildClass(data: (string | ReadOnlyDataSource<string>)[]): string {
 export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<string> {
     if (typeof data === 'string') {
         return data;
-    } else if (data instanceof DataSource || data instanceof DuplexDataSource) {
+    } else if (data instanceof DataSource) {
         return data.transform(
             dsUnique(),
             dsMap((v) => {
@@ -82,16 +86,18 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
         );
     } else if (typeof data === 'object' && !Array.isArray(data)) {
         const result = new ArrayDataSource<[string, string]>();
+        const styles = data as Styles;
         let index = 0;
-        for (const i in data) {
-            if (data[i] instanceof DataSource) {
+        for (const i in styles) {
+            const value = styles[i as keyof Styles];
+            if (value instanceof DataSource) {
                 const myIndex = index;
-                result.push([i, data[i].value]);
-                (data[i] as ReadOnlyDataSource<string>).listen((v) => {
-                    result.set(myIndex, [i, v]);
+                result.push([i, value.value.toString()]);
+                (value as ReadOnlyDataSource<string | number>).listen((v) => {
+                    result.set(myIndex, [i, v.toString()]);
                 }, cleanUp);
-            } else if (data[i] !== undefined) {
-                result.push([i, data[i]]);
+            } else if (value !== undefined) {
+                result.push([i, value.toString()]);
             }
             index++;
         }

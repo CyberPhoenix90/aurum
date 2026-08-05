@@ -47,5 +47,3 @@ export * from './misc/currency.js';
 export { PanelContent, PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop, PanelElementProps, SizeTypes } from './layout/panel_dock.js';
 export * from './layout/panel_layout.js';
 export * from './layout/grid.js';
-
-export { aurumify } from './utils.js';

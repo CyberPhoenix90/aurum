@@ -1,7 +1,6 @@
-import { GenericDataSource, DataSource } from '../stream/data_source.js';
+import { BindableSource } from '../stream/data_source.js';
 import { AttributeValue, DataDrain } from '../utilities/common.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
 
 export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
@@ -10,7 +9,7 @@ export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
     disabled?: AttributeValue;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
-    value?: GenericDataSource<string> | string;
+    value?: BindableSource<string> | string;
     cols?: AttributeValue;
     rows?: AttributeValue;
     wrap?: AttributeValue;
@@ -62,20 +61,14 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
     textAreaEvents,
     (node: HTMLElement, props: TextAreaProps, cleanUp: CancellationToken) => {
         const textArea = node as HTMLTextAreaElement;
-        if (props?.value) {
-            if (props.value instanceof DataSource) {
-                props.value.listenAndRepeat((v) => {
+        if (props?.value !== undefined) {
+            if (typeof props.value !== 'string') {
+                const value = props.value as BindableSource<string>;
+                value.listenAndRepeat((v) => {
                     textArea.value = v;
                 }, cleanUp);
                 textArea.addEventListener('input', () => {
-                    (props.value as DataSource<string>).update(textArea.value);
-                });
-            } else if (props.value instanceof DuplexDataSource) {
-                props.value.listenAndRepeat((v) => {
-                    textArea.value = v;
-                }, cleanUp);
-                textArea.addEventListener('input', () => {
-                    (props.value as DuplexDataSource<string>).updateUpstream(textArea.value);
+                    value.write(textArea.value);
                 });
             } else {
                 textArea.value = props.value as string;

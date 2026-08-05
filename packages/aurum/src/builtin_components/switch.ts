@@ -15,7 +15,7 @@ export function Switch<T = boolean>(props: SwitchProps<T>, children: Renderable[
     if (
         children.some(
             (c) =>
-                !c[aurumElementModelIdentitiy] ||
+                !(c as AurumElementModel<any>)[aurumElementModelIdentitiy] ||
                 !((c as AurumElementModel<any>).factory === SwitchCase || (c as AurumElementModel<any>).factory === DefaultSwitchCase)
         )
     ) {
@@ -42,10 +42,10 @@ export interface SwitchCaseProps<T> {
     when: T;
 }
 
-export function SwitchCase<T>(props: SwitchCaseProps<T>, children): undefined {
+export function SwitchCase<T>(props: SwitchCaseProps<T>, children: Renderable[]): undefined {
     return undefined;
 }
 
-export function DefaultSwitchCase(props: {}, children): undefined {
+export function DefaultSwitchCase(props: {}, children: Renderable[]): undefined {
     return undefined;
 }

@@ -1,4 +1,3 @@
-import { css } from '@emotion/css';
 import {
     ArrayDataSource,
     Aurum,
@@ -11,40 +10,22 @@ import {
     resolveChildren,
     AurumElementModel,
     combineStyle,
-    StyleType
+    StyleType,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 
-const toasterStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [],
-        () => css`
+const toasterStyle = css`
             display: flex;
             width: 100%;
             position: fixed;
             top: 100%;
             z-index: 10000;
             transition: all 0.4s ease;
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
-const toastStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [
-            theme.fontFamily,
-            theme.heading3FontSize,
-            theme.baseFontColor,
-            theme.themeColor2,
-            theme.boxShadow,
-            theme.success,
-            theme.warning,
-            theme.error,
-            theme.highContrastFontColor
-        ],
-        (fontFamily, size, fontColor, color2, boxShadow, success, warning, error, highContrastFontColor) => css`
+const { fontFamily, heading3FontSize: size, baseFontColor: fontColor, themeColor2: color2, boxShadow, success, warning, error, highContrastFontColor } = theme;
+const toastStyle = css`
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
@@ -64,10 +45,7 @@ const toastStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
                 background-color: ${error};
                 color: ${highContrastFontColor};
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export interface ToasterProps {
     defaultToastActiveTime: number;

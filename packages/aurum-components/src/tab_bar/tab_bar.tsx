@@ -2,23 +2,19 @@ import {
     Aurum,
     combineClass,
     AurumComponentAPI,
-    DataSource,
+    BindableSource,
     dsMap,
-    DuplexDataSource,
     Renderable,
     StyleType,
     ClassType,
     resolveChildren,
-    AurumElementModel
+    AurumElementModel,
+    css
 } from 'aurumjs';
-import { css } from '@emotion/css';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.themeColor2, theme.themeColor3],
-        (fontFamily, size, fontColor, color1, color2, color3) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, themeColor2: color2, themeColor3: color3 } = theme;
+const style = css`
             height: 24px;
             width: 100%;
             display: flex;
@@ -48,10 +44,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 font-weight: bold;
                 background: ${color2};
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 interface TabBarProps<T> {
     keyboardNavigation?: boolean;
@@ -61,7 +54,7 @@ interface TabBarProps<T> {
     onReorder?(tabA: T, tabB: T): void;
     class?: ClassType;
     style?: StyleType;
-    selected: DataSource<T> | DuplexDataSource<T>;
+    selected: BindableSource<T>;
 }
 
 export function TabBar<T>(props: TabBarProps<T>, children: Renderable[], api: AurumComponentAPI): any {
@@ -83,9 +76,7 @@ export function TabBar<T>(props: TabBarProps<T>, children: Renderable[], api: Au
                 updateSelected(undefined);
             }
         } else if (v > 0 && selected.value === undefined) {
-            if (selected instanceof DataSource) {
-                updateSelected(resolvedChildren.get(0).props.id);
-            }
+            updateSelected(resolvedChildren.get(0).props.id);
         }
     }, api.cancellationToken);
 
@@ -142,11 +133,7 @@ export function TabBar<T>(props: TabBarProps<T>, children: Renderable[], api: Au
     );
 
     function updateSelected(id: T) {
-        if (selected instanceof DataSource) {
-            selected.update(id);
-        } else {
-            selected.updateUpstream(id);
-        }
+        selected.write(id);
     }
 
     function renderTab(tab: AurumElementModel<TabBarItemProps<T>>): Renderable {
@@ -165,11 +152,7 @@ export function TabBar<T>(props: TabBarProps<T>, children: Renderable[], api: Au
                             resolvedChildren.findIndex((e) => e.props.id === tabId)
                         );
                     } else if (e.button === 0) {
-                        if (selected instanceof DataSource) {
-                            selected.update(tabId);
-                        } else {
-                            selected.updateUpstream(tabId);
-                        }
+                        selected.write(tabId);
                     }
                 }}
                 class={{
@@ -211,6 +194,6 @@ export interface TabBarItemProps<T> {
     onClose?: (id: T) => void;
 }
 
-export function TabBarItem<T>(props: TabBarItemProps<T>) {
+export function TabBarItem<T>(props: TabBarItemProps<T>): undefined {
     return undefined;
 }

@@ -160,7 +160,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                     if (entry.open instanceof DataSource) {
                         entry.open.update(!entry.open.value);
                     } else {
-                        entry.open.updateDownstream(!entry.open.value);
+                        entry.open.write(!entry.open.value);
                     }
                 }
                 events.onEntryClicked?.(event, entry, props.ancestors);
@@ -175,7 +175,7 @@ export function TreeEntryRenderable(props: TreeViewNodeProps, children: Renderab
                             if (entry.open instanceof DataSource) {
                                 entry.open.update(!entry.open.value);
                             } else {
-                                entry.open.updateDownstream(!entry.open.value);
+                                entry.open.write(!entry.open.value);
                             }
                         }
                     }

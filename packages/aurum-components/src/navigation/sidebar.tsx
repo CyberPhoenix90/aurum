@@ -1,4 +1,3 @@
-import { css } from '@emotion/css';
 import {
     AttributeValue,
     Aurum,
@@ -9,20 +8,18 @@ import {
     DataDrain,
     Renderable,
     resolveChildren,
-    StyleType
+    StyleType,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 
 export interface SidebarProps {
     class?: ClassType;
     style?: StyleType;
 }
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.highlightColor1, theme.boxShadow],
-        (fontFamily, size, fontColor, color1, highlight, boxShadow) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, highlightColor1: highlight, boxShadow } = theme;
+const style = css`
             height: 100%;
             width: 62px;
             display: flex;
@@ -54,10 +51,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
 
                 transition: all 300ms;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export function Sidebar(props: SidebarProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     const resolvedChildren = resolveChildren(children, api.cancellationToken, (c) => (c as AurumElementModel<any>).factory === SidebarItem);

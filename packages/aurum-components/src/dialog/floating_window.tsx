@@ -1,13 +1,13 @@
-import { css } from '@emotion/css';
-import { Aurum, AurumComponentAPI, AurumElementModel, ClassType, DataSource, Renderable, StyleType, combineClass, dsMap, getValueOf } from 'aurumjs';
+import { Aurum, AurumComponentAPI, AurumElementModel, ClassType, css, DataSource, keyframes, Renderable, StyleType, combineClass, dsMap, getValueOf } from 'aurumjs';
 import { Button } from '../input/button.js';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor0, theme.themeColor1, theme.themeColor4],
-        (fontFamily, size, fontColor, color0, color1, color4) => css`
+const fadeIn = keyframes`
+    from { opacity: 0; }
+    to { opacity: 1; }
+`;
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor0: color0, themeColor1: color1, themeColor4: color4 } = theme;
+const style = css`
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -18,25 +18,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             box-shadow: 0px 0px 8px 1px black;
             outline: none;
 
-            //fade in with spring
-            animation: fadein 0.2s ease;
-            @keyframes fadein {
-                from {
-                    opacity: 0;
-                }
-                to {
-                    opacity: 1;
-                }
-            }
-
-            @keyframes fadeout {
-                from {
-                    opacity: 1;
-                }
-                to {
-                    opacity: 0;
-                }
-            }
+            animation: ${fadeIn} 0.2s ease;
 
             .floating-title {
                 font-size: 120%;
@@ -95,10 +77,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                     }
                 }
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 export interface FloatingWindowProps {
     x?: DataSource<number> | number;
     y?: DataSource<number> | number;
@@ -289,7 +268,7 @@ export function WindowTitle(
         style?: StyleType;
     },
     children: Renderable[]
-) {
+): undefined {
     return undefined;
 }
 
@@ -299,7 +278,7 @@ export function WindowContent(
         style?: StyleType;
     },
     children: Renderable[]
-) {
+): undefined {
     return undefined;
 }
 
@@ -309,7 +288,7 @@ export function WindowFooter(
         style?: StyleType;
     },
     children: Renderable[]
-) {
+): undefined {
     return undefined;
 }
 

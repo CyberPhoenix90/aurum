@@ -16,7 +16,7 @@ export interface ComponentModel extends InteractionProps, CommonProps {
     readWidth?: DataSource<number>;
     readHeight?: DataSource<number>;
     readIsHovering: DataSource<boolean>;
-    onPreDraw?(props: RenderData);
+    onPreDraw?(props: RenderData): void;
 }
 
 export interface RenderData {

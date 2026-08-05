@@ -190,7 +190,7 @@ export class TreeDataSource<T, K extends keyof T> {
                 case 'merge':
                     throw new Error('Not implemented');
                 case 'replace':
-                    this.adaptNodeTree(newRoots[change.index], change.items[0][newKey as any] as any, mapper, newKey, token);
+                    this.adaptNodeTree(newRoots.get(change.index), change.items[0][newKey as any] as any, mapper, newKey, token);
                     break;
             }
         }, token);

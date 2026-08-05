@@ -1,13 +1,9 @@
-import { Aurum, AurumComponentAPI, DataSource, dsMap, dsUnique, DuplexDataSource, getValueOf, Renderable } from 'aurumjs';
-import { css } from '@emotion/css';
-import { aurumify } from '../utils.js';
-import { currentTheme } from '../theme/theme.js';
+import { Aurum, AurumComponentAPI, css, DataSource, dsMap, dsUnique, getValueOf, Renderable } from 'aurumjs';
+import { theme } from '../theme/theme.js';
 import { Button } from './button.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.disabledFontColor, theme.themeColor1, theme.themeColor2, theme.highlightColor1],
-        (fontFamily, size, fontColor, disabledFontColor, color1, color2, highlightColor) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, disabledFontColor, themeColor1: color1, themeColor2: color2, highlightColor1: highlightColor } = theme;
+const style = css`
             background-color: ${color1};
             font-family: ${fontFamily};
             font-size: ${size};
@@ -42,10 +38,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             .clickable {
                 cursor: pointer;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export interface JSONRendererProps {
     datePreview?: {
@@ -69,7 +62,7 @@ export function JSONRenderer(props: JSONRendererProps, children: any[], api: Aur
         throw new Error('JSON renderer only supports exactly one child');
     }
 
-    if (children[0] instanceof DataSource || children[0] instanceof DuplexDataSource) {
+    if (children[0] instanceof DataSource) {
         return children[0].transform(
             dsMap((c) => {
                 if (c == null) {
@@ -143,10 +136,7 @@ function renderKey(key: string, obj: any, props: JSONRendererBranchProps, id: st
                                 if (!props.allowEdit.validateNewValue || props.allowEdit.validateNewValue(key, newValue, value)) {
                                     if (rawValue instanceof DataSource) {
                                         value = newValue;
-                                        rawValue.update(newValue);
-                                    } else if (rawValue instanceof DuplexDataSource) {
-                                        value = newValue;
-                                        rawValue.updateUpstream(newValue);
+                                        rawValue.write(newValue);
                                     } else {
                                         value = newValue;
                                         rawValue = newValue;

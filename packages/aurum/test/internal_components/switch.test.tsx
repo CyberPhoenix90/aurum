@@ -1,8 +1,8 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { Aurum, DataSource, DefaultSwitchCase, Switch, SwitchCase } from '../../src/aurumjs.js';
+import { Aurum, CancellationToken, DataSource, DefaultSwitchCase, Switch, SwitchCase } from '../../src/aurumjs.js';
 
 describe('Switch', () => {
-    let attachToken;
+    let attachToken: CancellationToken | undefined;
     afterEach(() => {
         attachToken?.cancel();
         attachToken = undefined;

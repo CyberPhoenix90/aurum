@@ -12,19 +12,16 @@ import {
     dsMap,
     dsDiff,
     dsTap,
-    StyleType
+    StyleType,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { css } from '@emotion/css';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 import { Dialog } from '../dialog/dialog.js';
 import { ContextMenu } from '../dialog/context_menu.js';
 import { Button } from '../aurum-components.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor4, theme.themeColor2, theme.highlightColor1],
-        (fontFamily, size, fontColor, color4, color2) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor4: color4, themeColor2: color2 } = theme;
+const style = css`
             display: flex;
             width: 100%;
             color: ${fontColor};
@@ -45,10 +42,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
             > span.menustrip-radio-button.active {
                 background-color: ${color4};
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export function MenuStrip(
     props: {
@@ -178,7 +172,7 @@ export function MenuStripButton(
     );
 }
 
-export function MenuStripMenuContent(props: {}, children: Renderable[]) {
+export function MenuStripMenuContent(props: {}, children: Renderable[]): undefined {
     return undefined;
 }
 
@@ -189,8 +183,8 @@ export function MenuStripMenu(props: { class?: ClassType; style?: StyleType }, c
     const magic: MenuStripController = props.controller;
 
     const isOpen = magic.openState.aggregate([magic.openId], (open, id) => open && id === menuId).transform(dsUnique());
-    let dialog;
-    let target;
+    let dialog: Renderable;
+    let target: HTMLElement;
 
     if (menuContent) {
         isOpen.listen((v) => {

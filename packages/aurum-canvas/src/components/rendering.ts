@@ -399,16 +399,17 @@ export function renderRectangle(
 }
 
 export function resolveValues(node: ComponentModel, props: string[], offsetX: number, offsetY: number, applyOrigin: boolean = true): any {
-    const result = {
+    const result: Record<string, any> & { idle: boolean; x: number; y: number } = {
         idle: true,
         x: 0,
         y: 0
     };
     let idle = true;
+    const dynamicNode = node as unknown as Record<string, any>;
 
     for (const key of props) {
-        const baseValue = deref(node[key]);
-        const state = node.animationStates?.find((n) => n[key] != undefined);
+        const baseValue = deref(dynamicNode[key]);
+        const state = node.animationStates?.find((n) => (n as unknown as Record<string, any>)[key] != undefined);
         if (state) {
             let progress;
             if (!state.transitionTime) {
@@ -416,7 +417,7 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
             } else {
                 progress = Math.min(1, (Date.now() - node.animationTime) / deref(state.transitionTime));
             }
-            const targetValue = state[key];
+            const targetValue = (state as unknown as Record<string, any>)[key];
             result[key] = baseValue + (targetValue - baseValue) * progress;
             if (progress < 1) {
                 idle = false;

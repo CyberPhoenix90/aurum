@@ -87,7 +87,7 @@ describe('TreeDatasource', () => {
 
     it('should allow listening to changes', () => {
         const a = new TreeDataSource<Tree, 'children'>('children', tree);
-        const changes = [];
+        const changes: Array<{ operation: string; id: string }> = [];
 
         a.listen(
             (e) =>

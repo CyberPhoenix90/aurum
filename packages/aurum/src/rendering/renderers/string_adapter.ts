@@ -1,10 +1,10 @@
 import { AurumElementModel, createAPI, Renderable } from '../aurum_element.js';
 import { ArrayDataSource, DataSource } from '../../stream/data_source.js';
-import { DuplexDataSource } from '../../stream/duplex_data_source.js';
 import { CancellationToken } from '../../utilities/cancellation_token.js';
 import { camelCaseToKebabCase } from '../../utilities/classname.js';
 import { getValueOf } from '../../utilities/sources.js';
 import { HTMLSanitizeConfig } from '../../utilities/sanitize.js';
+import { isAurumStyleClass } from '../../utilities/styling.js';
 
 export async function aurumToString(content: Renderable | Renderable[], config: HTMLSanitizeConfig = {}): Promise<string> {
     if (content === undefined || content === null) {
@@ -26,8 +26,6 @@ export async function aurumToString(content: Renderable | Renderable[], config: 
     if (['number', 'string', 'bigint', 'boolean'].includes(typeof content)) {
         return content.toString();
     } else if (content instanceof DataSource) {
-        return aurumToString(content.value);
-    } else if (content instanceof DuplexDataSource) {
         return aurumToString(content.value);
     } else if (content instanceof ArrayDataSource) {
         return aurumToString(content.getData() as any);
@@ -85,10 +83,28 @@ export async function aurumToString(content: Renderable | Renderable[], config: 
 
 // classes can be map like objects that map a class name to a boolean or boolean data source and the class only applies if the value is true
 function handleObjectClass(propString: string, prop: string, item: AurumElementModel<any>) {
-    propString += `${prop}="${Object.keys(item.props[prop])
-        .filter((key) => getValueOf(item.props[prop][key]))
-        .join(' ')}" `;
-    return propString;
+    return `${propString}${prop}="${resolveClass(item.props[prop])}" `;
+}
+
+function resolveClass(value: unknown): string {
+    if (typeof value === 'string') {
+        return value;
+    }
+    if (isAurumStyleClass(value)) {
+        return value.className;
+    }
+    if (value instanceof DataSource) {
+        return resolveClass(value.value);
+    }
+    if (Array.isArray(value)) {
+        return value.map(resolveClass).filter(Boolean).join(' ');
+    }
+    if (typeof value === 'object' && value !== null) {
+        return Object.keys(value)
+            .filter((key) => getValueOf((value as Record<string, boolean | DataSource<boolean>>)[key]))
+            .join(' ');
+    }
+    return '';
 }
 
 function handleObjectStyle(propString: string, prop: string, item: AurumElementModel<any>) {

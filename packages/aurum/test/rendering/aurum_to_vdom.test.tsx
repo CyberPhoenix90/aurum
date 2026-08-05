@@ -1,8 +1,8 @@
-import { ArrayDataSource, Aurum, aurumToVDOM, CancellationToken, DataSource } from '../../src/aurumjs.js';
+import { ArrayDataSource, Aurum, AurumComponentAPI, aurumToVDOM, CancellationToken, DataSource, Renderable } from '../../src/aurumjs.js';
 import { assert, describe, beforeEach, afterEach, it } from 'vitest';
 
 describe('Aurum To VDOM', () => {
-    let sessionToken;
+    let sessionToken: CancellationToken;
 
     beforeEach(() => {
         sessionToken = new CancellationToken();
@@ -276,7 +276,7 @@ describe('Aurum To VDOM', () => {
     it('should cancel api token of component when unmounted', async () => {
         let token: CancellationToken;
         const component = new DataSource(<TestComponent></TestComponent>);
-        function TestComponent(props, children, api) {
+        function TestComponent(props: object, children: Renderable[], api: AurumComponentAPI) {
             token = api.cancellationToken;
             return <div>0</div>;
         }
@@ -295,7 +295,7 @@ describe('Aurum To VDOM', () => {
         let attached = false;
         let detached = false;
         const component = new DataSource(<TestComponent></TestComponent>);
-        function TestComponent(props, children, api) {
+        function TestComponent(props: object, children: Renderable[], api: AurumComponentAPI) {
             api.onAttach(() => {
                 attached = true;
             });
@@ -322,7 +322,7 @@ describe('Aurum To VDOM', () => {
         let attached = false;
         let detached = false;
         const component = new DataSource(<TestComponent></TestComponent>);
-        function TestComponent(props, children, api) {
+        function TestComponent(props: object, children: Renderable[], api: AurumComponentAPI) {
             return <div onAttach={() => (attached = true)} onDetach={() => (detached = true)}></div>;
         }
 

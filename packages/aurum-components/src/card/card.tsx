@@ -1,12 +1,8 @@
-import { css } from '@emotion/css';
-import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, DataSource, dsMap, Renderable, StyleType } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, css, DataSource, dsMap, Renderable, StyleType } from 'aurumjs';
+import { theme } from '../theme/theme.js';
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.themeColor2, theme.boxShadow, theme.highContrastFontColor],
-        (color2, boxShadow, highContrastFontColor) => css`
+const { themeColor2: color2, boxShadow, highContrastFontColor } = theme;
+const style = css`
             margin: 8px;
             padding: 8px;
             border-radius: 4px;
@@ -35,10 +31,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                     color: ${highContrastFontColor};
                 }
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 interface CardProps {
     onClose?: (e: MouseEvent) => void;

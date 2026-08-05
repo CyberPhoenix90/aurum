@@ -1,28 +1,26 @@
-import { css } from '@emotion/css';
 import {
     ArrayDataSource,
     Aurum,
     AurumComponentAPI,
     AurumElementModel,
+    BindableSource,
     ClassType,
     combineClass,
     DataSource,
     dsMap,
-    DuplexDataSource,
+    MutableSource,
     ReadOnlyArrayDataSource,
     Renderable,
     resolveChildren,
-    StyleType
+    StyleType,
+    css
 } from 'aurumjs';
 import { Dialog } from '../dialog/dialog.js';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
-import { FormType } from '../form/form.js';
+import { theme } from '../theme/theme.js';
+import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
-const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor2, theme.primary],
-        (fontFamily, size, highlightFont, color0, color2, primary) => css`
+const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor0: color0, themeColor2: color2, primary } = theme;
+const menuStyle = css`
             border-radius: 4px;
             position: relative;
             display: inline-flex;
@@ -47,15 +45,10 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
             &:focus {
                 outline: ${primary} auto 5px;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
-const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor0, theme.themeColor3, theme.themeColor4, theme.highlightColor1],
-        (fontFamily, size, highlightFont, color0, color3, color4, highlightColor1) => css`
+const { themeColor4: color4, highlightColor1 } = theme;
+const dropdownStyle = css`
             position: relative;
             display: inline-flex;
             font-family: ${fontFamily};
@@ -82,42 +75,38 @@ const dropdownStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
             li.highlight {
                 background-color: ${highlightColor1};
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
-export interface DropDownMenuProps<T> {
-    selectedValue?: DuplexDataSource<T> | DataSource<T>;
-    selectedIndex?: DuplexDataSource<number> | DataSource<number>;
-    isOpen?: DataSource<boolean>;
+export interface DropDownMenuProps<T, F extends object = Record<string, T>> {
+    selectedValue?: BindableSource<T>;
+    selectedIndex?: MutableSource<number>;
+    isOpen?: BindableSource<boolean>;
     class?: ClassType;
     style?: StyleType;
-    form?: FormType<any, any>;
-    name?: string;
+    form?: FormType<F, unknown>;
+    name?: FormFieldName<F, T>;
 
     onChange?(selectedValue: T, selectedIndex: number, previousIndex: number): void;
 }
 
-export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderable[], api: AurumComponentAPI) {
+export function DropDownMenu<T, F extends object = Record<string, T>>(props: DropDownMenuProps<T, F>, children: Renderable[], api: AurumComponentAPI) {
+    const formField = props.form && props.name ? props.form.schema.fields[props.name] : undefined;
+    const formOptions = formField && 'oneOf' in formField ? (formField.oneOf as readonly T[] | undefined) : undefined;
     const childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>> =
-        props.form && props.name && (props.form.schema.fields[props.name] as any).oneOf && children.length === 0
-            ? new ArrayDataSource((props.form.schema.fields[props.name] as any).oneOf.map((c) => <DropDownMenuOption value={c}>{c}</DropDownMenuOption>))
-            : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<any>).factory === DropDownMenuOption);
+        formOptions && children.length === 0
+            ? new ArrayDataSource(formOptions.map((c) => <DropDownMenuOption value={c}>{c}</DropDownMenuOption>))
+            : resolveChildren(children, api.cancellationToken, (e) => (e as AurumElementModel<{ value: T }>).factory === DropDownMenuOption);
 
-    if (!props.selectedValue && props.form && props.name) {
-        //@ts-ignore
-        props.selectedValue = props.form.schema.fields[props.name].source;
+    if (!props.selectedValue && formField) {
+        props.selectedValue = getFormFieldSource<F, T>(props.form, props.name);
     }
 
     const isOpen = props.isOpen ?? new DataSource(false);
-    const selectedIndex =
+    const selectedIndex: MutableSource<number> =
         props.selectedIndex ??
         (props.selectedValue
             ? new DataSource(
-                  props.selectedValue instanceof DataSource
-                      ? childSource.findIndex((c) => c.props.value === props.selectedValue.value)
-                      : childSource.findIndex((c) => c.props.value === props.selectedValue.value)
+                  childSource.findIndex((c) => c.props.value === props.selectedValue.value)
               )
             : new DataSource(0));
     const highlightIndex = new DataSource(selectedIndex.value);
@@ -131,26 +120,14 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
         selectedIndex.listen((index) => {
             const value = childSource.get(index)?.props.value;
             if (props.selectedValue.value !== value) {
-                if (props.selectedValue instanceof DataSource) {
-                    props.selectedValue.update(value);
-                } else {
-                    props.selectedValue.updateUpstream(value);
-                }
+                props.selectedValue.write(value);
             }
         }, api.cancellationToken);
-        if (props.selectedValue instanceof DataSource) {
-            props.selectedValue.listen(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
-        } else {
-            props.selectedValue.listenDownstream(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
-        }
+        props.selectedValue.listen(handleValueChange<T>(childSource, selectedIndex), api.cancellationToken);
     }
 
     childSource.listen(() => {
-        if (selectedIndex instanceof DuplexDataSource) {
-            selectedIndex.updateDownstream(selectedIndex.value);
-        } else {
-            selectedIndex.update(selectedIndex.value);
-        }
+        selectedIndex.publish(selectedIndex.value);
     });
 
     isOpen.listenAndRepeat((open) => {
@@ -170,10 +147,10 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                         orientationY: 'top'
                     }}
                     onClickInside={() => {
-                        isOpen.update(false);
+                        isOpen.write(false);
                     }}
                     onClickOutside={() => {
-                        isOpen.update(false);
+                        isOpen.write(false);
                     }}
                 >
                     <ol onAttach={(e) => (childContainer = e)}>
@@ -207,7 +184,7 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                 switch (e.key) {
                     case 'Escape':
                         if (isOpen.value) {
-                            isOpen.update(false);
+                            isOpen.write(false);
                         }
                         break;
                     case 'ArrowDown':
@@ -228,9 +205,9 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
                     case ' ':
                         if (isOpen.value) {
                             update(selectedIndex, highlightIndex.value);
-                            isOpen.update(false);
+                            isOpen.write(false);
                         } else {
-                            isOpen.update(true);
+                            isOpen.write(true);
                         }
                         break;
                     default:
@@ -257,11 +234,11 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
             }}
             onClick={() => {
                 if (!isOpen.value) {
-                    isOpen.update(true);
+                    isOpen.write(true);
                 }
             }}
             onAttach={(e) => (root = e)}
-            class={combineClass(api.cancellationToken, theme, props.class)}
+            class={combineClass(api.cancellationToken, menuStyle, props.class)}
             style={props.style}
         >
             <div>
@@ -278,8 +255,8 @@ export function DropDownMenu<T>(props: DropDownMenuProps<T>, children: Renderabl
 
 function handleValueChange<T>(
     childSource: ReadOnlyArrayDataSource<AurumElementModel<{ value: T }>>,
-    selectedIndex: DataSource<number> | DuplexDataSource<number>
-): any {
+    selectedIndex: BindableSource<number>
+): (value: T) => void {
     return (value: T) => {
         const index = childSource.findIndex((c) => c.props.value === value);
         if (selectedIndex.value !== index) {
@@ -288,14 +265,10 @@ function handleValueChange<T>(
     };
 }
 
-function update<T>(source: DataSource<T> | DuplexDataSource<T>, value: T) {
-    if (source instanceof DataSource) {
-        source.update(value);
-    } else {
-        source.updateUpstream(value);
-    }
+function update<T>(source: BindableSource<T>, value: T) {
+    source.write(value);
 }
 
-export function DropDownMenuOption<T>(props: { value: T }) {
+export function DropDownMenuOption<T>(props: { value: T }): undefined {
     return undefined;
 }

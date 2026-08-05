@@ -2,7 +2,23 @@ import { assert, beforeEach, describe, it } from 'vitest';
 import { ObjectDataSource } from '../../src/aurumjs.js';
 
 describe('object data source', () => {
-    let testObject;
+    let testObject: {
+        a: number;
+        b: string;
+        c: boolean;
+        d: null;
+        e: undefined;
+        f: number[];
+        g: {
+            a: number;
+            b: string;
+            c: boolean;
+            d: null;
+            e: undefined;
+            f: number[];
+            g?: { a: number; b: string };
+        };
+    };
 
     beforeEach(() => {
         testObject = {

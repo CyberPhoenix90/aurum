@@ -1,15 +1,11 @@
-import { css } from '@emotion/css';
-import { Aurum, Renderable } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { Aurum, Renderable, css } from 'aurumjs';
+import { theme } from '../theme/theme.js';
 import { Dialog } from './dialog.js';
 
 export interface ContextMenuProps {}
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.highlightColor1],
-        (fontFamily, size, fontColor, color1, highlight1) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, highlightColor1: highlight1 } = theme;
+const style = css`
             color: ${fontColor};
             font-family: ${fontFamily};
             font-size: ${size};
@@ -36,10 +32,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                 padding: 5px 5px 5px 15px;
                 cursor: pointer;
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export function ContextMenu(props: ContextMenuProps, children: Renderable[]) {
     return (

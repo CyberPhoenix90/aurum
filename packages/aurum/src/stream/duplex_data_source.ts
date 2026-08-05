@@ -1,12 +1,11 @@
 import { AurumServerInfo, syncDuplexDataSource } from '../aurum_server/aurum_server_client.js';
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { Callback } from '../utilities/common.js';
+import { Callback, DataWriter } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
 import { promiseIterator } from '../utilities/iteration.js';
-import { DataSource, GenericDataSource, processTransform, ReadOnlyDataSource } from './data_source.js';
+import { DataSource } from './data_source.js';
 import { DataFlow, ddsOneWayFlow } from './duplex_data_source_operators.js';
 import {
-    DataSourceOperator,
     DuplexDataSourceDelayFilterOperator,
     DuplexDataSourceFilterOperator,
     DuplexDataSourceMapDelayFilterOperator,
@@ -16,382 +15,147 @@ import {
 } from './operator_model.js';
 
 /**
- * Same as DataSource except data can flow in both directions
+ * A DataSource with an additional consumer-to-source write channel.
+ * Downstream publications use the inherited DataSource implementation; only
+ * upstream writes and bidirectional transforms are implemented here.
  */
-export class DuplexDataSource<T> implements GenericDataSource<T> {
-    /**
-     * The current value of this data source, can be changed through update
-     */
-    public value: T;
-    private primed: boolean;
+export class DuplexDataSource<T> extends DataSource<T> implements DataWriter<T> {
+    private updatingUpstream = false;
+    private readonly updateUpstreamEvent = new EventEmitter<T>();
+    private readonly propagateWritesToReadStream: boolean;
 
-    protected errorHandler: (error: any) => T;
-    protected errorEvent: EventEmitter<Error>;
-    private updatingUpstream: boolean;
-    private updatingDownstream: boolean;
-    private updateDownstreamEvent: EventEmitter<T>;
-    private updateUpstreamEvent: EventEmitter<T>;
-    private propagateWritesToReadStream: boolean;
-    public name: string;
-
-    /**
-     * The top can be viewed as the source of truth and bottom as the derived value. UpdateDownStream means the change is propagated from top to bottom or that the source of truth changed.
-     * UpdateUpstream means the change is propagated from bottom to top or that the derived value changed.
-     * @param initialValue
-     * @param rootNode If a write is done propagate this update back down to all the consumers. Useful at the root node because in case of a tree structure changes from one branch won't propagate to the other without this
-     */
     constructor(initialValue?: T, rootNode: boolean = true, name: string = 'RootDuplexDataSource') {
-        this.name = name;
-        this.value = initialValue;
-        this.primed = initialValue !== undefined;
-        this.updateDownstreamEvent = new EventEmitter();
-        this.updateUpstreamEvent = new EventEmitter();
+        super(initialValue, name);
         this.propagateWritesToReadStream = rootNode;
     }
 
-    /**
-     * Connects to an aurum-server exposed datasource view https://github.com/CyberPhoenix90/aurum-server for more information
-     * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
-     * @param  {AurumServerInfo} aurumServerInfo
-     * @returns DataSource
-     */
     public static fromRemoteSource<T>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): DuplexDataSource<T> {
         const result = new DuplexDataSource<T>(undefined, false);
-
         syncDuplexDataSource(result, aurumServerInfo, cancellation);
-
         return result;
     }
 
     public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): DuplexDataSource<T> {
         const result = new DuplexDataSource<T>();
-
         (async () => {
-            for await (const item of iterator) {
-                if (cancellation?.isCancelled) {
-                    return;
+            try {
+                for await (const item of iterator) {
+                    if (cancellation?.isCancelled) return;
+                    result.publish(item);
                 }
-                result.updateDownstream(item);
+            } catch (error) {
+                result.emitError(error, DataFlow.DOWNSTREAM);
             }
         })();
-
         return result;
     }
 
     public static fromPromise<T>(promise: Promise<T>, cancellation?: CancellationToken): DuplexDataSource<T> {
         const result = new DuplexDataSource<T>();
-
         promise.then(
-            (v) => {
-                if (cancellation?.isCancelled) {
-                    return;
-                }
-                result.updateDownstream(v);
+            (value) => {
+                if (!cancellation?.isCancelled) result.publish(value);
             },
-            (e) => {
-                if (cancellation?.isCancelled) {
-                    return;
-                }
-                result.emitError(e, DataFlow.DOWNSTREAM);
+            (error) => {
+                if (!cancellation?.isCancelled) result.emitError(error, DataFlow.DOWNSTREAM);
             }
         );
-
         return result;
     }
 
     public static fromPromiseArray<T>(promises: Promise<T>[], cancellation?: CancellationToken): DuplexDataSource<T> {
         const result = new DuplexDataSource<T>();
-
         (async () => {
             for await (const promise of promiseIterator(promises, cancellation)) {
-                if (cancellation?.isCancelled) {
-                    return;
-                }
+                if (cancellation?.isCancelled) return;
                 if (promise.status === 'fulfilled') {
-                    result.updateDownstream(promise.value);
+                    result.publish(promise.value);
                 } else {
                     result.emitError(promise.reason, DataFlow.DOWNSTREAM);
                 }
             }
         })();
-
         return result;
     }
 
-    public toAsyncIterator(cancellation?: CancellationToken): AsyncIterableIterator<T> {
-        return this.updateDownstreamEvent.toAsyncIterator(undefined, cancellation);
-    }
-
     public static toDuplexDataSource<T>(value: T | DuplexDataSource<T>): DuplexDataSource<T> {
-        if (value instanceof DuplexDataSource) {
-            return value;
-        } else {
-            return new DuplexDataSource(value);
-        }
+        return value instanceof DuplexDataSource ? value : new DuplexDataSource(value);
     }
 
-    /**
-     * Makes it possible to have 2 completely separate data flow pipelines for each direction
-     * @param downStream stream to pipe downstream data to
-     * @param upstream  stream to pipe upstream data to
-     */
     public static fromTwoDataSource<T>(
-        downStream: DataSource<T>,
+        downstream: DataSource<T>,
         upstream: DataSource<T>,
         initialValue?: T,
         propagateWritesToReadStream: boolean = true
     ): DuplexDataSource<T> {
         const result = new DuplexDataSource<T>(initialValue, propagateWritesToReadStream);
-        //@ts-ignore
-        result.updateDownstreamEvent = downStream.updateEvent;
-        //@ts-ignore
-        result.updateUpstreamEvent = upstream.updateEvent;
-
+        downstream.listen((value) => result.publish(value));
+        result.listenUpstream((value) => upstream.publish(value));
         return result;
     }
 
-    /**
-     * Updates the data source with a value if it has never had a value before
-     */
-    public withInitial(value: T): this {
-        if (!this.primed) {
-            this.updateDownstream(value);
-        }
-
-        return this;
-    }
-
-    public toString(): string {
-        return this.value.toString();
-    }
-
-    /**
-     * Allows creating a duplex stream that blocks data in one direction. Useful for plugging into code that uses two way flow but only one way is desired
-     * @param direction direction of the dataflow that is allowed
-     */
     public static createOneWay<T>(direction: DataFlow = DataFlow.DOWNSTREAM, initialValue?: T): DuplexDataSource<T> {
         return new DuplexDataSource(initialValue, false).transformDuplex(ddsOneWayFlow(direction));
     }
-    /**
-     * Updates the value in the data source and calls the listen callback for all listeners
-     * Moves the data from the top to the bottom. Used to reflect changes in the source data to the derived data
-     * @param newValue new value for the data source
-     */
-    public updateDownstream(newValue: T): void {
-        //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
-        if (newValue === this) {
-            throw new Error('Cannot update data source with itself');
-        }
 
-        if (this.updatingDownstream) {
-            throw new Error(
-                'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
-            );
-        }
-        this.primed = true;
-        this.updatingDownstream = true;
-        this.value = newValue;
-        this.updateDownstreamEvent.fire(newValue);
-        this.updatingDownstream = false;
+    /** Compatibility alias for a source-originated publication. */
+    public updateDownstream(newValue: T): void {
+        this.publish(newValue);
     }
 
-    /**
-     * Updates the value in the data source and calls the listen callback for all listeners.
-     * Moves the data from the bottom to the top. Used to reflect changes in derived data back to the source
-     * @param newValue new value for the data source
-     */
+    public override publish(newValue: T): void {
+        super.update(newValue);
+    }
+
+    /** Consumer-originated writes flow upstream. */
+    public override write(newValue: T): void {
+        this.updateUpstream(newValue);
+    }
+
     public updateUpstream(newValue: T): void {
-        //@ts-expect-error Typescript tries to be smart and thinks this could never happen but it can with the any type as T
-        if (newValue === this) {
+        if ((newValue as any) === this) {
             throw new Error('Cannot update data source with itself');
         }
-
         if (this.updatingUpstream) {
             throw new Error(
-                'Problem in datas source: Unstable value propagation, when updating a value the stream was updated back as a direct response. This can lead to infinite loops and is therefore not allowed'
+                'Problem in data source: Unstable value propagation. An upstream write caused another synchronous upstream write'
             );
         }
+
         this.primed = true;
         this.updatingUpstream = true;
         this.value = newValue;
-        this.updateUpstreamEvent.fire(newValue);
-        if (this.propagateWritesToReadStream) {
-            this.updateDownstreamEvent.fire(newValue);
+        try {
+            this.updateUpstreamEvent.fire(newValue);
+            if (this.propagateWritesToReadStream) {
+                super.update(newValue);
+            }
+        } finally {
+            this.updatingUpstream = false;
         }
-        this.updatingUpstream = false;
     }
 
-    /**
-     * Same as listen but will immediately call the callback with the current value first
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
-    public listenAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void {
-        if (this.primed) {
-            callback(this.value);
-        }
-        this.listen(callback, cancellationToken);
-    }
-
-    /**
-     * alias for listenDownstream
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
-    public listen(callback: Callback<T>, cancellationToken?: CancellationToken): void {
-        this.updateDownstreamEvent.subscribe(callback, cancellationToken);
-    }
-
-    /**
-     * Subscribes exclusively to updates of the data stream that occur due to an update flowing upstream
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
     public listenUpstream(callback: Callback<T>, cancellationToken?: CancellationToken): void {
         this.updateUpstreamEvent.subscribe(callback, cancellationToken);
     }
 
-    /**
-     * Subscribes exclusively to updates of the data stream that occur due to an update flowing upstream
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
     public listenUpstreamAndRepeat(callback: Callback<T>, cancellationToken?: CancellationToken): void {
-        if (this.primed) {
-            callback(this.value);
-        }
-
-        this.updateUpstreamEvent.subscribe(callback, cancellationToken);
+        if (this.primed) callback(this.value);
+        this.listenUpstream(callback, cancellationToken);
     }
 
-    /**
-     * Subscribes exclusively to one update of the data stream that occur due to an update flowing upstream
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
     public listenUpstreamOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
         this.updateUpstreamEvent.subscribeOnce(callback, cancellationToken);
     }
 
-    /**
-     * Subscribes exclusively to updates of the data stream that occur due to an update flowing downstream
-     * @param callback Callback to call when value is updated
-     * @param cancellationToken Optional token to control the cancellation of the subscription
-     * @returns Cancellation callback, can be used to cancel subscription without a cancellation token
-     */
     public listenDownstream(callback: Callback<T>, cancellationToken?: CancellationToken): void {
-        this.updateDownstreamEvent.subscribe(callback, cancellationToken);
+        this.listen(callback, cancellationToken);
     }
 
     public downStreamToDataSource(cancellationToken?: CancellationToken): DataSource<T> {
-        const downStreamDatasource = new DataSource<T>(this.value);
-        this.listenDownstream((newVal) => {
-            downStreamDatasource.update(newVal);
-        }, cancellationToken);
-
-        return downStreamDatasource;
-    }
-
-    /**
-     * Combines two sources into a third source that listens to updates from both parent sources.
-     * @param otherSource Second parent for the new source
-     * @param combinator Method allowing you to combine the data from both parents on update. Called each time a parent is updated with the latest values of both parents
-     * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
-     */
-    public aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
-    public aggregate<R, A, B>(
-        otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>],
-        combinator: (self: T, second: A, third: B) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C>(
-        otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>],
-        combinator: (self: T, second: A, third: B, fourth: C) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D>(
-        otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E>(
-        otherSources: [ReadOnlyDataSource<A>, ReadOnlyDataSource<B>, ReadOnlyDataSource<C>, ReadOnlyDataSource<D>, ReadOnlyDataSource<E>],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E, F>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>
-        ],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E, F, G>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>
-        ],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E, F, G, H>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>,
-            ReadOnlyDataSource<H>
-        ],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R, A, B, C, D, E, F, G, H, I>(
-        otherSources: [
-            ReadOnlyDataSource<A>,
-            ReadOnlyDataSource<B>,
-            ReadOnlyDataSource<C>,
-            ReadOnlyDataSource<D>,
-            ReadOnlyDataSource<E>,
-            ReadOnlyDataSource<F>,
-            ReadOnlyDataSource<G>,
-            ReadOnlyDataSource<H>,
-            ReadOnlyDataSource<I>
-        ],
-        combinator: (self: T, second: A, third: B, fourth: C, fifth: D, sixth: E, seventh: F, eigth: G, ninth: H, tenth: I) => R,
-        cancellationToken?: CancellationToken
-    ): DataSource<R>;
-    public aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R> {
-        cancellationToken = cancellationToken ?? new CancellationToken();
-
-        const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s?.value)));
-
-        for (let i = 0; i < otherSources.length; i++) {
-            otherSources[i]?.listen(() => {
-                aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s?.value)));
-            }, cancellationToken);
-        }
-
-        this.listen(() => aggregatedSource.update(combinator(this.value, ...otherSources.map((s) => s?.value))), cancellationToken);
-
-        return aggregatedSource;
+        const result = new DataSource(this.value);
+        this.listen((value) => result.publish(value), cancellationToken);
+        return result;
     }
 
     public transformDuplex<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
@@ -408,8 +172,8 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
         operationK?: DuplexDataSourceOperator<J, K> | CancellationToken,
         cancellationToken?: CancellationToken
     ): DuplexDataSource<K> {
-        let token;
-        const operations: DuplexDataSourceOperator<any, any>[] = [
+        let token: CancellationToken;
+        const operations = [
             operationA,
             operationB,
             operationC,
@@ -421,196 +185,96 @@ export class DuplexDataSource<T> implements GenericDataSource<T> {
             operationI,
             operationJ,
             operationK
-        ].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DuplexDataSourceOperator<any, any>[];
-        if (cancellationToken) {
-            token = cancellationToken;
-        }
-        const result = new DuplexDataSource<K>(undefined, false, this.name + ' ' + operations.map((v) => v.name).join(' '));
-        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransformDuplex<T, K>(operations as any, result, DataFlow.DOWNSTREAM), token);
-        result.listenUpstream.call(result, processTransformDuplex<T, K>(operations as any, this as any, DataFlow.UPSTREAM), token);
+        ].filter((operation) => operation && (operation instanceof CancellationToken ? ((token = operation), false) : true)) as DuplexDataSourceOperator<any, any>[];
+        token = cancellationToken ?? token;
 
+        const result = new DuplexDataSource<K>(undefined, false, `${this.name} ${operations.map((operation) => operation.name).join(' ')}`);
+        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransformDuplex(operations, result, DataFlow.DOWNSTREAM), token);
+        result.listenUpstream(processTransformDuplex(operations, this as any, DataFlow.UPSTREAM), token);
+        this.onError((error) => result.emitError(error, DataFlow.DOWNSTREAM), token);
         return result;
     }
 
-    public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
-        operationA: DataSourceOperator<T, A>,
-        operationB?: DataSourceOperator<A, B> | CancellationToken,
-        operationC?: DataSourceOperator<B, C> | CancellationToken,
-        operationD?: DataSourceOperator<C, D> | CancellationToken,
-        operationE?: DataSourceOperator<D, E> | CancellationToken,
-        operationF?: DataSourceOperator<E, F> | CancellationToken,
-        operationG?: DataSourceOperator<F, G> | CancellationToken,
-        operationH?: DataSourceOperator<G, H> | CancellationToken,
-        operationI?: DataSourceOperator<H, I> | CancellationToken,
-        operationJ?: DataSourceOperator<I, J> | CancellationToken,
-        operationK?: DataSourceOperator<J, K> | CancellationToken,
-        cancellationToken?: CancellationToken
-    ): DataSource<K> {
-        let token;
-        const operations: DataSourceOperator<any, any>[] = [
-            operationA,
-            operationB,
-            operationC,
-            operationD,
-            operationE,
-            operationF,
-            operationG,
-            operationH,
-            operationI,
-            operationJ,
-            operationK
-        ].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
-        if (cancellationToken) {
-            token = cancellationToken;
-        }
-        const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
-        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
-
-        return result;
-    }
-
-    /**
-     * Like aggregate except that no combination method is needed as a result both parents must have the same type and the new stream just exposes the last update recieved from either parent
-     * @param otherSource Second parent for the new source
-     * @param cancellationToken  Cancellation token to cancel the subscriptions the new datasource has to the two parent datasources
-     */
-    public combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T> {
-        cancellationToken = cancellationToken ?? new CancellationToken();
-
-        let combinedDataSource: DataSource<T> | DuplexDataSource<T>;
-        if (this.primed) {
-            combinedDataSource = new DataSource<T>(this.value);
-        } else {
-            combinedDataSource = new DataSource<T>();
-        }
-        this.pipe(combinedDataSource, cancellationToken);
-        for (const otherSource of otherSources) {
-            otherSource.pipe(combinedDataSource, cancellationToken);
-        }
-
-        return combinedDataSource;
-    }
-
-    /**
-     * Forwards all updates from this source to another
-     * @param targetDataSource datasource to pipe the updates to
-     * @param cancellationToken  Cancellation token to cancel the subscriptions added to the datasources by this operation
-     */
-    public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
-        this.listenDownstream((newVal) => targetDataSource.update(newVal), cancellationToken);
-        targetDataSource.listen((newVal) => this.updateUpstream(newVal), cancellationToken);
+    /** Creates a two-way connection to a regular DataSource. */
+    public override pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
+        this.listen((value) => targetDataSource.publish(value), cancellationToken);
+        targetDataSource.listen((value) => this.write(value), cancellationToken);
         return this;
     }
 
-    public listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void {
-        this.updateDownstreamEvent.subscribeOnce(callback, cancellationToken);
-    }
-
-    /**
-     * Returns a promise that resolves when the next update occurs
-     * @param cancellationToken
-     */
-    public awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T> {
-        return new Promise((resolve) => {
-            this.listenOnce((value) => resolve(value), cancellationToken);
-        });
-    }
-
-    /**
-     * If the datasource was never updated this will wait until the first update otherwise it will return the current value
-     */
-    public async getValueWhenAvailable(): Promise<T> {
-        if (this.primed) {
-            return this.value;
-        } else {
-            return await this.awaitNextUpdate();
-        }
-    }
-
-    /**
-     * Remove all listeners
-     */
-    public cancelAll(): void {
-        this.updateDownstreamEvent.cancelAll();
+    public override cancelAll(): void {
+        super.cancelAll();
         this.updateUpstreamEvent.cancelAll();
     }
 
     public cancelAllDownstream(): void {
-        this.updateDownstreamEvent.cancelAll();
+        super.cancelAll();
     }
 
     public cancelAllUpstream(): void {
         this.updateUpstreamEvent.cancelAll();
     }
 
-    /**
-     * Assign a function to handle errors and map them back to regular values. Rethrow the error in case you want to fallback to emitting error
-     */
-    public handleErrors(callback: (error: any) => T): this {
-        this.errorHandler = callback;
-        return this;
-    }
+    public override emitError(error: Error, direction: DataFlow = DataFlow.DOWNSTREAM): void {
+        if (direction === DataFlow.DOWNSTREAM) {
+            super.emitError(error);
+            return;
+        }
 
-    public onError(callback: (error: any) => void, cancellationToken?: CancellationToken): this {
-        this.errorEvent.subscribe(callback, cancellationToken);
-        return this;
-    }
-
-    public emitError(e: Error, direction: DataFlow): void {
         if (this.errorHandler) {
             try {
-                if (direction === DataFlow.DOWNSTREAM) {
-                    return this.updateDownstream(this.errorHandler(e));
-                } else {
-                    return this.updateUpstream(this.errorHandler(e));
-                }
+                this.write(this.errorHandler(error));
+                return;
             } catch (newError) {
-                e = newError;
+                error = newError;
             }
         }
         if (this.errorEvent.hasSubscriptions()) {
-            this.errorEvent.fire(e);
+            this.errorEvent.fire(error);
         } else {
-            throw e;
+            throw error;
         }
     }
 }
 
-export function processTransformDuplex<I, O>(operations: DuplexDataSourceOperator<any, any>[], result: DuplexDataSource<O>, direction: DataFlow): Callback<I> {
-    return async (v: any) => {
+export function processTransformDuplex<I, O>(
+    operations: DuplexDataSourceOperator<any, any>[],
+    result: DuplexDataSource<O>,
+    direction: DataFlow
+): Callback<I> {
+    return async (input: any) => {
+        let value = input;
         try {
             for (const operation of operations) {
                 switch (operation.operationType) {
                     case OperationType.NOOP:
                     case OperationType.MAP:
-                        v =
+                        value =
                             direction === DataFlow.DOWNSTREAM
-                                ? (operation as DuplexDataSourceMapOperator<any, any>).operationDown(v)
-                                : (operation as DuplexDataSourceMapOperator<any, any>).operationUp(v);
+                                ? (operation as DuplexDataSourceMapOperator<any, any>).operationDown(value)
+                                : (operation as DuplexDataSourceMapOperator<any, any>).operationUp(value);
                         break;
-                    case OperationType.MAP_DELAY_FILTER:
-                        const tmp =
+                    case OperationType.MAP_DELAY_FILTER: {
+                        const transformed =
                             direction === DataFlow.DOWNSTREAM
-                                ? await (operation as DuplexDataSourceMapDelayFilterOperator<any, any>).operationDown(v)
-                                : await (operation as DuplexDataSourceMapDelayFilterOperator<any, any>).operationUp(v);
-                        if (tmp.cancelled) {
-                            return;
-                        } else {
-                            v = await tmp.item;
-                        }
+                                ? await (operation as DuplexDataSourceMapDelayFilterOperator<any, any>).operationDown(value)
+                                : await (operation as DuplexDataSourceMapDelayFilterOperator<any, any>).operationUp(value);
+                        if (transformed.cancelled) return;
+                        value = await transformed.item;
                         break;
+                    }
                     case OperationType.DELAY:
                     case OperationType.MAP_DELAY:
-                        v =
+                        value =
                             direction === DataFlow.DOWNSTREAM
-                                ? await (operation as DuplexDataSourceMapOperator<any, any>).operationDown(v)
-                                : await (operation as DuplexDataSourceMapOperator<any, any>).operationUp(v);
+                                ? await (operation as DuplexDataSourceMapOperator<any, any>).operationDown(value)
+                                : await (operation as DuplexDataSourceMapOperator<any, any>).operationUp(value);
                         break;
                     case OperationType.DELAY_FILTER:
                         if (
                             !(direction === DataFlow.DOWNSTREAM
-                                ? await (operation as DuplexDataSourceDelayFilterOperator<any>).operationDown(v)
-                                : await (operation as DuplexDataSourceDelayFilterOperator<any>).operationUp(v))
+                                ? await (operation as DuplexDataSourceDelayFilterOperator<any>).operationDown(value)
+                                : await (operation as DuplexDataSourceDelayFilterOperator<any>).operationUp(value))
                         ) {
                             return;
                         }
@@ -618,21 +282,18 @@ export function processTransformDuplex<I, O>(operations: DuplexDataSourceOperato
                     case OperationType.FILTER:
                         if (
                             !(direction === DataFlow.DOWNSTREAM
-                                ? (operation as DuplexDataSourceFilterOperator<any>).operationDown(v)
-                                : (operation as DuplexDataSourceFilterOperator<any>).operationUp(v))
+                                ? (operation as DuplexDataSourceFilterOperator<any>).operationDown(value)
+                                : (operation as DuplexDataSourceFilterOperator<any>).operationUp(value))
                         ) {
                             return;
                         }
                         break;
                 }
             }
-            if (direction === DataFlow.DOWNSTREAM) {
-                result.updateDownstream(v);
-            } else {
-                result.updateUpstream(v);
-            }
-        } catch (e) {
-            result.emitError(e, direction);
+            if (direction === DataFlow.DOWNSTREAM) result.publish(value);
+            else result.write(value);
+        } catch (error) {
+            result.emitError(error, direction);
         }
     };
 }

@@ -1,8 +1,8 @@
 import { ReadOnlyDataSource, DataSource, MapDataSource, ArrayDataSource } from '../stream/data_source.js';
 import { dsMap } from '../stream/data_source_operators.js';
-import { DuplexDataSource } from '../stream/duplex_data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 import { AttributeValue, ClassType, StyleType, Styles } from './common.js';
+import { isAurumStyleClass } from './styling.js';
 
 export function aurumClassName(
     data: { [key: string]: boolean | ReadOnlyDataSource<boolean> } | MapDataSource<string, boolean>,
@@ -16,13 +16,13 @@ export function aurumClassName(
 }
 
 function handleClassMapLike(
-    data: { [key: string]: boolean | ReadOnlyDataSource<boolean> } | MapDataSource<string, boolean>,
+    data: { [key: string]: boolean | ReadOnlyDataSource<boolean> },
     cancellationToken: CancellationToken
-) {
-    const result = [];
+): Array<string | ReadOnlyDataSource<string>> {
+    const result: Array<string | ReadOnlyDataSource<string>> = [];
     for (const key in data) {
         if (data[key]) {
-            if (data[key] instanceof DataSource || data[key] instanceof DuplexDataSource) {
+            if (data[key] instanceof DataSource) {
                 const source = data[key] as ReadOnlyDataSource<boolean>;
                 const mappedSource = new DataSource<string>(source.value ? key : '');
                 source.listen((value) => {
@@ -83,23 +83,26 @@ export function combineClass(cancellationToken: CancellationToken, ...args: Clas
         for (const arg of args) {
             if (typeof arg === 'string') {
                 fixed += arg + ' ';
+            } else if (isAurumStyleClass(arg)) {
+                fixed += arg.attach(cancellationToken) + ' ';
             } else if (Array.isArray(arg)) {
                 resolveConstants(arg);
-            } else if (arg instanceof DataSource || arg instanceof DuplexDataSource) {
+            } else if (arg instanceof DataSource) {
                 sources.push(arg);
             } else if (arg instanceof MapDataSource) {
                 maps.push(arg);
             } else if (typeof arg === 'object') {
-                for (const key in arg) {
-                    if (arg[key] instanceof DataSource || arg[key] instanceof DuplexDataSource) {
+                const classMap = arg as { [key: string]: boolean | ReadOnlyDataSource<boolean> };
+                for (const key in classMap) {
+                    if (classMap[key] instanceof DataSource) {
                         sources.push(
-                            arg[key].transform(
+                            (classMap[key] as ReadOnlyDataSource<boolean>).transform(
                                 dsMap((v) => (v ? key : '')),
                                 cancellationToken
                             )
                         );
                     } else {
-                        fixed += arg[key] ? key + ' ' : '';
+                        fixed += classMap[key] ? key + ' ' : '';
                     }
                 }
             }
@@ -154,7 +157,7 @@ export function combineAttribute(cancellationToken: CancellationToken, ...args: 
         if (typeof attr === 'string' || typeof attr === 'boolean') {
             constants.push(attr);
         }
-        if (attr instanceof DataSource || attr instanceof DuplexDataSource) {
+        if (attr instanceof DataSource) {
             sources.push(attr);
         }
     }
@@ -188,22 +191,23 @@ export function combineStyle(cancellationToken: CancellationToken, ...args: Styl
     for (const attr of args) {
         if (typeof attr === 'string') {
             fixed += attr + ';';
-        } else if (attr instanceof DataSource || attr instanceof DuplexDataSource) {
+        } else if (attr instanceof DataSource) {
             sources.push(attr);
         } else if (attr instanceof MapDataSource) {
             maps.push(attr);
-        } else if (typeof attr === 'object' && !(attr instanceof DataSource || attr instanceof DuplexDataSource)) {
-            //@ts-ignore
-            for (const key in attr) {
-                if (attr[key] instanceof DataSource) {
+        } else if (typeof attr === 'object' && !(attr instanceof DataSource)) {
+            const styles = attr as Styles;
+            for (const key in styles) {
+                const value = styles[key as keyof Styles];
+                if (value instanceof DataSource) {
                     sources.push(
-                        attr[key].transform(
-                            dsMap((v: string) => `${camelCaseToKebabCase(key)}:${v};`),
+                        value.transform(
+                            dsMap((v: string | number) => `${camelCaseToKebabCase(key)}:${v};`),
                             cancellationToken
                         )
                     );
                 } else {
-                    fixed += `${camelCaseToKebabCase(key)}:${attr[key]};`;
+                    fixed += `${camelCaseToKebabCase(key)}:${value};`;
                 }
             }
         }

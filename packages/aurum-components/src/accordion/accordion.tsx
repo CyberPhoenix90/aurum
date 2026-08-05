@@ -1,4 +1,3 @@
-import { css } from '@emotion/css';
 import {
     ArrayDataSource,
     Aurum,
@@ -13,10 +12,10 @@ import {
     combineStyle,
     dsMap,
     dsUpdateToken,
-    resolveChildren
+    resolveChildren,
+    css
 } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { theme } from '../theme/theme.js';
 
 export interface AccordionProps {
     style?: StyleType;
@@ -39,10 +38,8 @@ export interface AccordionItemProps {
     expanded?: boolean | DataSource<boolean>;
 }
 
-const style = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.baseFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2, theme.highlightColor1],
-        (fontFamily, size, fontColor, color1, color3, color2, highlight) => css`
+const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, themeColor3: color3, themeColor2: color2, highlightColor1: highlight } = theme;
+const style = css`
             background-color: ${color1};
             color: ${fontColor};
             font-family: ${fontFamily};
@@ -102,10 +99,7 @@ const style = aurumify([currentTheme], (theme, lifecycleToken) =>
                     }
                 }
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export function Accordion(props: AccordionProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     const accordionItems = resolveChildren<AurumElementModel<AccordionItemProps>>(

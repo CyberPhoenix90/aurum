@@ -204,7 +204,7 @@ export class CancellationToken {
     }
 }
 
-const animationCbs = [];
+const animationCbs: Array<(time: number) => void> = [];
 let looping = false;
 
 export function registerAnimationLoop(callback: (time: number) => void, token: CancellationToken): void {

@@ -1,7 +1,7 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { Aurum, CancellationToken, DataSource, dsMap } from '../../src/aurumjs.js';
+import { Aurum, AurumComponentAPI, CancellationToken, DataSource, dsMap, Renderable } from '../../src/aurumjs.js';
 
-function TestComponent(props, children, api) {
+function TestComponent(props: object, children: Renderable[], api: AurumComponentAPI) {
     return <span>{children}</span>;
 }
 

@@ -1,8 +1,8 @@
 import { afterEach, assert, describe, it } from 'vitest';
-import { Aurum, AurumRouter, DataSource, Route } from '../../src/aurumjs.js';
+import { Aurum, AurumRouter, CancellationToken, DataSource, Route } from '../../src/aurumjs.js';
 
 describe('Router', () => {
-    let attachToken;
+    let attachToken: CancellationToken | undefined;
     afterEach(() => {
         attachToken?.cancel();
         attachToken = undefined;

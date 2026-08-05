@@ -1,27 +1,19 @@
-import { Aurum, DataSource, DuplexDataSource, GenericDataSource, getValueOf } from 'aurumjs';
-import { TextField, TextFieldProps } from './text_field.js';
+import { Aurum, BindableSource, getValueOf } from 'aurumjs';
+import { getFormFieldSource } from '../form/form.js';
+import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 
-export interface CheckboxFieldProps extends Omit<TextFieldProps, 'type' | 'step' | 'value' | 'min' | 'max'> {
-    value?: GenericDataSource<boolean> | boolean;
+export interface CheckboxFieldProps<T extends object = Record<string, boolean>>
+    extends Omit<FormFieldInputProps<T, boolean>, 'type' | 'step' | 'value' | 'min' | 'max'> {
+    value?: BindableSource<boolean> | boolean;
 }
 
-export function CheckboxField(props: CheckboxFieldProps) {
+export function CheckboxField<T extends object = Record<string, boolean>>(props: CheckboxFieldProps<T>) {
     const { ...inputProps } = props;
 
-    if (props.form && props.name && !props.value) {
-        //@ts-ignore
-        props.value = props.form.schema.fields[getValueOf(props.name)].source;
+    if (props.form && props.name && props.value === undefined) {
+        const fieldName = getValueOf(props.name);
+        props.value = getFormFieldSource<T, boolean>(props.form, fieldName);
     }
 
-    const valueSource = new DataSource(getValueOf(props.value));
-
-    valueSource.listen((newValue) => {
-        if (props.value instanceof DataSource) {
-            props.value.update(newValue);
-        } else if (props.value instanceof DuplexDataSource) {
-            props.value.updateUpstream(newValue);
-        }
-    });
-
-    return <TextField {...inputProps} value={undefined} checked={valueSource} type="checkbox"></TextField>;
+    return <FormFieldInput {...inputProps} value={undefined} checked={props.value} type="checkbox"></FormFieldInput>;
 }

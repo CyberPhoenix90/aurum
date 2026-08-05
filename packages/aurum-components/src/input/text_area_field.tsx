@@ -1,12 +1,8 @@
-import { css } from '@emotion/css';
-import { Aurum, TextAreaProps, DataSource, dsMap, Renderable, ClassType, combineClass, AurumComponentAPI, StyleType } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
+import { Aurum, TextAreaProps, Renderable, ClassType, combineClass, AurumComponentAPI, css, StyleType } from 'aurumjs';
+import { theme } from '../theme/theme.js';
 
-const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [theme.fontFamily, theme.baseFontSize, theme.highlightFontColor, theme.themeColor1, theme.themeColor3, theme.themeColor2, theme.primary],
-        (fontFamily, size, highlightFont, color1, color3, color2, primary) => css`
+const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor1: color1, themeColor3: color3, themeColor2: color2, primary } = theme;
+const textAreaStyle = css`
             position: relative;
             display: inline-flex;
             width: 300px;
@@ -27,10 +23,7 @@ const theme = aurumify([currentTheme], (theme, lifecycleToken) =>
                     border-width: 2px;
                 }
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export interface TextAreaFieldProps extends TextAreaProps {
     decorators?: Renderable;
@@ -43,7 +36,7 @@ export function TextAreaField(props: TextAreaFieldProps, children: Renderable[],
 
     return (
         <span
-            class={combineClass(api.cancellationToken, props.class, theme.transform(dsMap<string, string>((t) => `${t} text-field`)) as DataSource<string>)}
+            class={combineClass(api.cancellationToken, props.class, textAreaStyle, 'text-field')}
             style={style}
         >
             <textarea {...inputProps}></textarea>

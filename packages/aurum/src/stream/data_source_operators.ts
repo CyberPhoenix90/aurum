@@ -1,8 +1,7 @@
 import { CancellationToken } from '../utilities/cancellation_token.js';
-import { Callback, ThenArg } from '../utilities/common.js';
+import { Callback, DataPublisher, DataWriter, ThenArg } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
 import { ArrayDataSource, DataSource } from './data_source.js';
-import { DuplexDataSource } from './duplex_data_source.js';
 import {
     DataSourceDelayFilterOperator,
     DataSourceDelayOperator,
@@ -14,7 +13,6 @@ import {
     DataSourceSpreadOperator,
     OperationType
 } from './operator_model.js';
-import { Stream } from './stream.js';
 
 /**
  * Mutates an update
@@ -63,7 +61,7 @@ export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMa
  * Changes updates to contain the value of the previous update as well as the current
  */
 export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T }> {
-    let lastValue = undefined;
+    let lastValue: T | undefined = undefined;
     return {
         name: 'diff',
         operationType: OperationType.MAP,
@@ -147,12 +145,14 @@ export function dsOdd(): DataSourceFilterOperator<number> {
  * Only propagate an update if the value is lower than the previous update
  */
 export function dsMin(): DataSourceFilterOperator<number> {
-    let last = Number.MAX_SAFE_INTEGER;
+    let last: number;
+    let primed = false;
     return {
         name: 'min',
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (v < last) {
+            if (!primed || v < last) {
+                primed = true;
                 last = v;
                 return true;
             } else {
@@ -166,12 +166,14 @@ export function dsMin(): DataSourceFilterOperator<number> {
  * Only propagate an update if the value is higher than the previous update
  */
 export function dsMax(): DataSourceFilterOperator<number> {
-    let last = Number.MIN_SAFE_INTEGER;
+    let last: number;
+    let primed = false;
     return {
         name: 'max',
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (v > last) {
+            if (!primed || v > last) {
+                primed = true;
                 last = v;
                 return true;
             } else {
@@ -262,6 +264,11 @@ export function dsCutOffDynamic<T>(amountLeft: DataSource<number>): DataSourceFi
  * If the counter reaches 0 the updates are buffered until they are unlocked again
  */
 export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
+    const queue: Array<{ value: T; resolve: (value: T) => void }> = [];
+    let drainScheduled = false;
+
+    state.listen(scheduleDrain);
+
     return {
         operationType: OperationType.DELAY,
         name: 'semaphore',
@@ -271,18 +278,25 @@ export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperat
                     state.update(state.value - 1);
                     resolve(v);
                 } else {
-                    const token = new CancellationToken();
-                    state.listen(() => {
-                        if (state.value > 0) {
-                            token.cancel();
-                            state.update(state.value - 1);
-                            resolve(v);
-                        }
-                    });
+                    queue.push({ value: v, resolve });
                 }
             });
         }
     };
+
+    function scheduleDrain() {
+        if (!drainScheduled && queue.length > 0 && state.value > 0) {
+            drainScheduled = true;
+            queueMicrotask(() => {
+                drainScheduled = false;
+                while (queue.length > 0 && state.value > 0) {
+                    const item = queue.shift();
+                    state.update(state.value - 1);
+                    item.resolve(item.value);
+                }
+            });
+        }
+    }
 }
 
 /**
@@ -323,34 +337,20 @@ export function dsAwait<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
  * Takes promises and updates with the resolved value, if multiple promises come in makes sure the updates fire in the same order that the promises came in
  */
 export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
-    const queue: any[] = [];
-    const onDequeue = new EventEmitter();
+    let tail = Promise.resolve();
 
     return {
         operationType: OperationType.MAP_DELAY,
         name: 'awaitOrdered',
-        operation: async (v) => {
-            queue.push(v);
-            if (queue.length === 1) {
-                return processItem();
-            } else {
-                const token = new CancellationToken();
-                onDequeue.subscribe(async () => {
-                    if (queue[0] === v) {
-                        token.cancel();
-                        return processItem();
-                    }
-                }, token);
-            }
+        operation: (value) => {
+            const result = tail.then(() => value as any);
+            tail = result.then(
+                (): undefined => undefined,
+                (): undefined => undefined
+            );
+            return result;
         }
     };
-
-    async function processItem() {
-        await queue[0];
-        const item = queue.shift();
-        onDequeue.fire();
-        return item;
-    }
 }
 
 /**
@@ -359,16 +359,15 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
  * async operations where we only care about the result if it's the latest action
  */
 export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<T>> {
-    let freshnessToken: number;
+    let freshnessToken = 0;
 
     return {
         operationType: OperationType.MAP_DELAY_FILTER,
         name: 'awaitLatest',
         operation: async (v) => {
-            freshnessToken = Date.now();
-            const timestamp = freshnessToken;
+            const token = ++freshnessToken;
             const resolved = await (v as any);
-            if (freshnessToken === timestamp) {
+            if (freshnessToken === token) {
                 return {
                     item: resolved as any,
                     cancelled: false
@@ -403,14 +402,16 @@ export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M):
  */
 export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<string, string> {
     let last: string;
+    let primed = false;
     return {
         name: `stringJoin ${seperator}`,
         operationType: OperationType.MAP,
         operation: (v: string) => {
-            if (last) {
+            if (primed) {
                 last += seperator + v;
             } else {
                 last = v;
+                primed = true;
             }
             return last;
         }
@@ -439,7 +440,7 @@ export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
  * update is cancelled and the process starts again
  */
 export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     let cancelled = new EventEmitter();
     return {
         operationType: OperationType.DELAY_FILTER,
@@ -464,7 +465,7 @@ export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
  * Only allow up to 1 update to propagate per frame makes update run as a microtask
  */
 export function dsMicroDebounce<T>(): DataSourceDelayFilterOperator<T> {
-    let scheduled;
+    let scheduled = false;
     return {
         operationType: OperationType.DELAY_FILTER,
         name: `microDebounce`,
@@ -488,14 +489,14 @@ export function dsMicroDebounce<T>(): DataSourceDelayFilterOperator<T> {
  * Debounce update to occur at most one per animation frame
  */
 export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
-    let timeout;
+    let timeout: number | undefined;
     let cancelled = new EventEmitter();
     return {
         operationType: OperationType.DELAY_FILTER,
         name: `throttle frame`,
         operation: (v) => {
             return new Promise((resolve) => {
-                clearTimeout(timeout);
+                cancelAnimationFrame(timeout);
                 cancelled.fire();
                 cancelled.subscribeOnce(() => {
                     resolve(false);
@@ -569,7 +570,7 @@ export function dsThrottleBuffer<T>(
     let nextScheduled = false;
 
     function next() {
-        if (buffer.length > 0 && performance.now() - lastCall > time) {
+        if (buffer.length > 0 && performance.now() - lastCall >= time) {
             const resolve = buffer.shift();
             lastCall = performance.now();
             resolve(true);
@@ -588,11 +589,11 @@ export function dsThrottleBuffer<T>(
         name: `throttle buffer ${time}ms`,
         operationType: OperationType.DELAY_FILTER,
         operation: async (v) => {
-            if (buffer.length === 0 && performance.now() - lastCall > time) {
+            if (buffer.length === 0 && performance.now() - lastCall >= time) {
                 lastCall = performance.now();
                 return true;
             } else {
-                if (options.maxBufferSize && buffer.length >= options.maxBufferSize) {
+                if (options?.maxBufferSize && buffer.length >= options.maxBufferSize) {
                     return false;
                 }
 
@@ -603,8 +604,8 @@ export function dsThrottleBuffer<T>(
 
                 buffer.push(res);
 
-                if (options.highWaterMark && buffer.length >= options.highWaterMark) {
-                    options.onHighWaterMark();
+                if (options?.highWaterMark && buffer.length >= options.highWaterMark) {
+                    options.onHighWaterMark?.();
                 }
 
                 if (!nextScheduled) {
@@ -635,12 +636,12 @@ export function dsBuffer<T>(config: {
     // custom predicate to determine if an item should be included in the batch. Return true to include the item in the batch and false to flush the batch and put the new item in a new batch
     canBatch?: (item: T, batch: readonly T[]) => boolean;
 }): DataSourceMapDelayFilterOperator<T, T[]> {
-    let buffer = [];
-    let resolve;
-    let promise;
-    let timeout;
+    let buffer: T[] = [];
+    let resolve: ((value: { item: T[]; cancelled: boolean }) => void) | undefined;
+    let promise: Promise<{ item: T[]; cancelled: boolean }> | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
-    if (!config && !config.time && !config.maxBatchSize && !config.canBatch) {
+    if (!config || (!config.time && !config.maxBatchSize && !config.canBatch)) {
         throw new Error('At least one of time, maxBatchSize or batchPredicate must be provided');
     }
 
@@ -690,11 +691,12 @@ export function dsBuffer<T>(config: {
             } else {
                 // Updates coming in while the batch is being processed are added to the batch and cancelled from the stream
                 return Promise.resolve({
-                    cancelled: true
+                    cancelled: true,
+                    item: undefined
                 });
             }
 
-            function flush() {
+            function flush(): void {
                 if (timeout) {
                     clearTimeout(timeout);
                     timeout = undefined;
@@ -730,16 +732,12 @@ export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T
 /**
  * Forwards an event to another source
  */
-export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any>): DataSourceNoopOperator<T> {
+export function dsPipe<T>(target: DataPublisher<T> & { readonly name: string }): DataSourceNoopOperator<T> {
     return {
         name: `pipe ${target.name}`,
         operationType: OperationType.NOOP,
         operation: (v) => {
-            if (target instanceof DataSource || target instanceof Stream) {
-                target.update(v);
-            } else {
-                target.updateDownstream(v);
-            }
+            target.publish(v);
         }
     };
 }
@@ -747,16 +745,12 @@ export function dsPipe<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T
 /**
  * Same as pipe except for duplex data sources it pipes upstream
  */
-export function dsPipeUp<T>(target: DataSource<T> | DuplexDataSource<T> | Stream<T, any>): DataSourceNoopOperator<T> {
+export function dsPipeUp<T>(target: DataWriter<T> & { readonly name: string }): DataSourceNoopOperator<T> {
     return {
         name: `pipeup ${target.name}`,
         operationType: OperationType.NOOP,
         operation: (v) => {
-            if (target instanceof DataSource || target instanceof Stream) {
-                target.update(v);
-            } else {
-                target.updateUpstream(v);
-            }
+            target.write(v);
         }
     };
 }
@@ -776,7 +770,7 @@ export function dsHistory<T>(
             if (!cancellationToken.isCancelled) {
                 if (generations) {
                     if (reportTarget.length.value >= generations) {
-                        reportTarget.removeLeft(reportTarget.length.value - generations);
+                        reportTarget.removeLeft(reportTarget.length.value - generations + 1);
                     }
                 }
                 reportTarget.push(v);
@@ -824,7 +818,7 @@ export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
 /**
  * Pipes updates to the targets in round-robin fashion
  */
-export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource<T> | Stream<T, any>>): DataSourceNoopOperator<T> {
+export function dsLoadBalance<T>(targets: Array<DataPublisher<T> & { readonly name: string }>): DataSourceNoopOperator<T> {
     let i = 0;
 
     return {
@@ -835,11 +829,7 @@ export function dsLoadBalance<T>(targets: Array<DataSource<T> | DuplexDataSource
             if (i >= targets.length) {
                 i = 0;
             }
-            if (target instanceof DataSource || target instanceof Stream) {
-                target.update(v);
-            } else {
-                target.updateDownstream(v);
-            }
+            target.publish(v);
         }
     };
 }
@@ -857,17 +847,13 @@ export function dsLog<T>(prefix: string = '', suffix: string = ''): DataSourceNo
     };
 }
 
-export function dsPipeAll<T>(...sources: Array<DataSource<T> | DuplexDataSource<T> | Stream<T, any>>): DataSourceNoopOperator<T> {
+export function dsPipeAll<T>(...sources: Array<DataPublisher<T> & { readonly name: string }>): DataSourceNoopOperator<T> {
     return {
         name: `pipeAll [${sources.map((v) => v.name).join()}]`,
         operationType: OperationType.NOOP,
         operation: (v) => {
             sources.forEach((source) => {
-                if (source instanceof DataSource || source instanceof Stream) {
-                    source.update(v);
-                } else {
-                    source.updateDownstream(v);
-                }
+                source.publish(v);
             });
         }
     };

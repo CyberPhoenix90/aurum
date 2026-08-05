@@ -168,7 +168,7 @@ import {
 import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '../stream/data_source.js';
 import { CancellationToken } from './cancellation_token.js';
 import { MapLike } from './common.js';
-import { HTMLSanitizeConfig, sanitizeHTML } from './sanitize.js';
+import { HTMLSanitizeConfig, insertSanitizedHTML, setSanitizedHTML } from './sanitize.js';
 import { dsTap, dsUnique, dsUpdateToken } from '../stream/data_source_operators.js';
 
 export type AurumDecorator = (model: AurumElementModel<any>) => Renderable;
@@ -302,7 +302,7 @@ export class Aurum {
             content.transform(
                 dsUnique(),
                 dsTap((v) => {
-                    target.innerHTML = sanitizeHTML(v, config);
+                    setSanitizedHTML(target, v, config);
                 }),
                 token
             );
@@ -310,33 +310,24 @@ export class Aurum {
             content.listenAndRepeat((change) => {
                 switch (change.operationDetailed) {
                     case 'append':
-                        target.insertAdjacentHTML('beforeend', change.items.map((item) => sanitizeHTML(item, config)).join(''));
+                        insertSanitizedHTML(target, change.items.join(''), 'append', config);
                         break;
                     case 'prepend':
-                        target.insertAdjacentHTML('afterbegin', change.items.map((item) => sanitizeHTML(item, config)).join(''));
+                        insertSanitizedHTML(target, change.items.join(''), 'prepend', config);
                         break;
                     case 'clear':
-                        target.innerHTML = '';
+                        target.replaceChildren();
                         break;
-                    case 'insert':
-                    case 'merge':
-                    case 'removeLeft':
-                    case 'removeRight':
-                    case 'remove':
-                    case 'swap':
-                        target.innerHTML = content
-                            .getData()
-                            .map((item) => sanitizeHTML(item, config))
-                            .join('');
-                        break;
+                    default:
+                        setSanitizedHTML(target, content.getData().join(''), config);
                 }
             }, token);
         } else {
-            target.innerHTML = sanitizeHTML(content, config);
+            setSanitizedHTML(target, content, config);
         }
 
         token.addCancellable(() => {
-            target.innerHTML = '';
+            target.replaceChildren();
         });
 
         return token;
@@ -420,7 +411,7 @@ export class Aurum {
             intrinsic = true;
             name = node;
             const type = node;
-            node = nodeMap[node];
+            node = (nodeMap as MapLike<any>)[node];
             if (node === undefined) {
                 throw new Error(`Node ${type} does not exist or is not supported`);
             }

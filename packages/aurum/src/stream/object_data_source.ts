@@ -122,8 +122,9 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
 
             this.listenOnKey(key, (v) => {
                 if (Array.isArray(v.newValue)) {
-                    if (v.newValue.length !== subDataSource.length.value || !subDataSource.getData().every((item, index) => v.newValue[index] === item)) {
-                        subDataSource.merge(v.newValue);
+                    const newValue = v.newValue as FlatArray<T[K], 1>[];
+                    if (newValue.length !== subDataSource.length.value || !subDataSource.getData().every((item, index) => newValue[index] === item)) {
+                        subDataSource.merge(newValue);
                     }
                 } else {
                     subDataSource.clear();
@@ -328,11 +329,11 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
     public assign(newData: Partial<T> | ObjectDataSource<T>): void {
         if (newData instanceof ObjectDataSource) {
             for (const key of newData.keys()) {
-                this.set(key as keyof T, newData.data[key]);
+                this.set(key as keyof T, (newData.data as Record<string, any>)[key]);
             }
         } else {
             for (const key of Object.keys(newData)) {
-                this.set(key as keyof T, newData[key]);
+                this.set(key as keyof T, (newData as Record<string, any>)[key]);
             }
         }
     }
@@ -346,12 +347,12 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
         if (newData instanceof ObjectDataSource) {
             for (const key of newData.keys()) {
                 keys.delete(key);
-                this.set(key as keyof T, newData.data[key]);
+                this.set(key as keyof T, (newData.data as Record<string, any>)[key]);
             }
         } else {
             for (const key of Object.keys(newData)) {
                 keys.delete(key);
-                this.set(key as keyof T, newData[key]);
+                this.set(key as keyof T, (newData as Record<string, any>)[key]);
             }
         }
 

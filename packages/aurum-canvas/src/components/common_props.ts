@@ -50,7 +50,7 @@ export interface CommonProps extends InteractionProps {
     opacity?: number | ReadOnlyDataSource<number>;
     rotation?: number | ReadOnlyDataSource<number>;
     colorBlending?: ColorBlending | ReadOnlyDataSource<ColorBlending>;
-    onPreDraw?(props: RenderData);
+    onPreDraw?(props: RenderData): void;
 }
 
 export interface InteractionProps {

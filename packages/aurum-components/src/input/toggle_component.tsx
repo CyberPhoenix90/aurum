@@ -1,22 +1,9 @@
-import { css } from '@emotion/css';
-import { Aurum, Renderable, combineClass, AurumComponentAPI, DataSource } from 'aurumjs';
-import { currentTheme } from '../theme/theme.js';
-import { aurumify } from '../utils.js';
-import { FormType } from '../form/form.js';
+import { Aurum, BindableSource, Renderable, combineClass, AurumComponentAPI, css, DataSource } from 'aurumjs';
+import { theme } from '../theme/theme.js';
+import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
-const toggleStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
-    aurumify(
-        [
-            theme.fontFamily,
-            theme.baseFontSize,
-            theme.themeColor0,
-            theme.themeColor1,
-            theme.baseFontColor,
-            theme.highContrastFontColor,
-            theme.primary,
-            theme.error
-        ],
-        (fontFamily, size, color0, color1, baseFontColor, highContrastFontColor, action, error) => css`
+const { fontFamily, baseFontSize: size, themeColor0: color0, themeColor1: color1, baseFontColor, primary: action } = theme;
+const toggleStyle = css`
             font-family: ${fontFamily};
             font-size: ${size};
             outline: none;
@@ -58,32 +45,34 @@ const toggleStyle = aurumify([currentTheme], (theme, lifecycleToken) =>
             &.off .toggle-knob {
                 transform: translateX(0);
             }
-        `,
-        lifecycleToken
-    )
-);
+        `;
 
 export type ToggleState = 'on' | 'off';
 
-export interface ToggleComponentProps {
-    form?: FormType<any, any>;
-    name?: string;
-    toggleState?: DataSource<ToggleState>;
+export interface ToggleComponentProps<T extends object = Record<string, ToggleState>> {
+    form?: FormType<T, unknown>;
+    name?: FormFieldName<T, ToggleState>;
+    toggleState?: BindableSource<ToggleState>;
     onToggle?: (state: ToggleState) => void;
 }
 
-export function Toggle(props: ToggleComponentProps, children: Renderable[], api: AurumComponentAPI): Renderable {
-    let state = props.toggleState;
-    if (!state && props.form && props.name) {
-        //@ts-ignore
-        state = props.form.schema.fields[props.name].source;
+export function Toggle<T extends object = Record<string, ToggleState>>(
+    props: ToggleComponentProps<T>,
+    children: Renderable[],
+    api: AurumComponentAPI
+): Renderable {
+    let state: BindableSource<ToggleState>;
+    if (props.toggleState) {
+        state = props.toggleState;
+    } else if (props.form && props.name) {
+        state = getFormFieldSource<T, ToggleState>(props.form, props.name);
     } else {
-        state = new DataSource('off');
+        state = new DataSource<ToggleState>('off');
     }
 
     const toggle = () => {
         const newState = state.value === 'on' ? 'off' : 'on';
-        state.update(newState);
+        state.write(newState);
         if (props.onToggle) {
             props.onToggle(newState);
         }

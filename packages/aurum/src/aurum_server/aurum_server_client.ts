@@ -54,7 +54,7 @@ export interface AurumServerInfo {
     authenticationToken?: string;
 }
 
-const pendingRPCResponses: Map<string, { resolve(value: any); reject(error: any) }> = new Map();
+const pendingRPCResponses: Map<string, { resolve(value: any): void; reject(error: any): void }> = new Map();
 
 export function getRemoteFunction<I, O = void>(aurumServerInfo: AurumServerInfo, cancellation: CancellationToken): (input: I) => Promise<O> {
     return syncFunction(aurumServerInfo, cancellation);
@@ -178,7 +178,7 @@ class AurumServerClient {
         );
     }
 
-    public performRPC(input, endpointId: string, authenticationToken: string, cancellation: CancellationToken): Promise<any> {
+    public performRPC(input: any, endpointId: string, authenticationToken: string, cancellation: CancellationToken): Promise<any> {
         return new Promise((resolve, reject) => {
             const uuid = Math.random().toString();
             pendingRPCResponses.set(uuid, { resolve, reject });
@@ -304,8 +304,8 @@ class AurumServerClient {
         let started = false;
         let latency = [0, 0, 0, 0, 0];
         let cycle = 0;
-        let latencyTs;
-        let lastBeat;
+        let latencyTs: number;
+        let lastBeat: number;
         return new Promise((resolve, reject) => {
             protocol = resolveProtocol(protocol);
             host = resolveHost(host);
