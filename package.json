@@ -5,6 +5,9 @@
     "description": "Monorepo for all Aurum packages",
     "workspaces": [
         "packages/aurum",
+        "packages/aurum-streams",
+        "packages/aurum-rendering",
+        "packages/aurum-html",
         "packages/aurum-canvas",
         "packages/aurum-components",
         "packages/aurum-server"

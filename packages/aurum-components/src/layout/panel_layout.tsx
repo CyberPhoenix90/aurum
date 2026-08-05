@@ -12,7 +12,7 @@ import {
     StyleType,
     Renderable,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import {
     PanelContent,

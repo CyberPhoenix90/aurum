@@ -1,4 +1,4 @@
-import { Aurum, Renderable, css } from 'aurumjs';
+import { Aurum, Renderable, css } from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { Dialog } from './dialog.js';
 

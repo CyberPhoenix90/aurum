@@ -345,7 +345,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     }
 
     /**
-     * Connects to an aurum-server exposed datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Connects to a data source exposed by `@aurum/server`.
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
      * @param  {AurumServerInfo} aurumServerInfo
      * @returns DataSource
@@ -1150,7 +1150,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     /**
-     * Connects to an aurum-server exposed array datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Connects to an array data source exposed by `@aurum/server`.
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated
      * @param  {AurumServerInfo} aurumServerInfo
      * @returns DataSource
@@ -2935,7 +2935,7 @@ export class MapDataSource<K, V> {
     }
 
     /**
-     * Connects to an aurum-server exposed map datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Connects to a map data source exposed by `@aurum/server`.
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
      * @param  {AurumServerInfo} aurumServerInfo
      * @returns DataSource
@@ -3308,7 +3308,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     }
 
     /**
-     * Connects to an aurum-server exposed set datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Connects to a set data source exposed by `@aurum/server`.
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
      * @param  {AurumServerInfo} aurumServerInfo
      * @returns DataSource

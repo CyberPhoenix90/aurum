@@ -1,4 +1,4 @@
-import { ArrayDataSource, BindableSource, ReadOnlyDataSource, Renderable } from 'aurumjs';
+import { ArrayDataSource, BindableSource, ReadOnlyDataSource, Renderable } from '@aurum/html';
 
 export interface TreeEntry<T> {
     tag?: T;

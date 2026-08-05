@@ -11,6 +11,21 @@
             "types": "./prebuilt/esnext/aurumjs.d.ts",
             "import": "./prebuilt/esnext/aurumjs.js",
             "require": "./prebuilt/cjs/aurumjs.js"
+        },
+        "./streams": {
+            "types": "./prebuilt/esnext/streams.d.ts",
+            "import": "./prebuilt/esnext/streams.js",
+            "require": "./prebuilt/cjs/streams.js"
+        },
+        "./rendering": {
+            "types": "./prebuilt/esnext/rendering.d.ts",
+            "import": "./prebuilt/esnext/rendering.js",
+            "require": "./prebuilt/cjs/rendering.js"
+        },
+        "./html": {
+            "types": "./prebuilt/esnext/html.d.ts",
+            "import": "./prebuilt/esnext/html.js",
+            "require": "./prebuilt/cjs/html.js"
         }
     },
     "files": [

@@ -1,4 +1,4 @@
-import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, css, DataSource, dsMap, Renderable, StyleType } from 'aurumjs';
+import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, css, DataSource, dsMap, Renderable, StyleType } from '@aurum/html';
 import { theme } from '../theme/theme.js';
 
 const { themeColor2: color2, boxShadow, highContrastFontColor } = theme;

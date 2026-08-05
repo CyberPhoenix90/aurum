@@ -1,4 +1,4 @@
-import { Aurum, AurumComponentAPI, BindableSource, combineClass, css, DataSource, Renderable } from 'aurumjs';
+import { Aurum, AurumComponentAPI, BindableSource, combineClass, css, DataSource, Renderable } from '@aurum/html';
 import { TextField, TextFieldProps } from './text_field.js';
 import { Button } from './button.js';
 

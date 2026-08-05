@@ -1,4 +1,4 @@
-import { ArrayDataSource, Aurum, Renderable } from 'aurumjs';
+import { ArrayDataSource, Aurum, Renderable } from '@aurum/html';
 import { FloatingWindow, WindowContent, WindowContentRow, WindowFooter, WindowTitle } from './floating_window.js';
 import { Button, ButtonType } from '../aurum-components.js';
 

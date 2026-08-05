@@ -1,0 +1,26 @@
+{
+    "name": "@aurum/html",
+    "version": "0.1.0",
+    "description": "HTML nodes, DOM rendering, styling, and HTML JSX types for Aurum",
+    "type": "module",
+    "main": "./prebuilt/esnext/index.js",
+    "types": "./prebuilt/esnext/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./prebuilt/esnext/index.d.ts",
+            "import": "./prebuilt/esnext/index.js"
+        }
+    },
+    "files": ["prebuilt", "README.md", "LICENSE"],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "test": "tsc -p tsconfig.test.json --noEmit --declaration false --declarationMap false",
+        "prepack": "npm run build"
+    },
+    "dependencies": {
+        "@aurum/rendering": "^0.1.0",
+        "@aurum/streams": "^0.1.0",
+        "aurumjs": "^0.9.55"
+    },
+    "license": "MIT"
+}

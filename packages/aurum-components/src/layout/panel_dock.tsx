@@ -10,7 +10,7 @@ import {
     dsMap,
     Renderable,
     StyleType
-} from 'aurumjs';
+} from '@aurum/html';
 
 export type SizeTypes = BindableSource<number> | number;
 export interface PanelElementProps {

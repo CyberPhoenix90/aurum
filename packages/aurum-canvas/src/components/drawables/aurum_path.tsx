@@ -1,4 +1,4 @@
-import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle, DataSource } from 'aurumjs';
+import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle, DataSource } from '@aurum/html';
 import { ComponentModel, ComponentType } from '../component_model.js';
 import { CommonProps } from '../common_props.js';
 

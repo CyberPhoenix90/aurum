@@ -1,4 +1,4 @@
-import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI, css } from 'aurumjs';
+import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI, css } from '@aurum/html';
 
 interface AlertProps {
     message: string;

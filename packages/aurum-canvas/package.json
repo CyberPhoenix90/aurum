@@ -1,5 +1,5 @@
 {
-    "name": "aurum-canvas",
+    "name": "@aurum/canvas",
     "version": "0.0.54",
     "description": "Aurum style scene graph management for rendering in canvas",
     "type": "module",
@@ -18,7 +18,7 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "aurumjs": "^0.9.55"
+        "@aurum/html": "^0.1.0"
     },
     "homepage": "https://aurumjs.org/",
     "repository": {

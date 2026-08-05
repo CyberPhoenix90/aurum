@@ -14,7 +14,7 @@ import {
     dsUpdateToken,
     resolveChildren,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 
 export interface AccordionProps {

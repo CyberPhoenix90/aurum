@@ -1,4 +1,4 @@
-import { DataSource, ReadOnlyDataSource } from 'aurumjs';
+import { DataSource, ReadOnlyDataSource } from '@aurum/html';
 import { CommonProps, InteractionProps } from './common_props.js';
 import { StateComponentModel } from './drawables/state.js';
 

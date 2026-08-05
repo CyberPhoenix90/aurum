@@ -1,4 +1,4 @@
-import { AurumCanvas, AurumRectangle } from 'aurum-canvas';
+import { AurumCanvas, AurumRectangle } from '@aurum/canvas';
 import {
     ArrayDataSource,
     Aurum,
@@ -12,7 +12,7 @@ import {
     ReadOnlyDataSource,
     Renderable,
     StyleType
-} from 'aurumjs';
+} from '@aurum/html';
 
 export interface DataPoint {
     value: number;

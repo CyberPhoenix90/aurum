@@ -44,7 +44,7 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
     }
 
     /**
-     * Connects to an aurum-server exposed object datasource. View https://github.com/CyberPhoenix90/aurum-server for more information
+     * Connects to an object data source exposed by `@aurum/server`.
      * Note that type safety is not guaranteed. Whatever the server sends as an update will be propagated. Make sure you trust the server
      * @param  {AurumServerInfo} aurumServerInfo
      * @returns DataSource

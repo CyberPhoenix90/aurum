@@ -1,7 +1,7 @@
 import { TextField } from '../input/text_field.js';
 import { FileTypePriority, TreeViewSorting, isDirectory, sortItems } from './tree_view_common.js';
 import { TreeEntry } from './tree_view_model.js';
-import { Aurum, ArrayDataSource, DataSource, dsMap, getValueOf, aurumClassName, Renderable, AurumComponentAPI } from 'aurumjs';
+import { Aurum, ArrayDataSource, DataSource, dsMap, getValueOf, aurumClassName, Renderable, AurumComponentAPI } from '@aurum/html';
 
 interface NodeEvents<T> {
     onEntryDoubleClicked?(e: MouseEvent, entry: TreeEntry<T>, ancestors: TreeEntry<T>[]): void;

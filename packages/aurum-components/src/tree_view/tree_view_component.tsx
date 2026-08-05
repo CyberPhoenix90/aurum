@@ -11,7 +11,7 @@ import {
     dsMap,
     getValueOf,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { TreeEntry } from './tree_view_model.js';
 import { TreeEntryRenderable } from './tree_view_node.js';

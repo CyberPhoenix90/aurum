@@ -1,4 +1,4 @@
-import { ArrayDataSource, DataSource, Aurum, CancellationToken } from 'aurumjs';
+import { ArrayDataSource, DataSource, Aurum, CancellationToken } from '@aurum/html';
 import { AurumCanvas, AurumGroup, AurumRectangle } from '../src/aurum-canvas.js';
 
 describe('rendering', () => {

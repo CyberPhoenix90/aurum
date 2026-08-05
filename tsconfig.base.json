@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2019",
         "module": "ES2020",
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
         "lib": ["ES2019", "DOM", "DOM.Iterable"],
         "jsx": "react",
         "jsxFactory": "Aurum.factory",

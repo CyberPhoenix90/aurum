@@ -1,4 +1,4 @@
-import { CancellationToken, EventEmitter } from 'aurumjs';
+import { CancellationToken, EventEmitter } from '@aurum/html';
 import { AurumOffscreenCanvasProps } from './offscreen_canvas.js';
 
 export function initializeKeyboardPanningFeature(

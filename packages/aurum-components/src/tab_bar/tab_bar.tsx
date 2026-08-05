@@ -10,7 +10,7 @@ import {
     resolveChildren,
     AurumElementModel,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, themeColor2: color2, themeColor3: color3 } = theme;

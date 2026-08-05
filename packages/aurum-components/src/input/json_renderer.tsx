@@ -1,4 +1,4 @@
-import { Aurum, AurumComponentAPI, css, DataSource, dsMap, dsUnique, getValueOf, Renderable } from 'aurumjs';
+import { Aurum, AurumComponentAPI, css, DataSource, dsMap, dsUnique, getValueOf, Renderable } from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { Button } from './button.js';
 

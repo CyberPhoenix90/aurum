@@ -1,4 +1,4 @@
-import { ArrayDataSource, Aurum, AurumComponentAPI, Renderable } from 'aurumjs';
+import { ArrayDataSource, Aurum, AurumComponentAPI, Renderable } from '@aurum/html';
 
 /**
  * WindowManager is a component that manages the z-index of its children based on their order in the array data source and allows the user to change the z-index by clicking on the window

@@ -1,4 +1,4 @@
-import { BindableSource, DataSource, ReadOnlyDataSource, SetDataSource, dsMap, dsUnique } from 'aurumjs';
+import { BindableSource, DataSource, ReadOnlyDataSource, SetDataSource, dsMap, dsUnique } from '@aurum/html';
 
 export type FormSchema<T extends object> = {
     defaultErrorMessages?: {

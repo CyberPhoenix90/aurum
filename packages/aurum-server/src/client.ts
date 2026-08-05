@@ -1,4 +1,4 @@
-import { CancellationToken, RemoteProtocol } from 'aurumjs';
+import { CancellationToken, RemoteProtocol } from '@aurum/streams';
 import { Session } from './session.js';
 import ws from 'ws';
 

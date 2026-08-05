@@ -1,4 +1,4 @@
-import { ArrayDataSource, Aurum, AurumComponentAPI, CancellationToken, DataSource, dsMap, Renderable } from 'aurumjs';
+import { ArrayDataSource, Aurum, AurumComponentAPI, CancellationToken, DataSource, dsMap, Renderable } from '@aurum/html';
 import { PanelDockBottom, PanelDockLeft, PanelDockRight, PanelDockTop } from './panel_dock.js';
 import { PanelComponent } from './panel_layout.js';
 

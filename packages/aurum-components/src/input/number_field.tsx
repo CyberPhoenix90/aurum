@@ -1,4 +1,4 @@
-import { Aurum, AurumComponentAPI, BindableSource, DataSource, GenericDataSource, dsMap, getValueOf } from 'aurumjs';
+import { Aurum, AurumComponentAPI, BindableSource, DataSource, GenericDataSource, dsMap, getValueOf } from '@aurum/html';
 import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 import { getFormFieldSource } from '../form/form.js';
 

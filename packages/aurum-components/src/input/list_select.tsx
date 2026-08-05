@@ -15,7 +15,7 @@ import {
     resolveChildren,
     StyleType,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 

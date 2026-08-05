@@ -1,4 +1,4 @@
-import { CancellationToken } from 'aurumjs';
+import { CancellationToken } from '@aurum/streams';
 import { Client } from './client.js';
 
 export class Session<T> {

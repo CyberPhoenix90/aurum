@@ -8,7 +8,7 @@ import {
     ReadOnlyObjectDataSource,
     ReadOnlySetDataSource,
     RemoteProtocol
-} from 'aurumjs';
+} from '@aurum/streams';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import ws from 'ws';

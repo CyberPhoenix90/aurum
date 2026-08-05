@@ -1,4 +1,4 @@
-import { Aurum, BindableSource, Renderable, combineClass, AurumComponentAPI, css, DataSource } from 'aurumjs';
+import { Aurum, BindableSource, Renderable, combineClass, AurumComponentAPI, css, DataSource } from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 

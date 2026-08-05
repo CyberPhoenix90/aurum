@@ -1,4 +1,4 @@
-import { Aurum } from 'aurumjs';
+import { Aurum } from '@aurum/html';
 import { TextField, TextFieldProps } from './text_field.js';
 
 export interface ColorPickerProps extends Omit<TextFieldProps, 'type'> {}

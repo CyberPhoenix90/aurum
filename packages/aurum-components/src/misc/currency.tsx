@@ -1,4 +1,4 @@
-import { AurumComponentAPI, DataSource, dsMap, dsPipe, getValueOf, ReadOnlyDataSource, Renderable } from 'aurumjs';
+import { AurumComponentAPI, DataSource, dsMap, dsPipe, getValueOf, ReadOnlyDataSource, Renderable } from '@aurum/html';
 
 export function Currency(
     props: { currency: string; amount: number | ReadOnlyDataSource<number>; locale?: string },

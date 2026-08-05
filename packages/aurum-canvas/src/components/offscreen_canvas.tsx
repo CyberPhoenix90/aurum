@@ -8,7 +8,7 @@ import {
     aurumElementModelIdentitiy,
     createLifeCycle,
     dsUnique
-} from 'aurumjs';
+} from '@aurum/html';
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { ComponentModel, ComponentType } from './component_model.js';
 import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';

@@ -14,7 +14,7 @@ import {
     dsTap,
     StyleType,
     css
-} from 'aurumjs';
+} from '@aurum/html';
 import { theme } from '../theme/theme.js';
 import { Dialog } from '../dialog/dialog.js';
 import { ContextMenu } from '../dialog/context_menu.js';

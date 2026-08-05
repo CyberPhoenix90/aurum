@@ -1,4 +1,4 @@
-import { AurumComponentAPI, AurumElementModel, CancellationToken, DataSource, DuplexDataSource, Renderable } from 'aurumjs';
+import { AurumComponentAPI, AurumElementModel, CancellationToken, DataSource, DuplexDataSource, Renderable } from '@aurum/html';
 import { assert, describe, it } from 'vitest';
 import { createForm } from '../src/form/form.js';
 import { CheckboxField } from '../src/input/checkbox_field.js';

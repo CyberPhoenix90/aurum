@@ -1,4 +1,4 @@
-import { Aurum, TextAreaProps, Renderable, ClassType, combineClass, AurumComponentAPI, css, StyleType } from 'aurumjs';
+import { Aurum, TextAreaProps, Renderable, ClassType, combineClass, AurumComponentAPI, css, StyleType } from '@aurum/html';
 import { theme } from '../theme/theme.js';
 
 const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor1: color1, themeColor3: color3, themeColor2: color2, primary } = theme;

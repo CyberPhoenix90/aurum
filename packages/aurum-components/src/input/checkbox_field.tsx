@@ -1,4 +1,4 @@
-import { Aurum, BindableSource, getValueOf } from 'aurumjs';
+import { Aurum, BindableSource, getValueOf } from '@aurum/html';
 import { getFormFieldSource } from '../form/form.js';
 import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 

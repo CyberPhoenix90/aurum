@@ -10,7 +10,7 @@ import {
     ReadOnlyObjectDataSource,
     ReadOnlySetDataSource,
     SetDataSource
-} from 'aurumjs';
+} from '@aurum/streams';
 import { Client } from './client.js';
 import { Session } from './session.js';
 

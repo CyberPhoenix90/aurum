@@ -1,5 +1,5 @@
 {
-    "name": "aurum-server",
+    "name": "@aurum/server",
     "version": "0.0.37",
     "description": "WebSocket-powered server for synchronizing Aurum data sources between a server and client",
     "type": "module",
@@ -18,7 +18,7 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "aurumjs": "^0.9.55",
+        "@aurum/streams": "^0.1.0",
         "ws": "^7.3.1"
     },
     "devDependencies": {

@@ -1,4 +1,4 @@
-import { CancellationToken, DataSource, ReadOnlyDataSource } from 'aurumjs';
+import { CancellationToken, DataSource, ReadOnlyDataSource } from '@aurum/html';
 
 export interface Theme {
     highlightColor1: DataSource<string>;

@@ -1,4 +1,4 @@
-import { DataSource, ReadOnlyDataSource } from 'aurumjs';
+import { DataSource, ReadOnlyDataSource } from '@aurum/html';
 import { ComponentModel, RenderData } from './component_model.js';
 
 export enum ColorBlending {

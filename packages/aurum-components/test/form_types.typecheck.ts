@@ -1,4 +1,4 @@
-import { AurumComponentAPI, CancellationToken, DataSource } from 'aurumjs';
+import { AurumComponentAPI, CancellationToken, DataSource } from '@aurum/html';
 import { createForm, FormSchema } from '../src/form/form.js';
 import { CheckboxField } from '../src/input/checkbox_field.js';
 import { DropDownMenu } from '../src/input/drop_down_menu.js';

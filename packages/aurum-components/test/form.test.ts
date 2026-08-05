@@ -1,4 +1,4 @@
-import { DataSource } from 'aurumjs';
+import { DataSource } from '@aurum/html';
 import { assert, describe, it } from 'vitest';
 import { createForm, FormViolation, FormViolationType } from '../src/form/form.js';
 

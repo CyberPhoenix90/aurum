@@ -1,4 +1,4 @@
-import { AurumComponentAPI, Renderable } from 'aurumjs';
+import { AurumComponentAPI, Renderable } from '@aurum/html';
 import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 
 export interface TextFieldProps<T extends object = Record<string, string>> extends FormFieldInputProps<T, string> {}
