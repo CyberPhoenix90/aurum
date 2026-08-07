@@ -1,0 +1,7 @@
+{
+    "manifest_version": 3,
+    "name": "Aurum DevTools",
+    "version": "0.1.0",
+    "description": "Inspect Aurum data-flow topology, subscriptions, debug metadata, and runtime events.",
+    "devtools_page": "devtools.html"
+}

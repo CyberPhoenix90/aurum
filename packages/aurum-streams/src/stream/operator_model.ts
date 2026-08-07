@@ -1,3 +1,5 @@
+import { CancellationToken } from '../utilities/cancellation_token.js';
+
 export enum OperationType {
     FILTER,
     NOOP,
@@ -9,20 +11,73 @@ export enum OperationType {
     MAP_DELAY_FILTER
 }
 
+export type AsyncOperatorConcurrency = 'parallel' | 'ordered' | 'latest';
+
+export interface OperatorContext {
+    readonly cancellationToken: CancellationToken;
+}
+
 interface SourceOperator {
     operationType: OperationType;
     name: string;
 }
 
 export interface DataSourceOperator<T, M> extends SourceOperator {
-    //Inference only works if the types are used despite the fact that the generic types are only used to indicate what type goes in and what type comes out which cannot be described in a way that typescript understands
-    typescriptLimitationWorkaround?: (value: T) => M;
+    /** Creates the state and resources owned by one attached pipeline. */
+    bind?(context: OperatorContext): DataSourceOperator<T, M>;
+    /** @internal Carries input/output variance for TypeScript's structural type system. */
+    readonly inputOutputType?: (value: T) => M;
 }
 
 export interface DuplexDataSourceOperator<T, M> extends SourceOperator {
-    //Inference only works if the types are used despite the fact that the generic types are only used to indicate what type goes in and what type comes out which cannot be described in a way that typescript understands
-    typescriptLimitationWorkaround?: (value: T) => M;
+    bind?(context: OperatorContext): DuplexDataSourceOperator<T, M>;
+    /** @internal Carries input/output variance for TypeScript's structural type system. */
+    readonly inputOutputType?: (value: T) => M;
 }
+
+export type DataSourceOperatorOutput<Input, Operators extends readonly DataSourceOperator<any, any>[]> =
+    Operators extends readonly [DataSourceOperator<Input, infer Output>, ...infer Rest]
+        ? Rest extends readonly DataSourceOperator<any, any>[]
+            ? DataSourceOperatorOutput<Output, Rest>
+            : Output
+        : Input;
+
+export type DataSourceOperatorChain<Input, Operators extends readonly DataSourceOperator<any, any>[]> =
+    Operators extends readonly []
+        ? readonly []
+        : Operators extends readonly [infer First, ...infer Rest]
+          ? First extends DataSourceOperator<Input, infer Output>
+              ? Rest extends readonly DataSourceOperator<any, any>[]
+                  ? readonly [First, ...DataSourceOperatorChain<Output, Rest>]
+                  : never
+              : never
+          : never;
+
+export type DataSourceTransformRestArguments<Input, Operators extends readonly DataSourceOperator<any, any>[]> =
+    | (Operators & DataSourceOperatorChain<Input, Operators>)
+    | [...(Operators & DataSourceOperatorChain<Input, Operators>), CancellationToken];
+
+export type DuplexDataSourceOperatorOutput<Input, Operators extends readonly DuplexDataSourceOperator<any, any>[]> =
+    Operators extends readonly [DuplexDataSourceOperator<Input, infer Output>, ...infer Rest]
+        ? Rest extends readonly DuplexDataSourceOperator<any, any>[]
+            ? DuplexDataSourceOperatorOutput<Output, Rest>
+            : Output
+        : Input;
+
+export type DuplexDataSourceOperatorChain<Input, Operators extends readonly DuplexDataSourceOperator<any, any>[]> =
+    Operators extends readonly []
+        ? readonly []
+        : Operators extends readonly [infer First, ...infer Rest]
+          ? First extends DuplexDataSourceOperator<Input, infer Output>
+              ? Rest extends readonly DuplexDataSourceOperator<any, any>[]
+                  ? readonly [First, ...DuplexDataSourceOperatorChain<Output, Rest>]
+                  : never
+              : never
+          : never;
+
+export type DuplexDataSourceTransformRestArguments<Input, Operators extends readonly DuplexDataSourceOperator<any, any>[]> =
+    | (Operators & DuplexDataSourceOperatorChain<Input, Operators>)
+    | [...(Operators & DuplexDataSourceOperatorChain<Input, Operators>), CancellationToken];
 
 export interface DataSourceFilterOperator<T> extends DataSourceOperator<T, T> {
     operationType: OperationType.FILTER;
@@ -46,7 +101,7 @@ export interface DataSourceMapOperator<T, M> extends DataSourceOperator<T, M> {
     operation: (value: T) => M;
 }
 
-export interface DataSourceSpreadOperator<T, M> extends DataSourceOperator<T, M[]> {
+export interface DataSourceSpreadOperator<T, M> extends DataSourceOperator<T, M> {
     operationType: OperationType.SPREAD;
     operation: (value: T) => M[];
 }
@@ -74,7 +129,7 @@ export interface DataSourceMapDelayFilterOperator<T, M> extends DataSourceOperat
 export interface DuplexDataSourceMapDelayFilterOperator<T, M> extends DuplexDataSourceOperator<T, M> {
     operationType: OperationType.MAP_DELAY_FILTER;
     operationDown: (value: T) => Promise<{ item: M; cancelled: boolean }>;
-    operationUp: (value: T) => Promise<{ item: M; cancelled: boolean }>;
+    operationUp: (value: M) => Promise<{ item: T; cancelled: boolean }>;
 }
 
 export interface DataSourceDelayFilterOperator<T> extends DataSourceOperator<T, T> {

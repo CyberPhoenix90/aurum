@@ -15,7 +15,7 @@ export interface RectangleComponentModel extends ComponentModel {
     height: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumRectangle(props: AurumRectangleProps, children: Renderable[], api: AurumComponentAPI): RectangleComponentModel {
+export function AurumRectangle(props: AurumRectangleProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): RectangleComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

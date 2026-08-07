@@ -15,7 +15,7 @@ export interface ImageComponentModel extends ComponentModel {
     src: string | ReadOnlyDataSource<string>;
 }
 
-export function AurumImage(props: AurumImageProps, children: Renderable[], api: AurumComponentAPI): ImageComponentModel {
+export function AurumImage(props: AurumImageProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): ImageComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

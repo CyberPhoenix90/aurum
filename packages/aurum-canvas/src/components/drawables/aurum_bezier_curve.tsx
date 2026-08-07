@@ -25,7 +25,7 @@ export interface BezierCurveComponentModel extends ComponentModel {
     lineWidth?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumBezierCurve(props: AurumBezierCurveProps, children: Renderable[], api: AurumComponentAPI): BezierCurveComponentModel {
+export function AurumBezierCurve(props: AurumBezierCurveProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): BezierCurveComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

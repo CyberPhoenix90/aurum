@@ -1,5 +1,7 @@
 export * from '@aurum/streams';
 export * from './rendering/aurum_element.js';
+export * from './rendering/render_tree.js';
+export * from './devtools.js';
 export * from './jsx.js';
 export * from './builtin_components/error_boundary.js';
 export * from './builtin_components/lazy.js';

@@ -12,6 +12,23 @@ describe('cancellation token', () => {
         clock.uninstall();
     });
 
+    it('does not allocate cancellation storage until it is used', () => {
+        const token = new CancellationToken();
+        expect(token.hasCancellables()).toBe(false);
+        expect(token['cancelables']).toBeUndefined();
+    });
+
+    it('cancels child tokens without an intermediary callback', () => {
+        const parent = new CancellationToken();
+        const child = new CancellationToken();
+        parent.addCancellable(child);
+
+        expect(parent['cancelables']![0]).toBe(child);
+        parent.cancel();
+
+        expect(child.isCancelled).toBe(true);
+    });
+
     it('setTimeout should not fire if cancel occurs first', () => {
         const token = new CancellationToken();
         token.setTimeout(() => {

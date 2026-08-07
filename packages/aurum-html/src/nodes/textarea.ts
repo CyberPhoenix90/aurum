@@ -2,10 +2,12 @@ import { BindableSource } from '@aurum/streams';
 import { AttributeValue, DataDrain } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
 import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
+import { queueRenderUpdate, renderBatchState } from '../rendering/render_batch.js';
 
 export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
     placeholder?: AttributeValue;
     readonly?: AttributeValue;
+    readOnly?: AttributeValue;
     disabled?: AttributeValue;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
@@ -15,11 +17,15 @@ export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
     wrap?: AttributeValue;
     form?: AttributeValue;
     autocomplete?: AttributeValue;
+    autoComplete?: AttributeValue;
     autofocus?: AttributeValue;
+    autoFocus?: AttributeValue;
     max?: AttributeValue;
     maxLength?: AttributeValue;
+    maxlength?: AttributeValue;
     min?: AttributeValue;
     minLength?: AttributeValue;
+    minlength?: AttributeValue;
     spellcheck?: AttributeValue;
     required?: AttributeValue;
     type?: AttributeValue;
@@ -64,10 +70,14 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
         if (props?.value !== undefined) {
             if (typeof props.value !== 'string') {
                 const value = props.value as BindableSource<string>;
-                value.listenAndRepeat((v) => {
+                const updateValue = (v: string): void => {
                     textArea.value = v;
+                };
+                value.listenAndRepeat((v) => {
+                    if (renderBatchState.active) queueRenderUpdate(updateValue, () => !cleanUp.isCancelled && updateValue(v));
+                    else updateValue(v);
                 }, cleanUp);
-                textArea.addEventListener('input', () => {
+                cleanUp.registerDomEvent(textArea, 'input', () => {
                     value.write(textArea.value);
                 });
             } else {

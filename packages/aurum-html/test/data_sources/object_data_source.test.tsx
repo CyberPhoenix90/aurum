@@ -78,22 +78,15 @@ describe('object data source', () => {
     it('toDataSource', () => {
         const wrapper = new ObjectDataSource(testObject);
         const datasource = wrapper.toDataSource();
+        const snapshots: typeof testObject[] = [];
+        datasource.listenAndRepeat((value) => snapshots.push(value));
 
-        let i = 0;
-        datasource.listenAndRepeat((c) => {
-            switch (i++) {
-                case 0:
-                case 1:
-                    assert.equal(c, testObject);
-                    break;
-                default:
-                    throw new Error('unexpected');
-            }
-        });
-
-        assert.equal(datasource.value, testObject);
+        assert.deepEqual(datasource.value, testObject);
+        assert.notEqual(datasource.value, testObject);
         wrapper.set('a', 2);
-        assert.equal(datasource.value, testObject);
+        assert.deepEqual(snapshots.map((snapshot) => snapshot.a), [1, 2]);
+        assert.notEqual(snapshots[0], snapshots[1]);
+        assert.equal(testObject.a, 1);
     });
 
     it('create synchronized arraydatasource from property', () => {

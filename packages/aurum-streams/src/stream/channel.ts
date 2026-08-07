@@ -1,5 +1,6 @@
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { DataPublisher, DataWriter } from '../utilities/common.js';
+import { AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED, linkAurumDevtoolsNodes, registerAurumDevtoolsNode } from '../devtools.js';
 import { DataSource, processTransform, ReadOnlyDataSource } from './data_source.js';
 import { DataSourceOperator } from './operator_model.js';
 
@@ -16,6 +17,15 @@ export class Channel<I, O = I> implements DataWriter<I>, DataPublisher<I> {
         this.input = input;
         this.output = output;
         this.lifetime = lifetime;
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(
+                this,
+                { kind: 'channel', name: this.name, getValue: (target) => target.value },
+                lifetime
+            );
+            linkAurumDevtoolsNodes(input, this, { kind: 'channel-input' }, lifetime);
+            linkAurumDevtoolsNodes(this, output as object, { kind: 'channel-output' }, lifetime);
+        }
     }
 
     public get name(): string {
@@ -81,8 +91,10 @@ export class Channel<I, O = I> implements DataWriter<I>, DataPublisher<I> {
         const input = new DataSource<A>();
         const output = new DataSource<K>();
         const lifetime = new CancellationToken();
-        const operations = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI].filter(Boolean);
-        input.listen(processTransform(operations, output), lifetime);
+        const operations = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI]
+            .filter(Boolean)
+            .map((operation) => operation.bind?.({ cancellationToken: lifetime }) ?? operation);
+        input.listen(processTransform(operations, output, lifetime), lifetime);
         return new Channel(input, output, lifetime);
     }
 
@@ -118,10 +130,14 @@ export class Channel<I, O = I> implements DataWriter<I>, DataPublisher<I> {
         }
         const output = new DataSource<K>();
         const lifetime = new CancellationToken();
-        const operations = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI, operationJ].filter(Boolean);
-        this.output.listen(processTransform(operations, output), lifetime);
+        const operations = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI, operationJ]
+            .filter(Boolean)
+            .map((operation) => operation.bind?.({ cancellationToken: lifetime }) ?? operation);
+        this.output.listen(processTransform(operations, output, lifetime), lifetime);
         this.lifetime.addCancellable(lifetime);
-        return new Channel(this.input, output, lifetime);
+        const result = new Channel(this.input, output, lifetime);
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: operations.map((operation) => operation.name).join(' → ') }, lifetime);
+        return result;
     }
 
     /** Cancels only work owned by this channel and its derived channels. */

@@ -34,6 +34,7 @@ export class EventEmitter<T> {
     private subscribeChannel: Map<number, Callback<T>>;
     private subscribeOnceChannel: Callback<T>[];
     private subscribeCache: Callback<T>[];
+    private subscriptionCountObserver?: (count: number) => void;
 
     constructor() {
         this.subscribeChannel = new Map();
@@ -156,6 +157,15 @@ export class EventEmitter<T> {
         return this.subscriptions > 0;
     }
 
+    /** @internal Used by the Aurum runtime inspector. */
+    public observeSubscriptionCount(callback: (count: number) => void, emitCurrent: boolean = true): () => void {
+        this.subscriptionCountObserver = callback;
+        if (emitCurrent) callback(this.subscriptions);
+        return () => {
+            if (this.subscriptionCountObserver === callback) this.subscriptionCountObserver = undefined;
+        };
+    }
+
     /**
      * Removes all currently active subscriptions. If called in the callback of a subscription will be deferred until after the fire event finished
      */
@@ -164,11 +174,13 @@ export class EventEmitter<T> {
             this.subscribeChannel.clear();
             this.subscribeCache = undefined;
             this.subscribeOnceChannel.length = 0;
+            this.notifySubscriptionCountObservers();
         } else {
             this.onAfterFire.push(() => {
                 this.subscribeCache = undefined;
                 this.subscribeChannel.clear();
                 this.subscribeOnceChannel.length = 0;
+                this.notifySubscriptionCountObservers();
             });
         }
     }
@@ -219,6 +231,7 @@ export class EventEmitter<T> {
                 }
             }
             this.subscribeOnceChannel.length = 0;
+            this.notifySubscriptionCountObservers();
         }
 
         this.isFiring = false;
@@ -234,9 +247,13 @@ export class EventEmitter<T> {
             cancellationToken.addCancellable(() => this.cancelOnce(callback));
         }
         if (this.isFiring) {
-            this.onAfterFire.push(() => this.subscribeOnceChannel.push(callback));
+            this.onAfterFire.push(() => {
+                this.subscribeOnceChannel.push(callback);
+                this.notifySubscriptionCountObservers();
+            });
         } else {
             this.subscribeOnceChannel.push(callback);
+            this.notifySubscriptionCountObservers();
         }
     }
 
@@ -253,6 +270,7 @@ export class EventEmitter<T> {
                 }
                 this.subscribeCache.push(callback);
                 this.subscribeChannel.set(id, callback);
+                this.notifySubscriptionCountObservers();
             });
         } else {
             if (this.subscribeCache === undefined) {
@@ -260,6 +278,7 @@ export class EventEmitter<T> {
             }
             this.subscribeCache.push(callback);
             this.subscribeChannel.set(id, callback);
+            this.notifySubscriptionCountObservers();
         }
     }
 
@@ -268,6 +287,7 @@ export class EventEmitter<T> {
             let index: number = this.subscribeOnceChannel.indexOf(subscription);
             if (index >= 0) {
                 this.subscribeOnceChannel.splice(index, 1);
+                this.notifySubscriptionCountObservers();
             } else {
                 this.onAfterFire.push(() => this.cancelOnce(subscription));
             }
@@ -277,12 +297,23 @@ export class EventEmitter<T> {
     private cancel(id: number): void {
         if (!this.isFiring) {
             this.subscribeCache = undefined;
-            this.subscribeChannel.delete(id);
+            if (this.subscribeChannel.delete(id)) {
+                this.notifySubscriptionCountObservers();
+            }
         } else {
             this.onAfterFire.push(() => {
                 this.subscribeCache = undefined;
                 this.cancel(id);
             });
+        }
+    }
+
+    private notifySubscriptionCountObservers(): void {
+        if (!this.subscriptionCountObserver) return;
+        try {
+            this.subscriptionCountObserver(this.subscriptions);
+        } catch {
+            // Diagnostics must never affect event delivery.
         }
     }
 }

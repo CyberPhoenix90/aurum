@@ -30,7 +30,7 @@ export interface TreeViewComponentProps<T> {
     sorting?: TreeViewSorting;
     noEntriesMsg?: string;
     renaming?: DataSource<TreeEntry<T>>;
-    entries: ReadOnlyArrayDataSource<TreeEntry<T>> | ArrayDataSource<TreeEntry<T>>;
+    entries: ReadOnlyArrayDataSource<TreeEntry<T>>;
     disableAutoOpenOnSelect?: boolean;
     canDrag?(draggedEntry: TreeEntry<T>): boolean;
     canDrop?(draggedEntry: TreeEntry<T>, targetEntry: TreeEntry<T>): boolean;

@@ -1,12 +1,27 @@
-import { AurumElementModel, createAPI, Renderable } from '@aurum/rendering';
+import {
+    AurumElementModel,
+    createAPI,
+    createRenderSession,
+    isAurumDevtoolsDebugBuild,
+    Renderable,
+    RenderSession,
+    traceAurumComponentRender
+} from '@aurum/rendering';
 import { ArrayDataSource, DataSource } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
 import { camelCaseToKebabCase } from '@aurum/streams';
 import { getValueOf } from '@aurum/streams';
 import { HTMLSanitizeConfig } from '../../utilities/sanitize.js';
 import { isAurumStyleClass } from '@aurum/streams';
 
-export async function aurumToString(content: Renderable | Renderable[], config: HTMLSanitizeConfig = {}): Promise<string> {
+export async function aurumToString(content: Renderable, config: HTMLSanitizeConfig = {}): Promise<string> {
+    return aurumToStringItem(content, config);
+}
+
+async function aurumToStringItem(
+    content: Renderable,
+    config: HTMLSanitizeConfig,
+    parentSession?: RenderSession
+): Promise<string> {
     if (content === undefined || content === null) {
         return '';
     }
@@ -14,35 +29,35 @@ export async function aurumToString(content: Renderable | Renderable[], config: 
     if (Array.isArray(content)) {
         const result = [];
         for (const item of content) {
-            result.push(await aurumToString(item));
+            result.push(await aurumToStringItem(item, config, parentSession));
         }
         return result.join('');
     }
 
     if (content instanceof Promise) {
-        return aurumToString(await content);
+        return aurumToStringItem((await (content as Promise<unknown>)) as Renderable, config, parentSession);
     }
 
     if (['number', 'string', 'bigint', 'boolean'].includes(typeof content)) {
         return content.toString();
     } else if (content instanceof DataSource) {
-        return aurumToString(content.value);
+        return aurumToStringItem(content.value, config, parentSession);
     } else if (content instanceof ArrayDataSource) {
-        return aurumToString(content.getData() as any);
+        return aurumToStringItem(content.getData() as any, config, parentSession);
     } else {
         const item = content as AurumElementModel<any>;
         if (!item.isIntrinsic) {
-            return aurumToString(
-                item.factory(
-                    item.props,
-                    item.children,
-                    createAPI({
-                        attachCalls: [],
-                        sessionToken: new CancellationToken(),
-                        tokens: []
-                    })
-                )
-            );
+            const session = createRenderSession(parentSession);
+            try {
+                return await traceAurumComponentRender(item, session, () => {
+                    const output = item.factory(item.props, item.children, createAPI(session));
+                    const outputScope = isAurumDevtoolsDebugBuild() ? createRenderSession(session) : session;
+                    if (outputScope !== session) session.sessionToken.addCancellable(outputScope.sessionToken);
+                    return aurumToStringItem(output, config, outputScope);
+                });
+            } finally {
+                session.sessionToken.cancel();
+            }
         }
 
         if (config.tagBlacklist && config.tagBlacklist.includes(item.name)) {
@@ -56,7 +71,7 @@ export async function aurumToString(content: Renderable | Renderable[], config: 
         let propString: string = ' ';
         let children: string = '';
         if (item.children) {
-            children = await aurumToString(item.children);
+            children = await aurumToStringItem(item.children, config, parentSession);
         }
         for (const prop in item.props) {
             if (config.attributeBlacklist && config.attributeBlacklist.includes(prop)) {

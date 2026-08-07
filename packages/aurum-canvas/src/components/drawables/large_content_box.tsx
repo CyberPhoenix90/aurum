@@ -19,7 +19,7 @@ export interface LargeContentBoxModel extends ComponentModel {
  * It could be compared to a virtual list but for canvas
  * For performance reasons, the box will not update its content unless manually triggered by the user
  */
-export function LargeContentBox(props: LargeContentBoxProps, children: Renderable[], api: AurumComponentAPI): LargeContentBoxModel {
+export function LargeContentBox(props: LargeContentBoxProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): LargeContentBoxModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

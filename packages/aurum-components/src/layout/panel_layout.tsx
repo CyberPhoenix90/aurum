@@ -45,31 +45,31 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
     let content: AurumElementModel<{ style?: AttributeValue; class?: ClassType }>;
 
     for (const child of children) {
-        if (child.factory === PanelDockLeft) {
+        if (child.factory === (PanelDockLeft as unknown as typeof child.factory)) {
             if (!left) {
                 left = child;
             } else {
                 throw new Error('only one left sidebar supported per panel');
             }
-        } else if (child.factory === PanelContent) {
+        } else if (child.factory === (PanelContent as unknown as typeof child.factory)) {
             if (!content) {
                 content = child;
             } else {
                 throw new Error('only one conent element supported per panel');
             }
-        } else if (child.factory === PanelDockBottom) {
+        } else if (child.factory === (PanelDockBottom as unknown as typeof child.factory)) {
             if (!bottom) {
                 bottom = child;
             } else {
                 throw new Error('only one bottom bar supported per panel');
             }
-        } else if (child.factory === PanelDockRight) {
+        } else if (child.factory === (PanelDockRight as unknown as typeof child.factory)) {
             if (!right) {
                 right = child;
             } else {
                 throw new Error('only one right sidebar supported per panel');
             }
-        } else if (child.factory === PanelDockTop) {
+        } else if (child.factory === (PanelDockTop as unknown as typeof child.factory)) {
             if (!top) {
                 top = child;
             } else {

@@ -131,6 +131,7 @@ describe('TreeDatasource', () => {
             { operation: 'deleted', id: '6' },
             { operation: 'added', id: '9' },
             { operation: 'added', id: '10' },
+            { operation: 'deleted', id: '10' },
             { operation: 'deleted', id: '9' }
         ]);
     });

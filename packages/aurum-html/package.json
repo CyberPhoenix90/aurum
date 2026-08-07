@@ -11,10 +11,18 @@
             "import": "./prebuilt/esnext/index.js"
         }
     },
-    "files": ["prebuilt", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run",
+        "benchmark": "tsc -p tsconfig.bench.json && vitest bench --config vite.bench.config.ts --run",
+        "benchmark:devtools": "tsc -p tsconfig.bench.json && vitest bench --config vite.devtools-bench.config.ts --run",
+        "benchmark:save": "npm run benchmark -- --outputJson .benchmark-baseline.json",
+        "benchmark:compare": "npm run benchmark -- --compare .benchmark-baseline.json",
         "prepack": "npm run build"
     },
     "dependencies": {
@@ -22,9 +30,13 @@
         "@aurum/streams": "^0.1.0"
     },
     "devDependencies": {
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.4",
         "@types/sinon": "^9.0.4",
         "@vitest/browser": "^4.0.16",
         "@vitest/browser-playwright": "^4.0.16",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
         "sinon": "^9.0.3",
         "vitest": "^4.0.16"
     },

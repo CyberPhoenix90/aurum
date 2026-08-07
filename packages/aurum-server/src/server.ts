@@ -161,7 +161,7 @@ export class AurumServer<T = void> {
         this.rootRouter.exposeSetDataSource(id, source, config);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
+    public exposeObjectDataSource<I extends object>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
         this.rootRouter.exposeObjectDataSource(id, source, config);
     }
 

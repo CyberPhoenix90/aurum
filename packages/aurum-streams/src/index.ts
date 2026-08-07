@@ -7,6 +7,7 @@ export * from './stream/duplex_data_source_operators.js';
 export * from './stream/operator_model.js';
 export * from './stream/channel.js';
 export * from './stream/emitters.js';
+export * from './devtools.js';
 
 export * from './utilities/cancellation_token.js';
 export * from './utilities/event_emitter.js';

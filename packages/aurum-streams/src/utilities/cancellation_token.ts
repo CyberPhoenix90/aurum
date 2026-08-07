@@ -7,7 +7,7 @@ export interface ReadonlyCancellationToken {
 }
 
 export class CancellationToken {
-    private cancelables: Delegate[];
+    private cancelables?: Array<Delegate | CancellationToken>;
     private _isCancelled: boolean;
 
     public get isCancelled(): boolean {
@@ -15,7 +15,7 @@ export class CancellationToken {
     }
 
     constructor(...cancellables: Delegate[]) {
-        this.cancelables = cancellables ?? [];
+        this.cancelables = cancellables.length === 0 ? undefined : cancellables;
         this._isCancelled = false;
     }
 
@@ -37,7 +37,7 @@ export class CancellationToken {
     }
 
     public hasCancellables(): boolean {
-        return this.cancelables.length > 0;
+        return (this.cancelables?.length ?? 0) > 0;
     }
 
     /**
@@ -47,12 +47,7 @@ export class CancellationToken {
     public addCancellable(delegate: Delegate | CancellationToken): this {
         this.throwIfCancelled('attempting to add cancellable to token that is already cancelled');
 
-        if (delegate instanceof CancellationToken) {
-            this.addCancellable(() => delegate.cancel());
-            return this;
-        }
-
-        this.cancelables.push(delegate);
+        (this.cancelables ??= []).push(delegate);
 
         if (this.cancelables.length === 200) {
             console.log('potential memory leak: cancellation token has over 200 clean up calls');
@@ -64,6 +59,7 @@ export class CancellationToken {
     public removeCancellable(delegate: Delegate): this {
         this.throwIfCancelled('attempting to remove cancellable from token that is already cancelled');
 
+        if (!this.cancelables) return this;
         const index = this.cancelables.indexOf(delegate);
         if (index !== -1) {
             this.cancelables.splice(index, 1);
@@ -197,10 +193,13 @@ export class CancellationToken {
             return;
         }
         this._isCancelled = true;
-        for (const c of this.cancelables) {
-            c();
-        }
+        const cancelables = this.cancelables;
         this.cancelables = undefined;
+        if (!cancelables) return;
+        for (const cancellable of cancelables) {
+            if (cancellable instanceof CancellationToken) cancellable.cancel();
+            else cancellable();
+        }
     }
 }
 

@@ -5,56 +5,61 @@ import {
     DataSourceMapDelayFilterOperator,
     DataSourceMapOperator,
     DataSourceOperator,
+    DataSourceOperatorOutput,
+    DataSourceSpreadOperator,
+    DataSourceTransformRestArguments,
     OperationType
 } from '../stream/operator_model.js';
 import { CancellationToken } from './cancellation_token.js';
 
-const FILTERED = Symbol('filtered');
-export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
+export function transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G>(
     asyncIterator: Generator<T> | AsyncGenerator<T>,
-    operationA: DataSourceOperator<T, A>,
-    operationB?: DataSourceOperator<A, B> | CancellationToken,
-    operationC?: DataSourceOperator<B, C> | CancellationToken,
-    operationD?: DataSourceOperator<C, D> | CancellationToken,
-    operationE?: DataSourceOperator<D, E> | CancellationToken,
-    operationF?: DataSourceOperator<E, F> | CancellationToken,
-    operationG?: DataSourceOperator<F, G> | CancellationToken,
-    operationH?: DataSourceOperator<G, H> | CancellationToken,
-    operationI?: DataSourceOperator<H, I> | CancellationToken,
-    operationJ?: DataSourceOperator<I, J> | CancellationToken,
-    operationK?: DataSourceOperator<J, K> | CancellationToken,
+    first: DataSourceOperator<T, A>, second?: DataSourceOperator<A, B> | CancellationToken,
+    third?: DataSourceOperator<B, C> | CancellationToken, fourth?: DataSourceOperator<C, D> | CancellationToken,
+    fifth?: DataSourceOperator<D, E> | CancellationToken, sixth?: DataSourceOperator<E, F> | CancellationToken,
+    seventh?: DataSourceOperator<F, G> | CancellationToken, eighth?: DataSourceOperator<G, H> | CancellationToken,
     cancellationToken?: CancellationToken
-): AsyncGenerator<K> {
-    let token: CancellationToken;
-    const operations: DataSourceOperator<any, any>[] = [
-        operationA,
-        operationB,
-        operationC,
-        operationD,
-        operationE,
-        operationF,
-        operationG,
-        operationH,
-        operationI,
-        operationJ,
-        operationK
-    ].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
-    if (cancellationToken) {
-        token = cancellationToken;
-    }
+): AsyncGenerator<H>;
+export function transformAsyncIterator<T, FirstOutput, const Operators extends readonly DataSourceOperator<any, any>[]>(
+    asyncIterator: Generator<T> | AsyncGenerator<T>,
+    first: DataSourceOperator<T, FirstOutput>,
+    ...rest: DataSourceTransformRestArguments<FirstOutput, Operators>
+): AsyncGenerator<DataSourceOperatorOutput<FirstOutput, Operators>>;
+export async function* transformAsyncIterator<T>(
+    asyncIterator: Generator<T> | AsyncGenerator<T>,
+    first: DataSourceOperator<T, any>,
+    ...rest: Array<DataSourceOperator<any, any> | CancellationToken>
+): AsyncGenerator<any> {
+    const args: Array<DataSourceOperator<any, any> | CancellationToken> = [first, ...rest];
+    const lastArgument = args[args.length - 1];
+    const suppliedToken = lastArgument instanceof CancellationToken ? lastArgument : undefined;
+    const definitions = (suppliedToken ? args.slice(0, -1) : args).filter(Boolean) as DataSourceOperator<any, any>[];
+    const token = suppliedToken ?? new CancellationToken();
+    const operations = definitions.map((operation) => operation.bind?.({ cancellationToken: token }) ?? operation);
 
-    const transform = async (v: any) => {
+    const transform = async (v: any, startIndex = 0): Promise<any[]> => {
         try {
-            for (const operation of operations) {
+            for (let index = startIndex; index < operations.length; index++) {
+                if (token.isCancelled) return [];
+                const operation = operations[index];
                 switch (operation.operationType) {
                     case OperationType.NOOP:
+                        (operation as DataSourceMapOperator<any, any>).operation(v);
+                        break;
                     case OperationType.MAP:
                         v = (operation as DataSourceMapOperator<any, any>).operation(v);
                         break;
+                    case OperationType.SPREAD: {
+                        const output: any[] = [];
+                        for (const item of (operation as DataSourceSpreadOperator<any, any>).operation(v)) {
+                            output.push(...(await transform(item, index + 1)));
+                        }
+                        return output;
+                    }
                     case OperationType.MAP_DELAY_FILTER:
                         const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
                         if (tmp.cancelled) {
-                            return;
+                            return [];
                         } else {
                             v = await tmp.item;
                         }
@@ -65,18 +70,18 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
                         break;
                     case OperationType.DELAY_FILTER:
                         if (!(await (operation as DataSourceDelayFilterOperator<any>).operation(v))) {
-                            return FILTERED;
+                            return [];
                         }
                         break;
                     case OperationType.FILTER:
                         if (!(operation as DataSourceFilterOperator<any>).operation(v)) {
-                            return FILTERED;
+                            return [];
                         }
                         break;
                 }
             }
 
-            return v;
+            return token.isCancelled ? [] : [v];
         } catch (e) {
             throw e;
         }
@@ -86,10 +91,7 @@ export async function* transformAsyncIterator<T, A, B = A, C = B, D = C, E = D, 
         if (token?.isCancelled) {
             return;
         }
-        const i = await transform(v);
-        if (i !== FILTERED) {
-            yield i;
-        }
+        for (const item of await transform(v)) yield item;
     }
 
     return;

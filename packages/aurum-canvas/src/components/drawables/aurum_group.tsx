@@ -12,7 +12,7 @@ export interface AurumGroupProps extends InteractionProps {
 
 export interface GroupComponentModel extends ComponentModel {}
 
-export function AurumGroup(props: AurumGroupProps, children: Renderable[], api: AurumComponentAPI): GroupComponentModel {
+export function AurumGroup(props: AurumGroupProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): GroupComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

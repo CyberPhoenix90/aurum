@@ -84,7 +84,7 @@ export class Router {
         this.expose(id, source, this.exposedSetDataSources, config, (client) => client.setdsSubscriptions);
     }
 
-    public exposeObjectDataSource<I>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
+    public exposeObjectDataSource<I extends object>(id: string, source: ReadOnlyObjectDataSource<I>, config: ExposeConfig = {}): void {
         this.expose(id, source, this.exposedObjectDataSources, config, (client) => client.odsSubscriptions);
     }
 

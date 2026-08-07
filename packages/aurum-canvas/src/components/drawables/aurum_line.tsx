@@ -17,7 +17,7 @@ export interface LineComponentModel extends ComponentModel {
     lineWidth?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumLine(props: AurumLineProps, children: Renderable[], api: AurumComponentAPI): LineComponentModel {
+export function AurumLine(props: AurumLineProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): LineComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

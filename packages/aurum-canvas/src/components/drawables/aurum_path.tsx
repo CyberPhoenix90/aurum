@@ -15,7 +15,7 @@ export interface PathComponentModel extends ComponentModel {
     lineWidth?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumPath(props: AurumPathProps, children: Renderable[], api: AurumComponentAPI): PathComponentModel {
+export function AurumPath(props: AurumPathProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): PathComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

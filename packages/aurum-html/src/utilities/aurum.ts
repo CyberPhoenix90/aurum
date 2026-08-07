@@ -10,6 +10,7 @@ import {
     AreaProps,
     Article,
     Aside,
+    Section,
     Audio,
     AudioProps,
     B,
@@ -70,6 +71,7 @@ import {
     OptGroupProps,
     Option,
     OptionProps,
+    Datalist,
     Output,
     OutputProps,
     P,
@@ -153,19 +155,18 @@ import {
     ForeignObjectProps,
     MarkerProps
 } from '../nodes/simple_dom_nodes.js';
+import { createGenericIntrinsicFactory, GenericHTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
 import { TextArea, TextAreaProps } from '../nodes/textarea.js';
 import {
-    ArrayAurumElement,
     AurumComponentAPI,
-    AurumElement,
     AurumElementModel,
     aurumElementModelIdentitiy,
-    createAPI,
     createRenderSession,
-    renderInternal,
     Renderable
 } from '@aurum/rendering';
-import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '@aurum/streams';
+import { ArrayAurumElement, AurumElement, createDOMAPI, renderInternal } from '../rendering/dom_runtime.js';
+import { batchRender } from '../rendering/render_batch.js';
+import { ArrayDataSource, DataSource } from '@aurum/streams';
 import { CancellationToken, MapLike } from '@aurum/streams';
 import { HTMLSanitizeConfig, insertSanitizedHTML, setSanitizedHTML } from './sanitize.js';
 import { dsTap, dsUnique, dsUpdateToken } from '@aurum/streams';
@@ -200,6 +201,7 @@ const nodeMap = {
     canvas: Canvas,
     a: A,
     article: Article,
+    section: Section,
     br: Br,
     form: Form,
     label: Label,
@@ -235,6 +237,7 @@ const nodeMap = {
     iframe: IFrame,
     noscript: NoScript,
     option: Option,
+    datalist: Datalist,
     q: Q,
     select: Select,
     source: Source,
@@ -281,7 +284,12 @@ const nodeMap = {
     marker: Marker
 };
 
+const genericNodeFactories = new Map<string, any>();
+
 export class Aurum {
+    /** Coalesces DOM rendering caused by synchronous stream updates while leaving stream propagation unchanged. */
+    public static batchRender = batchRender;
+
     public static rehydrate(aurumRenderable: Renderable, dom: HTMLElement): CancellationToken {
         const target = dom.parentElement;
         dom.remove();
@@ -353,7 +361,7 @@ export class Aurum {
                     value.attachToDom(dom, dom.childNodes.length);
                     token.addCancellable(() => value.dispose());
                 } else if (Array.isArray(value)) {
-                    const root = new ArrayAurumElement(new ArrayDataSource(value), createAPI(session));
+                    const root = new ArrayAurumElement(new ArrayDataSource(value), createDOMAPI(session));
                     token.addCancellable(() => root.dispose());
                     root.attachToDom(dom, dom.childNodes.length);
                 } else if (value == undefined) {
@@ -370,7 +378,7 @@ export class Aurum {
             content.attachToDom(dom, dom.childNodes.length);
             session.sessionToken.addCancellable(() => content.dispose());
         } else if (Array.isArray(content)) {
-            const root = new ArrayAurumElement(new ArrayDataSource(content), createAPI(session));
+            const root = new ArrayAurumElement(new ArrayDataSource(content), createDOMAPI(session));
             session.sessionToken.addCancellable(() => root.dispose());
             root.attachToDom(dom, dom.childNodes.length);
         } else if (content == undefined) {
@@ -397,7 +405,7 @@ export class Aurum {
     public static factory(
         node: string | ((props: any, children: Renderable[], api: AurumComponentAPI) => Renderable),
         args: MapLike<any>,
-        ...innerNodes: Array<AurumElementModel<any> | ReadOnlyDataSource<any> | ReadOnlyArrayDataSource<any>>
+        ...innerNodes: Renderable[]
     ): AurumElementModel<any> {
         //@ts-ignore
         if (node === Aurum.fragment) {
@@ -412,7 +420,11 @@ export class Aurum {
             const type = node;
             node = (nodeMap as MapLike<any>)[node];
             if (node === undefined) {
-                throw new Error(`Node ${type} does not exist or is not supported`);
+                node = genericNodeFactories.get(type);
+                if (node === undefined) {
+                    node = createGenericIntrinsicFactory(type) as any;
+                    genericNodeFactories.set(type, node);
+                }
             }
         } else {
             name = node.name;
@@ -445,10 +457,14 @@ export class Aurum {
 
 export namespace Aurum {
     export namespace JSX {
+        export type StandardHTMLIntrinsicElements = {
+            [K in keyof HTMLElementTagNameMap]: GenericHTMLNodeProps<HTMLElementTagNameMap[K]>;
+        };
+
         export interface IntrinsicAttributes {
             decorate?: AurumDecorator | AurumDecorator[];
         }
-        export interface IntrinsicElements {
+        export interface IntrinsicElements extends StandardHTMLIntrinsicElements {
             address: HTMLNodeProps<HTMLElement>;
             wbr: HTMLNodeProps<HTMLElement>;
             samp: HTMLNodeProps<HTMLElement>;
@@ -477,6 +493,7 @@ export namespace Aurum {
             canvas: CanvasProps;
             a: AProps;
             article: HTMLNodeProps<HTMLElement>;
+            section: HTMLNodeProps<HTMLElement>;
             br: HTMLNodeProps<HTMLBRElement>;
             form: FormProps;
             label: LabelProps;
@@ -511,6 +528,7 @@ export namespace Aurum {
             iframe: IFrameProps;
             noscript: HTMLNodeProps<HTMLElement>;
             option: OptionProps;
+            datalist: HTMLNodeProps<HTMLDataListElement>;
             q: HTMLNodeProps<HTMLQuoteElement>;
             select: SelectProps;
             source: SourceProps;

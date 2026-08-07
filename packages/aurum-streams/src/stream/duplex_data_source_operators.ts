@@ -1,5 +1,23 @@
+import { CancellationToken } from '../utilities/cancellation_token.js';
 import { dsDebounce } from './data_source_operators.js';
-import { DuplexDataSourceDelayFilterOperator, DuplexDataSourceFilterOperator, DuplexDataSourceMapOperator, OperationType } from './operator_model.js';
+import {
+    DuplexDataSourceDelayFilterOperator,
+    DuplexDataSourceFilterOperator,
+    DuplexDataSourceMapOperator,
+    DuplexDataSourceOperator,
+    OperationType,
+    OperatorContext
+} from './operator_model.js';
+
+function perDuplexPipeline<O extends DuplexDataSourceOperator<any, any>>(create: (context: OperatorContext) => O): O {
+    const standaloneLifetime = new CancellationToken();
+    const direct = create({ cancellationToken: standaloneLifetime });
+    direct.bind = (context) => {
+        standaloneLifetime.cancel();
+        return create(context);
+    };
+    return direct;
+}
 
 export enum DataFlow {
     UPSTREAM,
@@ -26,10 +44,10 @@ export function ddsMap<T, M>(mapDown: (value: T) => M, mapUp: (value: M) => T): 
  * update is cancelled and the process starts again
  */
 export function ddsDebounce<T>(time: number, direction?: DataFlowBoth): DuplexDataSourceDelayFilterOperator<T> {
-    const debounceDown = dsDebounce(time);
-    const debounceUp = dsDebounce(time);
-
-    return {
+    return perDuplexPipeline((context) => {
+        const debounceDown = dsDebounce<T>(time).bind?.(context) as ReturnType<typeof dsDebounce<T>>;
+        const debounceUp = dsDebounce<T>(time).bind?.(context) as ReturnType<typeof dsDebounce<T>>;
+        return {
         operationType: OperationType.DELAY_FILTER,
         name: `debounce ${time}ms`,
         operationDown: (v) => {
@@ -46,7 +64,8 @@ export function ddsDebounce<T>(time: number, direction?: DataFlowBoth): DuplexDa
                 return Promise.resolve(true);
             }
         }
-    };
+        };
+    });
 }
 
 export function ddsOneWayFlow<T>(direction: DataFlow): DuplexDataSourceFilterOperator<T> {
@@ -73,17 +92,18 @@ export function ddsFilter<T>(predicateDown: (value: T) => boolean, predicateUp: 
 }
 
 export function ddsUnique<T>(direction?: DataFlowBoth, isEqual?: (valueA: T, valueB: T) => boolean): DuplexDataSourceFilterOperator<T> {
-    let lastDown: T;
-    let lastUp: T;
-    let primedUp: boolean = false;
-    let primedDown: boolean = false;
-
-    return {
-        name: 'filter',
+    return perDuplexPipeline(() => {
+        let lastDown: T;
+        let lastUp: T;
+        let primedUp = false;
+        let primedDown = false;
+        const equals = (a: T, b: T) => isEqual ? isEqual(a, b) : a === b || (Number.isNaN(a) && Number.isNaN(b));
+        return {
+        name: 'unique',
         operationType: OperationType.FILTER,
         operationDown: (v) => {
             if (direction === undefined || direction === DataFlowBoth.DOWNSTREAM || direction === DataFlowBoth.BOTH) {
-                if (primedDown && (isEqual ? isEqual(lastDown, v) : v === lastDown)) {
+                if (primedDown && equals(lastDown, v)) {
                     return false;
                 } else {
                     primedDown = true;
@@ -96,7 +116,7 @@ export function ddsUnique<T>(direction?: DataFlowBoth, isEqual?: (valueA: T, val
         },
         operationUp: (v) => {
             if (direction === undefined || direction === DataFlowBoth.UPSTREAM || direction === DataFlowBoth.BOTH) {
-                if (primedUp && (isEqual ? isEqual(lastUp, v) : v === lastUp)) {
+                if (primedUp && equals(lastUp, v)) {
                     return false;
                 } else {
                     lastUp = v;
@@ -107,5 +127,6 @@ export function ddsUnique<T>(direction?: DataFlowBoth, isEqual?: (valueA: T, val
                 return true;
             }
         }
-    };
+        };
+    });
 }

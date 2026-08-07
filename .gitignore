@@ -3,6 +3,8 @@ node_modules
 prebuilt
 dist
 dist_test
+dist_bench
 artifacts
 coverage
+.benchmark-baseline.json
 *.tgz

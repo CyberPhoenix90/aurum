@@ -1,8 +1,8 @@
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, DataPublisher, DataWriter, ThenArg } from '../utilities/common.js';
-import { EventEmitter } from '../utilities/event_emitter.js';
 import { ArrayDataSource, DataSource } from './data_source.js';
 import {
+    AsyncOperatorConcurrency,
     DataSourceDelayFilterOperator,
     DataSourceDelayOperator,
     DataSourceFilterOperator,
@@ -10,9 +10,32 @@ import {
     DataSourceMapDelayOperator,
     DataSourceMapOperator,
     DataSourceNoopOperator,
+    DataSourceOperator,
     DataSourceSpreadOperator,
-    OperationType
+    OperationType,
+    OperatorContext
 } from './operator_model.js';
+
+export interface AsyncOperatorOptions {
+    /** parallel preserves today's merge behavior; ordered serializes work; latest drops stale results. */
+    concurrency?: AsyncOperatorConcurrency;
+}
+
+function perPipeline<O extends DataSourceOperator<any, any>>(create: (context: OperatorContext) => O): O {
+    const standaloneLifetime = new CancellationToken();
+    const direct = create({ cancellationToken: standaloneLifetime });
+    direct.bind = (context) => {
+        standaloneLifetime.cancel();
+        return create(context);
+    };
+    return direct;
+}
+
+function requireNonNegative(value: number, name: string): void {
+    if (!Number.isFinite(value) || value < 0) {
+        throw new RangeError(`${name} must be a finite, non-negative number`);
+    }
+}
 
 /**
  * Mutates an update
@@ -49,40 +72,76 @@ export function dsFork<T>(
 /**
  * Same as map but with an async mapper function
  */
-export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>): DataSourceMapDelayOperator<T, M> {
-    return {
-        name: 'mapAsync',
-        operationType: OperationType.MAP_DELAY,
-        operation: (v) => mapper(v)
-    };
+export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>, options?: { concurrency?: 'parallel' | 'ordered' }): DataSourceMapDelayOperator<T, M>;
+export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>, options: { concurrency: 'latest' }): DataSourceMapDelayFilterOperator<T, M>;
+export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>, options: AsyncOperatorOptions): DataSourceOperator<T, M>;
+export function dsMapAsync<T, M>(mapper: (value: T) => Promise<M>, options?: AsyncOperatorOptions): DataSourceOperator<T, M> {
+    return perPipeline((context) => {
+        const concurrency = options?.concurrency ?? 'parallel';
+        if (concurrency === 'latest') {
+            let sequence = 0;
+            return {
+                name: 'mapAsync latest',
+                operationType: OperationType.MAP_DELAY_FILTER,
+                operation: async (value: T) => {
+                    const current = ++sequence;
+                    const item = await mapper(value);
+                    return { item, cancelled: context.cancellationToken.isCancelled || current !== sequence };
+                }
+            };
+        }
+        if (concurrency === 'ordered') {
+            let tail = Promise.resolve<unknown>(undefined);
+            return {
+                name: 'mapAsync ordered',
+                operationType: OperationType.MAP_DELAY,
+                operation: (value: T) => {
+                    const result = tail.then(() => {
+                        if (context.cancellationToken.isCancelled) throw new Error('Async operator cancelled');
+                        return mapper(value);
+                    });
+                    tail = result.then(
+                        (): void => undefined,
+                        (): void => undefined
+                    );
+                    return result;
+                }
+            };
+        }
+        return { name: 'mapAsync', operationType: OperationType.MAP_DELAY, operation: mapper };
+    });
 }
 
 /**
  * Changes updates to contain the value of the previous update as well as the current
  */
-export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T }> {
-    let lastValue: T | undefined = undefined;
-    return {
+export function dsDiff<T>(): DataSourceMapOperator<T, { newValue: T; oldValue: T | undefined }> {
+    return perPipeline(() => {
+        let lastValue: T | undefined;
+        return {
         name: 'diff',
         operationType: OperationType.MAP,
         operation: (v) => {
-            let result = {
+            const result = {
                 oldValue: lastValue,
                 newValue: v
             };
             lastValue = v;
             return result;
         }
-    };
+        };
+    });
 }
 
 /**
  * Changes updates to contain the value of the previous update as well as the current
  */
 export function dsUpdateToken<T>(): DataSourceMapOperator<T, { value: T; token: CancellationToken }> {
-    let token: CancellationToken;
-    return {
-        name: 'diff',
+    return perPipeline((context) => {
+        let token: CancellationToken | undefined;
+        context.cancellationToken.addCancellable(() => token?.cancel());
+        return {
+        name: 'updateToken',
         operationType: OperationType.MAP,
         operation: (v) => {
             if (token) {
@@ -94,7 +153,8 @@ export function dsUpdateToken<T>(): DataSourceMapOperator<T, { value: T; token: 
                 value: v
             };
         }
-    };
+        };
+    });
 }
 
 /**
@@ -111,12 +171,41 @@ export function dsFilter<T>(predicate: (value: T) => boolean): DataSourceFilterO
 /**
  * Same as filter but with an async predicate function
  */
-export function dsFilterAsync<T>(predicate: (value: T) => Promise<boolean>): DataSourceDelayFilterOperator<T> {
-    return {
-        name: 'filterAsync',
-        operationType: OperationType.DELAY_FILTER,
-        operation: (v) => predicate(v)
-    };
+export function dsFilterAsync<T>(predicate: (value: T) => Promise<boolean>, options?: AsyncOperatorOptions): DataSourceDelayFilterOperator<T> {
+    return perPipeline((context) => {
+        const concurrency = options?.concurrency ?? 'parallel';
+        if (concurrency === 'latest') {
+            let sequence = 0;
+            return {
+                name: 'filterAsync latest',
+                operationType: OperationType.DELAY_FILTER,
+                operation: async (value) => {
+                    const current = ++sequence;
+                    const accepted = await predicate(value);
+                    return accepted && current === sequence && !context.cancellationToken.isCancelled;
+                }
+            };
+        }
+        if (concurrency === 'ordered') {
+            let tail = Promise.resolve<unknown>(undefined);
+            return {
+                name: 'filterAsync ordered',
+                operationType: OperationType.DELAY_FILTER,
+                operation: (value: T) => {
+                    const result = tail.then(() => {
+                        if (context.cancellationToken.isCancelled) return false;
+                        return predicate(value);
+                    });
+                    tail = result.then(
+                        (): void => undefined,
+                        (): void => undefined
+                    );
+                    return result;
+                }
+            };
+        }
+        return { name: 'filterAsync', operationType: OperationType.DELAY_FILTER, operation: predicate };
+    });
 }
 
 /**
@@ -145,9 +234,10 @@ export function dsOdd(): DataSourceFilterOperator<number> {
  * Only propagate an update if the value is lower than the previous update
  */
 export function dsMin(): DataSourceFilterOperator<number> {
-    let last: number;
-    let primed = false;
-    return {
+    return perPipeline(() => {
+        let last: number;
+        let primed = false;
+        return {
         name: 'min',
         operationType: OperationType.FILTER,
         operation: (v) => {
@@ -159,16 +249,18 @@ export function dsMin(): DataSourceFilterOperator<number> {
                 return false;
             }
         }
-    };
+        };
+    });
 }
 
 /**
  * Only propagate an update if the value is higher than the previous update
  */
 export function dsMax(): DataSourceFilterOperator<number> {
-    let last: number;
-    let primed = false;
-    return {
+    return perPipeline(() => {
+        let last: number;
+        let primed = false;
+        return {
         name: 'max',
         operationType: OperationType.FILTER,
         operation: (v) => {
@@ -180,7 +272,8 @@ export function dsMax(): DataSourceFilterOperator<number> {
                 return false;
             }
         }
-    };
+        };
+    });
 }
 
 /**
@@ -205,18 +298,22 @@ export function dsSkipDynamic<T>(amountLeft: DataSource<number>): DataSourceFilt
  * Ignore the first N updates
  */
 export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
-    return {
+    requireNonNegative(amount, 'amount');
+    return perPipeline(() => {
+        let remaining = amount;
+        return {
         operationType: OperationType.FILTER,
         name: `skip ${amount}`,
         operation: (v) => {
-            if (amount === 0) {
+            if (remaining === 0) {
                 return true;
             } else {
-                amount--;
+                remaining--;
                 return false;
             }
         }
-    };
+        };
+    });
 }
 
 /**
@@ -224,18 +321,22 @@ export function dsSkip<T>(amount: number): DataSourceFilterOperator<T> {
  * If the counter reaches 0 the updates are lost
  */
 export function dsCutOff<T>(amount: number): DataSourceFilterOperator<T> {
-    return {
+    requireNonNegative(amount, 'amount');
+    return perPipeline(() => {
+        let remaining = amount;
+        return {
         name: `cutoff ${amount}`,
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (amount === 0) {
+            if (remaining === 0) {
                 return false;
             } else {
-                amount--;
+                remaining--;
                 return true;
             }
         }
-    };
+        };
+    });
 }
 
 /**
@@ -264,12 +365,14 @@ export function dsCutOffDynamic<T>(amountLeft: DataSource<number>): DataSourceFi
  * If the counter reaches 0 the updates are buffered until they are unlocked again
  */
 export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperator<T> {
-    const queue: Array<{ value: T; resolve: (value: T) => void }> = [];
-    let drainScheduled = false;
-
-    state.listen(scheduleDrain);
-
-    return {
+    return perPipeline((context) => {
+        const queue: Array<{ value: T; resolve: (value: T) => void }> = [];
+        let drainScheduled = false;
+        state.listen(scheduleDrain, context.cancellationToken);
+        context.cancellationToken.addCancellable(() => {
+            for (const item of queue.splice(0)) item.resolve(item.value);
+        });
+        const operator: DataSourceDelayOperator<T> = {
         operationType: OperationType.DELAY,
         name: 'semaphore',
         operation: (v) => {
@@ -282,9 +385,10 @@ export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperat
                 }
             });
         }
-    };
+        };
+        return operator;
 
-    function scheduleDrain() {
+        function scheduleDrain() {
         if (!drainScheduled && queue.length > 0 && state.value > 0) {
             drainScheduled = true;
             queueMicrotask(() => {
@@ -296,16 +400,18 @@ export function dsSemaphore<T>(state: DataSource<number>): DataSourceDelayOperat
                 }
             });
         }
-    }
+        }
+    });
 }
 
 /**
  * Filters out updates if they have the same value as the previous update, uses reference equality by default
  */
 export function dsUnique<T>(isEqual?: (valueA: T, valueB: T) => boolean): DataSourceFilterOperator<T> {
-    let primed: boolean = false;
-    let last: T;
-    return {
+    return perPipeline(() => {
+        let primed = false;
+        let last: T;
+        return {
         name: 'unique',
         operationType: OperationType.FILTER,
         operation: (v) => {
@@ -317,7 +423,8 @@ export function dsUnique<T>(isEqual?: (valueA: T, valueB: T) => boolean): DataSo
                 return true;
             }
         }
-    };
+        };
+    });
 }
 
 /**
@@ -337,9 +444,9 @@ export function dsAwait<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
  * Takes promises and updates with the resolved value, if multiple promises come in makes sure the updates fire in the same order that the promises came in
  */
 export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
-    let tail = Promise.resolve();
-
-    return {
+    return perPipeline(() => {
+        let tail = Promise.resolve();
+        return {
         operationType: OperationType.MAP_DELAY,
         name: 'awaitOrdered',
         operation: (value) => {
@@ -350,7 +457,8 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
             );
             return result;
         }
-    };
+        };
+    });
 }
 
 /**
@@ -359,15 +467,15 @@ export function dsAwaitOrdered<T>(): DataSourceMapDelayOperator<T, ThenArg<T>> {
  * async operations where we only care about the result if it's the latest action
  */
 export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<T>> {
-    let freshnessToken = 0;
-
-    return {
+    return perPipeline((context) => {
+        let freshnessToken = 0;
+        return {
         operationType: OperationType.MAP_DELAY_FILTER,
         name: 'awaitLatest',
         operation: async (v) => {
             const token = ++freshnessToken;
             const resolved = await (v as any);
-            if (freshnessToken === token) {
+            if (freshnessToken === token && !context.cancellationToken.isCancelled) {
                 return {
                     item: resolved as any,
                     cancelled: false
@@ -379,60 +487,79 @@ export function dsAwaitLatest<T>(): DataSourceMapDelayFilterOperator<T, ThenArg<
                 };
             }
         }
-    };
+        };
+    });
 }
 
 /**
  * Reduces all updates down to a value
  */
 export function dsReduce<T, M = T>(reducer: (p: M, c: T) => M, initialValue: M): DataSourceMapOperator<T, M> {
-    let last = initialValue;
-    return {
+    return perPipeline(() => {
+        let last = initialValue;
+        return {
         name: 'reduce',
         operationType: OperationType.MAP,
         operation: (v) => {
             last = reducer(last, v);
             return last;
         }
-    };
+        };
+    });
 }
 
 /**
  * Builds a string where each update is appened to the string optionally with a seperator
  */
-export function dsStringJoin(seperator: string = ', '): DataSourceMapOperator<string, string> {
-    let last: string;
-    let primed = false;
-    return {
-        name: `stringJoin ${seperator}`,
+export function dsStringJoin(separator: string = ', '): DataSourceMapOperator<string, string> {
+    return perPipeline(() => {
+        let last: string;
+        let primed = false;
+        return {
+        name: `stringJoin ${separator}`,
         operationType: OperationType.MAP,
         operation: (v: string) => {
             if (primed) {
-                last += seperator + v;
+                last += separator + v;
             } else {
                 last = v;
                 primed = true;
             }
             return last;
         }
-    };
+        };
+    });
 }
 
 /**
  * Adds a fixed amount of lag to updates
  */
 export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
-    return {
+    requireNonNegative(time, 'time');
+    return perPipeline((context) => ({
         name: `delay ${time}ms`,
         operationType: OperationType.DELAY,
         operation: (v) => {
             return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(v);
+                let settled = false;
+                const finish = () => {
+                    if (!settled) {
+                        settled = true;
+                        resolve(v);
+                    }
+                };
+                const timeout = setTimeout(() => {
+                    if (!context.cancellationToken.isCancelled) context.cancellationToken.removeCancellable(cancel);
+                    finish();
                 }, time);
+                const cancel = () => {
+                    clearTimeout(timeout);
+                    finish();
+                };
+                context.cancellationToken.addCancellable(cancel);
             });
         }
-    };
+    }));
 }
 
 /**
@@ -440,33 +567,40 @@ export function dsDelay<T>(time: number): DataSourceDelayOperator<T> {
  * update is cancelled and the process starts again
  */
 export function dsDebounce<T>(time: number): DataSourceDelayFilterOperator<T> {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    let cancelled = new EventEmitter();
-    return {
+    requireNonNegative(time, 'time');
+    return perPipeline((context) => {
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        let pending: ((accepted: boolean) => void) | undefined;
+        context.cancellationToken.addCancellable(() => {
+            clearTimeout(timeout);
+            pending?.(false);
+            pending = undefined;
+        });
+        return {
         operationType: OperationType.DELAY_FILTER,
         name: `debounce ${time}ms`,
         operation: (v) => {
             return new Promise((resolve) => {
                 clearTimeout(timeout);
-                cancelled.fire();
-                cancelled.subscribeOnce(() => {
-                    resolve(false);
-                });
+                pending?.(false);
+                pending = resolve;
                 timeout = setTimeout(() => {
+                    pending = undefined;
                     resolve(true);
-                    cancelled.cancelAll();
                 }, time);
             });
         }
-    };
+        };
+    });
 }
 
 /**
  * Only allow up to 1 update to propagate per frame makes update run as a microtask
  */
 export function dsMicroDebounce<T>(): DataSourceDelayFilterOperator<T> {
-    let scheduled = false;
-    return {
+    return perPipeline((context) => {
+        let scheduled = false;
+        return {
         operationType: OperationType.DELAY_FILTER,
         name: `microDebounce`,
         operation: (v) => {
@@ -475,39 +609,53 @@ export function dsMicroDebounce<T>(): DataSourceDelayFilterOperator<T> {
                     scheduled = true;
                     queueMicrotask(() => {
                         scheduled = false;
-                        resolve(true);
+                        resolve(!context.cancellationToken.isCancelled);
                     });
                 } else {
                     resolve(false);
                 }
             });
         }
-    };
+        };
+    });
 }
 
 /**
  * Debounce update to occur at most one per animation frame
  */
 export function dsThrottleFrame<T>(): DataSourceDelayFilterOperator<T> {
-    let timeout: number | undefined;
-    let cancelled = new EventEmitter();
-    return {
+    return perPipeline((context) => {
+        let timeout: number | ReturnType<typeof setTimeout> | undefined;
+        let pending: ((accepted: boolean) => void) | undefined;
+        const cancelFrame = (id: number | ReturnType<typeof setTimeout>) => {
+            if (typeof globalThis.cancelAnimationFrame === 'function') globalThis.cancelAnimationFrame(id as number);
+            else clearTimeout(id);
+        };
+        const scheduleFrame = (callback: () => void): number | ReturnType<typeof setTimeout> => {
+            if (typeof globalThis.requestAnimationFrame === 'function') return globalThis.requestAnimationFrame(callback);
+            return setTimeout(callback, 16);
+        };
+        context.cancellationToken.addCancellable(() => {
+            if (timeout !== undefined) cancelFrame(timeout);
+            pending?.(false);
+            pending = undefined;
+        });
+        return {
         operationType: OperationType.DELAY_FILTER,
         name: `throttle frame`,
         operation: (v) => {
             return new Promise((resolve) => {
-                cancelAnimationFrame(timeout);
-                cancelled.fire();
-                cancelled.subscribeOnce(() => {
-                    resolve(false);
-                });
-                timeout = requestAnimationFrame(() => {
+                if (timeout !== undefined) cancelFrame(timeout);
+                pending?.(false);
+                pending = resolve;
+                timeout = scheduleFrame(() => {
+                    pending = undefined;
                     resolve(true);
-                    cancelled.cancelAll();
                 });
             });
         }
-    };
+        };
+    });
 }
 
 /**
@@ -536,19 +684,23 @@ export function dsLock<T>(state: DataSource<boolean>): DataSourceFilterOperator<
  * Supports nanosecond scale precision by using decimal numbers
  */
 export function dsThrottle<T>(time: number): DataSourceFilterOperator<T> {
-    let lastCall = 0;
-    return {
+    requireNonNegative(time, 'time');
+    return perPipeline(() => {
+        let lastCall: number | undefined;
+        return {
         name: `throttle ${time}ms`,
         operationType: OperationType.FILTER,
         operation: (v) => {
-            if (performance.now() - lastCall > time) {
-                lastCall = performance.now();
+            const now = performance.now();
+            if (lastCall === undefined || now - lastCall >= time) {
+                lastCall = now;
                 return true;
             } else {
                 return false;
             }
         }
-    };
+        };
+    });
 }
 
 /**
@@ -562,42 +714,49 @@ export function dsThrottleBuffer<T>(
     options?: {
         highWaterMark?: number;
         onHighWaterMark?: () => void;
-        maxBufferSize: number;
+        maxBufferSize?: number;
     }
 ): DataSourceDelayFilterOperator<T> {
-    let lastCall = 0;
+    requireNonNegative(time, 'time');
+    if (options?.maxBufferSize !== undefined) requireNonNegative(options.maxBufferSize, 'maxBufferSize');
+    if (options?.highWaterMark !== undefined) requireNonNegative(options.highWaterMark, 'highWaterMark');
+    return perPipeline((context) => {
+    let lastCall: number | undefined;
     const buffer: Array<(result: boolean) => void> = [];
-    let nextScheduled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
     function next() {
-        if (buffer.length > 0 && performance.now() - lastCall >= time) {
+        timeout = undefined;
+        if (context.cancellationToken.isCancelled) return;
+        const now = performance.now();
+        if (buffer.length > 0 && (lastCall === undefined || now - lastCall >= time)) {
             const resolve = buffer.shift();
-            lastCall = performance.now();
+            lastCall = now;
             resolve(true);
         }
         if (buffer.length > 0) {
-            nextScheduled = true;
-            setTimeout(() => {
-                next();
-            }, time - (performance.now() - lastCall));
-        } else {
-            nextScheduled = false;
+            timeout = setTimeout(next, Math.max(0, time - (performance.now() - (lastCall ?? 0))));
         }
     }
 
+    context.cancellationToken.addCancellable(() => {
+        clearTimeout(timeout);
+        for (const resolve of buffer.splice(0)) resolve(false);
+    });
     return {
         name: `throttle buffer ${time}ms`,
         operationType: OperationType.DELAY_FILTER,
         operation: async (v) => {
-            if (buffer.length === 0 && performance.now() - lastCall >= time) {
-                lastCall = performance.now();
+            const now = performance.now();
+            if (buffer.length === 0 && (lastCall === undefined || now - lastCall >= time)) {
+                lastCall = now;
                 return true;
             } else {
-                if (options?.maxBufferSize && buffer.length >= options.maxBufferSize) {
+                if (options?.maxBufferSize !== undefined && buffer.length >= options.maxBufferSize) {
                     return false;
                 }
 
-                let res;
+                let res!: (result: boolean) => void;
                 const promise = new Promise<boolean>((resolve) => {
                     res = resolve;
                 });
@@ -608,13 +767,14 @@ export function dsThrottleBuffer<T>(
                     options.onHighWaterMark?.();
                 }
 
-                if (!nextScheduled) {
+                if (timeout === undefined) {
                     next();
                 }
                 return promise;
             }
         }
     };
+    });
 }
 
 export function dsSpread<T>(): DataSourceSpreadOperator<T[], T> {
@@ -636,13 +796,12 @@ export function dsBuffer<T>(config: {
     // custom predicate to determine if an item should be included in the batch. Return true to include the item in the batch and false to flush the batch and put the new item in a new batch
     canBatch?: (item: T, batch: readonly T[]) => boolean;
 }): DataSourceMapDelayFilterOperator<T, T[]> {
-    let buffer: T[] = [];
-    let resolve: ((value: { item: T[]; cancelled: boolean }) => void) | undefined;
-    let promise: Promise<{ item: T[]; cancelled: boolean }> | undefined;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-
-    if (!config || (!config.time && !config.maxBatchSize && !config.canBatch)) {
+    if (!config || (config.time === undefined && config.maxBatchSize === undefined && !config.canBatch)) {
         throw new Error('At least one of time, maxBatchSize or batchPredicate must be provided');
+    }
+    if (config.time !== undefined) requireNonNegative(config.time, 'time');
+    if (config.maxBatchSize !== undefined) {
+        if (!Number.isInteger(config.maxBatchSize) || config.maxBatchSize <= 0) throw new RangeError('maxBatchSize must be a positive integer');
     }
 
     const { time, maxBatchSize, canBatch } = config;
@@ -658,36 +817,34 @@ export function dsBuffer<T>(config: {
     if (canBatch) {
         name += ` custom predicate`;
     }
-    return {
+    return perPipeline((context) => {
+        let buffer: T[] = [];
+        let resolveBatch: ((value: { item: T[]; cancelled: boolean }) => void) | undefined;
+        let batchPromise: Promise<{ item: T[]; cancelled: boolean }> | undefined;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+
+        context.cancellationToken.addCancellable(() => flush(true));
+
+        return {
         name,
         operationType: OperationType.MAP_DELAY_FILTER,
         operation: (v) => {
-            let isNewBatch = promise === undefined;
-            if (!promise) {
-                promise = new Promise((res) => {
-                    resolve = res;
-                });
-            }
-
             if (canBatch && buffer.length > 0 && !canBatch(v, buffer)) {
-                flush();
+                flush(false);
             }
 
+            const isNewBatch = batchPromise === undefined;
+            if (isNewBatch) startBatch();
+            const currentPromise = batchPromise;
             buffer.push(v);
 
             if (maxBatchSize && buffer.length >= maxBatchSize) {
-                flush();
-            }
-
-            if (time && isNewBatch) {
-                timeout = setTimeout(() => {
-                    flush();
-                }, time);
+                flush(false);
             }
 
             // The update is suspended until the batch is resolved
             if (isNewBatch) {
-                return promise;
+                return currentPromise;
             } else {
                 // Updates coming in while the batch is being processed are added to the batch and cancelled from the stream
                 return Promise.resolve({
@@ -696,26 +853,34 @@ export function dsBuffer<T>(config: {
                 });
             }
 
-            function flush(): void {
-                if (timeout) {
-                    clearTimeout(timeout);
-                    timeout = undefined;
-                }
-                resolve({
-                    cancelled: false,
-                    item: buffer
-                });
-                buffer = [];
-                promise = undefined;
-            }
         }
-    };
+        };
+
+        function startBatch(): void {
+            batchPromise = new Promise((resolve) => {
+                resolveBatch = resolve;
+            });
+            if (time !== undefined) timeout = setTimeout(() => flush(false), time);
+        }
+
+        function flush(cancelled: boolean): void {
+            if (!batchPromise) return;
+            clearTimeout(timeout);
+            timeout = undefined;
+            const items = buffer;
+            const resolve = resolveBatch;
+            buffer = [];
+            batchPromise = undefined;
+            resolveBatch = undefined;
+            resolve?.({ cancelled, item: items });
+        }
+    });
 }
 
 /**
  * Extracts only the value of a key of the update value
  */
-export function dsPick<T, K extends keyof T>(key: K): DataSourceMapOperator<T, T[K]> {
+export function dsPick<T, K extends keyof NonNullable<T>>(key: K): DataSourceMapOperator<T, NonNullable<T>[K] | Extract<T, null | undefined>> {
     return {
         name: `pick ${key.toString()}`,
         operationType: OperationType.MAP,
@@ -761,14 +926,18 @@ export function dsPipeUp<T>(target: DataWriter<T> & { readonly name: string }): 
 export function dsHistory<T>(
     reportTarget: ArrayDataSource<T>,
     generations?: number,
-    cancellationToken: CancellationToken = new CancellationToken()
+    cancellationToken?: CancellationToken
 ): DataSourceNoopOperator<T> {
-    return {
+    if (generations !== undefined && (!Number.isInteger(generations) || generations < 0)) {
+        throw new RangeError('generations must be a non-negative integer');
+    }
+    return perPipeline((context) => ({
         operationType: OperationType.NOOP,
         name: `history`,
         operation: (v) => {
-            if (!cancellationToken.isCancelled) {
-                if (generations) {
+            if (!context.cancellationToken.isCancelled && !cancellationToken?.isCancelled) {
+                if (generations === 0) return;
+                if (generations !== undefined) {
                     if (reportTarget.length.value >= generations) {
                         reportTarget.removeLeft(reportTarget.length.value - generations + 1);
                     }
@@ -776,7 +945,7 @@ export function dsHistory<T>(
                 reportTarget.push(v);
             }
         }
-    };
+    }));
 }
 
 /**
@@ -785,21 +954,26 @@ export function dsHistory<T>(
 export function dsThroughputMeter<T>(
     reportTarget: DataSource<number>,
     interval: number,
-    cancellationToken: CancellationToken = new CancellationToken()
+    cancellationToken?: CancellationToken
 ): DataSourceNoopOperator<T> {
-    let amount = 0;
-    cancellationToken.setInterval(() => {
-        reportTarget.update(amount);
-        amount = 0;
-    }, interval);
-
-    return {
+    requireNonNegative(interval, 'interval');
+    return perPipeline((context) => {
+        let amount = 0;
+        const lifetime = cancellationToken ? context.cancellationToken.or(cancellationToken) : context.cancellationToken;
+        if (!lifetime.isCancelled) {
+            lifetime.setInterval(() => {
+                reportTarget.update(amount);
+                amount = 0;
+            }, interval);
+        }
+        return {
         operationType: OperationType.NOOP,
         name: `throughput meter`,
         operation: (v) => {
-            amount++;
+            if (!lifetime.isCancelled) amount++;
         }
-    };
+        };
+    });
 }
 
 /**
@@ -819,9 +993,10 @@ export function dsTap<T>(cb: Callback<T>): DataSourceNoopOperator<T> {
  * Pipes updates to the targets in round-robin fashion
  */
 export function dsLoadBalance<T>(targets: Array<DataPublisher<T> & { readonly name: string }>): DataSourceNoopOperator<T> {
-    let i = 0;
-
-    return {
+    if (targets.length === 0) throw new Error('dsLoadBalance requires at least one target');
+    return perPipeline(() => {
+        let i = 0;
+        return {
         name: `loadBalance [${targets.map((v) => v.name).join()}]`,
         operationType: OperationType.NOOP,
         operation: (v) => {
@@ -831,7 +1006,8 @@ export function dsLoadBalance<T>(targets: Array<DataPublisher<T> & { readonly na
             }
             target.publish(v);
         }
-    };
+        };
+    });
 }
 
 /**
@@ -860,13 +1036,24 @@ export function dsPipeAll<T>(...sources: Array<DataPublisher<T> & { readonly nam
 }
 
 export function dsAccumulate(initialValue: number): DataSourceMapOperator<number, number> {
-    let sum = initialValue;
-    return {
+    return perPipeline(() => {
+        let sum = initialValue;
+        return {
         name: `accumulate`,
         operationType: OperationType.MAP,
         operation: (v) => {
             sum += v;
             return sum;
         }
-    };
+        };
+    });
 }
+
+/** Familiar aliases; the ds-prefixed names remain supported. */
+export const dsDistinct = dsUnique;
+export const dsScan = dsReduce;
+export const dsTake = dsCutOff;
+export const dsRecordLow = dsMin;
+export const dsRecordHigh = dsMax;
+export const dsMicroThrottle = dsMicroDebounce;
+export const dsDebounceFrame = dsThrottleFrame;

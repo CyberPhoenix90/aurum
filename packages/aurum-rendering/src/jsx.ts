@@ -1,4 +1,3 @@
-import type { ReadOnlyArrayDataSource as CoreReadOnlyArrayDataSource, ReadOnlyDataSource as CoreReadOnlyDataSource } from '@aurum/streams';
 import {
     AurumComponentAPI as CoreComponentAPI,
     AurumComponent as CoreComponent,
@@ -16,7 +15,7 @@ export class Aurum {
     public static factory<T>(
         component: CoreComponent<T> | string,
         props: T | null,
-        ...children: Array<CoreElementModel<unknown> | CoreReadOnlyDataSource<unknown> | CoreReadOnlyArrayDataSource<unknown>>
+        ...children: CoreRenderable[]
     ): CoreElementModel<T> | typeof children {
         if (component === Aurum.fragment) {
             return children;

@@ -1,144 +1,123 @@
 import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
+import {
+    AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED,
+    emitAurumDevtoolsUpdate,
+    linkAurumDevtoolsNodes,
+    registerAurumDevtoolsNode,
+    setAurumDevtoolsSubscriptionCount
+} from '../devtools.js';
 import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource, ReadOnlyDataSource } from './data_source.js';
 import { DuplexDataSource } from './duplex_data_source.js';
 
-export interface ObjectChange<T, K extends keyof T> {
+type ArrayElement<T> = T extends readonly (infer U)[] ? U : never;
+
+export interface ObjectSetChange<T, K extends keyof T> {
+    operation: 'set';
     key: K;
-    path?: string[];
-    oldValue: T[K];
+    path?: PropertyKey[];
+    oldValue: T[K] | undefined;
     newValue: T[K];
-    deleted?: boolean;
+    deleted: false;
 }
 
-export interface ReadOnlyObjectDataSource<T> {
+export interface ObjectDeleteChange<T, K extends keyof T> {
+    operation: 'delete';
+    key: K;
+    path?: PropertyKey[];
+    oldValue: T[K];
+    newValue: undefined;
+    deleted: true;
+}
+
+export type ObjectChange<T, K extends keyof T = keyof T> = ObjectSetChange<T, K> | ObjectDeleteChange<T, K>;
+
+export interface ReadOnlyObjectDataSource<T extends object> {
     toString(): string;
-    pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyObjectDataSource<T[K]>;
-    pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<FlatArray<T[K], 1>>;
+    pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyObjectDataSource<Extract<T[K], object>>;
+    pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<ArrayElement<T[K]>>;
     pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ReadOnlyDataSource<T[K]>;
     pickDuplex<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DuplexDataSource<T[K]>;
-    listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
-    listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
-    map<D>(mapper: (key: keyof T) => D): ArrayDataSource<D>;
+    listen(callback: Callback<ObjectChange<T>>, cancellationToken?: CancellationToken): void;
+    listenAndRepeat(callback: Callback<ObjectChange<T>>, cancellationToken?: CancellationToken): void;
+    map<D>(mapper: (key: keyof T, value: T[keyof T]) => D, cancellationToken?: CancellationToken): ArrayDataSource<D>;
     listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void;
-    listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void;
-    keys(): string[];
-    values(): any;
+    listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void;
+    hasKey(key: keyof T): boolean;
+    keys(): (keyof T)[];
+    values(): T[keyof T][];
     get<K extends keyof T>(key: K): T[K];
     getData(): Readonly<T>;
     toObject(): T;
-    toDataSource(): DataSource<T>;
+    toDataSource(cancellationToken?: CancellationToken): DataSource<T>;
 }
 
-export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSource<T> {
+/** A shallow observable record with lazily allocated per-key event channels. */
+export class ObjectDataSource<T extends object> implements ReadOnlyObjectDataSource<T> {
     protected data: T;
-    private updateEvent: EventEmitter<ObjectChange<T, keyof T>>;
-    private updateEventOnKey: Map<keyof T, EventEmitter<ObjectChange<T, keyof T>>>;
+    private readonly updateEvent = new EventEmitter<ObjectChange<T>>();
+    private readonly updateEventOnKey = new Map<keyof T, EventEmitter<ObjectChange<T>>>();
 
     constructor(initialData: T) {
-        this.data = initialData;
-        this.updateEvent = new EventEmitter();
-        this.updateEventOnKey = new Map();
+        if (!isRecord(initialData)) {
+            throw new TypeError('ObjectDataSource initial data must be a non-null, non-array object');
+        }
+        this.data = { ...initialData };
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(this, { kind: 'object-data-source', getValue: (target) => target.getData() });
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            this.updateEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count), false);
+        }
     }
 
-    public static toObjectDataSource<T>(value: T | ObjectDataSource<T>): ObjectDataSource<T> {
-        if (value instanceof ObjectDataSource) {
-            return value;
-        } else {
-            return new ObjectDataSource(value);
-        }
+    public static toObjectDataSource<T extends object>(value: T | ObjectDataSource<T>): ObjectDataSource<T> {
+        return value instanceof ObjectDataSource ? value : new ObjectDataSource(value);
     }
 
     public toString(): string {
-        return this.data.toString();
+        return String(this.data);
     }
-    /**
-     * Remove all listeners
-     */
+
     public cancelAll(): void {
         this.updateEvent.cancelAll();
-        this.updateEventOnKey.forEach((v) => v.cancelAll());
+        this.updateEventOnKey.forEach((event) => event.cancelAll());
+        this.updateEventOnKey.clear();
     }
 
-    public pickObject<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ObjectDataSource<T[K]> {
-        if (typeof this.data[key] === 'object') {
-            const subDataSource: ObjectDataSource<T[K]> = new ObjectDataSource(this.data[key] as T[K]);
-
-            subDataSource.listen((change) => {
-                if (change.deleted) {
-                    if (this.data[key]) {
-                        delete this.data[key][change.key];
-                    }
-                } else {
-                    this.get(key)[change.key] = change.newValue as any;
-                    this.updateEvent.fire({
-                        key: key,
-                        path: [(key as any).toString(), ...(change.path ? change.path : [(change.key as any).toString()])],
-                        oldValue: this.get(key),
-                        newValue: this.get(key)
-                    });
-                }
-            }, cancellationToken);
-
-            this.listenOnKey(key, (v) => {
-                if (typeof v.newValue === 'object') {
-                    if (v.newValue !== subDataSource.data) {
-                        subDataSource.merge(v.newValue);
-                    }
-                } else {
-                    subDataSource.clear();
-                }
-            });
-
-            return subDataSource;
-        } else {
-            throw new Error('Cannot pick a non object key');
+    public pickObject<K extends keyof T>(key: K, cancellationToken: CancellationToken = CancellationToken.forever): ObjectDataSource<Extract<T[K], object>> {
+        const initialValue = this.data[key];
+        if (!isRecord(initialValue)) {
+            throw new Error('Cannot pick a non-object or array key as an object');
         }
-    }
 
-    public pickArray<K extends keyof T>(key: K, cancellationToken?: CancellationToken): ArrayDataSource<FlatArray<T[K], 1>> {
-        if (Array.isArray(this.data[key])) {
-            const subDataSource: ArrayDataSource<FlatArray<T[K], 1>> = new ArrayDataSource(this.data?.[key] as any);
+        type Nested = Extract<T[K], object>;
+        const subDataSource = new ObjectDataSource<Nested>(initialValue as Nested);
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'pick', label: String(key) }, cancellationToken);
+        linkAurumDevtoolsNodes(subDataSource, this, { kind: 'write-back', label: String(key) }, cancellationToken);
+        let syncingFromParent = false;
 
-            subDataSource.listen((change) => {
-                this.set(key, change.newState as any);
-            }, cancellationToken);
-
-            this.listenOnKey(key, (v) => {
-                if (Array.isArray(v.newValue)) {
-                    const newValue = v.newValue as FlatArray<T[K], 1>[];
-                    if (newValue.length !== subDataSource.length.value || !subDataSource.getData().every((item, index) => newValue[index] === item)) {
-                        subDataSource.merge(newValue);
-                    }
-                } else {
-                    subDataSource.clear();
-                }
-            });
-
-            return subDataSource;
-        } else {
-            throw new Error('Cannot pick a non array key');
-        }
-    }
-
-    /**
-     * Creates a datasource for a single key of the object
-     * @param key
-     * @param cancellationToken
-     */
-    public pick<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DataSource<T[K]> {
-        const subDataSource: DataSource<T[K]> = new DataSource(this.data?.[key]);
-
-        subDataSource.listen(() => {
-            this.set(key, subDataSource.value);
+        subDataSource.listen((change) => {
+            if (syncingFromParent) {
+                return;
+            }
+            const path = [key as PropertyKey, ...(change.path ?? [change.key as PropertyKey])];
+            this.setInternal(key, subDataSource.toObject() as T[K], path);
         }, cancellationToken);
 
         this.listenOnKey(
             key,
-            (v) => {
-                if (subDataSource.value !== v.newValue || (Number.isNaN(subDataSource.value) && Number.isNaN(v.newValue))) {
-                    subDataSource.update(v.newValue);
+            (change) => {
+                syncingFromParent = true;
+                try {
+                    if (change.operation === 'set' && isRecord(change.newValue)) {
+                        subDataSource.merge(change.newValue as Nested);
+                    } else {
+                        subDataSource.clear();
+                    }
+                } finally {
+                    syncingFromParent = false;
                 }
             },
             cancellationToken
@@ -147,22 +126,86 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
         return subDataSource;
     }
 
-    /**
-     * Creates a duplexdatasource for a single key of the object
-     * @param key
-     * @param cancellationToken
-     */
-    public pickDuplex<K extends keyof T>(key: K, cancellationToken?: CancellationToken): DuplexDataSource<T[K]> {
-        const subDataSource: DuplexDataSource<T[K]> = new DuplexDataSource(this.data?.[key]);
-        subDataSource.listenUpstream((v) => {
-            this.set(key, v);
-        });
+    public pickArray<K extends keyof T>(key: K, cancellationToken: CancellationToken = CancellationToken.forever): ArrayDataSource<ArrayElement<T[K]>> {
+        const initialValue = this.data[key];
+        if (!Array.isArray(initialValue)) {
+            throw new Error('Cannot pick a non-array key as an array');
+        }
+
+        type Item = ArrayElement<T[K]>;
+        const subDataSource = new ArrayDataSource<Item>(initialValue as Item[]);
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'pick', label: String(key) }, cancellationToken);
+        linkAurumDevtoolsNodes(subDataSource, this, { kind: 'write-back', label: String(key) }, cancellationToken);
+        let syncingFromParent = false;
+
+        subDataSource.listen((change) => {
+            if (!syncingFromParent) {
+                this.set(key, change.newState.slice() as T[K]);
+            }
+        }, cancellationToken);
 
         this.listenOnKey(
             key,
-            (v) => {
-                if (subDataSource.value !== v.newValue) {
-                    subDataSource.updateDownstream(v.newValue);
+            (change) => {
+                syncingFromParent = true;
+                try {
+                    if (change.operation === 'set' && Array.isArray(change.newValue)) {
+                        const value = change.newValue as Item[];
+                        if (!arraysEqual(subDataSource.getData(), value)) {
+                            subDataSource.merge(value);
+                        }
+                    } else {
+                        subDataSource.clear();
+                    }
+                } finally {
+                    syncingFromParent = false;
+                }
+            },
+            cancellationToken
+        );
+
+        return subDataSource;
+    }
+
+    public pick<K extends keyof T>(key: K, cancellationToken: CancellationToken = CancellationToken.forever): DataSource<T[K]> {
+        const subDataSource = new DataSource<T[K]>(this.data[key]);
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'pick', label: String(key) }, cancellationToken);
+        linkAurumDevtoolsNodes(subDataSource, this, { kind: 'write-back', label: String(key) }, cancellationToken);
+
+        subDataSource.listen((value) => {
+            if (!this.hasKey(key) || !Object.is(this.data[key], value)) {
+                this.set(key, value);
+            }
+        }, cancellationToken);
+
+        this.listenOnKey(
+            key,
+            (change) => {
+                if (!Object.is(subDataSource.value, change.newValue)) {
+                    subDataSource.update(change.newValue as T[K]);
+                }
+            },
+            cancellationToken
+        );
+
+        return subDataSource;
+    }
+
+    public pickDuplex<K extends keyof T>(key: K, cancellationToken: CancellationToken = CancellationToken.forever): DuplexDataSource<T[K]> {
+        const subDataSource = new DuplexDataSource<T[K]>(this.data[key]);
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'pick', label: String(key) }, cancellationToken);
+        linkAurumDevtoolsNodes(subDataSource, this, { kind: 'write-back', label: String(key) }, cancellationToken);
+        subDataSource.listenUpstream((value) => {
+            if (!this.hasKey(key) || !Object.is(this.data[key], value)) {
+                this.set(key, value);
+            }
+        }, cancellationToken);
+
+        this.listenOnKey(
+            key,
+            (change) => {
+                if (!Object.is(subDataSource.value, change.newValue)) {
+                    subDataSource.updateDownstream(change.newValue as T[K]);
                 }
             },
             cancellationToken
@@ -172,53 +215,26 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
     }
 
     public hasKey(key: keyof T): boolean {
-        return this.data.hasOwnProperty(key);
+        return Object.prototype.hasOwnProperty.call(this.data, key);
     }
 
-    public applyObjectChange(change: ObjectChange<T, keyof T>): void {
-        if (change.deleted && this.hasKey(change.key)) {
+    public applyObjectChange(change: ObjectChange<T>): void {
+        if (change.operation === 'delete' || change.deleted) {
             this.delete(change.key);
-        } else if (change.newValue !== this.get(change.key)) {
+        } else {
             this.set(change.key, change.newValue);
         }
     }
 
-    /**
-     * Listen to changes of the object
-     */
-    public listen(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
+    public listen(callback: Callback<ObjectChange<T>>, cancellationToken?: CancellationToken): void {
         this.updateEvent.subscribe(callback, cancellationToken);
     }
 
-    public map<D>(mapper: (key: keyof T, value: T[keyof T]) => D): ArrayDataSource<D> {
-        const stateMap: Map<string | number | Symbol, D> = new Map<string | number | Symbol, D>();
-        const result = new ArrayDataSource<D>();
-        this.listenAndRepeat((change) => {
-            if (change.deleted && stateMap.has(change.key)) {
-                const item = stateMap.get(change.key);
-                result.remove(item);
-                stateMap.delete(change.key);
-            } else if (stateMap.has(change.key)) {
-                const newItem = mapper(change.key, change.newValue);
-                result.replace(stateMap.get(change.key), newItem);
-                stateMap.set(change.key, newItem);
-            } else if (!stateMap.has(change.key) && !change.deleted) {
-                const newItem = mapper(change.key, change.newValue);
-                result.push(newItem);
-                stateMap.set(change.key, newItem);
-            }
-        });
-
-        return result;
-    }
-
-    /**
-     * Same as listen but will immediately call the callback with the current value of each key
-     */
-    public listenAndRepeat(callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
+    public listenAndRepeat(callback: Callback<ObjectChange<T>>, cancellationToken?: CancellationToken): void {
         this.updateEvent.subscribe(callback, cancellationToken);
-        for (const key in this.data) {
+        for (const key of this.keys()) {
             callback({
+                operation: 'set',
                 key,
                 newValue: this.data[key],
                 oldValue: undefined,
@@ -227,134 +243,97 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
         }
     }
 
-    /**
-     * Same as listenOnKey but will immediately call the callback with the current value first
-     */
-    public listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, keyof T>>, cancellationToken?: CancellationToken): void {
+    public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void {
+        let event = this.updateEventOnKey.get(key);
+        if (!event) {
+            event = new EventEmitter<ObjectChange<T>>();
+            this.updateEventOnKey.set(key, event);
+            if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+                event.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, `key:${String(key)}`), false);
+            }
+        }
+        event.subscribe(callback as Callback<ObjectChange<T>>, cancellationToken);
+    }
+
+    public listenOnKeyAndRepeat<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void {
         callback({
+            operation: 'set',
             key,
             newValue: this.data[key],
-            oldValue: undefined
+            oldValue: undefined,
+            deleted: false
         });
-
         this.listenOnKey(key, callback, cancellationToken);
     }
 
-    /**
-     * Listen to changes of a single key of the object
-     */
-    public listenOnKey<K extends keyof T>(key: K, callback: Callback<ObjectChange<T, K>>, cancellationToken?: CancellationToken): void {
-        if (!this.updateEventOnKey.has(key)) {
-            this.updateEventOnKey.set(key, new EventEmitter());
+    public map<D>(mapper: (key: keyof T, value: T[keyof T]) => D, cancellationToken: CancellationToken = CancellationToken.forever): ArrayDataSource<D> {
+        const mapped = new Map<keyof T, D>();
+        for (const key of this.keys()) {
+            mapped.set(key, mapper(key, this.data[key]));
         }
-        const event = this.updateEventOnKey.get(key);
-        event.subscribe(callback as any, cancellationToken);
+        const result = new ArrayDataSource<D>(this.keys().map((key) => mapped.get(key)!));
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'map' }, cancellationToken);
+
+        this.listen((change) => {
+            if (change.operation === 'delete') {
+                mapped.delete(change.key);
+            } else {
+                mapped.set(change.key, mapper(change.key, change.newValue));
+            }
+            result.merge(this.keys().map((key) => mapped.get(key)!));
+        }, cancellationToken);
+
+        return result;
     }
 
-    /**
-     * Returns all the keys of the object in the source
-     */
-    public keys(): string[] {
-        return Object.keys(this.data);
+    public keys(): (keyof T)[] {
+        return Reflect.ownKeys(this.data).filter((key) => Object.prototype.propertyIsEnumerable.call(this.data, key)) as (keyof T)[];
     }
 
-    /**
-     * Returns all the values of the object in the source
-     */
-    public values(): any {
-        return Object.values(this.data);
+    public values(): T[keyof T][] {
+        return this.keys().map((key) => this.data[key]);
     }
 
-    /**
-     * get the current value of a key of the object
-     * @param key
-     */
     public get<K extends keyof T>(key: K): T[K] {
         return this.data[key];
     }
 
-    /**
-     * delete a key from the object
-     * @param key
-     * @param value
-     */
     public delete<K extends keyof T>(key: K): void {
-        if (this.hasKey(key)) {
-            const old = this.data[key];
-            delete this.data[key];
-            this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
-            if (this.updateEventOnKey.has(key)) {
-                this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
-            }
+        if (!this.hasKey(key)) {
+            return;
         }
+        const oldValue = this.data[key];
+        delete this.data[key];
+        this.emit({ operation: 'delete', oldValue, key, newValue: undefined, deleted: true });
     }
 
-    /**
-     * set the value for a key of the object
-     * @param key
-     * @param value
-     */
     public set<K extends keyof T>(key: K, value: T[K]): void {
-        if (this.data[key] === value) {
-            return;
-        }
-
-        const old = this.data[key];
-        this.data[key] = value;
-        this.updateEvent.fire({ oldValue: old, key, newValue: this.data[key] });
-        if (this.updateEventOnKey.has(key)) {
-            this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: this.data[key] });
-        }
+        this.setInternal(key, value);
     }
 
-    /**
-     * Merge the key value pairs of an object into this object non recursively
-     * @param newData
-     */
     public assign(newData: Partial<T> | ObjectDataSource<T>): void {
-        if (newData instanceof ObjectDataSource) {
-            for (const key of newData.keys()) {
-                this.set(key as keyof T, (newData.data as Record<string, any>)[key]);
-            }
-        } else {
-            for (const key of Object.keys(newData)) {
-                this.set(key as keyof T, (newData as Record<string, any>)[key]);
-            }
+        const value = newData instanceof ObjectDataSource ? newData.getData() : newData;
+        for (const key of ownEnumerableKeys(value) as (keyof T)[]) {
+            this.set(key, value[key] as T[keyof T]);
         }
     }
 
-    /**
-     * Merge the key value pairs of an object into this object non recursively and delete properties that do not exist in the newData
-     * @param newData
-     */
+    /** Replaces the shallow record, deleting keys absent from newData. */
     public merge(newData: Partial<T> | ObjectDataSource<T>): void {
-        const keys = new Set<string>(Object.keys(this.data ?? {}));
-        if (newData instanceof ObjectDataSource) {
-            for (const key of newData.keys()) {
-                keys.delete(key);
-                this.set(key as keyof T, (newData.data as Record<string, any>)[key]);
-            }
-        } else {
-            for (const key of Object.keys(newData)) {
-                keys.delete(key);
-                this.set(key as keyof T, (newData as Record<string, any>)[key]);
-            }
+        const value = newData instanceof ObjectDataSource ? newData.getData() : newData;
+        const nextKeys = new Set<PropertyKey>(ownEnumerableKeys(value));
+        for (const key of ownEnumerableKeys(value) as (keyof T)[]) {
+            this.set(key, value[key] as T[keyof T]);
         }
-
-        for (const key of keys) {
-            this.delete(key as keyof T);
+        for (const key of this.keys()) {
+            if (!nextKeys.has(key as PropertyKey)) {
+                this.delete(key);
+            }
         }
     }
 
-    /**
-     * Deletes all keys
-     */
     public clear(): void {
-        if (this.data == undefined) {
-            return;
-        }
-
-        for (const key in this.data) {
+        for (const key of this.keys()) {
             this.delete(key);
         }
     }
@@ -363,21 +342,47 @@ export class ObjectDataSource<T extends Object> implements ReadOnlyObjectDataSou
         return this.data;
     }
 
-    /**
-     * Returns a shallow copy of the object
-     */
     public toObject(): T {
         return { ...this.data };
     }
 
-    /**
-     * Returns a simplified version of this datasource
-     */
-    public toDataSource(): DataSource<T> {
-        const stream = new DataSource(this.data);
-        this.listen((s) => {
-            stream.update(this.data);
-        });
+    public toDataSource(cancellationToken: CancellationToken = CancellationToken.forever): DataSource<T> {
+        const stream = new DataSource<T>(this.toObject());
+        linkAurumDevtoolsNodes(this, stream, { kind: 'transform', label: 'toDataSource' }, cancellationToken);
+        this.listen(() => stream.update(this.toObject()), cancellationToken);
         return stream;
     }
+
+    private setInternal<K extends keyof T>(key: K, value: T[K], path?: PropertyKey[]): void {
+        const hasKey = this.hasKey(key);
+        const oldValue = this.data[key];
+        if (hasKey && Object.is(oldValue, value)) {
+            return;
+        }
+        this.data[key] = value;
+        this.emit({ operation: 'set', oldValue, key, newValue: value, deleted: false, path });
+    }
+
+    private emit<K extends keyof T>(change: ObjectChange<T, K>): void {
+        const genericChange = change as ObjectChange<T>;
+        emitAurumDevtoolsUpdate(this, {
+            kind: change.operation,
+            value: this.data,
+            details: { key: change.key, path: change.path, deleted: change.deleted }
+        });
+        this.updateEvent.fire(genericChange);
+        this.updateEventOnKey.get(change.key)?.fire(genericChange);
+    }
+}
+
+function isRecord(value: unknown): value is object {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function arraysEqual<T>(left: readonly T[], right: readonly T[]): boolean {
+    return left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+}
+
+function ownEnumerableKeys(value: object): PropertyKey[] {
+    return Reflect.ownKeys(value).filter((key) => Object.prototype.propertyIsEnumerable.call(value, key));
 }

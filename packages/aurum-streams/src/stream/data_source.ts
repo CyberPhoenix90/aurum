@@ -2,6 +2,14 @@ import { CancellationToken } from '../utilities/cancellation_token.js';
 import { Callback, DataPublisher, DataWriter, Predicate } from '../utilities/common.js';
 import { EventEmitter } from '../utilities/event_emitter.js';
 import { promiseIterator, readableStreamStringIterator, transformAsyncIterator } from '../utilities/iteration.js';
+import {
+    AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED,
+    emitAurumDevtoolsUpdate,
+    linkAurumDevtoolsNodes,
+    registerAurumDevtoolsNode,
+    setAurumDevtoolsSubscriptionCount,
+    updateAurumDevtoolsNode
+} from '../devtools.js';
 import { dsDiff, dsMap, dsTap } from './data_source_operators.js';
 import {
     DataSourceDelayFilterOperator,
@@ -9,6 +17,8 @@ import {
     DataSourceMapDelayFilterOperator,
     DataSourceMapOperator,
     DataSourceOperator,
+    DataSourceOperatorOutput,
+    DataSourceTransformRestArguments,
     DataSourceSpreadOperator,
     OperationType
 } from './operator_model.js';
@@ -21,6 +31,11 @@ export interface ReadOnlyDataSource<T> {
     listenOnce(callback: Callback<T>, cancellationToken?: CancellationToken): void;
     onError(callback: Callback<Error>, cancellationToken?: CancellationToken): void;
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<T>;
+    /** Resolves with the current or next matching value. By default, null and undefined are skipped. */
+    awaitValue(cancellationToken?: CancellationToken): Promise<NonNullable<T>>;
+    awaitValue(predicate: undefined, cancellationToken?: CancellationToken): Promise<NonNullable<T>>;
+    awaitValue<S extends T>(predicate: (value: T) => value is S, cancellationToken?: CancellationToken): Promise<S>;
+    awaitValue(predicate: (value: T) => boolean, cancellationToken?: CancellationToken): Promise<T>;
     combine(otherSources: ReadOnlyDataSource<T>[], cancellationToken?: CancellationToken): DataSource<T>;
     aggregate<R, A>(otherSources: [ReadOnlyDataSource<A>], combinator: (self: T, other: A) => R, cancellationToken?: CancellationToken): DataSource<R>;
     aggregate<R, A, B>(
@@ -100,20 +115,17 @@ export interface ReadOnlyDataSource<T> {
     aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
 
     pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this;
-    transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
-        operationA: DataSourceOperator<T, A>,
-        operationB?: DataSourceOperator<A, B> | CancellationToken,
-        operationC?: DataSourceOperator<B, C> | CancellationToken,
-        operationD?: DataSourceOperator<C, D> | CancellationToken,
-        operationE?: DataSourceOperator<D, E> | CancellationToken,
-        operationF?: DataSourceOperator<E, F> | CancellationToken,
-        operationG?: DataSourceOperator<F, G> | CancellationToken,
-        operationH?: DataSourceOperator<G, H> | CancellationToken,
-        operationI?: DataSourceOperator<H, I> | CancellationToken,
-        operationJ?: DataSourceOperator<I, J> | CancellationToken,
-        operationK?: DataSourceOperator<J, K> | CancellationToken,
+    transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G>(
+        first: DataSourceOperator<T, A>, second?: DataSourceOperator<A, B> | CancellationToken,
+        third?: DataSourceOperator<B, C> | CancellationToken, fourth?: DataSourceOperator<C, D> | CancellationToken,
+        fifth?: DataSourceOperator<D, E> | CancellationToken, sixth?: DataSourceOperator<E, F> | CancellationToken,
+        seventh?: DataSourceOperator<F, G> | CancellationToken, eighth?: DataSourceOperator<G, H> | CancellationToken,
         cancellationToken?: CancellationToken
-    ): ReadOnlyDataSource<K>;
+    ): ReadOnlyDataSource<H>;
+    transform<FirstOutput, const Operators extends readonly DataSourceOperator<any, any>[]>(
+        first: DataSourceOperator<T, FirstOutput>,
+        ...operations: DataSourceTransformRestArguments<FirstOutput, Operators>
+    ): ReadOnlyDataSource<DataSourceOperatorOutput<FirstOutput, Operators>>;
 }
 
 export type BindableSource<T> = ReadOnlyDataSource<T> & DataWriter<T>;
@@ -203,20 +215,17 @@ export interface GenericDataSource<T> extends ReadOnlyDataSource<T> {
         cancellationToken?: CancellationToken
     ): DataSource<R>;
     aggregate<R>(otherSources: ReadOnlyDataSource<any>[], combinator: (...data: any[]) => R, cancellationToken?: CancellationToken): DataSource<R>;
-    transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
-        operationA: DataSourceOperator<T, A>,
-        operationB?: DataSourceOperator<A, B> | CancellationToken,
-        operationC?: DataSourceOperator<B, C> | CancellationToken,
-        operationD?: DataSourceOperator<C, D> | CancellationToken,
-        operationE?: DataSourceOperator<D, E> | CancellationToken,
-        operationF?: DataSourceOperator<E, F> | CancellationToken,
-        operationG?: DataSourceOperator<F, G> | CancellationToken,
-        operationH?: DataSourceOperator<G, H> | CancellationToken,
-        operationI?: DataSourceOperator<H, I> | CancellationToken,
-        operationJ?: DataSourceOperator<I, J> | CancellationToken,
-        operationK?: DataSourceOperator<J, K> | CancellationToken,
+    transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G>(
+        first: DataSourceOperator<T, A>, second?: DataSourceOperator<A, B> | CancellationToken,
+        third?: DataSourceOperator<B, C> | CancellationToken, fourth?: DataSourceOperator<C, D> | CancellationToken,
+        fifth?: DataSourceOperator<D, E> | CancellationToken, sixth?: DataSourceOperator<E, F> | CancellationToken,
+        seventh?: DataSourceOperator<F, G> | CancellationToken, eighth?: DataSourceOperator<G, H> | CancellationToken,
         cancellationToken?: CancellationToken
-    ): DataSource<K>;
+    ): DataSource<H>;
+    transform<FirstOutput, const Operators extends readonly DataSourceOperator<any, any>[]>(
+        first: DataSourceOperator<T, FirstOutput>,
+        ...operations: DataSourceTransformRestArguments<FirstOutput, Operators>
+    ): DataSource<DataSourceOperatorOutput<FirstOutput, Operators>>;
 }
 
 /**
@@ -240,6 +249,17 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         this.primed = initialValue !== undefined;
         this.errorEvent = new EventEmitter();
         this.updateEvent = new EventEmitter();
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(this, {
+                kind: 'data-source',
+                name,
+                getValue: (target) => target.value
+            });
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            this.updateEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count), false);
+            this.errorEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, 'errors'), false);
+        }
     }
 
     public toString(): string {
@@ -347,10 +367,12 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const result = new DataSource<T>();
 
         for (const s of sources) {
+            linkAurumDevtoolsNodes(s as object, result, { kind: 'combine' }, cancellation);
             s.listen((v: T) => result.update(v), cancellation);
         }
 
         result.name = `Combination of [${sources.map((v) => v.name).join(' & ')}]`;
+        updateAurumDevtoolsNode(result, { name: result.name, metadata: { sourceCount: sources.length } });
 
         return result;
     }
@@ -424,6 +446,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
     }
 
     public emitError(e: Error): void {
+        emitAurumDevtoolsUpdate(this, { kind: 'error', value: e });
         if (this.errorHandler) {
             try {
                 return this.update(this.errorHandler(e));
@@ -475,6 +498,9 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         }
         this.updating = true;
         this.value = newValue;
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            emitAurumDevtoolsUpdate(this, { kind: 'update', value: newValue });
+        }
         try {
             this.updateEvent.fire(newValue);
         } finally {
@@ -545,39 +571,34 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         this.updateEvent.subscribeOnce(callback, cancellationToken);
     }
 
-    public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I = H, J = I, K = J>(
-        operationA: DataSourceOperator<T, A>,
-        operationB?: DataSourceOperator<A, B> | CancellationToken,
-        operationC?: DataSourceOperator<B, C> | CancellationToken,
-        operationD?: DataSourceOperator<C, D> | CancellationToken,
-        operationE?: DataSourceOperator<D, E> | CancellationToken,
-        operationF?: DataSourceOperator<E, F> | CancellationToken,
-        operationG?: DataSourceOperator<F, G> | CancellationToken,
-        operationH?: DataSourceOperator<G, H> | CancellationToken,
-        operationI?: DataSourceOperator<H, I> | CancellationToken,
-        operationJ?: DataSourceOperator<I, J> | CancellationToken,
-        operationK?: DataSourceOperator<J, K> | CancellationToken,
+    public transform<A, B = A, C = B, D = C, E = D, F = E, G = F, H = G>(
+        first: DataSourceOperator<T, A>, second?: DataSourceOperator<A, B> | CancellationToken,
+        third?: DataSourceOperator<B, C> | CancellationToken, fourth?: DataSourceOperator<C, D> | CancellationToken,
+        fifth?: DataSourceOperator<D, E> | CancellationToken, sixth?: DataSourceOperator<E, F> | CancellationToken,
+        seventh?: DataSourceOperator<F, G> | CancellationToken, eighth?: DataSourceOperator<G, H> | CancellationToken,
         cancellationToken?: CancellationToken
-    ): DataSource<K> {
-        let token;
-        const operations: DataSourceOperator<any, any>[] = [
-            operationA,
-            operationB,
-            operationC,
-            operationD,
-            operationE,
-            operationF,
-            operationG,
-            operationH,
-            operationI,
-            operationJ,
-            operationK
-        ].filter((e) => e && (e instanceof CancellationToken ? ((token = e), false) : true)) as DataSourceOperator<any, any>[];
-        if (cancellationToken) {
-            token = cancellationToken;
+    ): DataSource<H>;
+    public transform<FirstOutput, const Operators extends readonly DataSourceOperator<any, any>[]>(
+        first: DataSourceOperator<T, FirstOutput>,
+        ...rest: DataSourceTransformRestArguments<FirstOutput, Operators>
+    ): DataSource<DataSourceOperatorOutput<FirstOutput, Operators>>;
+    public transform(first: DataSourceOperator<T, any>, ...rest: Array<DataSourceOperator<any, any> | CancellationToken>): DataSource<any> {
+        const args: Array<DataSourceOperator<any, any> | CancellationToken> = [first, ...rest];
+        const lastArgument = args[args.length - 1];
+        const suppliedToken = lastArgument instanceof CancellationToken ? lastArgument : undefined;
+        const token = suppliedToken ?? new CancellationToken();
+        const definitions = (suppliedToken ? args.slice(0, -1) : args).filter(Boolean) as DataSourceOperator<any, any>[];
+        const operations = definitions.map((operation) => operation.bind?.({ cancellationToken: token }) ?? operation);
+        const result = new DataSource<any>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            linkAurumDevtoolsNodes(
+                this,
+                result,
+                { kind: 'transform', label: operations.map((operation) => operation.name).join(' → '), metadata: { operators: operations.map((operation) => operation.name) } },
+                token
+            );
         }
-        const result = new DataSource<K>(undefined, this.name + ' ' + operations.map((v) => v.name).join(' '));
-        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, K>(operations as any, result), token);
+        (this.primed ? this.listenAndRepeat : this.listen).call(this, processTransform<T, any>(operations, result, token), token);
         this.onError((e) => result.emitError(e), token);
 
         return result;
@@ -659,6 +680,9 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         cancellationToken = cancellationToken ?? new CancellationToken();
 
         const aggregatedSource = new DataSource<R>(combinator(...sources.map((s) => s?.value)));
+        for (const source of sources) {
+            if (source) linkAurumDevtoolsNodes(source as object, aggregatedSource, { kind: 'aggregate' }, cancellationToken);
+        }
 
         for (let i = 0; i < sources.length; i++) {
             sources[i]?.listen(() => {
@@ -754,6 +778,10 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         cancellationToken = cancellationToken ?? new CancellationToken();
 
         const aggregatedSource = new DataSource<R>(combinator(this.value, ...otherSources.map((s) => s?.value)));
+        linkAurumDevtoolsNodes(this, aggregatedSource, { kind: 'aggregate', label: 'self' }, cancellationToken);
+        for (const source of otherSources) {
+            if (source) linkAurumDevtoolsNodes(source as object, aggregatedSource, { kind: 'aggregate' }, cancellationToken);
+        }
 
         for (let i = 0; i < otherSources.length; i++) {
             otherSources[i]?.listen(() => {
@@ -772,6 +800,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
      * @param cancellationToken  Cancellation token to cancel the subscription the target datasource has to this datasource
      */
     public pipe(targetDataSource: DataSource<T>, cancellationToken?: CancellationToken): this {
+        linkAurumDevtoolsNodes(this, targetDataSource, { kind: 'pipe' }, cancellationToken);
         (this.primed ? this.listenAndRepeat : this.listen).call(this, (v: T) => targetDataSource.update(v), cancellationToken);
 
         return this;
@@ -798,6 +827,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         const session = new WeakMap<ReadOnlyDataSource<I>, { token: CancellationToken; references: number }>();
 
         const result = new DataSource<O>();
+        linkAurumDevtoolsNodes(data as object, result, { kind: 'dynamic-aggregate' }, cancellationToken);
         data.onItemsAdded.subscribe((items) => {
             for (const item of items) {
                 listenToSubSource(item);
@@ -836,6 +866,7 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
             const itemToken = new CancellationToken();
             session.set(item, { token: itemToken, references: 1 });
             cancellationToken.addCancellable(itemToken);
+            linkAurumDevtoolsNodes(item as object, result, { kind: 'dynamic-aggregate-item' }, itemToken);
             item.listen(() => {
                 result.update(aggregate(data.getData().map((e) => e.value)));
             }, itemToken);
@@ -872,6 +903,57 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
         return new Promise((resolve, reject) => {
             cancellationToken?.addCancellable(() => reject(new Error('Cancelled')));
             this.listenOnce((value) => resolve(value), cancellationToken);
+        });
+    }
+
+    /**
+     * Resolves with the current value when it matches, or waits for the next matching update.
+     * Without a predicate, null and undefined values are skipped.
+     */
+    public awaitValue(cancellationToken?: CancellationToken): Promise<NonNullable<T>>;
+    public awaitValue(predicate: undefined, cancellationToken?: CancellationToken): Promise<NonNullable<T>>;
+    public awaitValue<S extends T>(predicate: (value: T) => value is S, cancellationToken?: CancellationToken): Promise<S>;
+    public awaitValue(predicate: (value: T) => boolean, cancellationToken?: CancellationToken): Promise<T>;
+    public awaitValue<S extends T>(
+        predicateOrToken?: ((value: T) => boolean) | CancellationToken,
+        cancellationToken?: CancellationToken
+    ): Promise<T | S> {
+        const predicate =
+            typeof predicateOrToken === 'function'
+                ? predicateOrToken
+                : (value: T): boolean => value !== null && value !== undefined;
+        const token = predicateOrToken instanceof CancellationToken ? predicateOrToken : cancellationToken;
+
+        if (token?.isCancelled) return Promise.reject(new Error('Cancelled'));
+        try {
+            if (this.primed && predicate(this.value)) return Promise.resolve(this.value);
+        } catch (error) {
+            return Promise.reject(error);
+        }
+
+        return new Promise<T | S>((resolve, reject) => {
+            const subscriptionToken = new CancellationToken();
+            const cancelWait = (): void => {
+                subscriptionToken.cancel();
+                reject(new Error('Cancelled'));
+            };
+            token?.addCancellable(cancelWait);
+
+            const cleanUp = (): void => {
+                subscriptionToken.cancel();
+                if (token && !token.isCancelled) token.removeCancellable(cancelWait);
+            };
+
+            this.listen((value) => {
+                try {
+                    if (!predicate(value)) return;
+                    cleanUp();
+                    resolve(value);
+                } catch (error) {
+                    cleanUp();
+                    reject(error);
+                }
+            }, subscriptionToken);
         });
     }
 
@@ -916,6 +998,16 @@ export class DataSource<T> implements GenericDataSource<T>, ReadOnlyDataSource<T
 
 type DetailedOperations = 'replace' | 'append' | 'prepend' | 'removeRight' | 'removeLeft' | 'remove' | 'swap' | 'clear' | 'merge' | 'insert';
 
+declare const collectionItemIdentityBrand: unique symbol;
+
+/**
+ * Opaque identity assigned to an occurrence in an ArrayDataSource. Identities
+ * are managed by the source and are intentionally not supplied by users.
+ */
+export interface CollectionItemIdentity {
+    readonly [collectionItemIdentityBrand]: true;
+}
+
 export interface CollectionChange<T> {
     operation: 'replace' | 'swap' | 'add' | 'remove' | 'merge';
     operationDetailed: DetailedOperations;
@@ -926,6 +1018,14 @@ export interface CollectionChange<T> {
     items: T[];
     newState: T[];
     previousState?: T[];
+    /** @internal Identities corresponding to `items`. */
+    readonly itemIdentities?: readonly CollectionItemIdentity[];
+    /** @internal Identity of `target` for replace operations. */
+    readonly targetIdentity?: CollectionItemIdentity;
+    /** @internal Identities corresponding to `newState`. */
+    readonly newStateIdentities?: readonly CollectionItemIdentity[];
+    /** @internal Identities corresponding to `previousState`. */
+    readonly previousStateIdentities?: readonly CollectionItemIdentity[];
 }
 
 export interface ReadOnlyArrayDataSourceView<T> extends ReadOnlyArrayDataSource<T> {
@@ -942,6 +1042,8 @@ export interface ReadOnlyArrayDataSource<T> {
     awaitNextUpdate(cancellationToken?: CancellationToken): Promise<CollectionChange<T>>;
     length: ReadOnlyDataSource<number>;
     getData(): ReadonlyArray<T>;
+    /** @internal Used by renderers and derived sources to preserve occurrence identity. */
+    getItemIdentities(): readonly CollectionItemIdentity[];
     get(index: number): T;
     pickAt(index: number, cancellationToken?: CancellationToken): ReadOnlyDataSource<T>;
     limit(count: number, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<T>;
@@ -1005,6 +1107,8 @@ export interface FetchStreamConfig {
 
 export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     protected data: T[];
+    protected itemIdentities: CollectionItemIdentity[];
+    private nextIdentityHint?: readonly CollectionItemIdentity[];
     protected updateEvent: EventEmitter<CollectionChange<T>>;
     private lengthSource: DataSource<number>;
     private name: string;
@@ -1018,8 +1122,24 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         } else {
             this.data = [];
         }
+        this.itemIdentities = this.data.map(() => createCollectionItemIdentity());
         this.lengthSource = new DataSource(this.data.length, this.name + '.length');
         this.updateEvent = new EventEmitter();
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(this, {
+                kind: 'array-data-source',
+                name,
+                getValue: (target) => target.getData()
+            });
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            this.updateEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count), false);
+            this.onItemsAdded.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, 'items-added'), false);
+            this.onItemsRemoved.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, 'items-removed'), false);
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            linkAurumDevtoolsNodes(this, this.lengthSource, { kind: 'derived', label: 'length' });
+        }
     }
 
     *[Symbol.iterator](): IterableIterator<T> {
@@ -1039,6 +1159,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         }
 
         const result = new DataSource<T>(this.data[index], this.name + `[${index}]`);
+        linkAurumDevtoolsNodes(this, result, { kind: 'derived', label: `index ${index}` }, cancellationToken);
         this.listen((change) => {
             if (result.value !== change.newState[index]) {
                 result.update(change.newState[index]);
@@ -1050,6 +1171,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public toSetDataSource(cancellationToken: CancellationToken): ReadOnlySetDataSource<T> {
         const result = new SetDataSource<T>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'toSetDataSource' }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             switch (change.operation) {
@@ -1159,6 +1281,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             if (Array.isArray(item)) {
                 result.appendArray(item as T[]);
             } else if (item instanceof DataSource) {
+                linkAurumDevtoolsNodes(item, result, { kind: 'combine', label: `source ${i}` }, cancellationToken);
                 let index = i;
                 item.transform(
                     dsDiff(),
@@ -1208,6 +1331,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
                     cancellationToken
                 );
             } else {
+                linkAurumDevtoolsNodes(item as object, result, { kind: 'combine', label: `source ${i}` }, cancellationToken);
                 result.appendArray((sources[i] as ArrayDataSource<T>).data ?? []);
                 let index = i;
                 (sources[i] as ArrayDataSource<T>).listen((change) => {
@@ -1269,6 +1393,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         cancellation: CancellationToken
     ): ReadOnlyArrayDataSource<T> {
         const result = new ArrayDataSource<T>();
+        linkAurumDevtoolsNodes(arrayDataSource as object, result, { kind: 'transform', label: 'unwrap sources' }, cancellation);
         const session = new WeakMap<any, { token: CancellationToken; references: number }>();
         arrayDataSource.listenAndRepeat((change: CollectionChange<any>) => {
             const { operationDetailed, index, index2, count, items, previousState, newState, target } = change;
@@ -1337,7 +1462,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return result;
 
         function listenToItem(item: ReadOnlyDataSource<T> | T | DataSource<T> | GenericDataSource<T>) {
-            if (typeof item !== 'object' || !('listen' in item)) {
+            if (item === null || typeof item !== 'object' || !('listen' in item)) {
                 return;
             }
 
@@ -1350,6 +1475,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             const itemToken = new CancellationToken();
             session.set(item, { token: itemToken, references: 1 });
             cancellation.addCancellable(itemToken);
+            linkAurumDevtoolsNodes(item, result, { kind: 'dynamic-item' }, itemToken);
             item.listen((value) => {
                 const sourceData = arrayDataSource.getData();
                 for (let index = 0; index < sourceData.length; index++) {
@@ -1420,6 +1546,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public pipe(target: ArrayDataSource<T>, cancellation?: CancellationToken): void {
+        linkAurumDevtoolsNodes(this, target, { kind: 'pipe' }, cancellation);
         this.listenAndRepeat((c) => target.applyCollectionChange(c), cancellation);
     }
 
@@ -1437,14 +1564,16 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
      */
     public listenAndRepeat(callback: Callback<CollectionChange<T>>, cancellationToken?: CancellationToken): void {
         if (this.data.length) {
-            callback({
+            const change: CollectionChange<T> = {
                 operation: 'add',
                 operationDetailed: 'append',
                 index: 0,
                 items: this.data,
                 newState: this.data,
                 count: this.data.length
-            });
+            };
+            attachCollectionIdentities(change, this.itemIdentities, undefined, this.itemIdentities, undefined);
+            callback(change);
         }
         this.listen(callback, cancellationToken);
     }
@@ -1536,6 +1665,15 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         return this.data;
     }
 
+    public getItemIdentities(): readonly CollectionItemIdentity[] {
+        return this.itemIdentities;
+    }
+
+    /** @internal Allows derived sources to retain parent occurrence identity. */
+    protected inheritNextIdentities(identities: readonly CollectionItemIdentity[] | undefined): void {
+        this.nextIdentityHint = identities;
+    }
+
     public get(index: number): T {
         return this.data[index];
     }
@@ -1618,6 +1756,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public appendArray(items: T[]) {
         if (!items || items.length === 0) {
+            this.nextIdentityHint = undefined;
             return;
         }
 
@@ -1659,6 +1798,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public insertAt(index: number, ...items: T[]): void {
         if (items.length === 0) {
+            this.nextIdentityHint = undefined;
             return;
         }
 
@@ -1714,15 +1854,22 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             this.clear();
             return;
         }
-        if (newData === this.data) {
+        const identityChanged =
+            this.nextIdentityHint !== undefined &&
+            (this.nextIdentityHint.length !== this.itemIdentities.length ||
+                this.nextIdentityHint.some((identity, index) => identity !== this.itemIdentities[index]));
+        if (newData === this.data && !identityChanged) {
+            this.nextIdentityHint = undefined;
             return;
         }
 
-        if (newData.every((v, i) => v === this.data[i])) {
+        if (!identityChanged && newData.every((v, i) => v === this.data[i])) {
             if (this.data.length > newData.length) {
+                this.nextIdentityHint = undefined;
                 this.removeRight(this.data.length - newData.length);
                 return;
             } else {
+                this.nextIdentityHint = undefined;
                 return;
             }
         }
@@ -1875,12 +2022,14 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): T extends ReadOnlyArrayDataSource<infer U> ? ReadOnlyArrayDataSource<U> : ReadOnlyArrayDataSource<FlatArray<T, 1>> {
         const view = new FlattenedArrayView<any>(this as any, 1, cancellationToken, this.name + '.flat()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'flat' }, cancellationToken);
 
         return view as any;
     }
 
     public reduce<R>(reducer: (acc: R, value: T) => R, initial?: R, cancellationToken?: CancellationToken): DataSource<R> {
         const result = new DataSource<R>(initial);
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'reduce' }, cancellationToken);
 
         this.listenAndRepeat((change: CollectionChange<T>) => {
             switch (change.operationDetailed) {
@@ -1916,6 +2065,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public reverse(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSourceView<T> {
         const view = new ReversedArrayView<T>(this, cancellationToken, this.name + '.reverse()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'reverse' }, cancellationToken);
 
         return view;
     }
@@ -1941,8 +2091,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): ReadOnlyArrayDataSourceView<T> {
         const view = new SortedArrayView(this, comparator, cancellationToken, this.name + '.sort()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'sort' }, cancellationToken);
 
         dependencies.forEach((dep) => {
+            linkAurumDevtoolsNodes(dep as object, view, { kind: 'dependency', label: 'sort dependency' }, cancellationToken);
             dep.listen(() => view.refresh(), cancellationToken);
         });
 
@@ -1967,7 +2119,11 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
             end = this.length;
         }
 
-        return new SlicedArrayView(this, start, end, cancellationToken, this.name + '.slice()', config);
+        const view = new SlicedArrayView(this, start, end, cancellationToken, this.name + '.slice()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'slice' }, cancellationToken);
+        linkAurumDevtoolsNodes(start, view, { kind: 'dependency', label: 'slice start' }, cancellationToken);
+        linkAurumDevtoolsNodes(end, view, { kind: 'dependency', label: 'slice end' }, cancellationToken);
+        return view;
     }
 
     public map<D>(
@@ -1977,8 +2133,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): ReadOnlyArrayDataSource<D> {
         const view = new MappedArrayView<T, D>(this, mapper, cancellationToken, this.name + '.map()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'map' }, cancellationToken);
 
         dependencies.forEach((dep) => {
+            linkAurumDevtoolsNodes(dep as object, view, { kind: 'dependency', label: 'map dependency' }, cancellationToken);
             dep.listen(() => view.refresh(), cancellationToken);
         });
 
@@ -1986,11 +2144,14 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     public unique(cancellationToken?: CancellationToken, config?: ViewConfig): ReadOnlyArrayDataSource<T> {
-        return new UniqueArrayView(this, cancellationToken, this.name + '.unique()', config);
+        const view = new UniqueArrayView(this, cancellationToken, this.name + '.unique()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'unique' }, cancellationToken);
+        return view;
     }
 
     public indexBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], T> {
         const view = new MapDataSource<T[K], T>();
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: `indexBy(${String(key)})` }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2034,6 +2195,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public indexByProvider<K>(provider: (item: T) => K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<K, T> {
         const view = new MapDataSource<K, T>();
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'indexByProvider' }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             if (!config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2077,6 +2239,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public groupBy<K extends keyof T>(key: K, cancellationToken?: CancellationToken, config?: ViewConfig): MapDataSource<T[K], ReadOnlyArrayDataSource<T>> {
         const view = new MapDataSource<T[K], ArrayDataSource<T>>();
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: `groupBy(${String(key)})` }, cancellationToken);
 
         function handleRemove(item: T) {
             const list = view.get(item[key]);
@@ -2139,6 +2302,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): MapDataSource<K, ReadOnlyArrayDataSource<T>> {
         const view = new MapDataSource<K, ArrayDataSource<T>>();
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'groupByProvider' }, cancellationToken);
 
         function handleRemove(item: T) {
             const list = view.get(provider(item));
@@ -2201,6 +2365,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): MapDataSource<K, ReadOnlyArrayDataSource<T>> {
         const view = new MapDataSource<K, ArrayDataSource<T>>();
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'groupByMultiProvider' }, cancellationToken);
 
         function handleRemove(item: T) {
             for (const i of provider(item)) {
@@ -2272,8 +2437,10 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
         config?: ViewConfig
     ): ReadOnlyArrayDataSourceView<T> {
         const view = new FilteredArrayView(this, callback, cancellationToken, this.name + '.filter()', config);
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'filter' }, cancellationToken);
 
         dependencies.forEach((dep) => {
+            linkAurumDevtoolsNodes(dep as object, view, { kind: 'dependency', label: 'filter dependency' }, cancellationToken);
             dep.listen(() => view.refresh(), cancellationToken);
         });
 
@@ -2282,6 +2449,7 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
 
     public limit(count: number, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<T> {
         const view = new LimitedArrayView(this, count, cancellationToken, this.name + '.limit()');
+        linkAurumDevtoolsNodes(this, view, { kind: 'transform', label: 'limit' }, cancellationToken);
 
         return view;
     }
@@ -2291,8 +2459,102 @@ export class ArrayDataSource<T> implements ReadOnlyArrayDataSource<T> {
     }
 
     protected update(change: CollectionChange<T>) {
+        const identityHint = this.nextIdentityHint;
+        this.nextIdentityHint = undefined;
+        let changedIdentities: CollectionItemIdentity[];
+        let previousIdentities: CollectionItemIdentity[];
+        let targetIdentity: CollectionItemIdentity;
+        switch (change.operationDetailed) {
+            case 'append':
+            case 'prepend':
+            case 'insert':
+                changedIdentities =
+                    identityHint?.length === change.items.length
+                        ? identityHint.slice()
+                        : change.items.map(() => createCollectionItemIdentity());
+                this.itemIdentities.splice(change.index, 0, ...changedIdentities);
+                break;
+            case 'remove':
+            case 'removeLeft':
+            case 'removeRight':
+            case 'clear':
+                changedIdentities = this.itemIdentities.splice(change.index, change.count ?? change.items.length);
+                break;
+            case 'replace':
+                targetIdentity = this.itemIdentities[change.index];
+                changedIdentities = identityHint?.length === 1 ? identityHint.slice() : [createCollectionItemIdentity()];
+                this.itemIdentities.splice(change.index, 1, changedIdentities[0]);
+                break;
+            case 'swap': {
+                const firstIdentity = this.itemIdentities[change.index];
+                const secondIdentity = this.itemIdentities[change.index2];
+                this.itemIdentities[change.index] = secondIdentity;
+                this.itemIdentities[change.index2] = firstIdentity;
+                changedIdentities = [firstIdentity, secondIdentity];
+                break;
+            }
+            case 'merge':
+                previousIdentities = this.itemIdentities.slice();
+                this.itemIdentities =
+                    identityHint?.length === change.newState.length
+                        ? identityHint.slice()
+                        : reconcileCollectionIdentities(change.previousState ?? [], previousIdentities, change.newState);
+                changedIdentities = this.itemIdentities;
+                break;
+        }
+        attachCollectionIdentities(change, changedIdentities, targetIdentity, this.itemIdentities, previousIdentities);
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            emitAurumDevtoolsUpdate(this, {
+                kind: change.operationDetailed,
+                value: this.data,
+                details: { operation: change.operation, index: change.index, index2: change.index2, count: change.count }
+            });
+        }
         this.updateEvent.fire(change);
     }
+}
+
+function createCollectionItemIdentity(): CollectionItemIdentity {
+    return {} as CollectionItemIdentity;
+}
+
+function reconcileCollectionIdentities<T>(
+    previousState: readonly T[],
+    previousIdentities: readonly CollectionItemIdentity[],
+    newState: readonly T[]
+): CollectionItemIdentity[] {
+    const identitiesByValue = new Map<T, CollectionItemIdentity[]>();
+    for (let index = 0; index < previousState.length; index++) {
+        const identities = identitiesByValue.get(previousState[index]);
+        if (identities) identities.push(previousIdentities[index]);
+        else identitiesByValue.set(previousState[index], [previousIdentities[index]]);
+    }
+    const offsets = new Map<T, number>();
+    return newState.map((item) => {
+        const identities = identitiesByValue.get(item);
+        const offset = offsets.get(item) ?? 0;
+        if (identities && offset < identities.length) {
+            offsets.set(item, offset + 1);
+            return identities[offset];
+        }
+        return createCollectionItemIdentity();
+    });
+}
+
+function attachCollectionIdentities<T>(
+    change: CollectionChange<T>,
+    itemIdentities: readonly CollectionItemIdentity[] | undefined,
+    targetIdentity: CollectionItemIdentity | undefined,
+    newStateIdentities: readonly CollectionItemIdentity[],
+    previousStateIdentities: readonly CollectionItemIdentity[] | undefined
+): void {
+    // Keep renderer metadata out of JSON payloads used by remote sources.
+    Object.defineProperties(change, {
+        itemIdentities: { value: itemIdentities, enumerable: false },
+        targetIdentity: { value: targetIdentity, enumerable: false },
+        newStateIdentities: { value: newStateIdentities, enumerable: false },
+        previousStateIdentities: { value: previousStateIdentities, enumerable: false }
+    });
 }
 
 export interface ViewConfig {
@@ -2303,6 +2565,7 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
     private parent: ArrayDataSource<T[]>;
     private depth: number;
     private sessionToken: CancellationToken;
+    private derivedIdentities = new Map<CollectionItemIdentity, CollectionItemIdentity[]>();
 
     constructor(
         parent: ArrayDataSource<T[]>,
@@ -2312,6 +2575,7 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
         config?: ViewConfig
     ) {
         super([], name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'flat', depth } });
         this.depth = depth;
         this.parent = parent;
         this.refresh();
@@ -2352,11 +2616,37 @@ export class FlattenedArrayView<T> extends ArrayDataSource<T> {
                 this.sessionToken = new CancellationToken();
                 const combination = ArrayDataSource.fromMultipleSources(data as any as ArrayDataSource<T>[]);
                 combination.listen((change) => {
+                    this.inheritNextIdentities(
+                        change.operationDetailed === 'merge' ? change.newStateIdentities : change.itemIdentities
+                    );
                     this.applyCollectionChange(change);
                 }, this.sessionToken);
+                this.inheritNextIdentities(combination.getItemIdentities());
                 this.merge(combination.getData() as any);
             } else {
-                this.merge(data.flat(this.depth) as T[]);
+                const flattened: T[] = [];
+                const identities: CollectionItemIdentity[] = [];
+                const parentIdentities = this.parent.getItemIdentities();
+                const retainedParents = new Set(parentIdentities);
+                for (let index = 0; index < data.length; index++) {
+                    const values = Array.isArray(data[index])
+                        ? (data[index].flat(Math.max(0, this.depth - 1)) as T[])
+                        : ([data[index]] as T[]);
+                    let childIdentities = this.derivedIdentities.get(parentIdentities[index]);
+                    if (!childIdentities) {
+                        childIdentities = [];
+                        this.derivedIdentities.set(parentIdentities[index], childIdentities);
+                    }
+                    while (childIdentities.length < values.length) childIdentities.push(createCollectionItemIdentity());
+                    childIdentities.length = values.length;
+                    flattened.push(...values);
+                    identities.push(...childIdentities);
+                }
+                for (const identity of this.derivedIdentities.keys()) {
+                    if (!retainedParents.has(identity)) this.derivedIdentities.delete(identity);
+                }
+                this.inheritNextIdentities(identities);
+                this.merge(flattened);
             }
         }
     }
@@ -2375,8 +2665,10 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
     ) {
         const initial = parent.getData().map(mapper);
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'map' } });
         this.parent = parent;
         this.mapper = mapper;
+        this.itemIdentities = parent.getItemIdentities().slice();
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2397,18 +2689,22 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
                     this.clear();
                     break;
                 case 'prepend':
+                    this.inheritNextIdentities(change.itemIdentities);
                     this.unshift(...change.items.map(this.mapper));
                     break;
                 case 'append':
+                    this.inheritNextIdentities(change.itemIdentities);
                     this.appendArray(change.items.map(this.mapper));
                     break;
                 case 'insert':
+                    this.inheritNextIdentities(change.itemIdentities);
                     this.insertAt(change.index, ...change.items.map(this.mapper));
                     break;
                 case 'swap':
                     this.swap(change.index, change.index2);
                     break;
                 case 'replace':
+                    this.inheritNextIdentities(change.itemIdentities);
                     this.set(change.index, this.mapper(change.items[0]));
                     break;
                 case 'merge':
@@ -2439,6 +2735,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
                         this.data.length = change.newState.length;
                     }
                     this.length.update(this.data.length);
+                    this.inheritNextIdentities(change.newStateIdentities);
                     this.update({
                         operation: 'merge',
                         operationDetailed: 'merge',
@@ -2455,6 +2752,7 @@ export class MappedArrayView<D, T> extends ArrayDataSource<T> {
     }
 
     public refresh() {
+        this.inheritNextIdentities(this.parent.getItemIdentities());
         this.merge(this.parent.getData().map(this.mapper));
     }
 }
@@ -2465,7 +2763,9 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
     constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string, config?: ViewConfig) {
         const initial = parent.getData().slice().reverse();
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'reverse' } });
         this.parent = parent;
+        this.itemIdentities = parent.getItemIdentities().slice().reverse();
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2480,29 +2780,33 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
                     this.removeLeft(change.count);
                     break;
                 case 'remove':
-                    for (const item of change.items) {
-                        this.remove(item);
-                    }
+                    this.removeAt(change.newState.length - change.index, change.count);
                     break;
                 case 'clear':
                     this.clear();
                     break;
                 case 'prepend':
-                    this.appendArray(change.items.reverse());
+                    this.inheritNextIdentities(change.itemIdentities?.slice().reverse());
+                    this.appendArray(change.items.slice().reverse());
                     break;
                 case 'append':
-                    this.unshift(...change.items.reverse());
+                    this.inheritNextIdentities(change.itemIdentities?.slice().reverse());
+                    this.unshift(...change.items.slice().reverse());
                     break;
                 case 'insert':
+                    this.inheritNextIdentities(change.newStateIdentities?.slice().reverse());
                     this.merge(change.newState.slice().reverse());
                     break;
                 case 'merge':
+                    this.inheritNextIdentities(change.newStateIdentities?.slice().reverse());
                     this.merge(change.items.slice().reverse());
                     break;
                 case 'swap':
+                    this.inheritNextIdentities(change.newStateIdentities?.slice().reverse());
                     this.merge(change.newState.slice().reverse());
                     break;
                 case 'replace':
+                    this.inheritNextIdentities(change.newStateIdentities?.slice().reverse());
                     this.merge(change.newState.slice().reverse());
                     break;
             }
@@ -2510,6 +2814,7 @@ export class ReversedArrayView<T> extends ArrayDataSource<T> {
     }
 
     public refresh() {
+        this.inheritNextIdentities(this.parent.getItemIdentities().slice().reverse());
         this.merge(this.parent.getData().slice().reverse());
     }
 }
@@ -2525,9 +2830,16 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
     ) {
         const initial = parent.getData().slice(start.value, end.value);
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'slice' } });
+        this.itemIdentities = parent.getItemIdentities().slice(start.value, end.value);
 
-        start.listen(() => this.merge(parent.getData().slice(start.value, end.value)), cancellationToken);
-        end.listen(() => this.merge(parent.getData().slice(start.value, end.value)), cancellationToken);
+        const synchronize = () => {
+            this.inheritNextIdentities(parent.getItemIdentities().slice(start.value, end.value));
+            this.merge(parent.getData().slice(start.value, end.value));
+        };
+
+        start.listen(synchronize, cancellationToken);
+        end.listen(synchronize, cancellationToken);
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2544,7 +2856,7 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
                 case 'swap':
                 case 'replace':
                 case 'merge':
-                    this.merge(parent.getData().slice(start.value, end.value));
+                    synchronize();
                     break;
                 case 'clear':
                     this.clear();
@@ -2558,7 +2870,18 @@ export class UniqueArrayView<T> extends ArrayDataSource<T> {
     constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string, config?: ViewConfig) {
         const initial = Array.from(new Set(parent.getData()));
         super(initial, name);
-        let filteredItems;
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'unique' } });
+        let filteredItems: T[];
+        const synchronizeIdentities = () => {
+            const parentIdentities = parent.getItemIdentities();
+            const identities = this.data.map((value) => {
+                const index = parent.getData().findIndex((item) => item === value || Object.is(item, value));
+                return parentIdentities[index];
+            });
+            this.inheritNextIdentities(identities);
+            this.merge(this.data.slice());
+        };
+        synchronizeIdentities();
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
@@ -2570,46 +2893,43 @@ export class UniqueArrayView<T> extends ArrayDataSource<T> {
                 case 'removeRight':
                 case 'remove':
                     for (const item of change.items) {
-                        if (!change.newState.includes(item)) {
-                            this.remove(item);
-                        }
+                        if (!change.newState.includes(item)) this.remove(item);
                     }
                     break;
                 case 'clear':
                     this.clear();
-                    break;
+                    return;
                 case 'prepend':
                     filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
-                    this.unshift(...filteredItems);
+                    if (filteredItems.length > 0) this.unshift(...filteredItems);
                     break;
                 case 'append':
-                    filteredItems = change.items.filter((e) => !this.data.includes(e));
-                    this.appendArray(filteredItems);
+                    filteredItems = change.items.filter((item) => !this.data.includes(item));
+                    if (filteredItems.length > 0) this.appendArray(filteredItems);
                     break;
                 case 'insert':
                     filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
-                    this.insertAt(Math.min(change.index, this.data.length), ...filteredItems);
+                    if (filteredItems.length > 0) this.insertAt(Math.min(change.index, this.data.length), ...filteredItems);
                     break;
                 case 'merge':
                     this.merge(Array.from(new Set(parent.getData())));
                     break;
                 case 'swap':
                     break;
-                case 'replace':
+                case 'replace': {
                     const targetStillExists = parent.includes(change.target);
                     const replacementExists = this.data.includes(change.items[0]);
                     if (!targetStillExists) {
                         const targetIndex = this.indexOf(change.target);
-                        if (replacementExists) {
-                            this.removeAt(targetIndex);
-                        } else {
-                            this.set(targetIndex, change.items[0]);
-                        }
+                        if (replacementExists) this.removeAt(targetIndex);
+                        else this.set(targetIndex, change.items[0]);
                     } else if (!replacementExists) {
                         this.insertAt(Math.min(change.index, this.data.length), change.items[0]);
                     }
                     break;
+                }
             }
+            synchronizeIdentities();
         }, cancellationToken);
     }
 }
@@ -2627,58 +2947,36 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
     ) {
         const initial = parent.getData().slice().sort(comparator);
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'sort' } });
         this.parent = parent;
         this.comparator = comparator;
+        const synchronize = () => {
+            const pairs = parent
+                .getData()
+                .map((value, index) => ({ value, identity: parent.getItemIdentities()[index] }))
+                .sort((left, right) => this.comparator(left.value, right.value));
+            this.inheritNextIdentities(pairs.map((pair) => pair.identity));
+            this.merge(pairs.map((pair) => pair.value));
+        };
+        synchronize();
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
                 return;
             }
 
-            switch (change.operationDetailed) {
-                case 'removeLeft':
-                case 'removeRight':
-                case 'remove':
-                    for (const item of change.items) {
-                        this.remove(item);
-                    }
-                    break;
-                case 'clear':
-                    this.clear();
-                    break;
-                case 'prepend':
-                    this.unshift(...change.items);
-                    this.data.sort(this.comparator);
-                    break;
-                case 'append':
-                    this.appendSorted(change.items);
-                    break;
-                case 'insert':
-                    this.appendSorted(change.items);
-                    break;
-                case 'merge':
-                    this.merge(change.items.slice().sort(this.comparator));
-                    break;
-                case 'swap':
-                    break;
-                case 'replace':
-                    this.remove(change.target);
-                    this.appendSorted(change.items);
-                    break;
-            }
+            if (change.operationDetailed === 'clear') this.clear();
+            else synchronize();
         }, cancellationToken);
     }
 
-    private appendSorted(items: T[]) {
-        if (items.length === 1 && this.data.length === 0) {
-            this.push(items[0]);
-        } else {
-            this.merge(this.data.concat(items).sort(this.comparator));
-        }
-    }
-
     public refresh() {
-        this.merge(this.parent.getData().slice().sort(this.comparator));
+        const pairs = this.parent
+            .getData()
+            .map((value, index) => ({ value, identity: this.parent.getItemIdentities()[index] }))
+            .sort((left, right) => this.comparator(left.value, right.value));
+        this.inheritNextIdentities(pairs.map((pair) => pair.identity));
+        this.merge(pairs.map((pair) => pair.value));
     }
 }
 
@@ -2698,9 +2996,27 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
         filter = filter ?? (() => true);
         const initial = (parent as FilteredArrayView<T>).data.filter(filter);
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'filter' } });
 
         this.parent = parent;
         this.viewFilter = filter;
+        this.itemIdentities = parent
+            .getItemIdentities()
+            .filter((_identity, index) => this.viewFilter(parent.getData()[index]));
+
+        const synchronize = () => {
+            const values: T[] = [];
+            const identities: CollectionItemIdentity[] = [];
+            const parentIdentities = this.parent.getItemIdentities();
+            this.parent.getData().forEach((item, index) => {
+                if (this.viewFilter(item)) {
+                    values.push(item);
+                    identities.push(parentIdentities[index]);
+                }
+            });
+            this.inheritNextIdentities(identities);
+            this.merge(values);
+        };
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
                 return;
@@ -2720,32 +3036,44 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
                     break;
                 case 'prepend':
                     filteredItems = change.items.filter(this.viewFilter);
+                    if (filteredItems.length === 0) break;
+                    this.inheritNextIdentities(
+                        change.itemIdentities?.filter((_identity, index) => this.viewFilter(change.items[index]))
+                    );
                     this.unshift(...filteredItems);
                     break;
                 case 'append':
                     filteredItems = change.items.filter(this.viewFilter);
+                    if (filteredItems.length === 0) break;
+                    this.inheritNextIdentities(
+                        change.itemIdentities?.filter((_identity, index) => this.viewFilter(change.items[index]))
+                    );
                     this.appendArray(filteredItems);
                     break;
                 case 'insert':
                     filteredItems = change.items.filter(this.viewFilter);
+                    if (filteredItems.length === 0) break;
                     const insertIndex = change.newState.slice(0, change.index).filter(this.viewFilter).length;
+                    this.inheritNextIdentities(
+                        change.itemIdentities?.filter((_identity, index) => this.viewFilter(change.items[index]))
+                    );
                     this.insertAt(insertIndex, ...filteredItems);
                     break;
                 case 'merge':
-                    this.merge(change.items.filter(this.viewFilter));
-                    break;
                 case 'swap':
-                    this.merge(change.newState.filter(this.viewFilter));
+                    synchronize();
                     break;
                 case 'replace':
                     const index = change.newState.slice(0, change.index).filter(this.viewFilter).length;
                     const acceptOld = this.viewFilter(change.target);
                     const acceptNew = this.viewFilter(change.items[0]);
                     if (acceptOld && acceptNew) {
+                        this.inheritNextIdentities(change.itemIdentities);
                         this.set(index, change.items[0]);
                     } else if (acceptOld) {
                         this.removeAt(index);
                     } else if (acceptNew) {
+                        this.inheritNextIdentities(change.itemIdentities);
                         this.insertAt(index, change.items[0]);
                     }
                     break;
@@ -2771,7 +3099,17 @@ export class FilteredArrayView<T> extends ArrayDataSource<T> {
      * Recalculates the filter. Only needed if your filter function isn't pure and you know the result would be different if run again compared to before
      */
     public refresh() {
-        this.merge((this.parent as FilteredArrayView<T>).data.filter(this.viewFilter));
+        const values: T[] = [];
+        const identities: CollectionItemIdentity[] = [];
+        const parentIdentities = this.parent.getItemIdentities();
+        this.parent.getData().forEach((item, index) => {
+            if (this.viewFilter(item)) {
+                values.push(item);
+                identities.push(parentIdentities[index]);
+            }
+        });
+        this.inheritNextIdentities(identities);
+        this.merge(values);
     }
 }
 
@@ -2782,58 +3120,32 @@ export class LimitedArrayView<T> extends ArrayDataSource<T> {
         }
         const initial = (parent as LimitedArrayView<T>).data.slice(0, sizeLimit);
         super(initial, name);
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'limit', sizeLimit } });
+        this.itemIdentities = parent.getItemIdentities().slice(0, sizeLimit);
+
+        const synchronize = () => {
+            this.inheritNextIdentities(parent.getItemIdentities().slice(0, sizeLimit));
+            this.merge(parent.getData().slice(0, sizeLimit));
+        };
 
         parent.listen((change) => {
-            switch (change.operationDetailed) {
-                case 'clear':
-                    this.clear();
-                    break;
-                case 'removeLeft':
-                case 'removeRight':
-                case 'remove':
-                    if (change.index < sizeLimit) {
-                        this.removeRange(change.index, change.index + Math.min(sizeLimit, change.count));
-
-                        if (this.data.length < sizeLimit) {
-                            this.appendArray(change.newState.slice(this.data.length, sizeLimit));
-                        }
-                    }
-                    break;
-                case 'prepend':
-                    this.removeRight(Math.min(change.count, sizeLimit));
-                    this.unshift(...change.items.slice(0, sizeLimit));
-                    break;
-
-                case 'append':
-                    if (this.data.length < sizeLimit) {
-                        this.appendArray(change.items.slice(0, sizeLimit - this.data.length));
-                    }
-                    break;
-
-                case 'insert':
-                    if (change.index < sizeLimit) {
-                        this.removeRight(Math.min(change.count, sizeLimit - change.index));
-                        this.insertAt(change.index, ...change.items.slice(0, sizeLimit - change.index));
-                    }
-                    break;
-                case 'merge':
-                case 'swap':
-                    this.merge(change.newState.slice(0, sizeLimit));
-                    break;
-                case 'replace':
-                    if (change.index < sizeLimit) {
-                        this.set(change.index, change.items[0]);
-                    }
-                    break;
-            }
+            if (change.operationDetailed === 'clear') this.clear();
+            else synchronize();
         }, cancellationToken);
     }
 }
 
-export function processTransform<I, O>(operations: DataSourceOperator<any, any>[], result: DataSource<O>, startIndex = 0): (input: I) => Promise<void> {
+export function processTransform<I, O>(
+    operations: DataSourceOperator<any, any>[],
+    result: DataSource<O>,
+    cancellationToken: CancellationToken = CancellationToken.forever,
+    startIndex = 0
+): (input: I) => Promise<void> {
     return async (v: any) => {
+        if (cancellationToken.isCancelled) return;
         try {
             for (let i = startIndex; i < operations.length; i++) {
+                if (cancellationToken.isCancelled) return;
                 const operation = operations[i];
                 switch (operation.operationType) {
                     case OperationType.NOOP:
@@ -2841,9 +3153,9 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
                         break;
                     case OperationType.SPREAD:
                         // One to many operation
-                        v = (operation as DataSourceSpreadOperator<any, any[]>).operation(v);
+                        v = (operation as DataSourceSpreadOperator<any, any>).operation(v);
                         for (const item of v) {
-                            await processTransform(operations, result, i + 1)(item);
+                            await processTransform(operations, result, cancellationToken, i + 1)(item);
                         }
                         return;
                     case OperationType.MAP:
@@ -2851,7 +3163,7 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
                         break;
                     case OperationType.MAP_DELAY_FILTER:
                         const tmp = await (operation as DataSourceMapDelayFilterOperator<any, any>).operation(v);
-                        if (tmp.cancelled) {
+                        if (tmp.cancelled || cancellationToken.isCancelled) {
                             return;
                         } else {
                             v = await tmp.item;
@@ -2860,6 +3172,7 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
                     case OperationType.DELAY:
                     case OperationType.MAP_DELAY:
                         v = await (operation as DataSourceMapOperator<any, any>).operation(v);
+                        if (cancellationToken.isCancelled) return;
                         break;
                     case OperationType.DELAY_FILTER:
                         if (!(await (operation as DataSourceDelayFilterOperator<any>).operation(v))) {
@@ -2873,9 +3186,9 @@ export function processTransform<I, O>(operations: DataSourceOperator<any, any>[
                         break;
                 }
             }
-            result.update(v);
+            if (!cancellationToken.isCancelled) result.update(v);
         } catch (e) {
-            result.emitError(e);
+            if (!cancellationToken.isCancelled) result.emitError(e);
         }
     };
 }
@@ -2897,6 +3210,12 @@ export class MapDataSource<K, V> {
 
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(this, { kind: 'map-data-source', getValue: (target) => target.toMap() });
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            this.updateEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count), false);
+        }
     }
 
     public cancelAll(): void {
@@ -2908,6 +3227,7 @@ export class MapDataSource<K, V> {
     public static fromMultipleMaps<K, V>(maps: MapDataSource<K, V>[], cancellationToken?: CancellationToken): MapDataSource<K, V> {
         const result = new MapDataSource<K, V>();
         for (const map of maps) {
+            linkAurumDevtoolsNodes(map, result, { kind: 'combine' }, cancellationToken);
             result.assign(map);
             map.listen((change) => {
                 let valueSource: MapDataSource<K, V>;
@@ -2934,6 +3254,7 @@ export class MapDataSource<K, V> {
     }
 
     public pipe(target: MapDataSource<K, V>, cancellation?: CancellationToken): void {
+        linkAurumDevtoolsNodes(this, target, { kind: 'pipe' }, cancellation);
         this.listenAndRepeat((c) => target.applyMapChange(c), cancellation);
     }
 
@@ -2968,6 +3289,7 @@ export class MapDataSource<K, V> {
      */
     public pick(key: K, cancellationToken?: CancellationToken): DataSource<V> {
         const subDataSource: DataSource<V> = new DataSource(this.data.get(key));
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'derived', label: `key ${String(key)}` }, cancellationToken);
 
         this.listenOnKey(
             key,
@@ -3005,6 +3327,7 @@ export class MapDataSource<K, V> {
 
     public map<D>(mapper: (key: K, value: V, valueLifetimeToken: CancellationToken) => D, cancellation: CancellationToken): MapDataSource<K, D> {
         const result = new MapDataSource<K, D>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'map' }, cancellation);
         const lifeTimeMap = new Map<K, CancellationToken>();
         this.listenAndRepeat((change) => {
             if (change.deleted) {
@@ -3026,6 +3349,7 @@ export class MapDataSource<K, V> {
 
     public toKeysArrayDataSource(cancellation: CancellationToken): ArrayDataSource<K> {
         const result = new ArrayDataSource<K>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'keys' }, cancellation);
         this.listenAndRepeat((change) => {
             if (change.deleted) {
                 result.remove(change.key);
@@ -3042,6 +3366,7 @@ export class MapDataSource<K, V> {
     public toArrayDataSource(cancellation: CancellationToken): ArrayDataSource<V> {
         const stateMap: Map<K, V> = new Map<K, V>();
         const result = new ArrayDataSource<V>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'values' }, cancellation);
         this.listenAndRepeat((change) => {
             if (change.deleted && stateMap.has(change.key)) {
                 const item = stateMap.get(change.key);
@@ -3064,6 +3389,7 @@ export class MapDataSource<K, V> {
     public toEntriesArrayDataSource(cancellation: CancellationToken): ArrayDataSource<[K, V]> {
         const stateMap: Map<K, V> = new Map<K, V>();
         const result = new ArrayDataSource<[K, V]>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'entries' }, cancellation);
         this.listenAndRepeat((change) => {
             if (change.deleted && stateMap.has(change.key)) {
                 const index = result.findIndex((v) => v[0] === change.key);
@@ -3108,7 +3434,11 @@ export class MapDataSource<K, V> {
      */
     public listenOnKey(key: K, callback: Callback<MapChange<K, V>>, cancellationToken?: CancellationToken): void {
         if (!this.updateEventOnKey.has(key)) {
-            this.updateEventOnKey.set(key, new EventEmitter());
+            const event = new EventEmitter<MapChange<K, V>>();
+            if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+                event.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, `key:${String(key)}`), false);
+            }
+            this.updateEventOnKey.set(key, event);
         }
         const event = this.updateEventOnKey.get(key);
         return event.subscribe(callback, cancellationToken);
@@ -3156,7 +3486,9 @@ export class MapDataSource<K, V> {
 
         const old = this.data.get(key);
         this.data.delete(key);
-        this.updateEvent.fire({ oldValue: old, key, newValue: undefined, deleted: true });
+        const change: MapChange<K, V> = { oldValue: old, key, newValue: undefined, deleted: true };
+        emitAurumDevtoolsUpdate(this, { kind: 'delete', value: this.data, details: { key } });
+        this.updateEvent.fire(change);
         if (this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: undefined });
         }
@@ -3174,7 +3506,9 @@ export class MapDataSource<K, V> {
 
         const old = this.data.get(key);
         this.data.set(key, value);
-        this.updateEvent.fire({ oldValue: old, key, newValue: this.data.get(key) });
+        const change: MapChange<K, V> = { oldValue: old, key, newValue: this.data.get(key) };
+        emitAurumDevtoolsUpdate(this, { kind: 'set', value: this.data, details: { key } });
+        this.updateEvent.fire(change);
         if (this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.get(key).fire({ oldValue: old, key, newValue: this.data.get(key) });
         }
@@ -3262,6 +3596,12 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
         this.updateEvent = new EventEmitter();
         this.updateEventOnKey = new Map();
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            registerAurumDevtoolsNode(this, { kind: 'set-data-source', getValue: (target) => target.toSet() });
+        }
+        if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+            this.updateEvent.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count), false);
+        }
     }
 
     public static fromAsyncIterator<T>(iterator: AsyncIterableIterator<T>, cancellation?: CancellationToken): SetDataSource<T> {
@@ -3381,6 +3721,8 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
     public difference(otherSet: ReadOnlySetDataSource<K>, cancellationToken: CancellationToken): ReadOnlySetDataSource<K> {
         const result = new SetDataSource<K>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'difference' }, cancellationToken);
+        linkAurumDevtoolsNodes(otherSet as object, result, { kind: 'dependency', label: 'difference operand' }, cancellationToken);
         const otherSetKeys = new Set<K>(otherSet.keys());
         this.listenAndRepeat((change) => {
             if (change.exists && !otherSetKeys.has(change.key)) {
@@ -3407,6 +3749,8 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
     public union(otherSet: ReadOnlySetDataSource<K>, cancellationToken: CancellationToken): ReadOnlySetDataSource<K> {
         const result = new SetDataSource<K>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'union' }, cancellationToken);
+        linkAurumDevtoolsNodes(otherSet as object, result, { kind: 'dependency', label: 'union operand' }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             if (change.exists) {
@@ -3429,6 +3773,8 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
     public intersection(otherSet: ReadOnlySetDataSource<K>, cancellationToken: CancellationToken): ReadOnlySetDataSource<K> {
         const result = new SetDataSource<K>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'intersection' }, cancellationToken);
+        linkAurumDevtoolsNodes(otherSet as object, result, { kind: 'dependency', label: 'intersection operand' }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             if (change.exists && otherSet.has(change.key)) {
@@ -3451,6 +3797,8 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
 
     public symmetricDifference(otherSet: ReadOnlySetDataSource<K>, cancellationToken: CancellationToken): ReadOnlySetDataSource<K> {
         const result = new SetDataSource<K>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'symmetric difference' }, cancellationToken);
+        linkAurumDevtoolsNodes(otherSet as object, result, { kind: 'dependency', label: 'symmetric difference operand' }, cancellationToken);
 
         this.listenAndRepeat((change) => {
             if (change.exists && !otherSet.has(change.key)) {
@@ -3490,6 +3838,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
      */
     public pick(key: K, cancellationToken?: CancellationToken): DataSource<boolean> {
         const subDataSource: DataSource<boolean> = new DataSource(this.data.has(key));
+        linkAurumDevtoolsNodes(this, subDataSource, { kind: 'derived', label: `has ${String(key)}` }, cancellationToken);
 
         this.listenOnKey(
             key,
@@ -3536,7 +3885,11 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
      */
     public listenOnKey(key: K, callback: Callback<boolean>, cancellationToken?: CancellationToken): void {
         if (!this.updateEventOnKey.has(key)) {
-            this.updateEventOnKey.set(key, new EventEmitter());
+            const event = new EventEmitter<boolean>();
+            if (AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) {
+                event.observeSubscriptionCount((count) => setAurumDevtoolsSubscriptionCount(this, count, `key:${String(key)}`), false);
+            }
+            this.updateEventOnKey.set(key, event);
         }
         const event = this.updateEventOnKey.get(key);
         event.subscribe(callback, cancellationToken);
@@ -3549,6 +3902,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     public map<D>(mapper: (key: K) => D, cancellationToken?: CancellationToken): ReadOnlyArrayDataSource<D> {
         const stateMap: Map<K, D> = new Map<K, D>();
         const result = new ArrayDataSource<D>();
+        linkAurumDevtoolsNodes(this, result, { kind: 'transform', label: 'map' }, cancellationToken);
         this.listenAndRepeat((change) => {
             if (!change.exists && stateMap.has(change.key)) {
                 const item = stateMap.get(change.key);
@@ -3587,6 +3941,7 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
      */
     public pickKey(key: K, cancellationToken?: CancellationToken): DataSource<boolean> {
         const result = new DataSource(this.has(key));
+        linkAurumDevtoolsNodes(this, result, { kind: 'derived', label: `has ${String(key)}` }, cancellationToken);
         this.listenOnKey(key, (v) => result.update(v), cancellationToken);
         return result;
     }
@@ -3599,7 +3954,9 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
     public delete(key: K): void {
         if (this.has(key)) {
             this.data.delete(key);
-            this.updateEvent.fire({ key, exists: false });
+            const change = { key, exists: false };
+            emitAurumDevtoolsUpdate(this, { kind: 'delete', value: this.data, details: { key } });
+            this.updateEvent.fire(change);
             if (this.updateEventOnKey.has(key)) {
                 this.updateEventOnKey.get(key).fire(false);
             }
@@ -3616,7 +3973,9 @@ export class SetDataSource<K> implements ReadOnlySetDataSource<K> {
             return;
         }
         this.data.add(key);
-        this.updateEvent.fire({ key, exists: true });
+        const change = { key, exists: true };
+        emitAurumDevtoolsUpdate(this, { kind: 'add', value: this.data, details: { key } });
+        this.updateEvent.fire(change);
         if (this.updateEventOnKey.has(key)) {
             this.updateEventOnKey.get(key).fire(true);
         }
@@ -3682,8 +4041,7 @@ export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F
     operationJ?: DataSourceOperator<I, J>,
     operationK?: DataSourceOperator<J, K>
 ): DataSourceMapDelayFilterOperator<T, K> {
-    const lockState = new DataSource<boolean>(false);
-    const operations = [
+    const definitions = [
         operationA,
         operationB,
         operationC,
@@ -3696,55 +4054,47 @@ export function dsCriticalSection<T, A, B = A, C = B, D = C, E = D, F = E, G = F
         operationJ,
         operationK
     ].filter((v) => v !== undefined);
-    const buffer: Array<{
-        value: T;
-        resolve: (value: { item: K; cancelled: boolean }) => void;
-        reject: (reason?: unknown) => void;
-    }> = [];
 
-    lockState.listen((v) => {
-        if (!v) {
-            if (buffer.length > 0) {
-                queueMicrotask(async () => {
-                    if (!lockState.value) {
-                        lockState.update(true);
-                        const item = buffer.shift();
-                        try {
-                            const value = await processInlineTransform(operations, item.value);
-                            item.resolve(value);
-                        } catch (e) {
-                            item.reject(e);
-                        } finally {
-                            lockState.update(false);
-                        }
-                    }
-                });
+    const create = (cancellationToken: CancellationToken): DataSourceMapDelayFilterOperator<T, K> => {
+        const operations = definitions.map((operation) => operation.bind?.({ cancellationToken }) ?? operation);
+        const queue: Array<{
+            value: T;
+            resolve: (result: { item: K; cancelled: boolean }) => void;
+            reject: (error: unknown) => void;
+        }> = [];
+        let active = false;
+        cancellationToken.addCancellable(() => {
+            for (const queued of queue.splice(0)) queued.resolve({ item: undefined as K, cancelled: true });
+        });
+        return {
+            name: `CriticalSection<${operations.map((v) => v.name).join(', ')}>`,
+            operationType: OperationType.MAP_DELAY_FILTER,
+            operation: (value) => {
+                if (!active) return execute(value);
+                return new Promise((resolve, reject) => queue.push({ value, resolve, reject }));
             }
-        }
-    });
+        };
 
-    return {
-        name: `CriticalSection<${operations.map((v) => v.name).join(', ')}>`,
-        operationType: OperationType.MAP_DELAY_FILTER,
-        operation: async (v) => {
-            if (!lockState.value) {
-                lockState.update(true);
-                try {
-                    const result = await processInlineTransform(operations, v);
-                    return result;
-                } finally {
-                    lockState.update(false);
-                }
+        async function execute(value: T): Promise<{ item: K; cancelled: boolean }> {
+            active = true;
+            try {
+                return cancellationToken.isCancelled
+                    ? { item: undefined as K, cancelled: true }
+                    : await processInlineTransform(operations, value, cancellationToken);
+            } finally {
+                active = false;
+                const next = queue.shift();
+                if (next) execute(next.value).then(next.resolve, next.reject);
             }
-            return new Promise((resolve, reject) => {
-                buffer.push({
-                    resolve,
-                    reject,
-                    value: v
-                });
-            });
         }
     };
+    const standaloneLifetime = new CancellationToken();
+    const direct = create(standaloneLifetime);
+    direct.bind = ({ cancellationToken }) => {
+        standaloneLifetime.cancel();
+        return create(cancellationToken);
+    };
+    return direct;
 }
 
 /**
@@ -3768,7 +4118,11 @@ export function dsRetry<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I
     operationJ?: DataSourceOperator<I, J>,
     operationK?: DataSourceOperator<J, K>
 ): DataSourceMapDelayFilterOperator<T, K> {
-    const operations = [
+    if (!Number.isInteger(config.retryCount) || config.retryCount < 0) throw new RangeError('retryCount must be a non-negative integer');
+    if (config.retryDelay !== undefined && (!Number.isFinite(config.retryDelay) || config.retryDelay < 0)) {
+        throw new RangeError('retryDelay must be a finite, non-negative number');
+    }
+    const definitions = [
         operationA,
         operationB,
         operationC,
@@ -3782,34 +4136,37 @@ export function dsRetry<T, A, B = A, C = B, D = C, E = D, F = E, G = F, H = G, I
         operationK
     ].filter((v) => v !== undefined);
 
-    return {
-        name: `Retry<${operations.map((v) => v.name).join(', ')}>`,
-        operationType: OperationType.MAP_DELAY_FILTER,
-        operation: async (v) => {
-            try {
-                const result = await processInlineTransform(operations, v);
-                return result;
-            } catch (e) {
-                if (config.shouldRetry && !config.shouldRetry(e)) {
-                    throw e;
-                }
-                for (let i = 0; i < config.retryCount; i++) {
-                    if (config.retryDelay) {
-                        await new Promise((resolve) => setTimeout(resolve, config.retryDelay ?? 0));
+    const create = (cancellationToken: CancellationToken): DataSourceMapDelayFilterOperator<T, K> => {
+        const operations = definitions.map((operation) => operation.bind?.({ cancellationToken }) ?? operation);
+        return {
+            name: `Retry<${operations.map((v) => v.name).join(', ')}>`,
+            operationType: OperationType.MAP_DELAY_FILTER,
+            operation: async (value) => {
+                let lastError: unknown;
+                for (let attempt = 0; attempt <= config.retryCount; attempt++) {
+                    if (cancellationToken.isCancelled) return { item: undefined as K, cancelled: true };
+                    if (attempt > 0 && config.retryDelay !== undefined) {
+                        await cancellableDelay(config.retryDelay, cancellationToken);
+                        if (cancellationToken.isCancelled) return { item: undefined as K, cancelled: true };
                     }
                     try {
-                        const result = await processInlineTransform(operations, v);
-                        return result;
-                    } catch (e) {
-                        if (config.shouldRetry && !config.shouldRetry(e)) {
-                            throw e;
-                        }
+                        return await processInlineTransform(operations, value, cancellationToken);
+                    } catch (error) {
+                        lastError = error;
+                        if (config.shouldRetry && !config.shouldRetry(error)) throw error;
                     }
                 }
-                throw e;
+                throw lastError;
             }
-        }
+        };
     };
+    const standaloneLifetime = new CancellationToken();
+    const direct = create(standaloneLifetime);
+    direct.bind = ({ cancellationToken }) => {
+        standaloneLifetime.cancel();
+        return create(cancellationToken);
+    };
+    return direct;
 }
 
 /**
@@ -3827,22 +4184,37 @@ export function dsForkInline<T, A1, B1 = A1, C1 = B1, D1 = C1, E1 = D1, F1 = E1,
     operationH?: DataSourceOperator<G1, H1>,
     operationI?: DataSourceOperator<H1, I1>
 ): DataSourceMapDelayFilterOperator<T, T | I1> {
-    const ops = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI].filter((v) => v !== undefined);
-
-    return {
-        name: 'fork-inline',
-        operationType: OperationType.MAP_DELAY_FILTER,
-        operation: async (v) => {
-            if (condition(v)) {
-                return processInlineTransform(ops, v);
-            } else {
-                return { item: v, cancelled: false };
+    const definitions = [operationA, operationB, operationC, operationD, operationE, operationF, operationG, operationH, operationI].filter(
+        (v) => v !== undefined
+    );
+    const create = (cancellationToken: CancellationToken): DataSourceMapDelayFilterOperator<T, T | I1> => {
+        const operations = definitions.map((operation) => operation.bind?.({ cancellationToken }) ?? operation);
+        return {
+            name: 'fork-inline',
+            operationType: OperationType.MAP_DELAY_FILTER,
+            operation: async (value) => {
+                if (cancellationToken.isCancelled) return { item: undefined as I1, cancelled: true };
+                if (condition(value)) {
+                    return processInlineTransform(operations, value, cancellationToken);
+                }
+                return { item: value, cancelled: false };
             }
-        }
+        };
     };
+    const standaloneLifetime = new CancellationToken();
+    const direct = create(standaloneLifetime);
+    direct.bind = ({ cancellationToken }) => {
+        standaloneLifetime.cancel();
+        return create(cancellationToken);
+    };
+    return direct;
 }
 
-async function processInlineTransform(operations: DataSourceOperator<any, any>[], value: any): Promise<{ item: any; cancelled: boolean }> {
+async function processInlineTransform(
+    operations: DataSourceOperator<any, any>[],
+    value: any,
+    cancellationToken: CancellationToken = CancellationToken.forever
+): Promise<{ item: any; cancelled: boolean }> {
     let out;
     let error;
     let hasValue = false;
@@ -3856,11 +4228,32 @@ async function processInlineTransform(operations: DataSourceOperator<any, any>[]
         error = e;
     });
 
-    await processTransform(operations, sink)(value);
+    await processTransform(operations, sink, cancellationToken)(value);
 
     if (error) {
         throw error;
     }
 
     return { item: out, cancelled: !hasValue };
+}
+
+function cancellableDelay(time: number, cancellationToken: CancellationToken): Promise<void> {
+    return new Promise((resolve) => {
+        let settled = false;
+        const finish = () => {
+            if (!settled) {
+                settled = true;
+                resolve();
+            }
+        };
+        const timeout = setTimeout(() => {
+            if (!cancellationToken.isCancelled) cancellationToken.removeCancellable(cancel);
+            finish();
+        }, time);
+        const cancel = () => {
+            clearTimeout(timeout);
+            finish();
+        };
+        cancellationToken.addCancellable(cancel);
+    });
 }

@@ -1,7 +1,7 @@
 import { AurumComponentAPI, createLifeCycle, Renderable } from '../rendering/aurum_element.js';
 import { DataSource } from '@aurum/streams';
 
-export type ErrorRenderer = (error: any) => Renderable;
+export type ErrorRenderer = (error: unknown) => Renderable;
 
 export interface ErrorBoundaryProps {
     suspenseFallback?: Renderable;
@@ -9,33 +9,34 @@ export interface ErrorBoundaryProps {
 }
 
 export function ErrorBoundary(props: ErrorBoundaryProps, children: Renderable[], api: AurumComponentAPI) {
-    const data = new DataSource<Renderable | Renderable[]>(props?.suspenseFallback);
+    const data = new DataSource<Renderable>(props?.suspenseFallback);
     const renderFallbackError: ErrorRenderer = typeof props?.errorFallback === 'function' ? props.errorFallback : (error) => props?.errorFallback as Renderable;
 
     const lc = createLifeCycle();
     api.onDetach(() => lc.onDetach());
 
-    function onDone(res: any[]): void {
+    function onDone(res: Renderable[]): void {
         if (!api.cancellationToken.isCancelled) {
             data.update(res);
             lc.onAttach();
         }
     }
 
-    function onError(error: any): void {
+    function onError(error: unknown): void {
         console.error(error);
         if (!api.cancellationToken.isCancelled) {
             data.update(renderFallbackError(error));
         }
     }
 
-    async function handleRenderedChildren(res: any) {
+    async function handleRenderedChildren(res: Renderable): Promise<void> {
         if (res instanceof Promise) {
-            res.then(handleRenderedChildren, onError);
+            await (res as Promise<unknown>).then((value) => handleRenderedChildren(value as Renderable), onError);
         } else {
-            const nestedRendered = api.prerender(res, lc);
+            const nestedRendered = api.prerender(Array.isArray(res) ? res : [res], lc);
             if (nestedRendered.some((s) => s instanceof Promise)) {
-                await Promise.all(nestedRendered).then(handleRenderedChildren, onError);
+                const resolved = await Promise.all(nestedRendered as unknown[]);
+                await handleRenderedChildren(resolved as Renderable[]);
             } else {
                 onDone(nestedRendered);
             }

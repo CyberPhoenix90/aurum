@@ -4,6 +4,8 @@ import {
     CancellationToken,
     DataSource,
     DuplexDataSource,
+    ddsMap,
+    ddsUnique,
     dsAccumulate,
     dsAwait,
     dsAwaitLatest,
@@ -11,6 +13,7 @@ import {
     dsBuffer,
     dsCutOff,
     dsCutOffDynamic,
+    dsDistinct,
     dsDebounce,
     dsDelay,
     dsDiff,
@@ -31,19 +34,22 @@ import {
     dsPipeAll,
     dsPipeUp,
     dsReduce,
+    dsScan,
     dsSemaphore,
     dsSkip,
     dsSkipDynamic,
     dsSpread,
     dsStringJoin,
     dsTap,
+    dsTake,
     dsThrottle,
     dsThrottleBuffer,
     dsThrottleFrame,
     dsThroughputMeter,
     dsUnique,
-    dsUpdateToken
-} from '../../src/index.js';
+    dsUpdateToken,
+    transformAsyncIterator
+} from '../src/index.js';
 
 const turn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -275,7 +281,7 @@ describe('DataSource transformation operators', () => {
     });
 
     it('throttles immediate updates', () => {
-        vi.spyOn(performance, 'now').mockReturnValueOnce(100).mockReturnValueOnce(100).mockReturnValueOnce(105).mockReturnValueOnce(120).mockReturnValueOnce(120);
+        vi.spyOn(performance, 'now').mockReturnValueOnce(100).mockReturnValueOnce(105).mockReturnValueOnce(120);
         const source = new DataSource<number>();
         const values: number[] = [];
         source.transform(dsThrottle(10)).listen((value) => values.push(value));
@@ -299,14 +305,14 @@ describe('DataSource transformation operators', () => {
         source.update(3);
         source.update(4);
         await vi.advanceTimersByTimeAsync(25);
-        assert.deepEqual(values, [1, 2]);
+        assert.deepEqual(values, [1, 2, 3]);
         assert.equal(highWater.mock.calls.length, 1);
     });
 
     it('spreads arrays through the remaining pipeline', async () => {
         const source = new DataSource<number[]>();
         const values: number[] = [];
-        source.transform(dsSpread<number>() as any, dsMap<number, number>((value) => value * 2) as any).listen((value) => values.push(value as number));
+        source.transform(dsSpread<number>(), dsMap((value) => value * 2)).listen((value) => values.push(value));
         source.update([1, 2, 3]);
         await turn();
         assert.deepEqual(values, [2, 4, 6]);
@@ -490,5 +496,204 @@ describe('DataSource transformation operators', () => {
         sources.clear();
         shared.update(5);
         assert.equal(total.value, 0);
+    });
+
+    it('creates isolated state whenever an operator definition is attached', () => {
+        const distinct = dsDistinct<number>();
+        const first = new DataSource<number>();
+        const second = new DataSource<number>();
+        const firstValues: number[] = [];
+        const secondValues: number[] = [];
+        first.transform(distinct).listen((value) => firstValues.push(value));
+        second.transform(distinct).listen((value) => secondValues.push(value));
+
+        first.update(1);
+        first.update(1);
+        second.update(1);
+        second.update(1);
+
+        assert.deepEqual(firstValues, [1]);
+        assert.deepEqual(secondValues, [1]);
+    });
+
+    it('does not publish an async result after its pipeline is cancelled', async () => {
+        const source = new DataSource<number>();
+        const token = new CancellationToken();
+        let resolve!: (value: string) => void;
+        const output = source.transform(dsMapAsync(() => new Promise<string>((done) => (resolve = done))), token);
+        const values: string[] = [];
+        output.listen((value) => values.push(value));
+
+        source.update(1);
+        token.cancel();
+        resolve('late');
+        await turn();
+
+        assert.deepEqual(values, []);
+    });
+
+    it('disposes operator timers with the transform lifecycle', async () => {
+        vi.useFakeTimers();
+        const source = new DataSource<number>();
+        const token = new CancellationToken();
+        const values: number[] = [];
+        source.transform(dsDelay(100), token).listen((value) => values.push(value));
+        source.update(1);
+        assert.isAbove(vi.getTimerCount(), 0);
+
+        token.cancel();
+        await vi.runAllTimersAsync();
+
+        assert.equal(vi.getTimerCount(), 0);
+        assert.deepEqual(values, []);
+    });
+
+    it('supports parallel, ordered, and latest async map policies explicitly', async () => {
+        const parallelSource = new DataSource<number>();
+        const orderedSource = new DataSource<number>();
+        const latestSource = new DataSource<number>();
+        const resolvers = new Map<string, (value: number) => void>();
+        const mapper = (label: string) => (value: number) => new Promise<number>((resolve) => resolvers.set(`${label}${value}`, resolve));
+        const parallel: number[] = [];
+        const ordered: number[] = [];
+        const latest: number[] = [];
+        parallelSource.transform(dsMapAsync(mapper('p'), { concurrency: 'parallel' })).listen((value) => parallel.push(value));
+        orderedSource.transform(dsMapAsync(mapper('o'), { concurrency: 'ordered' })).listen((value) => ordered.push(value));
+        latestSource.transform(dsMapAsync(mapper('l'), { concurrency: 'latest' })).listen((value) => latest.push(value));
+
+        parallelSource.update(1);
+        parallelSource.update(2);
+        latestSource.update(1);
+        latestSource.update(2);
+        orderedSource.update(1);
+        orderedSource.update(2);
+        await Promise.resolve();
+
+        resolvers.get('p2')?.(2);
+        resolvers.get('p1')?.(1);
+        resolvers.get('l1')?.(1);
+        resolvers.get('l2')?.(2);
+        resolvers.get('o1')?.(1);
+        await turn();
+        resolvers.get('o2')?.(2);
+        await turn();
+
+        assert.deepEqual(parallel, [2, 1]);
+        assert.deepEqual(ordered, [1, 2]);
+        assert.deepEqual(latest, [2]);
+    });
+
+    it('applies latest semantics to asynchronous filters', async () => {
+        const source = new DataSource<number>();
+        const values: number[] = [];
+        const resolvers = new Map<number, (accepted: boolean) => void>();
+        source
+            .transform(dsFilterAsync((value) => new Promise<boolean>((resolve) => resolvers.set(value, resolve)), { concurrency: 'latest' }))
+            .listen((value) => values.push(value));
+        source.update(1);
+        source.update(2);
+        resolvers.get(1)?.(true);
+        resolvers.get(2)?.(true);
+        await turn();
+        assert.deepEqual(values, [2]);
+    });
+
+    it('drops semaphore work queued when its transform is cancelled', async () => {
+        const permits = new DataSource(0);
+        const source = new DataSource<number>();
+        const token = new CancellationToken();
+        const values: number[] = [];
+        source.transform(dsSemaphore(permits), token).listen((value) => values.push(value));
+        source.update(1);
+        token.cancel();
+        permits.update(1);
+        await turn();
+        assert.deepEqual(values, []);
+    });
+
+    it('starts a fresh buffer with the item that closes the previous batch', async () => {
+        const source = new DataSource<number>();
+        const batches: number[][] = [];
+        source.transform(dsBuffer({ canBatch: (item, batch) => item - batch[0] < 2 })).listen((batch) => batches.push(batch));
+        source.update(1);
+        source.update(2);
+        source.update(4);
+        source.update(5);
+        source.update(7);
+        await turn();
+        assert.deepEqual(batches, [[1, 2], [4, 5]]);
+    });
+
+    it('rejects invalid counts, durations, and routing configurations', () => {
+        assert.throws(() => dsSkip(-1), RangeError);
+        assert.throws(() => dsTake(-1), RangeError);
+        assert.throws(() => dsDelay(-1), RangeError);
+        assert.throws(() => dsBuffer({ maxBatchSize: 0 }), RangeError);
+        assert.throws(() => dsLoadBalance([]), /at least one target/);
+    });
+
+    it('supports familiar aliases without changing their semantics', () => {
+        const source = new DataSource<number>();
+        const scanned = source.transform(dsScan((sum, value) => sum + value, 0));
+        const taken: number[] = [];
+        source.transform(dsTake(2)).listen((value) => taken.push(value));
+        source.update(1);
+        source.update(2);
+        source.update(3);
+        assert.equal(scanned.value, 6);
+        assert.deepEqual(taken, [1, 2]);
+    });
+
+    it('composes more than eleven operators without losing the output type', () => {
+        const source = new DataSource<number>();
+        const output: DataSource<string> = source.transform(
+            dsMap((value: number) => value + 1), dsMap((value: number) => value + 1), dsMap((value: number) => value + 1),
+            dsMap((value: number) => value + 1), dsMap((value: number) => value + 1), dsMap((value: number) => value + 1),
+            dsMap((value: number) => value + 1), dsMap((value: number) => value + 1), dsMap((value: number) => value + 1),
+            dsMap((value: number) => value + 1), dsMap((value: number) => value + 1), dsMap((value: number) => value + 1),
+            dsMap((value: number) => String(value))
+        );
+        source.update(0);
+        assert.equal(output.value, '12');
+    });
+
+    it('isolates duplex operator state and treats NaN consistently in both directions', () => {
+        const unique = ddsUnique<number>();
+        const first = new DuplexDataSource<number>();
+        const second = new DuplexDataSource<number>();
+        const firstOutput = first.transformDuplex(unique);
+        const secondOutput = second.transformDuplex(unique);
+        const firstValues: number[] = [];
+        const secondValues: number[] = [];
+        firstOutput.listen((value) => firstValues.push(value));
+        secondOutput.listen((value) => secondValues.push(value));
+        first.publish(NaN);
+        first.publish(NaN);
+        second.publish(NaN);
+        assert.equal(firstValues.length, 1);
+        assert.equal(secondValues.length, 1);
+
+        const mapped = first.transformDuplex(ddsMap((value: number) => String(value), (value: string) => Number(value)));
+        mapped.write('4');
+        assert.equal(first.value, 4);
+    });
+
+    it('binds iterator operators, preserves noop values, and supports spread', async () => {
+        function* batches() {
+            yield [1, 2];
+            yield [3];
+        }
+        const tapped: number[][] = [];
+        const values: number[] = [];
+        for await (const value of transformAsyncIterator(
+            batches(),
+            dsTap((batch) => tapped.push(batch)),
+            dsSpread<number>(),
+            dsMap((item) => item * 2)
+        )) {
+            values.push(value);
+        }
+        assert.deepEqual(tapped, [[1, 2], [3]]);
+        assert.deepEqual(values, [2, 4, 6]);
     });
 });

@@ -43,7 +43,7 @@ export interface StateComponentModel extends ComponentModel {
     font?: string | DataSource<string>;
 }
 
-export function State(props: StateProps, children: Renderable[], api: AurumComponentAPI): StateComponentModel {
+export function State(props: StateProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): StateComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
 

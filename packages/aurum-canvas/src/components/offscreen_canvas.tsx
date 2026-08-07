@@ -64,7 +64,7 @@ export interface AurumOffscreenCanvasProps {
     invalidate: EventEmitter<void>;
 }
 
-export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children: Renderable[], api: AurumComponentAPI): void {
+export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): void {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     const components = api.prerender(children, lc);

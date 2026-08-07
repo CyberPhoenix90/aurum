@@ -21,7 +21,7 @@ export interface QuadraticCurveComponentModel extends ComponentModel {
     lineWidth?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumQuadraticCurve(props: AurumQuadraticCurveProps, children: Renderable[], api: AurumComponentAPI): QuadraticCurveComponentModel {
+export function AurumQuadraticCurve(props: AurumQuadraticCurveProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): QuadraticCurveComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

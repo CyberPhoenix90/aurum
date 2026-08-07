@@ -1,7 +1,6 @@
 import {
     Aurum,
     AurumComponentAPI,
-    AurumElement,
     ClassType,
     DataSource,
     EventEmitter,
@@ -14,6 +13,7 @@ import {
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 import { AurumOffscreenCanvas } from './offscreen_canvas.js';
+import { ComponentModel } from './component_model.js';
 
 export interface AurumCanvasProps {
     backgroundColor?: ReadOnlyDataSource<string> | string;
@@ -52,7 +52,7 @@ export interface AurumCanvasProps {
     readHeight?: DataSource<number>;
 }
 
-export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api: AurumComponentAPI): AurumElement {
+export function AurumCanvas(props: AurumCanvasProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): Renderable {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     const onMouseMove: EventEmitter<SimplifiedMouseEvent> = new EventEmitter();

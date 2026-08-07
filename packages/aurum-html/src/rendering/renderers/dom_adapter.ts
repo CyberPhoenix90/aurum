@@ -1,10 +1,11 @@
 import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
-import { AurumComponentAPI, AurumElement, createRenderSession, Renderable, Rendered, renderInternal } from '@aurum/rendering';
+import { AurumComponentAPI, createRenderSession, registerAurumRenderBinding, Renderable, RenderSession } from '@aurum/rendering';
+import { AurumElement, Rendered, renderInternal } from '../dom_runtime.js';
 import { DataSource } from '@aurum/streams';
-import { dsUnique } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
 import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurum/streams';
 import { AurumDecorator } from '../../utilities/aurum.js';
+import { queueRenderUpdate, renderBatchState } from '../render_batch.js';
 
 export interface HTMLNodeProps<T> {
     decorate?: AurumDecorator | AurumDecorator[];
@@ -13,11 +14,39 @@ export interface HTMLNodeProps<T> {
     draggable?: AttributeValue;
     class?: ClassType;
     tabIndex?: AttributeValue;
+    tabindex?: AttributeValue;
     style?: StyleType;
     title?: AttributeValue;
     role?: AttributeValue;
     slot?: AttributeValue;
     contenteditable?: AttributeValue;
+    contentEditable?: AttributeValue;
+    accesskey?: AttributeValue;
+    accessKey?: AttributeValue;
+    autocapitalize?: AttributeValue;
+    autofocus?: AttributeValue;
+    autoFocus?: AttributeValue;
+    dir?: AttributeValue;
+    enterkeyhint?: AttributeValue;
+    hidden?: AttributeValue;
+    inert?: AttributeValue;
+    inputmode?: AttributeValue;
+    is?: AttributeValue;
+    itemid?: AttributeValue;
+    itemprop?: AttributeValue;
+    itemref?: AttributeValue;
+    itemscope?: AttributeValue;
+    itemtype?: AttributeValue;
+    lang?: AttributeValue;
+    nonce?: AttributeValue;
+    part?: AttributeValue;
+    popover?: AttributeValue;
+    spellcheck?: AttributeValue;
+    spellCheck?: AttributeValue;
+    translate?: AttributeValue;
+
+    [dataAttribute: `data-${string}`]: AttributeValue | undefined;
+    [ariaAttribute: `aria-${string}`]: AttributeValue | undefined;
 
     ariaAtomic?: AttributeValue;
     ariaAutoComplete?: AttributeValue;
@@ -72,6 +101,7 @@ export interface HTMLNodeProps<T> {
 
     onContextMenu?: DataDrain<MouseEvent>;
     onDblClick?: DataDrain<MouseEvent>;
+    onDoubleClick?: DataDrain<MouseEvent>;
     onClick?: DataDrain<MouseEvent>;
     onKeyDown?: DataDrain<KeyboardEvent>;
     onKeyUp?: DataDrain<KeyboardEvent>;
@@ -82,6 +112,7 @@ export interface HTMLNodeProps<T> {
     onMouseLeave?: DataDrain<MouseEvent>;
     onMouseMove?: DataDrain<MouseEvent>;
     onMouseWheel?: DataDrain<WheelEvent>;
+    onWheel?: DataDrain<WheelEvent>;
     onBlur?: DataDrain<FocusEvent>;
     onFocus?: DataDrain<FocusEvent>;
     onDrag?: DataDrain<DragEvent>;
@@ -137,6 +168,8 @@ export interface HTMLNodeProps<T> {
     onDetach?: Callback<T>;
 }
 
+export type GenericHTMLNodeProps<T extends HTMLElement = HTMLElement> = HTMLNodeProps<T>;
+
 /**
  * @internal
  */
@@ -153,6 +186,8 @@ export const defaultEvents: MapLike<string> = {
     focus: 'onFocus',
     click: 'onClick',
     dblclick: 'onDblClick',
+    // Standard DOM-style aliases retained alongside Aurum's historical names.
+    doubleclick: 'onDoubleClick',
     keydown: 'onKeyDown',
     keyPress: 'onKeyPress',
     keyup: 'onKeyUp',
@@ -163,6 +198,7 @@ export const defaultEvents: MapLike<string> = {
     mouseenter: 'onMouseEnter',
     mouseleave: 'onMouseLeave',
     mousewheel: 'onMouseWheel',
+    wheel: 'onWheel',
     load: 'onLoad',
     error: 'onError',
     transitionend: 'onTransitionEnd',
@@ -218,6 +254,26 @@ export const defaultAttributes: string[] = [
     'tabIndex',
     'role',
     'contenteditable',
+    'accesskey',
+    'autocapitalize',
+    'autofocus',
+    'dir',
+    'enterkeyhint',
+    'hidden',
+    'inert',
+    'inputmode',
+    'is',
+    'itemid',
+    'itemprop',
+    'itemref',
+    'itemscope',
+    'itemtype',
+    'lang',
+    'nonce',
+    'part',
+    'popover',
+    'spellcheck',
+    'translate',
     'slot',
     'title',
     'ariaAtomic',
@@ -277,8 +333,11 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     extraAttributes?: string[],
     extraEvents?: MapLike<string>,
     extraLogic?: (node: HTMLElement, props: T, cleanUp: CancellationToken) => void,
-    svg: boolean = false
+    svg: boolean = false,
+    bindAllValidAttributes: boolean = false
 ) {
+    const acceptedAttributes = new Set([...defaultAttributes, ...(extraAttributes ?? [])].map(normalizeAttributeName));
+    const eventByProp = createEventMap(extraEvents);
     return function (props: T, children: Renderable[], api: AurumComponentAPI): HTMLElement {
         let node: HTMLElement;
         if (svg) {
@@ -287,11 +346,19 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
             node = document.createElement(nodeName);
         }
         if (props) {
-            processHTMLNode(node, props, api.cancellationToken, extraAttributes, extraEvents);
+            processHTMLNodeInternal(
+                node,
+                props,
+                () => api.cancellationToken,
+                acceptedAttributes,
+                eventByProp,
+                api.renderSession,
+                bindAllValidAttributes
+            );
         }
         //@ts-ignore
         const renderedChildren = renderInternal(children, api.renderSession);
-        connectChildren(node, renderedChildren);
+        connectChildren(node, Array.isArray(renderedChildren) ? renderedChildren : renderedChildren ? [renderedChildren] : []);
         if (props) {
             if (props.onAttach) {
                 api.onAttach(() => props.onAttach(node));
@@ -310,6 +377,11 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
 
         return node;
     };
+}
+
+/** Creates an intrinsic HTML host factory for tags without a specialized Aurum node implementation. */
+export function createGenericIntrinsicFactory<T extends HTMLElement = HTMLElement>(nodeName: string) {
+    return DomNodeCreator<GenericHTMLNodeProps<T>>(nodeName, undefined, undefined, undefined, false, true);
 }
 
 function connectChildren(target: HTMLElement, children: Rendered[]): void {
@@ -344,63 +416,255 @@ export function processHTMLNode(
     props: HTMLNodeProps<any>,
     cleanUp: CancellationToken,
     extraAttributes?: string[],
-    extraEvents?: MapLike<string>
+    extraEvents?: MapLike<string>,
+    renderSession?: RenderSession,
+    bindAllValidAttributes: boolean = false
 ) {
-    createEventHandlers(node, defaultEvents, props);
+    processHTMLNodeInternal(
+        node,
+        props,
+        () => cleanUp,
+        new Set([...defaultAttributes, ...(extraAttributes ?? [])].map(normalizeAttributeName)),
+        createEventMap(extraEvents),
+        renderSession,
+        bindAllValidAttributes
+    );
+}
+
+function processHTMLNodeInternal(
+    node: HTMLElement,
+    props: HTMLNodeProps<any>,
+    getCleanUp: () => CancellationToken,
+    acceptedAttributes: ReadonlySet<string>,
+    eventByProp: ReadonlyMap<string, string>,
+    renderSession?: RenderSession,
+    bindAllValidAttributes: boolean = false
+): void {
+    const boundAttributes = new Set<string>();
+    for (const key of Object.keys(props)) {
+        const value = (props as Record<string, unknown>)[key];
+        if (value === undefined) continue;
+
+        const eventName = eventByProp.get(key);
+        if (eventName !== undefined) {
+            if (value) node.addEventListener(eventName === 'doubleclick' ? 'dblclick' : eventName, (event) => writeTo(value as never, event));
+            continue;
+        }
+        if (reservedIntrinsicProps.has(key) || typeof value === 'function') continue;
+
+        const attributeName = normalizeAttributeName(key);
+        if (boundAttributes.has(attributeName)) continue;
+        if (
+            acceptedAttributes.has(attributeName) ||
+            key.includes('-') ||
+            (bindAllValidAttributes && isValidGenericHTMLAttribute(node, key, value))
+        ) {
+            assignSourceToDOM(node, value as AttributeValue, attributeName, getCleanUp, renderSession);
+            boundAttributes.add(attributeName);
+        }
+    }
+
+    bindStyle(node, props.style, getCleanUp, renderSession);
+    bindClass(node, props.class, getCleanUp, renderSession);
+}
+
+function createEventMap(extraEvents?: MapLike<string>): ReadonlyMap<string, string> {
+    const result = new Map<string, string>();
+    for (const eventName of Object.keys(defaultEvents)) result.set(defaultEvents[eventName], eventName);
     if (extraEvents) {
-        createEventHandlers(node, extraEvents, props);
+        for (const eventName of Object.keys(extraEvents)) result.set(extraEvents[eventName], eventName);
     }
-
-    const dataProps = Object.keys(props).filter((e) => e.includes('-'));
-    bindProps(node, defaultAttributes, props, cleanUp, dataProps);
-    if (extraAttributes) {
-        bindProps(node, extraAttributes, props, cleanUp);
-    }
-
-    if (props.style) {
-        const result = handleStyle(props.style, cleanUp);
-        if (result instanceof DataSource) {
-            result.listenAndRepeat((v) => {
-                node.setAttribute('style', v);
-            }, cleanUp);
-        } else {
-            node.setAttribute('style', result);
-        }
-    }
-
-    if (props.class) {
-        const result = handleClass(props.class, cleanUp);
-        if (result instanceof DataSource) {
-            result.listenAndRepeat((v) => {
-                node.className = v;
-            }, cleanUp);
-        } else {
-            node.className = result;
-        }
-    }
+    return result;
 }
 
 export function createEventHandlers(node: HTMLElement, events: MapLike<string>, props: any) {
     for (const key in events) {
         if (props[events[key]]) {
             //@ts-ignore
-            node.addEventListener(key, (e: MouseEvent) => writeTo(props[events[key]], e));
+            node.addEventListener(key === 'doubleclick' ? 'dblclick' : key, (e: MouseEvent) => writeTo(props[events[key]], e));
         }
     }
 }
 
-function bindProps(node: HTMLElement, keys: string[], props: any, cleanUp: CancellationToken, dynamicProps?: string[]) {
-    for (const key of keys) {
-        if (props[key] != undefined) {
-            assignStringSourceToAttribute(node, props[key], key, cleanUp);
-        }
+const attributeAliases: Record<string, string> = {
+    accessKey: 'accesskey',
+    acceptCharset: 'accept-charset',
+    autoComplete: 'autocomplete',
+    autoFocus: 'autofocus',
+    colSpan: 'colspan',
+    contentEditable: 'contenteditable',
+    crossOrigin: 'crossorigin',
+    dateTime: 'datetime',
+    formAction: 'formaction',
+    formEncType: 'formenctype',
+    formMethod: 'formmethod',
+    formNoValidate: 'formnovalidate',
+    formTarget: 'formtarget',
+    htmlFor: 'for',
+    maxLength: 'maxlength',
+    minLength: 'minlength',
+    noValidate: 'novalidate',
+    readOnly: 'readonly',
+    referrerPolicy: 'referrerpolicy',
+    rowSpan: 'rowspan',
+    spellCheck: 'spellcheck',
+    srcSet: 'srcset',
+    tabIndex: 'tabindex',
+    useMap: 'usemap'
+};
+
+const propertyNamesByAttribute: Record<string, string> = {
+    'accept-charset': 'acceptCharset',
+    accesskey: 'accessKey',
+    autocomplete: 'autocomplete',
+    autofocus: 'autofocus',
+    checked: 'checked',
+    colspan: 'colSpan',
+    contenteditable: 'contentEditable',
+    crossorigin: 'crossOrigin',
+    datetime: 'dateTime',
+    disabled: 'disabled',
+    for: 'htmlFor',
+    formnovalidate: 'formNoValidate',
+    maxlength: 'maxLength',
+    minlength: 'minLength',
+    multiple: 'multiple',
+    muted: 'muted',
+    novalidate: 'noValidate',
+    open: 'open',
+    readonly: 'readOnly',
+    referrerpolicy: 'referrerPolicy',
+    required: 'required',
+    rowspan: 'rowSpan',
+    selected: 'selected',
+    selectedindex: 'selectedIndex',
+    spellcheck: 'spellcheck',
+    tabindex: 'tabIndex',
+    usemap: 'useMap',
+    value: 'value'
+};
+
+const propertyBoundAttributes = new Set([
+    'checked',
+    'disabled',
+    'multiple',
+    'muted',
+    'open',
+    'readonly',
+    'required',
+    'selected',
+    'selectedindex',
+    'spellcheck',
+    'value'
+]);
+
+const reservedIntrinsicProps = new Set(['children', 'class', 'className', 'decorate', 'style', 'onAttach', 'onDetach']);
+
+function normalizeAttributeName(key: string): string {
+    const alias = attributeAliases[key];
+    if (alias) return alias;
+    if (/^aria[A-Z]/.test(key)) return key.replace(/^aria/, 'aria-').replace(/([A-Z])/g, '-$1').toLowerCase().replace('aria--', 'aria-');
+    return key;
+}
+
+function propertyNameForAttribute(attributeName: string): string {
+    return propertyNamesByAttribute[attributeName.toLowerCase()] ?? attributeName;
+}
+
+function isValidGenericHTMLAttribute(node: HTMLElement, key: string, value: unknown): boolean {
+    if (reservedIntrinsicProps.has(key) || key.startsWith('on') || typeof value === 'function') return false;
+    const attributeName = normalizeAttributeName(key);
+    if (attributeName.startsWith('aria-') || attributeName.startsWith('data-')) return true;
+    return propertyNameForAttribute(attributeName) in node;
+}
+
+function bindClass(
+    node: HTMLElement,
+    value: ClassType | undefined,
+    getCleanUp: () => CancellationToken,
+    renderSession?: RenderSession
+): void {
+    if (!value) return;
+    if (typeof value === 'string') {
+        node.className = value;
+        return;
     }
-    if (dynamicProps) {
-        for (const key of dynamicProps) {
-            if (props[key] != undefined) {
-                assignStringSourceToAttribute(node, props[key], key, cleanUp);
-            }
-        }
+    if (value instanceof DataSource) {
+        const cleanUp = getCleanUp();
+        registerAurumRenderBinding(value, node, 'class', cleanUp, renderSession);
+        const normalize = (next: unknown): string => Array.isArray(next) ? next.filter(Boolean).join(' ') : String(next ?? '');
+        const updateClass = (next: unknown): void => {
+            node.className = normalize(next);
+        };
+        let previousValue = normalize(value.value);
+        node.className = previousValue;
+        value.listen((next) => {
+            const normalized = normalize(next);
+            if (normalized === previousValue) return;
+            previousValue = normalized;
+            if (renderBatchState.active) queueRenderUpdate(updateClass, () => !cleanUp.isCancelled && updateClass(normalized));
+            else updateClass(normalized);
+        }, cleanUp);
+        return;
+    }
+    const cleanUp = getCleanUp();
+    const result = handleClass(value, cleanUp);
+    if (result instanceof DataSource) {
+        registerAurumRenderBinding(result, node, 'class', cleanUp, renderSession);
+        const updateClass = (next: string): void => {
+            node.className = next;
+        };
+        result.listenAndRepeat((next) => {
+            if (renderBatchState.active) queueRenderUpdate(updateClass, () => !cleanUp.isCancelled && updateClass(next));
+            else updateClass(next);
+        }, cleanUp);
+    } else {
+        node.className = result;
+    }
+}
+
+function bindStyle(
+    node: HTMLElement,
+    value: StyleType | undefined,
+    getCleanUp: () => CancellationToken,
+    renderSession?: RenderSession
+): void {
+    if (!value) return;
+    if (typeof value === 'string') {
+        node.setAttribute('style', value);
+        return;
+    }
+    if (value instanceof DataSource) {
+        const cleanUp = getCleanUp();
+        registerAurumRenderBinding(value, node, 'style', cleanUp, renderSession);
+        const normalize = (next: unknown): string => String(next ?? '');
+        const updateStyle = (next: unknown): void => {
+            node.setAttribute('style', normalize(next));
+        };
+        let previousValue = normalize(value.value);
+        node.setAttribute('style', previousValue);
+        value.listen((next) => {
+            const normalized = normalize(next);
+            if (normalized === previousValue) return;
+            previousValue = normalized;
+            if (renderBatchState.active) queueRenderUpdate(updateStyle, () => !cleanUp.isCancelled && updateStyle(normalized));
+            else updateStyle(normalized);
+        }, cleanUp);
+        return;
+    }
+    const cleanUp = getCleanUp();
+    const result = handleStyle(value, cleanUp);
+    if (result instanceof DataSource) {
+        registerAurumRenderBinding(result, node, 'style', cleanUp, renderSession);
+        const updateStyle = (next: string): void => {
+            node.setAttribute('style', next);
+        };
+        result.listenAndRepeat((next) => {
+            if (renderBatchState.active) queueRenderUpdate(updateStyle, () => !cleanUp.isCancelled && updateStyle(next));
+            else updateStyle(next);
+        }, cleanUp);
+    } else {
+        node.setAttribute('style', result);
     }
 }
 
@@ -419,38 +683,50 @@ export function aurumToHTML(content: Renderable, syncLifecycle?: AurumComponentA
     }
 
     return {
-        content: renderedContent,
+        content: renderedContent as HTMLElement,
         fireOnAttach: () => rs.attachCalls.forEach((c) => c()),
         dispose: () => rs.sessionToken.cancel()
     };
 }
 
-function assignStringSourceToAttribute(node: HTMLElement, data: AttributeValue, key: string, cleanUp: CancellationToken) {
+function assignSourceToDOM(
+    node: HTMLElement,
+    data: AttributeValue,
+    attributeName: string,
+    getCleanUp: () => CancellationToken,
+    renderSession?: RenderSession
+) {
+    const propertyName = propertyNameForAttribute(attributeName);
+    const bindAsProperty = propertyBoundAttributes.has(attributeName.toLowerCase()) && propertyName in node;
+    const assign = (value: string | number | boolean): void => {
+        if (bindAsProperty) {
+            (node as unknown as Record<string, unknown>)[propertyName] = value;
+        } else if (typeof value === 'boolean') {
+            if (value) node.setAttribute(attributeName, '');
+            else node.removeAttribute(attributeName);
+        } else {
+            node.setAttribute(attributeName, value.toString());
+        }
+    };
+
     if (typeof data === 'string' || typeof data === 'number') {
-        node.setAttribute(key, data.toString());
+        assign(data);
     } else if (typeof data === 'boolean') {
-        if (data) {
-            node.setAttribute(key, '');
-        }
+        assign(data);
     } else if (data instanceof DataSource) {
-        if (typeof data.value === 'string' || typeof data.value === 'number') {
-            node.setAttribute(key, data.value.toString());
-        } else if (typeof data.value === 'boolean') {
-            if (data.value) {
-                node.setAttribute(key, '');
-            }
-        }
-        data.transform(dsUnique(), cleanUp).listen((v) => {
-            if (typeof v === 'string' || typeof v === 'number') {
-                node.setAttribute(key, v.toString());
-            } else if (typeof v === 'boolean') {
-                if (v) {
-                    node.setAttribute(key, '');
-                } else {
-                    node.removeAttribute(key);
-                }
-            }
-        });
+        const cleanUp = getCleanUp();
+        registerAurumRenderBinding(data, node, `${bindAsProperty ? 'property' : 'attribute'}:${attributeName}`, cleanUp, renderSession);
+        if (typeof data.value === 'string' || typeof data.value === 'number' || typeof data.value === 'boolean') assign(data.value);
+        const updateAttribute = (v: AttributeValue): void => {
+            if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') assign(v);
+        };
+        let previousValue = data.value;
+        data.listen((v) => {
+            if (v === previousValue || (Number.isNaN(v) && Number.isNaN(previousValue))) return;
+            previousValue = v;
+            if (renderBatchState.active) queueRenderUpdate(updateAttribute, () => !cleanUp.isCancelled && updateAttribute(v));
+            else updateAttribute(v);
+        }, cleanUp);
     } else {
         throw new Error('Attributes only support types boolean, string, number and data sources');
     }

@@ -1,19 +1,23 @@
 import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
-import { AttributeValue, DataDrain } from '@aurum/streams';
+import { AttributeValue, DataDrain, DataWriter } from '@aurum/streams';
 import { BindableSource } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
+import { queueRenderUpdate, renderBatchState } from '../rendering/render_batch.js';
 
 export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
     placeholder?: AttributeValue;
     readonly?: AttributeValue;
+    readOnly?: AttributeValue;
     disabled?: AttributeValue;
     onChange?: DataDrain<InputEvent>;
     onInput?: DataDrain<InputEvent>;
-    value?: BindableSource<string> | string;
+    value?: BindableSource<string> | BindableSource<number> | string | number;
     accept?: AttributeValue;
     alt?: AttributeValue;
     autocomplete?: AttributeValue;
+    autoComplete?: AttributeValue;
     autofocus?: AttributeValue;
+    autoFocus?: AttributeValue;
     checked?: BindableSource<boolean> | boolean;
     formAction?: AttributeValue;
     formEnctype?: AttributeValue;
@@ -24,8 +28,10 @@ export interface InputProps extends HTMLNodeProps<HTMLInputElement> {
     list?: AttributeValue;
     max?: AttributeValue;
     maxLength?: AttributeValue;
+    maxlength?: AttributeValue;
     min?: AttributeValue;
     minLength?: AttributeValue;
+    minlength?: AttributeValue;
     pattern?: AttributeValue;
     multiple?: AttributeValue;
     required?: AttributeValue;
@@ -48,8 +54,6 @@ const inputProps = [
     'alt',
     'autocomplete',
     'autofocus',
-    'checked',
-    'defaultChecked',
     'formAction',
     'formEnctype',
     'formMethod',
@@ -73,26 +77,35 @@ const inputProps = [
 export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents, (node: HTMLElement, props: InputProps, cleanUp: CancellationToken) => {
     const input = node as HTMLInputElement;
     if (props?.value !== undefined) {
-        if (typeof props.value !== 'string') {
-            const value = props.value as BindableSource<string>;
+        if (typeof props.value !== 'string' && typeof props.value !== 'number') {
+            const value = props.value as BindableSource<string> | BindableSource<number>;
+            const updateValue = (v: string | number): void => {
+                input.value = v == null ? '' : String(v);
+            };
             value.listenAndRepeat((v) => {
-                input.value = v ?? '';
+                if (renderBatchState.active) queueRenderUpdate(updateValue, () => !cleanUp.isCancelled && updateValue(v));
+                else updateValue(v);
             }, cleanUp);
-            input.addEventListener('input', () => {
-                value.write(input.value);
+            cleanUp.registerDomEvent(input, 'input', () => {
+                const nextValue = typeof value.value === 'number' ? input.valueAsNumber : input.value;
+                (value as DataWriter<string | number>).write(nextValue);
             });
         } else {
-            input.value = props.value as string;
+            input.value = String(props.value);
         }
     }
 
     if (props?.checked !== undefined) {
         if (typeof props.checked !== 'boolean') {
             const checked = props.checked as BindableSource<boolean>;
-            checked.listenAndRepeat((v) => {
+            const updateChecked = (v: boolean): void => {
                 input.checked = v ?? false;
+            };
+            checked.listenAndRepeat((v) => {
+                if (renderBatchState.active) queueRenderUpdate(updateChecked, () => !cleanUp.isCancelled && updateChecked(v));
+                else updateChecked(v);
             }, cleanUp);
-            input.addEventListener('change', () => {
+            cleanUp.registerDomEvent(input, 'change', () => {
                 checked.write(input.checked);
             });
         } else {

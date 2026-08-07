@@ -25,7 +25,11 @@ export interface TextComponentModel extends ComponentModel {
     lineHeight?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumText(props: AurumTexteProps, children: Renderable[], api: AurumComponentAPI): TextComponentModel {
+export function AurumText(
+    props: AurumTexteProps,
+    children: Renderable[],
+    api: AurumComponentAPI<string | ReadOnlyDataSource<string>>
+): TextComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {
@@ -78,17 +82,17 @@ export function AurumText(props: AurumTexteProps, children: Renderable[], api: A
         }, api.cancellationToken);
     }
 
-    for (const i of content as Array<string | ReadOnlyDataSource<string>>) {
+    for (const i of content) {
         if (i instanceof DataSource) {
             i.transform(dsUnique(), api.cancellationToken).listen((v) => {
                 if (result.renderedState) {
                     result.renderedState.lines = [];
                 }
-                updateText(text, content as any);
+                updateText(text, content);
             });
         }
     }
-    updateText(text, content as any);
+    updateText(text, content);
 
     const result: TextComponentModel = {
         readIsHovering: new DataSource<boolean>(),

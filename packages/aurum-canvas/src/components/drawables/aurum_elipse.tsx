@@ -20,7 +20,7 @@ export interface ElipseComponentModel extends ComponentModel {
     endAngle?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumElipse(props: AurumElipseProps, children: Renderable[], api: AurumComponentAPI): ElipseComponentModel {
+export function AurumElipse(props: AurumElipseProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): ElipseComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

@@ -14,11 +14,14 @@
     "files": ["prebuilt", "README.md", "LICENSE"],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "test": "tsc -p tsconfig.test.json --noEmit --declaration false --declarationMap false",
+        "test": "tsc -p tsconfig.test.json --noEmit --declaration false --declarationMap false && vitest run",
         "prepack": "npm run build"
     },
     "dependencies": {
         "@aurum/streams": "^0.1.0"
+    },
+    "devDependencies": {
+        "vitest": "^4.0.16"
     },
     "license": "MIT"
 }

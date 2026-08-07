@@ -98,6 +98,8 @@ export const Article = DomNodeCreator<HTMLNodeProps<HTMLElement>>('article');
  * @internal
  */
 export const Aside = DomNodeCreator<HTMLNodeProps<HTMLElement>>('aside');
+/** Semantic document section. */
+export const Section = DomNodeCreator<HTMLNodeProps<HTMLElement>>('section');
 /**
  * @internal
  */
@@ -317,6 +319,7 @@ export interface ButtonProps extends HTMLNodeProps<HTMLButtonElement> {
     type?: AttributeValue;
     disabled?: AttributeValue;
     autofocus?: AttributeValue;
+    autoFocus?: AttributeValue;
     form?: AttributeValue;
     formaction?: AttributeValue;
     formenctype?: AttributeValue;
@@ -390,9 +393,12 @@ export interface FormProps extends HTMLNodeProps<HTMLFormElement> {
     rel?: AttributeValue;
     enctype?: AttributeValue;
     novalidate?: AttributeValue;
+    noValidate?: AttributeValue;
     target?: AttributeValue;
     'accept-charset'?: AttributeValue;
+    acceptCharset?: AttributeValue;
     autocomplete?: AttributeValue;
+    autoComplete?: AttributeValue;
     onSubmit?: DataDrain<Event>;
     onReset?: DataDrain<Event>;
     onFormData?: DataDrain<FormDataEvent>;
@@ -495,10 +501,14 @@ export interface ImgProps extends HTMLNodeProps<HTMLImageElement> {
     width?: AttributeValue;
     height?: AttributeValue;
     referrerpolicy?: AttributeValue;
+    referrerPolicy?: AttributeValue;
     sizes?: AttributeValue;
     srcset?: AttributeValue;
+    srcSet?: AttributeValue;
     usemap?: AttributeValue;
+    useMap?: AttributeValue;
     crossorigin?: AttributeValue;
+    crossOrigin?: AttributeValue;
     decoding?: AttributeValue;
     ismap?: AttributeValue;
     loading?: AttributeValue;
@@ -527,6 +537,7 @@ export const Img = DomNodeCreator<ImgProps>('img', [
  */
 export interface LabelProps extends HTMLNodeProps<HTMLLabelElement> {
     for?: AttributeValue;
+    htmlFor?: AttributeValue;
 }
 
 /**
@@ -625,8 +636,10 @@ export const Tr = DomNodeCreator<HTMLNodeProps<HTMLTableRowElement>>('tr');
  */
 export interface TableCellProps extends HTMLNodeProps<HTMLTableCellElement> {
     colspan?: AttributeValue;
+    colSpan?: AttributeValue;
     headers?: AttributeValue;
     rowspan?: AttributeValue;
+    rowSpan?: AttributeValue;
 }
 
 /**
@@ -643,6 +656,7 @@ export const Th = DomNodeCreator<HTMLNodeProps<HTMLTableHeaderCellElement>>('th'
  */
 export interface TimeProps extends HTMLNodeProps<HTMLTimeElement> {
     datetime?: AttributeValue;
+    dateTime?: AttributeValue;
 }
 /**
  * @internal
@@ -1083,6 +1097,9 @@ export interface OptionProps extends HTMLNodeProps<HTMLElement> {
  * @internal
  */
 export const Option = DomNodeCreator<OptionProps>('option', ['value', 'label', 'disabled', 'selected']);
+
+/** List of suggestions associated with an input element. */
+export const Datalist = DomNodeCreator<HTMLNodeProps<HTMLDataListElement>>('datalist');
 
 /**
  * @internal

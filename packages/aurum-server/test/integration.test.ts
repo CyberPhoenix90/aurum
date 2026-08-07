@@ -27,7 +27,7 @@ describe('@aurum/server integration', () => {
         const scalar = new DataSource('one');
         const array = new ArrayDataSource([1]);
         const map = new MapDataSource(new Map([['one', 1]]));
-        const object = new ObjectDataSource({ value: 1 });
+        const object = new ObjectDataSource<{ value?: number }>({ value: 1 });
         const set = new SetDataSource(['one']);
         const duplex = new DuplexDataSource('downstream');
         server.exposeDataSource('scalar', scalar);
@@ -48,7 +48,7 @@ describe('@aurum/server integration', () => {
         const localScalar = new DataSource<string>();
         const localArray = new ArrayDataSource<number>();
         const localMap = new MapDataSource<string, number>();
-        const localObject = new ObjectDataSource<{ value: number }>({ value: 0 });
+        const localObject = new ObjectDataSource<{ value?: number }>({ value: 0 });
         const localSet = new SetDataSource<string>();
         const localDuplex = new DuplexDataSource<string>(undefined, false);
         client.syncDataSource(localScalar, 'scalar', { cancellationToken: token });
@@ -76,6 +76,11 @@ describe('@aurum/server integration', () => {
         set.add('two');
         duplex.update('server');
         await until(() => localScalar.value === 'two' && localArray.get(1) === 2 && localMap.get('two') === 2 && localObject.get('value') === 2 && localSet.has('two') && localDuplex.value === 'server');
+
+        object.delete('value');
+        await until(() => !localObject.hasKey('value'));
+        object.set('value', 3);
+        await until(() => localObject.get('value') === 3);
 
         let upstream: string | undefined;
         duplex.listenUpstream((value) => (upstream = value));

@@ -15,7 +15,7 @@ export interface RegularPolygonComponentModel extends ComponentModel {
     radius?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumRegularPolygon(props: AurumRegularPolygonProps, children: Renderable[], api: AurumComponentAPI): RegularPolygonComponentModel {
+export function AurumRegularPolygon(props: AurumRegularPolygonProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): RegularPolygonComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {
