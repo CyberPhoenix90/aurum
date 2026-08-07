@@ -206,7 +206,7 @@ describe('renderer developer tooling', () => {
             .nodes.filter((node) => !before.has(node.id));
 
         expect(resolveAurumDevtoolsNodeId(source)).toBeDefined();
-        expect(added.filter((node) => node.kind === 'component' || node.kind === 'render-binding')).toEqual([]);
+        expect(added.filter((node) => node.kind === 'component' || node.kind === 'render-binding' || node.kind === 'dom-element')).toEqual([]);
         tree.dispose();
     });
 });

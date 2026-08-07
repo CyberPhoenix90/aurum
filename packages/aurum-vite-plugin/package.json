@@ -1,6 +1,6 @@
 {
     "name": "@aurum/vite-plugin",
-    "version": "0.1.0",
+    "version": "0.10.0",
     "description": "Vite build policy for Aurum developer tooling metadata",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",

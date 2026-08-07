@@ -221,8 +221,15 @@ describe('aurumDevtools', () => {
             .map((entry) => entry.code)
             .join('\n');
         const moduleUrl = `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`;
-        const bundled = (await import(moduleUrl)) as { runtimePolicy: { mode: string; captureStacks: boolean; historyLimit: number } };
+        const bundled = (await import(moduleUrl)) as {
+            runtimePolicy: { debugBuildEnabled: boolean; mode: string; captureStacks: boolean; historyLimit: number };
+        };
 
-        expect(bundled.runtimePolicy).toEqual({ mode: 'production', captureStacks: false, historyLimit: 0 });
+        expect(bundled.runtimePolicy).toEqual({
+            debugBuildEnabled: false,
+            mode: 'production',
+            captureStacks: false,
+            historyLimit: 0
+        });
     });
 });

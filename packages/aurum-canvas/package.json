@@ -1,6 +1,6 @@
 {
     "name": "@aurum/canvas",
-    "version": "0.0.54",
+    "version": "0.10.0",
     "description": "Aurum style scene graph management for rendering in canvas",
     "type": "module",
     "main": "./prebuilt/esnext/aurum-canvas.js",
@@ -23,8 +23,8 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/html": "^0.1.0",
-        "@aurum/rendering": "^0.1.0"
+        "@aurum/html": "^0.10.0",
+        "@aurum/rendering": "^0.10.0"
     },
     "devDependencies": {
         "@vitest/browser": "^4.0.16",

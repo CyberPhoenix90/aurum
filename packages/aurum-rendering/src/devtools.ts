@@ -1,9 +1,11 @@
 import {
+    AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED,
     AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED,
     AurumDevtoolsCancellation,
     aurumDevtools,
     linkAurumDevtoolsNodes,
-    registerAurumDevtoolsNode
+    registerAurumDevtoolsNode,
+    resolveAurumDevtoolsNodeId
 } from '@aurum/streams';
 import type { RenderSession } from './rendering/aurum_element.js';
 
@@ -22,13 +24,52 @@ interface ComponentInspectionTarget {
 
 /** @internal Rich renderer relationships are intentionally debug-build only. */
 export function isAurumDevtoolsDebugBuild(): boolean {
-    return AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED && aurumDevtools.config.mode === 'debug';
+    return AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED && AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED && aurumDevtools.config.mode === 'debug';
 }
 
 /** @internal Returns the component owning work performed in this render scope. */
 export function getAurumDevtoolsActiveComponent(session: RenderSession | undefined): object | undefined {
     const activeComponents = session?.devtoolsComponentStack;
     return activeComponents?.[activeComponents.length - 1] ?? session?.devtoolsParentComponent;
+}
+
+/** Registers a concrete host DOM element for the component/DOM inspector. */
+export function registerAurumDomNode(
+    target: object,
+    cancellationToken?: AurumDevtoolsCancellation,
+    session?: RenderSession
+): void {
+    if (!isAurumDevtoolsDebugBuild()) return;
+
+    registerAurumDevtoolsNode(
+        target,
+        {
+            kind: 'dom-element',
+            name: describeRenderTarget(target),
+            getValue: describeDomValue,
+            metadata: { renderer: 'dom', host: true }
+        },
+        cancellationToken
+    );
+
+    const component = getAurumDevtoolsActiveComponent(session);
+    if (component) {
+        linkAurumDevtoolsNodes(component, target, { kind: 'component-output', label: 'DOM' }, cancellationToken);
+    }
+}
+
+/** Links host elements after insertion so the inspector mirrors actual DOM nesting. */
+export function linkAurumDomNodeChildren(
+    parent: object,
+    children: readonly object[],
+    cancellationToken?: AurumDevtoolsCancellation
+): void {
+    if (!isAurumDevtoolsDebugBuild()) return;
+    for (const child of children) {
+        if (resolveAurumDevtoolsNodeId(child) !== undefined) {
+            linkAurumDevtoolsNodes(parent, child, { kind: 'dom-child', label: 'contains' }, cancellationToken);
+        }
+    }
 }
 
 /**
@@ -84,20 +125,48 @@ export function registerAurumRenderBinding(
 ): void {
     if (!isAurumDevtoolsDebugBuild()) return;
 
-    registerAurumDevtoolsNode(
-        target,
-        {
-            kind: 'render-binding',
-            name: describeRenderTarget(target),
-            metadata: { binding: label }
-        },
-        cancellationToken
-    );
+    if (resolveAurumDevtoolsNodeId(target) === undefined) {
+        registerAurumDevtoolsNode(
+            target,
+            {
+                kind: 'render-binding',
+                name: describeRenderTarget(target),
+                metadata: { binding: label }
+            },
+            cancellationToken
+        );
+    }
     linkAurumDevtoolsNodes(source, target, { kind: 'render', label }, cancellationToken);
 
     const component = getAurumDevtoolsActiveComponent(session);
     if (component) {
         linkAurumDevtoolsNodes(component, target, { kind: 'component-output', label }, cancellationToken);
+    }
+}
+
+function describeDomValue(target: object): unknown {
+    try {
+        const element = target as {
+            tagName?: unknown;
+            id?: unknown;
+            className?: unknown;
+            attributes?: ArrayLike<{ name: string; value: string }>;
+        };
+        const attributes: Record<string, string> = {};
+        if (element.attributes !== undefined) {
+            for (let index = 0; index < element.attributes.length; index++) {
+                const attribute = element.attributes[index];
+                if (attribute !== undefined) attributes[attribute.name] = attribute.value;
+            }
+        }
+        return {
+            tagName: typeof element.tagName === 'string' ? element.tagName.toLowerCase() : undefined,
+            id: typeof element.id === 'string' && element.id ? element.id : undefined,
+            className: typeof element.className === 'string' && element.className ? element.className : undefined,
+            attributes
+        };
+    } catch {
+        return { unavailable: true };
     }
 }
 

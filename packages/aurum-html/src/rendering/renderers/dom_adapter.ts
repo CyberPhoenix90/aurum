@@ -1,7 +1,15 @@
 import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
-import { AurumComponentAPI, createRenderSession, registerAurumRenderBinding, Renderable, RenderSession } from '@aurum/rendering';
+import {
+    AurumComponentAPI,
+    createRenderSession,
+    linkAurumDomNodeChildren,
+    registerAurumDomNode,
+    registerAurumRenderBinding,
+    Renderable,
+    RenderSession
+} from '@aurum/rendering';
 import { AurumElement, Rendered, renderInternal } from '../dom_runtime.js';
-import { DataSource } from '@aurum/streams';
+import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, DataSource } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
 import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurum/streams';
 import { AurumDecorator } from '../../utilities/aurum.js';
@@ -345,6 +353,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
         } else {
             node = document.createElement(nodeName);
         }
+        if (AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED) registerAurumDomNode(node, api.cancellationToken, api.renderSession);
         if (props) {
             processHTMLNodeInternal(
                 node,
@@ -358,7 +367,15 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
         }
         //@ts-ignore
         const renderedChildren = renderInternal(children, api.renderSession);
-        connectChildren(node, Array.isArray(renderedChildren) ? renderedChildren : renderedChildren ? [renderedChildren] : []);
+        const childNodes = Array.isArray(renderedChildren) ? renderedChildren : renderedChildren ? [renderedChildren] : [];
+        connectChildren(node, childNodes);
+        if (AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED) {
+            linkAurumDomNodeChildren(
+                node,
+                childNodes.filter((child): child is HTMLElement | SVGElement => child instanceof HTMLElement || child instanceof SVGElement),
+                api.cancellationToken
+            );
+        }
         if (props) {
             if (props.onAttach) {
                 api.onAttach(() => props.onAttach(node));

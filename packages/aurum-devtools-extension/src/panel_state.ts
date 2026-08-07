@@ -24,6 +24,23 @@ export interface PageSlice<Item> {
     total: number;
 }
 
+export interface ComponentTreeEntry {
+    node: DevtoolsNode;
+    depth: number;
+    parentId?: string;
+}
+
+export interface ArrayPreview {
+    size: number;
+    truncated: boolean;
+    items: Array<{ index: string; value: unknown }>;
+}
+
+export interface RelatedGraphNodes {
+    upstream: Set<string>;
+    downstream: Set<string>;
+}
+
 export function mergeEvents(previous: DevtoolsEvent[], incoming: DevtoolsEvent[], limit = 1000): DevtoolsEvent[] {
     const seen = new Set<string>();
     const merged: DevtoolsEvent[] = [];
@@ -36,6 +53,25 @@ export function mergeEvents(previous: DevtoolsEvent[], incoming: DevtoolsEvent[]
     }
 
     return merged.length <= limit ? merged : merged.slice(merged.length - limit);
+}
+
+export function updatedNodeIds(events: readonly DevtoolsEvent[]): string[] {
+    return Array.from(
+        new Set(
+            events.flatMap((event) => (event.type === 'node-updated' && event.nodeId !== undefined ? [event.nodeId] : []))
+        )
+    );
+}
+
+export function relatedGraphNodeIds(selectedNodeId: string | undefined, edges: readonly DevtoolsEdge[]): RelatedGraphNodes {
+    const upstream = new Set<string>();
+    const downstream = new Set<string>();
+    if (selectedNodeId === undefined) return { upstream, downstream };
+    for (const edge of edges) {
+        if (edge.target === selectedNodeId) upstream.add(edge.source);
+        if (edge.source === selectedNodeId) downstream.add(edge.target);
+    }
+    return { upstream, downstream };
 }
 
 export function filterNodes(nodes: DevtoolsNode[], query: string, kind: string): DevtoolsNode[] {
@@ -53,6 +89,114 @@ export function filterNodes(nodes: DevtoolsNode[], query: string, kind: string):
         const searchable = `${node.name ?? ''}\n${node.kind}\n${node.id}`.toLocaleLowerCase();
         return searchable.includes(normalizedQuery);
     });
+}
+
+export function isArrayDataSourceNode(node: Pick<DevtoolsNode, 'kind'>): boolean {
+    return node.kind.toLocaleLowerCase().replace(/[^a-z]/g, '').includes('arraydatasource');
+}
+
+export function arrayPreview(value: unknown): ArrayPreview | undefined {
+    if (typeof value !== 'object' || value === null) return undefined;
+    const preview = value as { type?: unknown; size?: unknown; entries?: unknown; truncated?: unknown };
+    if (preview.type !== 'array' || !Array.isArray(preview.entries)) return undefined;
+    const items = preview.entries.flatMap((entry, position) => {
+        if (typeof entry !== 'object' || entry === null || !('value' in entry)) return [];
+        const candidate = entry as { key?: unknown; value: unknown };
+        return [{ index: typeof candidate.key === 'string' ? candidate.key : String(position), value: candidate.value }];
+    });
+    return {
+        size: typeof preview.size === 'number' && Number.isFinite(preview.size) ? preview.size : items.length,
+        truncated: preview.truncated === true,
+        items
+    };
+}
+
+export function buildComponentTree(nodes: DevtoolsNode[], edges: DevtoolsEdge[]): ComponentTreeEntry[] {
+    const relevantNodes = nodes.filter((node) => node.kind === 'component' || node.kind === 'dom-element');
+    const nodeById = new Map(relevantNodes.map((node) => [node.id, node]));
+    const componentParents = new Map<string, string>();
+    const domParents = new Map<string, string>();
+    const domOwners = new Map<string, string>();
+
+    for (const edge of edges) {
+        const source = nodeById.get(edge.source);
+        const target = nodeById.get(edge.target);
+        if (source === undefined || target === undefined) continue;
+        if (edge.kind === 'component-child' && source.kind === 'component' && target.kind === 'component') {
+            componentParents.set(target.id, source.id);
+        } else if (edge.kind === 'dom-child' && source.kind === 'dom-element' && target.kind === 'dom-element') {
+            domParents.set(target.id, source.id);
+        } else if (edge.kind === 'component-output' && source.kind === 'component' && target.kind === 'dom-element') {
+            domOwners.set(target.id, source.id);
+        }
+    }
+
+    const parentById = new Map<string, string>();
+    for (const node of relevantNodes) {
+        if (node.kind === 'component') {
+            let hostParent: string | undefined;
+            for (const [domId, ownerId] of domOwners) {
+                const domParent = domParents.get(domId);
+                if (ownerId === node.id && domParent !== undefined && domOwners.get(domParent) !== node.id) {
+                    hostParent = domParent;
+                    break;
+                }
+            }
+            const parent = hostParent ?? componentParents.get(node.id);
+            if (parent !== undefined) parentById.set(node.id, parent);
+            continue;
+        }
+        const owner = domOwners.get(node.id);
+        const domParent = domParents.get(node.id);
+        const domParentOwner = domParent === undefined ? undefined : domOwners.get(domParent);
+        const parent = domParent !== undefined && (owner === undefined || owner === domParentOwner) ? domParent : owner ?? domParent;
+        if (parent !== undefined && parent !== node.id) parentById.set(node.id, parent);
+    }
+
+    const children = new Map<string, DevtoolsNode[]>();
+    for (const node of relevantNodes) {
+        const parent = parentById.get(node.id);
+        if (parent === undefined || !nodeById.has(parent)) continue;
+        const siblings = children.get(parent) ?? [];
+        siblings.push(node);
+        children.set(parent, siblings);
+    }
+    const order = new Map(nodes.map((node, index) => [node.id, index]));
+    for (const siblings of children.values()) siblings.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+
+    const result: ComponentTreeEntry[] = [];
+    const visited = new Set<string>();
+    const append = (node: DevtoolsNode, depth: number): void => {
+        if (visited.has(node.id)) return;
+        visited.add(node.id);
+        const parentId = parentById.get(node.id);
+        result.push({ node, depth, ...(parentId === undefined ? {} : { parentId }) });
+        for (const child of children.get(node.id) ?? []) append(child, depth + 1);
+    };
+    for (const node of relevantNodes) {
+        if (!parentById.has(node.id)) append(node, 0);
+    }
+    // Malformed or cyclic third-party snapshots remain inspectable.
+    for (const node of relevantNodes) append(node, 0);
+    return result;
+}
+
+export function filterComponentTree(entries: ComponentTreeEntry[], query: string, kind: string): ComponentTreeEntry[] {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    if (normalizedQuery === '' && kind === '') return entries;
+    const byId = new Map(entries.map((entry) => [entry.node.id, entry]));
+    const included = new Set<string>();
+    for (const entry of entries) {
+        const matchesKind = kind === '' || entry.node.kind === kind;
+        const searchable = `${entry.node.name ?? ''}\n${entry.node.kind}\n${entry.node.id}`.toLocaleLowerCase();
+        if (!matchesKind || (normalizedQuery !== '' && !searchable.includes(normalizedQuery))) continue;
+        let current: ComponentTreeEntry | undefined = entry;
+        while (current !== undefined && !included.has(current.node.id)) {
+            included.add(current.node.id);
+            current = current.parentId === undefined ? undefined : byId.get(current.parentId);
+        }
+    }
+    return entries.filter((entry) => included.has(entry.node.id));
 }
 
 export function paginateItems<Item>(items: Item[], requestedPage: number, pageSize: number): PageSlice<Item> {

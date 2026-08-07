@@ -56,6 +56,7 @@ describe('Aurum developer tools protocol', () => {
         expect(registry.capabilities).toContain('graph');
         expect(registry.capabilities).toContain('inspect');
         expect(registry.capabilities).toContain('subscriptions');
+        expect(registry.capabilities).toContain('array-data-sources');
         expect(registry.getSnapshot().protocolVersion).toBe(AURUM_DEVTOOLS_PROTOCOL_VERSION);
     });
 
@@ -76,6 +77,23 @@ describe('Aurum developer tools protocol', () => {
         expect(registry.revision).toBeGreaterThan(registeredRevision);
         expect(registry.runtimeId).toBe(runtimeId);
         expect(getAurumDevtoolsRegistry().runtimeId).toBe(runtimeId);
+    });
+
+    it('omits absent optional fields from snapshots and cloned events', () => {
+        const registry = configureAurumDevtools({ mode: 'debug', captureStacks: false, historyLimit: 10 });
+        const target = {};
+        cleanupTargets.push(target);
+
+        const id = registerAurumDevtoolsNode(target, { kind: 'minimal-node' });
+        const node = registry.inspect(id)!;
+        const added = registry.getSnapshot().events.find((event) => event.type === 'node-added')!;
+
+        expect(node).not.toHaveProperty('name');
+        expect(node).not.toHaveProperty('value');
+        expect(node).not.toHaveProperty('metadata');
+        expect(node).not.toHaveProperty('creationStack');
+        expect(added).not.toHaveProperty('value');
+        expect(added).not.toHaveProperty('details');
     });
 
     it('rejects incomplete and hostile registry-shaped globals without invoking unsafe getters', () => {
@@ -123,6 +141,7 @@ describe('Aurum developer tools protocol', () => {
         expect(node.metadata?.purpose.value).toBe('test');
         expect(node.creationStack).toBeTypeOf('string');
         expect(registry.capabilities).toContain('annotations');
+        expect(registry.capabilities).toContain('component-tree');
     });
 
     it('returns detached snapshot previews and isolated live events', () => {
@@ -367,7 +386,18 @@ describe('Aurum developer tools protocol', () => {
         object.set('value', 2);
         duplex.write(2);
 
-        expect(registry.inspect(array)?.version).toBe(1);
+        expect(registry.inspect(array)).toMatchObject({
+            kind: 'array-data-source',
+            version: 1,
+            value: { type: 'array', size: 2, entries: [{ key: '0' }, { key: '1' }] }
+        });
+        const arrayEvent = registry
+            .getSnapshot()
+            .events.find((event) => event.nodeId === resolveAurumDevtoolsNodeId(array) && event.type === 'node-updated');
+        expect(arrayEvent).toMatchObject({
+            updateKind: 'append',
+            details: { operation: { value: 'add' }, index: { value: 1 } }
+        });
         expect(registry.inspect(map)?.version).toBe(1);
         expect(registry.inspect(set)?.version).toBe(1);
         expect(registry.inspect(object)?.version).toBe(1);
@@ -489,6 +519,7 @@ describe('Aurum developer tools protocol', () => {
         expect(registry.inspect(target)?.value).toBeUndefined();
         expect(registry.getSnapshot().edges.find((edge) => edge.id === edgeId)?.label).toBeUndefined();
         expect(registry.capabilities).not.toContain('annotations');
+        expect(registry.capabilities).not.toContain('component-tree');
         expect(registry.config.captureStacks).toBe(false);
         expect(() => ((registry.config as unknown as { mode: string }).mode = 'debug')).toThrow();
     });

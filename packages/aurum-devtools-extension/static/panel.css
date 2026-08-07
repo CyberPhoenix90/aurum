@@ -15,6 +15,10 @@
     --warning: #bd7400;
     --error: #ca3342;
     --edge: #8791a3;
+    --upstream: #6c65c9;
+    --upstream-soft: #ebe9ff;
+    --downstream: #16834b;
+    --downstream-soft: #dff5e8;
     --code: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 12px;
@@ -37,6 +41,10 @@
         --warning: #f0aa3b;
         --error: #ff6f7d;
         --edge: #667081;
+        --upstream: #a49cff;
+        --upstream-soft: #302d52;
+        --downstream: #4ec885;
+        --downstream-soft: #183d2b;
     }
 }
 
@@ -300,6 +308,19 @@ select:focus-visible,
 
 .content {
     background: var(--background);
+    overflow: hidden;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.panel-view {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
 }
 
 .details {
@@ -363,6 +384,18 @@ select:focus-visible,
     opacity: 0.72;
 }
 
+.graph-edges path.upstream {
+    stroke: var(--upstream);
+    stroke-width: 2.5;
+    opacity: 1;
+}
+
+.graph-edges path.downstream {
+    stroke: var(--downstream);
+    stroke-width: 2.5;
+    opacity: 1;
+}
+
 .graph-edges marker path {
     fill: var(--edge);
     stroke: none;
@@ -389,10 +422,113 @@ select:focus-visible,
     stroke-width: 2;
 }
 
+.graph-node.upstream:not(.selected) rect {
+    fill: var(--upstream-soft);
+    stroke: var(--upstream);
+    stroke-width: 2;
+}
+
+.graph-node.downstream:not(.selected) rect {
+    fill: var(--downstream-soft);
+    stroke: var(--downstream);
+    stroke-width: 2;
+}
+
+.graph-node.updated rect {
+    animation: graph-node-update 700ms ease-out;
+}
+
+@keyframes graph-node-update {
+    0% {
+        fill: var(--accent-strong);
+        stroke: var(--accent-strong);
+        stroke-width: 3;
+        filter: drop-shadow(0 0 6px var(--accent));
+    }
+
+    35% {
+        fill: var(--accent-soft);
+        stroke: var(--accent);
+        stroke-width: 2;
+        filter: drop-shadow(0 0 3px var(--accent));
+    }
+
+    100% {
+        filter: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .graph-node.updated rect {
+        animation-duration: 120ms;
+    }
+}
+
 .graph-node-title,
 .graph-node-value,
 .graph-node-subscriptions {
     pointer-events: none;
+}
+
+.component-view {
+    background: var(--surface);
+}
+
+.component-tree {
+    min-width: max-content;
+    padding: 5px 0;
+}
+
+.component-row {
+    display: grid;
+    width: 100%;
+    min-width: 420px;
+    min-height: 28px;
+    grid-template-columns: 14px 22px minmax(140px, auto) minmax(90px, 1fr);
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px 3px calc(9px + var(--tree-depth) * 18px);
+    color: inherit;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.component-row:hover {
+    background: var(--surface-hover);
+}
+
+.component-row.selected {
+    background: var(--accent-soft);
+}
+
+.component-disclosure,
+.component-icon {
+    color: var(--muted);
+    font-family: var(--code);
+    text-align: center;
+}
+
+.component-row:not(.host-node) .component-icon,
+.component-row:not(.host-node) .component-label {
+    color: var(--accent-strong);
+}
+
+.component-label {
+    overflow: hidden;
+    font-family: var(--code);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-detail {
+    overflow: hidden;
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .graph-node-title {
@@ -509,6 +645,48 @@ select:focus-visible,
 .numeric-cell {
     text-align: right !important;
     font-variant-numeric: tabular-nums;
+}
+
+.array-items {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.array-item {
+    display: grid;
+    grid-template-columns: minmax(32px, auto) minmax(0, 1fr);
+    border-bottom: 1px solid var(--border);
+}
+
+.array-item:last-of-type {
+    border-bottom: 0;
+}
+
+.array-index,
+.array-value,
+.array-truncated {
+    padding: 6px 8px;
+}
+
+.array-index {
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    background: var(--surface-raised);
+    font-family: var(--code);
+    text-align: right;
+}
+
+.array-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.array-truncated {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
 }
 
 .event-list {

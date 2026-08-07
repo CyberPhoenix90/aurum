@@ -1,6 +1,6 @@
 {
     "name": "@aurum/html",
-    "version": "0.1.0",
+    "version": "0.10.0",
     "description": "HTML nodes, DOM rendering, styling, and HTML JSX types for Aurum",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",
@@ -26,8 +26,8 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/rendering": "^0.1.0",
-        "@aurum/streams": "^0.1.0"
+        "@aurum/rendering": "^0.10.0",
+        "@aurum/streams": "^0.10.0"
     },
     "devDependencies": {
         "@types/react": "^19.2.18",

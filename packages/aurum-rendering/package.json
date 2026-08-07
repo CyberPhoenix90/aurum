@@ -1,6 +1,6 @@
 {
     "name": "@aurum/rendering",
-    "version": "0.1.0",
+    "version": "0.10.0",
     "description": "Renderer-independent component model and rendering primitives for Aurum",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",
@@ -18,7 +18,7 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/streams": "^0.1.0"
+        "@aurum/streams": "^0.10.0"
     },
     "devDependencies": {
         "vitest": "^4.0.16"

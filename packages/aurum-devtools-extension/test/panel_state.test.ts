@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { DevtoolsEvent, DevtoolsNode, DevtoolsSnapshot, RuntimeStatus } from '../src/protocol.js';
 import {
+    arrayPreview,
+    buildComponentTree,
     compactValue,
     createPanelRevision,
+    filterComponentTree,
     filterNodes,
     layoutGraph,
     mergeEvents,
     paginateItems,
+    relatedGraphNodeIds,
     shouldPollPanel,
-    shouldRefreshInspection
+    shouldRefreshInspection,
+    updatedNodeIds
 } from '../src/panel_state.js';
 
 function event(id: string, timestamp: number): DevtoolsEvent {
@@ -34,6 +39,29 @@ describe('panel state', () => {
         expect(result.map((item) => item.id)).toEqual(['two', 'three']);
     });
 
+    it('selects unique node update targets for graph flashes', () => {
+        expect(
+            updatedNodeIds([
+                { ...event('one', 1), nodeId: 'a' },
+                { ...event('two', 2), nodeId: 'a' },
+                { ...event('three', 3), nodeId: 'b' },
+                { id: 'four', timestamp: 4, type: 'subscriptions-changed', nodeId: 'c' },
+                event('five', 5)
+            ])
+        ).toEqual(['a', 'b']);
+    });
+
+    it('finds the direct upstream and downstream graph neighbors of a selection', () => {
+        const related = relatedGraphNodeIds('selected', [
+            { source: 'upstream-a', target: 'selected' },
+            { source: 'upstream-b', target: 'selected' },
+            { source: 'selected', target: 'downstream' },
+            { source: 'unrelated-a', target: 'unrelated-b' }
+        ]);
+        expect(Array.from(related.upstream)).toEqual(['upstream-a', 'upstream-b']);
+        expect(Array.from(related.downstream)).toEqual(['downstream']);
+    });
+
     it('filters nodes by the name, kind, and id fields available in topology snapshots', () => {
         const nodes = [node('1', 'DataSource', 'temperature'), node('2', 'ArrayDataSource', 'results')];
 
@@ -50,6 +78,35 @@ describe('panel state', () => {
     it('uses structured preview summaries in compact value labels', () => {
         expect(compactValue({ type: 'array', summary: 'Array(1,000)', size: 1000 })).toBe('Array(1,000)');
         expect(compactValue('abcdefghijklmnopqrstuvwxyz', 8)).toBe('abcdefg…');
+    });
+
+    it('extracts indexed ArrayDataSource items from structured value previews', () => {
+        const first = { type: 'string', summary: '"first"', value: 'first' };
+        expect(
+            arrayPreview({ type: 'array', summary: 'Array(3)', size: 3, entries: [{ key: '0', value: first }], truncated: true })
+        ).toEqual({ size: 3, truncated: true, items: [{ index: '0', value: first }] });
+        expect(arrayPreview({ summary: 'not an array' })).toBeUndefined();
+    });
+
+    it('builds a component and host DOM hierarchy without duplicating nested output nodes', () => {
+        const application = node('application', 'component', 'Application');
+        const child = node('child', 'component', 'Child');
+        const div = node('div', 'dom-element', '<div>');
+        const span = node('span', 'dom-element', '<span>');
+        const entries = buildComponentTree([application, div, child, span], [
+            { source: 'application', target: 'child', kind: 'component-child' },
+            { source: 'application', target: 'div', kind: 'component-output' },
+            { source: 'child', target: 'span', kind: 'component-output' },
+            { source: 'div', target: 'span', kind: 'dom-child' }
+        ]);
+
+        expect(entries.map((entry) => [entry.node.id, entry.depth, entry.parentId])).toEqual([
+            ['application', 0, undefined],
+            ['div', 1, 'application'],
+            ['child', 2, 'div'],
+            ['span', 3, 'child']
+        ]);
+        expect(filterComponentTree(entries, 'span', '').map((entry) => entry.node.id)).toEqual(['application', 'div', 'child', 'span']);
     });
 
     it('lays acyclic data flow from left to right', () => {

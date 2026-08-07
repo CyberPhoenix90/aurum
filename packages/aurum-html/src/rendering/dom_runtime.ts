@@ -1,4 +1,4 @@
-import { ArrayDataSource, CollectionChange, CollectionItemIdentity, DataSource } from '@aurum/streams';
+import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, ArrayDataSource, CollectionChange, CollectionItemIdentity, DataSource } from '@aurum/streams';
 import {
     AurumComponentAPI,
     AurumElementModel,
@@ -6,6 +6,7 @@ import {
     createAPI as createCoreAPI,
     createRenderSession,
     isAurumDevtoolsDebugBuild,
+    linkAurumDomNodeChildren,
     registerAurumRenderBinding,
     Renderable,
     RenderSession,
@@ -154,6 +155,7 @@ export abstract class AurumElement {
             const endIndex = this.getLastIndex();
             this.hostNode.insertBefore(fragment, this.contentEndMarker);
             this.lastEndIndex = endIndex + this.children.length;
+            this.linkHostChildren();
             return;
         }
         let i: number;
@@ -228,6 +230,16 @@ export abstract class AurumElement {
             this.lastEndIndex--;
             this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
         }
+        this.linkHostChildren();
+    }
+
+    private linkHostChildren(): void {
+        if (!AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED) return;
+        linkAurumDomNodeChildren(
+            this.hostNode,
+            this.children.filter((child): child is HTMLElement | SVGElement => child instanceof HTMLElement || child instanceof SVGElement),
+            this.renderScope.sessionToken
+        );
     }
 }
 

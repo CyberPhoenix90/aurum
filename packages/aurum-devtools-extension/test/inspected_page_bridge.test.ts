@@ -2,7 +2,9 @@ import { createContext, runInContext, type Context } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import {
     PAGE_BRIDGE_TTL_MS,
+    createClearHighlightExpression,
     createDisposeExpression,
+    createHighlightExpression,
     createPollExpression,
     normalizePollResult
 } from '../src/inspected_page_bridge.js';
@@ -24,6 +26,8 @@ interface MutableRegistry {
     revision?: number;
     getSnapshot(options?: { includeValues?: boolean }): Record<string, unknown>;
     subscribe(listener: (event: unknown) => void): () => void;
+    highlightDomNode?(nodeId: string, duration?: number): boolean;
+    clearDomNodeHighlight?(): void;
 }
 
 function createRegistry(options: { runtimeId?: string; revision?: number; subscribeFailures?: number } = {}): {
@@ -183,6 +187,67 @@ describe('inspected-page bridge lifecycle', () => {
         page.evaluate(createDisposeExpression('panel-b'));
         expect(state.unsubscribeCalls).toBe(1);
         expect(page.hasBridge()).toBe(false);
+    });
+
+    it('preserves omitted protocol fields instead of displaying them as undefined payloads', () => {
+        const { registry, state } = createRegistry({ runtimeId: 'runtime', revision: 1 });
+        state.snapshot.nodes = [
+            {
+                id: 'node-1',
+                kind: 'data-source',
+                subscriptions: {},
+                value: undefined,
+                metadata: undefined,
+                creationStack: undefined
+            }
+        ];
+        const page = createPage(registry);
+        const first = normalizePollResult(page.evaluate(createPollExpression('panel', 'fallback')));
+        const snapshot = first.snapshot as { nodes: Array<Record<string, unknown>> };
+
+        expect(snapshot.nodes[0]).not.toHaveProperty('value');
+        expect(snapshot.nodes[0]).not.toHaveProperty('metadata');
+        expect(snapshot.nodes[0]).not.toHaveProperty('creationStack');
+
+        state.listener?.({
+            sequence: 1,
+            timestamp: 1,
+            type: 'subscriptions-changed',
+            nodeId: 'node-1',
+            channel: 'updates',
+            count: 1,
+            value: undefined,
+            details: undefined
+        });
+        const next = normalizePollResult(page.evaluate(createPollExpression('panel', 'fallback')));
+        const event = next.events?.[0] as Record<string, unknown>;
+
+        expect(event).not.toHaveProperty('value');
+        expect(event).not.toHaveProperty('details');
+    });
+
+    it('forwards DOM highlighting without moving page nodes across the bridge', () => {
+        const { registry } = createRegistry({ runtimeId: 'runtime', revision: 1 });
+        const requests: Array<[string, number | undefined]> = [];
+        let clears = 0;
+        registry.highlightDomNode = (nodeId, duration): boolean => {
+            requests.push([nodeId, duration]);
+            return nodeId === 'dom-node';
+        };
+        registry.clearDomNodeHighlight = (): void => {
+            clears++;
+        };
+        const page = createPage(registry);
+
+        expect(page.evaluate(createHighlightExpression('dom-node', 1_200))).toBe(true);
+        expect(page.evaluate(createHighlightExpression('data-node'))).toBe(false);
+        page.evaluate(createClearHighlightExpression());
+
+        expect(requests).toEqual([
+            ['dom-node', 1_200],
+            ['data-node', 0]
+        ]);
+        expect(clears).toBe(1);
     });
 
     it('retries a failed subscription without losing snapshot inspection', () => {

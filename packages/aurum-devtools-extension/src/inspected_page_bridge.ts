@@ -15,7 +15,16 @@ export class InspectedPageBridge {
         return evaluateInPage(createInspectExpression(nodeId));
     }
 
+    public async highlightDomNode(nodeId: string, duration = 0): Promise<boolean> {
+        return (await evaluateInPage(createHighlightExpression(nodeId, duration))) === true;
+    }
+
+    public async clearDomNodeHighlight(): Promise<void> {
+        await evaluateInPage(createClearHighlightExpression());
+    }
+
     public async dispose(): Promise<void> {
+        await this.clearDomNodeHighlight().catch((_error: unknown): undefined => undefined);
         await evaluateInPage(createDisposeExpression(this.clientId)).catch((_error: unknown): undefined => undefined);
     }
 }
@@ -109,8 +118,20 @@ export function createPollExpression(clientId: string, fallbackRuntimeId: string
                 const limit = Math.min(keys.length, 1000);
                 for (let index = 0; index < limit; index++) {
                     const key = keys[index];
+                    let propertyValue;
+                    try { propertyValue = value[key]; }
+                    catch (error) {
+                        countText(key);
+                        output[key] = '[Unreadable: ' + errorText(error) + ']';
+                        countText(output[key]);
+                        continue;
+                    }
+                    // Optional protocol fields are represented by omission. Keep
+                    // that distinction across the inspected-page boundary; real
+                    // undefined values are already wrapped in Aurum previews.
+                    if (typeof propertyValue === 'undefined') continue;
                     countText(key);
-                    try { output[key] = visit(value[key], depth + 1); }
+                    try { output[key] = visit(propertyValue, depth + 1); }
                     catch (error) {
                         output[key] = '[Unreadable: ' + errorText(error) + ']';
                         countText(output[key]);
@@ -163,7 +184,7 @@ export function createPollExpression(clientId: string, fallbackRuntimeId: string
 
         const createHub = () => {
             const hub = {
-                bridgeVersion: 3,
+                bridgeVersion: 4,
                 registry,
                 fallbackRuntimeId,
                 runtimeId: undefined,
@@ -281,7 +302,7 @@ export function createPollExpression(clientId: string, fallbackRuntimeId: string
         let hub = previousHub;
         if (
             !hub ||
-            hub.bridgeVersion !== 3 ||
+            hub.bridgeVersion !== 4 ||
             hub.registry !== registry ||
             hub.disposed ||
             !hub.clients ||
@@ -399,6 +420,27 @@ export function createInspectExpression(nodeId: string): string {
     })()`;
 }
 
+export function createHighlightExpression(nodeId: string, duration = 0): string {
+    const encodedId = JSON.stringify(nodeId);
+    const normalizedDuration = Number.isFinite(duration) ? Math.max(0, Math.min(10_000, duration)) : 0;
+    return String.raw`(() => {
+        let registry;
+        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        if (!registry || typeof registry.highlightDomNode !== 'function') return false;
+        try { return registry.highlightDomNode(${encodedId}, ${normalizedDuration}) === true; }
+        catch { return false; }
+    })()`;
+}
+
+export function createClearHighlightExpression(): string {
+    return String.raw`(() => {
+        let registry;
+        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        if (!registry || typeof registry.clearDomNodeHighlight !== 'function') return;
+        try { registry.clearDomNodeHighlight(); } catch {}
+    })()`;
+}
+
 export function createDisposeExpression(clientId: string): string {
     const encodedClientId = JSON.stringify(clientId);
     return String.raw`(() => {
@@ -406,7 +448,7 @@ export function createDisposeExpression(clientId: string): string {
         let hub;
         try { hub = globalThis[bridgeKey]; } catch {}
         if (!hub) return;
-        if (hub.bridgeVersion !== 3 || !hub.clients) {
+        if (hub.bridgeVersion !== 4 || !hub.clients) {
             try { if (hub.expiryTimer !== undefined) clearTimeout(hub.expiryTimer); } catch {}
             try {
                 if (typeof hub.unsubscribe === 'function') hub.unsubscribe();

@@ -14,13 +14,26 @@ declare const __AURUM_DEVTOOLS_INSTRUMENTATION__: unknown;
 export const AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED =
     typeof __AURUM_DEVTOOLS_INSTRUMENTATION__ === 'undefined' || __AURUM_DEVTOOLS_INSTRUMENTATION__ !== false;
 
+/** Compile-time switch for metadata that exists only in debug/development builds. */
+export const AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED =
+    typeof __AURUM_DEVTOOLS_MODE__ === 'undefined' || __AURUM_DEVTOOLS_MODE__ === 'debug';
+
 export const AURUM_DEVTOOLS_PROTOCOL_VERSION = 1;
 export const AURUM_DEVTOOLS_GLOBAL_KEY = '__AURUM_DEVTOOLS__' as const;
 export const AURUM_DEVTOOLS_CONFIG_GLOBAL_KEY = '__AURUM_DEVTOOLS_CONFIG__' as const;
 export const AURUM_DEVTOOLS_SYMBOL = Symbol.for('@aurum/devtools');
 
 export type AurumDevtoolsMode = 'debug' | 'production';
-export type AurumDevtoolsCapability = 'graph' | 'events' | 'inspect' | 'annotations' | 'subscriptions' | 'weak-targets';
+export type AurumDevtoolsCapability =
+    | 'graph'
+    | 'events'
+    | 'inspect'
+    | 'annotations'
+    | 'subscriptions'
+    | 'array-data-sources'
+    | 'component-tree'
+    | 'weak-targets'
+    | 'dom-highlighting';
 
 export interface AurumDevtoolsConfig {
     mode?: AurumDevtoolsMode;
@@ -181,6 +194,9 @@ export interface AurumDevtoolsRegistry {
     setSubscriptionCount(targetOrId: AurumDevtoolsNodeReference, count: number, channel?: string): void;
     annotateNode(targetOrId: AurumDevtoolsNodeReference, annotations: Record<string, unknown>): void;
     inspect(nodeOrId: AurumDevtoolsNodeReference): AurumDevtoolsNodeSnapshot | undefined;
+    /** Highlights a registered DOM element without exposing the target across the extension boundary. */
+    highlightDomNode?(nodeOrId: AurumDevtoolsNodeReference, duration?: number): boolean;
+    clearDomNodeHighlight?(): void;
     getSnapshot(options?: AurumDevtoolsSnapshotOptions): AurumDevtoolsSnapshot;
     subscribe(listener: AurumDevtoolsListener): () => void;
     clearHistory(): void;
@@ -253,6 +269,8 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     private edgeSequence = 0;
     private eventSequence = 0;
     private runtimeRevision = 0;
+    private highlightedDomNodeId?: string;
+    private domHighlightCleanup?: () => void;
 
     public constructor(config: AurumDevtoolsConfig, public readonly productionLocked: boolean = false) {
         this.resolvedConfig = resolveConfig(config, undefined, productionLocked);
@@ -280,15 +298,17 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     }
 
     public get capabilities(): readonly AurumDevtoolsCapability[] {
-        const capabilities: AurumDevtoolsCapability[] = ['graph', 'events', 'inspect', 'subscriptions'];
-        if (this.resolvedConfig.mode === 'debug') capabilities.push('annotations');
+        const capabilities: AurumDevtoolsCapability[] = ['graph', 'events', 'inspect', 'subscriptions', 'array-data-sources'];
+        if (this.resolvedConfig.mode === 'debug') capabilities.push('annotations', 'component-tree');
         if (this.weakReferences) capabilities.push('weak-targets');
+        if (pageGlobalAvailable) capabilities.push('dom-highlighting');
         return Object.freeze(capabilities);
     }
 
     public configure(config: AurumDevtoolsConfig): void {
         const previousMode = this.resolvedConfig.mode;
         this.resolvedConfig = resolveConfig(config, this.resolvedConfig, this.productionLocked);
+        if (previousMode !== this.resolvedConfig.mode) this.clearDomNodeHighlight();
         if (previousMode === 'debug' && this.resolvedConfig.mode === 'production') {
             this.events.length = 0;
             for (const node of this.nodes.values()) {
@@ -387,6 +407,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     }
 
     private removeNode(entry: DevtoolsNodeEntry): void {
+        if (this.highlightedDomNodeId === entry.id) this.clearDomNodeHighlight();
         const target = this.dereference(entry);
         if (target) this.idsByTarget.delete(target);
         if (entry.finalizationToken) this.finalizationRegistry?.unregister(entry.finalizationToken);
@@ -400,6 +421,66 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     public resolveNodeId(target: object): string | undefined {
         const id = this.idsByTarget.get(target);
         return id && this.nodes.has(id) ? id : undefined;
+    }
+
+    public highlightDomNode(nodeOrId: AurumDevtoolsNodeReference, duration = 0): boolean {
+        this.clearDomNodeHighlight();
+        const entry = this.getEntry(nodeOrId);
+        const target = entry === undefined ? undefined : this.dereference(entry);
+        const element = target === undefined ? undefined : asDomElement(target);
+        if (entry === undefined || element === undefined || !element.isConnected) return false;
+
+        const document = element.ownerDocument;
+        const host = document.documentElement;
+        if (!host || typeof document.createElement !== 'function') return false;
+
+        const overlay = document.createElement('div');
+        overlay.setAttribute('data-aurum-devtools-highlight', entry.id);
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.style.cssText =
+            'all:initial;position:fixed;display:block;pointer-events:none;box-sizing:border-box;' +
+            'z-index:2147483647;background:rgba(66,133,244,.22);outline:2px solid rgba(66,133,244,.95);outline-offset:-1px;';
+
+        const updateOverlay = (): void => {
+            if (!element.isConnected) {
+                this.clearDomNodeHighlight();
+                return;
+            }
+            try {
+                const bounds = element.getBoundingClientRect();
+                overlay.style.left = `${bounds.left}px`;
+                overlay.style.top = `${bounds.top}px`;
+                overlay.style.width = `${Math.max(0, bounds.width)}px`;
+                overlay.style.height = `${Math.max(0, bounds.height)}px`;
+            } catch {
+                this.clearDomNodeHighlight();
+            }
+        };
+
+        const view = document.defaultView;
+        const cleanup = once(() => {
+            view?.removeEventListener('scroll', updateOverlay, true);
+            view?.removeEventListener('resize', updateOverlay);
+            overlay.remove();
+            if (this.domHighlightCleanup === cleanup) {
+                this.domHighlightCleanup = undefined;
+                this.highlightedDomNodeId = undefined;
+            }
+        });
+        this.highlightedDomNodeId = entry.id;
+        this.domHighlightCleanup = cleanup;
+        host.appendChild(overlay);
+        view?.addEventListener('scroll', updateOverlay, true);
+        view?.addEventListener('resize', updateOverlay);
+        updateOverlay();
+        if (Number.isFinite(duration) && duration > 0) {
+            view?.setTimeout(cleanup, Math.min(10_000, duration));
+        }
+        return true;
+    }
+
+    public clearDomNodeHighlight(): void {
+        this.domHighlightCleanup?.();
     }
 
     public linkNodes(
@@ -539,7 +620,11 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
             mode: this.resolvedConfig.mode,
             weakReferences: this.weakReferences,
             nodes: Array.from(this.nodes.values(), (entry) => this.toNodeSnapshot(entry, includeValues)),
-            edges: Array.from(this.edges.values(), (edge) => ({ ...edge, metadata: clonePreviewRecord(edge.metadata) })),
+            edges: Array.from(this.edges.values(), (edge) => {
+                const { metadata: sourceMetadata, ...fields } = edge;
+                const metadata = clonePreviewRecord(sourceMetadata);
+                return { ...fields, ...(metadata === undefined ? {} : { metadata }) };
+            }),
             events: this.events.map(cloneDevtoolsEvent)
         };
     }
@@ -587,16 +672,18 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
                 value = previewThrown(error);
             }
         }
+        const clonedValue = value ? cloneValuePreview(value) : undefined;
+        const metadata = clonePreviewRecord(entry.metadata);
         return {
             id: entry.id,
             kind: entry.kind,
-            name: entry.name,
+            ...(entry.name === undefined ? {} : { name: entry.name }),
             createdAt: entry.createdAt,
             version: entry.version,
             subscriptions: { ...entry.subscriptions },
-            value: value ? cloneValuePreview(value) : undefined,
-            metadata: clonePreviewRecord(entry.metadata),
-            creationStack: entry.creationStack
+            ...(clonedValue === undefined ? {} : { value: clonedValue }),
+            ...(metadata === undefined ? {} : { metadata }),
+            ...(entry.creationStack === undefined ? {} : { creationStack: entry.creationStack })
         };
     }
 
@@ -701,6 +788,8 @@ function createAurumDevtoolsRegistryFacade(internal: DefaultAurumDevtoolsRegistr
         setSubscriptionCount: internal.setSubscriptionCount.bind(internal),
         annotateNode: internal.annotateNode.bind(internal),
         inspect: internal.inspect.bind(internal),
+        highlightDomNode: internal.highlightDomNode.bind(internal),
+        clearDomNodeHighlight: internal.clearDomNodeHighlight.bind(internal),
         getSnapshot: internal.getSnapshot.bind(internal),
         subscribe: internal.subscribe.bind(internal),
         clearHistory: internal.clearHistory.bind(internal)
@@ -921,6 +1010,25 @@ function safeHasProperty(target: object, key: PropertyKey): boolean {
     }
 }
 
+function asDomElement(target: object): Element | undefined {
+    try {
+        const candidate = target as Partial<Element>;
+        const document = candidate.ownerDocument;
+        if (
+            candidate.nodeType !== 1 ||
+            document === null ||
+            document === undefined ||
+            typeof candidate.getBoundingClientRect !== 'function'
+        ) {
+            return undefined;
+        }
+        const elementConstructor = document.defaultView?.Element;
+        return elementConstructor === undefined || target instanceof elementConstructor ? (target as Element) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 function isFiniteNonNegativeNumber(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
@@ -951,10 +1059,13 @@ function createSubscriptionCountRecord(): Record<string, number> {
 }
 
 function cloneDevtoolsEvent(event: AurumDevtoolsEvent): AurumDevtoolsEvent {
+    const { value: sourceValue, details: sourceDetails, ...fields } = event;
+    const value = sourceValue ? cloneValuePreview(sourceValue) : undefined;
+    const details = clonePreviewRecord(sourceDetails);
     return {
-        ...event,
-        value: event.value ? cloneValuePreview(event.value) : undefined,
-        details: clonePreviewRecord(event.details)
+        ...fields,
+        ...(value === undefined ? {} : { value }),
+        ...(details === undefined ? {} : { details })
     };
 }
 
