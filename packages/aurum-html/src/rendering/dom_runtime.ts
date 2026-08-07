@@ -15,6 +15,7 @@ import { listenToRenderBatchState, queueRenderUpdate } from './render_batch.js';
 
 export type Rendered = AurumElement | HTMLElement | Text | SVGElement;
 type DOMRenderInput = Renderable | Rendered | DOMRenderInput[];
+const aurumElementDomBounds = new WeakMap<AurumElement, readonly [Comment, Comment]>();
 
 export abstract class AurumElement {
     public children: Rendered[];
@@ -75,6 +76,7 @@ export abstract class AurumElement {
         //@ts-ignore
         this.contentStartMarker.owner = this;
         this.contentEndMarker = document.createComment('END Aurum Node ' + id);
+        aurumElementDomBounds.set(this, [this.contentStartMarker, this.contentEndMarker]);
         if (index >= node.childNodes.length) {
             node.appendChild(this.contentStartMarker);
             node.appendChild(this.contentEndMarker);
@@ -338,6 +340,9 @@ export class ArrayAurumElement extends AurumElement {
     private static readonly immediateContentCommit = ArrayAurumElement.prototype.handleNewContent;
     private entries: ArrayRenderEntry[] = [];
     private dataSource: ArrayDataSource<DOMRenderInput>;
+    private readonly batchedContentCommit = (change: CollectionChange<DOMRenderInput>): void => {
+        if (!this.disposed) this.handleBatchedContent(change);
+    };
 
     constructor(dataSource: ArrayDataSource<DOMRenderInput>, api: AurumComponentAPI<DOMPrerendered>) {
         super(dataSource, api);
@@ -374,9 +379,7 @@ export class ArrayAurumElement extends AurumElement {
     }
 
     private queueBatchedContent(change: CollectionChange<DOMRenderInput>): void {
-        queueRenderUpdate(this, () => {
-            if (!this.disposed) this.handleBatchedContent(change);
-        });
+        queueRenderUpdate(this, this.batchedContentCommit, change);
     }
 
     public static setRenderBatching(active: boolean): void {
@@ -420,20 +423,8 @@ export class ArrayAurumElement extends AurumElement {
     }
 
     private detachEntriesFromDom(removed: readonly ArrayRenderEntry[]): void {
-        const canDeleteRange =
-            removed.length >= 8 &&
-            removed.every((entry) => !(entry.rendered instanceof AurumElement)) &&
-            (removed[0].rendered as Node).parentNode === this.hostNode &&
-            (removed[removed.length - 1].rendered as Node).parentNode === this.hostNode;
-        if (canDeleteRange) {
-            const range = document.createRange();
-            range.setStartBefore(removed[0].rendered as Node);
-            range.setEndAfter(removed[removed.length - 1].rendered as Node);
-            range.deleteContents();
-            range.detach();
-        }
         for (const entry of removed) {
-            if (!canDeleteRange && !(entry.rendered instanceof AurumElement)) {
+            if (!(entry.rendered instanceof AurumElement)) {
                 entry.rendered.remove();
             }
             entry.session?.sessionToken.cancel();
@@ -607,7 +598,7 @@ export class ArrayAurumElement extends AurumElement {
 
         const first = this.entries[0];
         const firstRendered = first.rendered;
-        if (!(firstRendered instanceof AurumElement) && desiredIdentities[length - 1] === first.identity) {
+        if (desiredIdentities[length - 1] === first.identity) {
             let isLeftRotation = true;
             for (let index = 0; index < length - 1; index++) {
                 if (desiredIdentities[index] !== this.entries[index + 1].identity) {
@@ -616,7 +607,7 @@ export class ArrayAurumElement extends AurumElement {
                 }
             }
             if (isLeftRotation) {
-                this.hostNode.insertBefore(firstRendered, this.contentEndMarker);
+                this.moveRenderedBefore(firstRendered, this.contentEndMarker);
                 this.entries.push(this.entries.shift());
                 this.children.push(this.children.shift());
                 return true;
@@ -625,11 +616,7 @@ export class ArrayAurumElement extends AurumElement {
 
         const last = this.entries[length - 1];
         const lastRendered = last.rendered;
-        if (
-            !(lastRendered instanceof AurumElement) &&
-            !(firstRendered instanceof AurumElement) &&
-            desiredIdentities[0] === last.identity
-        ) {
+        if (desiredIdentities[0] === last.identity) {
             let isRightRotation = true;
             for (let index = 1; index < length; index++) {
                 if (desiredIdentities[index] !== this.entries[index - 1].identity) {
@@ -638,7 +625,7 @@ export class ArrayAurumElement extends AurumElement {
                 }
             }
             if (isRightRotation) {
-                this.hostNode.insertBefore(lastRendered, firstRendered);
+                this.moveRenderedBefore(lastRendered, this.firstDomNode(firstRendered));
                 this.entries.unshift(this.entries.pop());
                 this.children.unshift(this.children.pop());
                 return true;
@@ -748,12 +735,12 @@ export class ArrayAurumElement extends AurumElement {
             case 'swap': {
                 const entryA = this.entries[change.index];
                 const entryB = this.entries[change.index2];
-                if (!(entryA.rendered instanceof AurumElement) && !(entryB.rendered instanceof AurumElement)) {
-                    this.swapDomNodes(entryA.rendered, entryB.rendered);
-                    optimized = true;
-                }
+                this.swapRendered(entryA.rendered, entryB.rendered, change.index, change.index2);
                 this.entries[change.index] = entryB;
                 this.entries[change.index2] = entryA;
+                this.children[change.index] = entryB.rendered;
+                this.children[change.index2] = entryA.rendered;
+                optimized = true;
                 break;
             }
             case 'prepend':
@@ -847,6 +834,45 @@ export class ArrayAurumElement extends AurumElement {
         nodeB.parentNode.insertBefore(nodeA, nodeB);
         parentA.insertBefore(nodeB, siblingA);
     }
+
+    private firstDomNode(rendered: Rendered): Node {
+        return rendered instanceof AurumElement ? aurumElementDomBounds.get(rendered)![0] : rendered;
+    }
+
+    private lastDomNode(rendered: Rendered): Node {
+        return rendered instanceof AurumElement ? aurumElementDomBounds.get(rendered)![1] : rendered;
+    }
+
+    private moveRenderedBefore(rendered: Rendered, referenceNode: Node): void {
+        if (!(rendered instanceof AurumElement)) {
+            this.hostNode.insertBefore(rendered, referenceNode);
+            return;
+        }
+
+        const [first, last] = aurumElementDomBounds.get(rendered)!;
+        if (last.nextSibling === referenceNode) return;
+        const afterLast = last.nextSibling;
+        let node: Node = first;
+        while (node !== afterLast) {
+            const next = node.nextSibling;
+            this.hostNode.insertBefore(node, referenceNode);
+            node = next;
+        }
+    }
+
+    private swapRendered(first: Rendered, second: Rendered, firstIndex: number, secondIndex: number): void {
+        if (!(first instanceof AurumElement) && !(second instanceof AurumElement)) {
+            this.swapDomNodes(first, second);
+            return;
+        }
+
+        const low = firstIndex < secondIndex ? first : second;
+        const high = firstIndex < secondIndex ? second : first;
+        const adjacent = this.lastDomNode(low).nextSibling === this.firstDomNode(high);
+        const afterHigh = this.lastDomNode(high).nextSibling;
+        this.moveRenderedBefore(high, this.firstDomNode(low));
+        if (!adjacent) this.moveRenderedBefore(low, afterHigh);
+    }
 }
 
 export class SingularAurumElement extends AurumElement {
@@ -854,6 +880,9 @@ export class SingularAurumElement extends AurumElement {
     private renderSession: RenderSession;
     private lastValue: DOMRenderInput;
     private dataSource: DataSource<DOMRenderInput>;
+    private readonly batchedContentCommit = (newValue: DOMRenderInput): void => {
+        if (!this.disposed) SingularAurumElement.immediateContentCommit.call(this, newValue);
+    };
 
     constructor(dataSource: DataSource<DOMRenderInput>, api: AurumComponentAPI<DOMPrerendered>) {
         super(dataSource, api);
@@ -888,9 +917,7 @@ export class SingularAurumElement extends AurumElement {
     }
 
     private queueBatchedContent(newValue: DOMRenderInput): void {
-        queueRenderUpdate(this, () => {
-            if (!this.disposed) SingularAurumElement.immediateContentCommit.call(this, newValue);
-        });
+        queueRenderUpdate(this, this.batchedContentCommit, newValue);
     }
 
     public static setRenderBatching(active: boolean): void {

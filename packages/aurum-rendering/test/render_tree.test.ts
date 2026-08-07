@@ -148,6 +148,18 @@ describe('RenderTree', () => {
         assert.equal(range.children[1], first);
     });
 
+    it('reorders a retained collection without rebuilding nodes when patches are unobserved', () => {
+        const source = new ArrayDataSource<Renderable>(['a', 'b', 'c', 'd']);
+        const tree = renderToTree(source);
+        const range = tree.roots[0];
+        const initial = range.children.slice();
+
+        source.merge(['d', 'c', 'b', 'a']);
+
+        assert.deepEqual(range.children, initial.slice().reverse());
+        assert.deepEqual(range.children.map((node) => node.text), ['d', 'c', 'b', 'a']);
+    });
+
     it('disposes nested component and reactive lifetimes when a dynamic subtree is replaced', () => {
         let componentToken!: CancellationToken;
         let detached = false;

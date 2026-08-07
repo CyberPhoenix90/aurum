@@ -1,5 +1,5 @@
 import { afterAll, bench, describe } from 'vitest';
-import { ArrayDataSource, Aurum, CancellationToken, DataSource, Renderable } from '../src/index.js';
+import { ArrayDataSource, Aurum, CancellationToken, DataSource, Renderable, renderToTree } from '../src/index.js';
 import type { CollectionChange } from '../src/index.js';
 
 const benchmarkOptions = { time: 300, warmupTime: 100 };
@@ -306,6 +306,52 @@ describe('reactive DOM attributes', () => {
     bench('update all 1,000 reactive attributes', () => {
         revision++;
         for (let index = 0; index < titles.length; index++) titles[index].update(`title ${index} revision ${revision}`);
+    }, benchmarkOptions);
+});
+
+describe('range-backed collection mutations', () => {
+    const values = Array.from({ length: 1_000 }, (_, index) => new DataSource<Renderable>(`item ${index}`));
+    const source = new ArrayDataSource<Renderable>(values);
+    mountPersistent(<div>{source}</div>);
+
+    bench('swap and restore distant reactive ranges', () => {
+        source.swap(0, source.length.value - 1);
+        source.swap(0, source.length.value - 1);
+    }, benchmarkOptions);
+
+    let rotated = true;
+    const rotatedValues = [...values.slice(1), values[0]];
+    bench('merge-rotate 1,000 retained reactive ranges', () => {
+        source.merge(rotated ? rotatedValues : values);
+        rotated = !rotated;
+    }, benchmarkOptions);
+});
+
+describe('renderer-neutral tree performance', () => {
+    const staticTree = <div>{Array.from({ length: 1_000 }, (_, index) => <span data-value={index}>{index}</span>)}</div>;
+    bench('render and dispose a 1,000-element RenderTree', () => {
+        renderToTree(staticTree).dispose();
+    }, benchmarkOptions);
+
+    const values: Renderable[] = Array.from({ length: 1_000 }, (_, index) => `item ${index}`);
+    const reversed = values.slice().reverse();
+    const source = new ArrayDataSource<Renderable>(values);
+    const tree = renderToTree(source);
+    cleanups.push(() => tree.dispose());
+    let reverse = true;
+    bench('reverse 1,000 retained RenderTree entries', () => {
+        source.merge(reverse ? reversed : values);
+        reverse = !reverse;
+    }, benchmarkOptions);
+
+    const rotated = [...values.slice(1), values[0]];
+    const rotationSource = new ArrayDataSource<Renderable>(values);
+    const rotationTree = renderToTree(rotationSource);
+    cleanups.push(() => rotationTree.dispose());
+    let rotate = true;
+    bench('rotate 1,000 retained RenderTree entries', () => {
+        rotationSource.merge(rotate ? rotated : values);
+        rotate = !rotate;
     }, benchmarkOptions);
 });
 

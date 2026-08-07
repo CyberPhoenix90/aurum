@@ -121,14 +121,14 @@ export class RenderTree implements RendererHost<RenderTreeNode> {
         const children = parent ? ensureChildren(parent) : this.roots;
         children.splice(index, 0, node);
         node.parent = parent;
-        this.emitPatch({ type: 'insert', parent, index, nodes: [node] }, parent ?? node);
+        if (this.hasChangeObservers()) this.emitPatch({ type: 'insert', parent, index, nodes: [node] }, parent ?? node);
     }
 
     public remove(parent: RenderTreeNode | undefined, index: number, count: number): void {
         const children = parent ? ensureChildren(parent) : this.roots;
         const nodes = children.splice(index, count);
         for (const node of nodes) node.parent = undefined;
-        if (nodes.length > 0) this.emitPatch({ type: 'remove', parent, index, nodes }, parent ?? nodes[0]);
+        if (nodes.length > 0 && this.hasChangeObservers()) this.emitPatch({ type: 'remove', parent, index, nodes }, parent ?? nodes[0]);
     }
 
     public move(parent: RenderTreeNode | undefined, from: number, to: number): void {
@@ -136,21 +136,21 @@ export class RenderTree implements RendererHost<RenderTreeNode> {
         const children = parent ? ensureChildren(parent) : this.roots;
         const [node] = children.splice(from, 1);
         children.splice(to, 0, node);
-        this.emitPatch({ type: 'move', parent, from, to, node }, parent ?? node);
+        if (this.hasChangeObservers()) this.emitPatch({ type: 'move', parent, from, to, node }, parent ?? node);
     }
 
     public setText(node: RenderTreeTextNode, value: string): void {
         if (node.text === value) return;
         const previousValue = node.text;
         node.text = value;
-        this.emitPatch({ type: 'set-text', node, previousValue, value }, node);
+        if (this.hasChangeObservers()) this.emitPatch({ type: 'set-text', node, previousValue, value }, node);
     }
 
     public setProperty(node: RenderTreeElementNode, key: string, value: unknown): void {
         const previousValue = node.properties[key];
         if (Object.is(previousValue, value)) return;
         node.properties[key] = value;
-        this.emitPatch({ type: 'set-property', node, key, previousValue, value }, node);
+        if (this.hasChangeObservers()) this.emitPatch({ type: 'set-property', node, key, previousValue, value }, node);
     }
 
     public dispose(): void {
@@ -179,6 +179,10 @@ export class RenderTree implements RendererHost<RenderTreeNode> {
         if (this.sessionToken.isCancelled) return;
         this.onPatch.fire(patch);
         this.onChange.fire({ changedNode });
+    }
+
+    private hasChangeObservers(): boolean {
+        return !this.sessionToken.isCancelled && (this.onPatch.hasSubscriptions() || this.onChange.hasSubscriptions());
     }
 }
 
@@ -457,33 +461,68 @@ function renderArrayDataSource(
     };
 
     const removeEntries = (entryIndex: number, count: number): void => {
+        const nodeIndex = nodeIndexForEntry(entryIndex);
         const removed = entries.splice(entryIndex, count);
+        let nodeCount = 0;
         for (const entry of removed) {
             entry.scope.dispose();
-            for (const node of entry.nodes) {
-                const nodeIndex = range.children.indexOf(node);
-                if (nodeIndex !== -1) tree.remove(range, nodeIndex, 1);
-            }
+            nodeCount += entry.nodes.length;
         }
+        if (nodeCount > 0) tree.remove(range, nodeIndex, nodeCount);
     };
 
     const moveEntry = (from: number, to: number): void => {
         if (from === to) return;
+        const currentNodeIndex = nodeIndexForEntry(from);
         const [entry] = entries.splice(from, 1);
         entries.splice(to, 0, entry);
         const targetNodeIndex = nodeIndexForEntry(to);
         if (from < to) {
             const destination = targetNodeIndex + entry.nodes.length - 1;
-            for (const node of entry.nodes) tree.move(range, range.children.indexOf(node), destination);
+            for (let offset = 0; offset < entry.nodes.length; offset++) tree.move(range, currentNodeIndex, destination);
         } else {
             for (let offset = 0; offset < entry.nodes.length; offset++) {
-                tree.move(range, range.children.indexOf(entry.nodes[offset]), targetNodeIndex + offset);
+                tree.move(range, currentNodeIndex + offset, targetNodeIndex + offset);
             }
         }
     };
 
     const reconcileMerge = (change: CollectionChange<Renderable>): void => {
         const desiredIdentities = change.newStateIdentities ?? [];
+        if (desiredIdentities.length === entries.length && entries.length > 1) {
+            let leftRotation = desiredIdentities[desiredIdentities.length - 1] === entries[0].identity;
+            for (let index = 0; leftRotation && index < entries.length - 1; index++) {
+                leftRotation = desiredIdentities[index] === entries[index + 1].identity;
+            }
+            if (leftRotation) {
+                moveEntry(0, entries.length - 1);
+                return;
+            }
+
+            let rightRotation = desiredIdentities[0] === entries[entries.length - 1].identity;
+            for (let index = 1; rightRotation && index < entries.length; index++) {
+                rightRotation = desiredIdentities[index] === entries[index - 1].identity;
+            }
+            if (rightRotation) {
+                moveEntry(entries.length - 1, 0);
+                return;
+            }
+        }
+        if (
+            desiredIdentities.length === entries.length &&
+            !tree.onPatch.hasSubscriptions() &&
+            !tree.onChange.hasSubscriptions()
+        ) {
+            const entriesByIdentity = new Map(entries.map((entry) => [entry.identity, entry]));
+            const desiredEntries = desiredIdentities.map((identity) => entriesByIdentity.get(identity));
+            if (desiredEntries.every((entry): entry is ArrayRenderEntry => entry !== undefined)) {
+                entries = desiredEntries;
+                const desiredNodes: RenderTreeNode[] = [];
+                for (const entry of entries) desiredNodes.push(...entry.nodes);
+                range.children.splice(0, range.children.length, ...desiredNodes);
+                return;
+            }
+        }
         const retained = new Set(desiredIdentities);
         for (let index = entries.length - 1; index >= 0; index--) {
             if (!retained.has(entries[index].identity)) removeEntries(index, 1);

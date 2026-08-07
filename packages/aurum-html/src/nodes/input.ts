@@ -80,10 +80,11 @@ export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents
         if (typeof props.value !== 'string' && typeof props.value !== 'number') {
             const value = props.value as BindableSource<string> | BindableSource<number>;
             const updateValue = (v: string | number): void => {
+                if (cleanUp.isCancelled) return;
                 input.value = v == null ? '' : String(v);
             };
             value.listenAndRepeat((v) => {
-                if (renderBatchState.active) queueRenderUpdate(updateValue, () => !cleanUp.isCancelled && updateValue(v));
+                if (renderBatchState.active) queueRenderUpdate(updateValue, updateValue, v);
                 else updateValue(v);
             }, cleanUp);
             cleanUp.registerDomEvent(input, 'input', () => {
@@ -99,10 +100,11 @@ export const Input = DomNodeCreator<InputProps>('input', inputProps, inputEvents
         if (typeof props.checked !== 'boolean') {
             const checked = props.checked as BindableSource<boolean>;
             const updateChecked = (v: boolean): void => {
+                if (cleanUp.isCancelled) return;
                 input.checked = v ?? false;
             };
             checked.listenAndRepeat((v) => {
-                if (renderBatchState.active) queueRenderUpdate(updateChecked, () => !cleanUp.isCancelled && updateChecked(v));
+                if (renderBatchState.active) queueRenderUpdate(updateChecked, updateChecked, v);
                 else updateChecked(v);
             }, cleanUp);
             cleanUp.registerDomEvent(input, 'change', () => {

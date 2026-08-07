@@ -50,6 +50,28 @@ describe('ArrayDataSource rendering identity', () => {
         assert.deepEqual(rendered.map((node) => node.dataset.item), ['first-updated', 'second', 'tail']);
     });
 
+    it('swaps and rotates reactive ranges without rebuilding their content', () => {
+        const first = new DataSource<Renderable>(<span data-item="first">first</span>);
+        const second = new DataSource<Renderable>(<span data-item="second">second</span>);
+        const third = new DataSource<Renderable>(<span data-item="third">third</span>);
+        const items = new ArrayDataSource<Renderable>([first, second, third]);
+
+        attachToken = Aurum.attach(<div>{items}</div>, document.getElementById('target'));
+        const [firstNode, secondNode, thirdNode] = renderedElements();
+
+        items.swap(0, 2);
+        assert.deepEqual(renderedElements().map((node) => node.dataset.item), ['third', 'second', 'first']);
+        assert.strictEqual(renderedElements()[0], thirdNode);
+        assert.strictEqual(renderedElements()[2], firstNode);
+
+        items.merge([second, first, third]);
+        const rendered = renderedElements();
+        assert.deepEqual(rendered.map((node) => node.dataset.item), ['second', 'first', 'third']);
+        assert.strictEqual(rendered[0], secondNode);
+        assert.strictEqual(rendered[1], firstNode);
+        assert.strictEqual(rendered[2], thirdNode);
+    });
+
     it('moves existing DOM nodes when swapping items', () => {
         const items = new ArrayDataSource<Renderable>([
             <span data-item="first">first</span>,

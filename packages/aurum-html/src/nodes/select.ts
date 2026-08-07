@@ -55,10 +55,11 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
         if (props?.value !== undefined && typeof props.value !== 'string' && typeof props.value !== 'number') {
             const value = props.value as BindableSource<string> | BindableSource<number>;
             const updateValue = (v: string | number): void => {
+                if (cleanUp.isCancelled) return;
                 select.value = String(v);
             };
             value.listenAndRepeat((v) => {
-                if (renderBatchState.active) queueRenderUpdate(updateValue, () => !cleanUp.isCancelled && updateValue(v));
+                if (renderBatchState.active) queueRenderUpdate(updateValue, updateValue, v);
                 else updateValue(v);
             }, cleanUp);
             cleanUp.registerDomEvent(select, 'change', () => {
@@ -76,11 +77,12 @@ export const Select = DomNodeCreator<SelectProps>('select', undefined, selectEve
             if (typeof props.selectedIndex !== 'number') {
                 const selectedIndex = props.selectedIndex as BindableSource<number>;
                 const updateSelectedIndex = (v: number): void => {
+                    if (cleanUp.isCancelled) return;
                     select.selectedIndex = v;
                 };
                 selectedIndex.listenAndRepeat((v) => {
                     if (renderBatchState.active) {
-                        queueRenderUpdate(updateSelectedIndex, () => !cleanUp.isCancelled && updateSelectedIndex(v));
+                        queueRenderUpdate(updateSelectedIndex, updateSelectedIndex, v);
                     } else updateSelectedIndex(v);
                 }, cleanUp);
                 cleanUp.registerDomEvent(select, 'change', () => {

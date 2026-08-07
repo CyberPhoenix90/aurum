@@ -71,10 +71,11 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
             if (typeof props.value !== 'string') {
                 const value = props.value as BindableSource<string>;
                 const updateValue = (v: string): void => {
+                    if (cleanUp.isCancelled) return;
                     textArea.value = v;
                 };
                 value.listenAndRepeat((v) => {
-                    if (renderBatchState.active) queueRenderUpdate(updateValue, () => !cleanUp.isCancelled && updateValue(v));
+                    if (renderBatchState.active) queueRenderUpdate(updateValue, updateValue, v);
                     else updateValue(v);
                 }, cleanUp);
                 cleanUp.registerDomEvent(textArea, 'input', () => {

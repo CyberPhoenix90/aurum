@@ -594,6 +594,7 @@ function bindClass(
         registerAurumRenderBinding(value, node, 'class', cleanUp, renderSession);
         const normalize = (next: unknown): string => Array.isArray(next) ? next.filter(Boolean).join(' ') : String(next ?? '');
         const updateClass = (next: unknown): void => {
+            if (cleanUp.isCancelled) return;
             node.className = normalize(next);
         };
         let previousValue = normalize(value.value);
@@ -602,7 +603,7 @@ function bindClass(
             const normalized = normalize(next);
             if (normalized === previousValue) return;
             previousValue = normalized;
-            if (renderBatchState.active) queueRenderUpdate(updateClass, () => !cleanUp.isCancelled && updateClass(normalized));
+            if (renderBatchState.active) queueRenderUpdate(updateClass, updateClass, normalized);
             else updateClass(normalized);
         }, cleanUp);
         return;
@@ -612,10 +613,11 @@ function bindClass(
     if (result instanceof DataSource) {
         registerAurumRenderBinding(result, node, 'class', cleanUp, renderSession);
         const updateClass = (next: string): void => {
+            if (cleanUp.isCancelled) return;
             node.className = next;
         };
         result.listenAndRepeat((next) => {
-            if (renderBatchState.active) queueRenderUpdate(updateClass, () => !cleanUp.isCancelled && updateClass(next));
+            if (renderBatchState.active) queueRenderUpdate(updateClass, updateClass, next);
             else updateClass(next);
         }, cleanUp);
     } else {
@@ -639,6 +641,7 @@ function bindStyle(
         registerAurumRenderBinding(value, node, 'style', cleanUp, renderSession);
         const normalize = (next: unknown): string => String(next ?? '');
         const updateStyle = (next: unknown): void => {
+            if (cleanUp.isCancelled) return;
             node.setAttribute('style', normalize(next));
         };
         let previousValue = normalize(value.value);
@@ -647,7 +650,7 @@ function bindStyle(
             const normalized = normalize(next);
             if (normalized === previousValue) return;
             previousValue = normalized;
-            if (renderBatchState.active) queueRenderUpdate(updateStyle, () => !cleanUp.isCancelled && updateStyle(normalized));
+            if (renderBatchState.active) queueRenderUpdate(updateStyle, updateStyle, normalized);
             else updateStyle(normalized);
         }, cleanUp);
         return;
@@ -657,10 +660,11 @@ function bindStyle(
     if (result instanceof DataSource) {
         registerAurumRenderBinding(result, node, 'style', cleanUp, renderSession);
         const updateStyle = (next: string): void => {
+            if (cleanUp.isCancelled) return;
             node.setAttribute('style', next);
         };
         result.listenAndRepeat((next) => {
-            if (renderBatchState.active) queueRenderUpdate(updateStyle, () => !cleanUp.isCancelled && updateStyle(next));
+            if (renderBatchState.active) queueRenderUpdate(updateStyle, updateStyle, next);
             else updateStyle(next);
         }, cleanUp);
     } else {
@@ -718,13 +722,14 @@ function assignSourceToDOM(
         registerAurumRenderBinding(data, node, `${bindAsProperty ? 'property' : 'attribute'}:${attributeName}`, cleanUp, renderSession);
         if (typeof data.value === 'string' || typeof data.value === 'number' || typeof data.value === 'boolean') assign(data.value);
         const updateAttribute = (v: AttributeValue): void => {
+            if (cleanUp.isCancelled) return;
             if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') assign(v);
         };
         let previousValue = data.value;
         data.listen((v) => {
             if (v === previousValue || (Number.isNaN(v) && Number.isNaN(previousValue))) return;
             previousValue = v;
-            if (renderBatchState.active) queueRenderUpdate(updateAttribute, () => !cleanUp.isCancelled && updateAttribute(v));
+            if (renderBatchState.active) queueRenderUpdate(updateAttribute, updateAttribute, v);
             else updateAttribute(v);
         }, cleanUp);
     } else {

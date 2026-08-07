@@ -13,6 +13,7 @@ export default defineConfig({
         conditions: ['production', 'browser', 'module', 'import']
     },
     test: {
+        fileParallelism: false,
         benchmark: {
             include: ['dist_bench/bench/**/*.bench.js'],
             exclude: ['dist_bench/bench/devtools_overhead.bench.js'],
