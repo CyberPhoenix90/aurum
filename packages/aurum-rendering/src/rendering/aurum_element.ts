@@ -24,6 +24,28 @@ export type AurumComponent<Props, Prerendered = Renderable> = (
     api: AurumComponentAPI<Prerendered>
 ) => ComponentResult;
 
+const aurumContextIdentity = Symbol('AurumContext');
+
+/** A renderer-independent value inherited by descendant components. */
+export interface AurumContext<T> {
+    readonly [aurumContextIdentity]: true;
+    readonly defaultValue: T;
+    readonly Provider: AurumComponent<{ value: T }>;
+}
+
+/** Creates a context whose provider scopes a value to its rendered descendants. */
+export function createContext<T>(defaultValue: T): AurumContext<T> {
+    const context = {
+        [aurumContextIdentity]: true as const,
+        defaultValue,
+        Provider(props: { value: T }, children: Renderable[], api: AurumComponentAPI): Renderable {
+            api.provideContext(context, props.value);
+            return children;
+        }
+    };
+    return context;
+}
+
 export const aurumElementModelIdentitiy = Symbol('AurumElementModel');
 
 export interface AurumElementModel<Props, Result = ComponentResult> {
@@ -83,6 +105,10 @@ export interface AurumComponentAPI<Prerendered = Renderable> {
     onDetach(cb: () => void): void;
     /** Publishes a component's explicit public API while it is attached and clears it on detach. */
     expose<T>(handle: ComponentHandle<T> | undefined, value: NoInfer<T>): void;
+    /** Makes a context value available to components rendered below this component. */
+    provideContext<T>(context: AurumContext<T>, value: T): void;
+    /** Reads the nearest provided value, or the context's default value. */
+    readContext<T>(context: AurumContext<T>): T;
     readonly cancellationToken: CancellationToken;
     /** @internal Renderer session used by intrinsic host factories. */
     readonly renderSession: RenderSession;
@@ -101,6 +127,8 @@ export interface RenderSession {
     devtoolsComponentStack?: object[];
     /** @internal Component inherited by a child render session or deferred render scope. */
     devtoolsParentComponent?: object;
+    /** @internal Context values inherited by descendant component sessions. */
+    contextValues: Map<AurumContext<unknown>, unknown>;
 }
 
 export type PrerenderStrategy<Prerendered = Renderable> = (
@@ -124,7 +152,8 @@ export function createRenderSession(parentSession?: RenderSession): RenderSessio
         }),
         tokens: [],
         devtoolsTargets: [],
-        devtoolsParentComponent
+        devtoolsParentComponent,
+        contextValues: new Map(parentSession?.contextValues)
     };
     return session;
 }
@@ -194,6 +223,22 @@ class DefaultAurumComponentAPI<Prerendered> implements AurumComponentAPI<Prerend
                 state.source.update(undefined);
             }
         });
+    }
+
+    public provideContext<T>(context: AurumContext<T>, value: T): void {
+        if (context?.[aurumContextIdentity] !== true) {
+            throw new Error('provideContext only accepts contexts created by createContext');
+        }
+        this.renderSession.contextValues.set(context as AurumContext<unknown>, value);
+    }
+
+    public readContext<T>(context: AurumContext<T>): T {
+        if (context?.[aurumContextIdentity] !== true) {
+            throw new Error('readContext only accepts contexts created by createContext');
+        }
+        return this.renderSession.contextValues.has(context as AurumContext<unknown>)
+            ? (this.renderSession.contextValues.get(context as AurumContext<unknown>) as T)
+            : context.defaultValue;
     }
 
     public get cancellationToken(): CancellationToken {

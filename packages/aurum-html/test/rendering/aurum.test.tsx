@@ -29,6 +29,39 @@ describe('Aurum', () => {
         assert.equal(document.getElementById('target').textContent, 'Hello World 2');
     });
 
+    it('treats boolean JSX children as empty, including reactive transitions', () => {
+        const conditional = new DataSource<Renderable>(false);
+        attachToken = Aurum.attach(
+            <div>
+                before
+                {false}
+                {true}
+                {conditional}
+                after
+            </div>,
+            document.getElementById('target')
+        );
+
+        assert.equal(document.getElementById('target').textContent, 'beforeafter');
+        conditional.update(<span>visible</span>);
+        assert.equal(document.getElementById('target').textContent, 'beforevisibleafter');
+        conditional.update(false);
+        assert.equal(document.getElementById('target').textContent, 'beforeafter');
+    });
+
+    it('serializes reactive style objects and updates them', () => {
+        const style = new DataSource({ display: 'none', width: 12 });
+        attachToken = Aurum.attach(<div style={style}>content</div>, document.getElementById('target'));
+        const element = document.getElementById('target').firstChild as HTMLDivElement;
+
+        assert.equal(element.style.display, 'none');
+        assert.equal(element.style.width, '12px');
+
+        style.update({ display: 'contents', width: 20 });
+        assert.equal(element.style.display, 'contents');
+        assert.equal(element.style.width, '20px');
+    });
+
     it('Should set inner text', () => {
         attachToken = Aurum.attach(<div>Hello World</div>, document.getElementById('target'));
         assert((document.getElementById('target').firstChild as HTMLDivElement).textContent === 'Hello World');

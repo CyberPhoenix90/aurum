@@ -3,8 +3,12 @@ import { dsMap, dsUnique } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
 import { aurumClassName, camelCaseToKebabCase } from '@aurum/streams';
 import { ClassType, StyleType, Styles } from '@aurum/streams';
-import { Data } from '@aurum/streams';
+import { Data, DataWriter } from '@aurum/streams';
 import { isAurumStyleClass } from '@aurum/streams';
+
+export function isDataWriter<T>(source: ReadOnlyDataSource<T>): source is ReadOnlyDataSource<T> & DataWriter<T> {
+    return typeof (source as { write?: unknown }).write === 'function';
+}
 
 export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<string> {
     if (typeof data === 'string') {
@@ -71,9 +75,7 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
     } else if (data instanceof DataSource) {
         return data.transform(
             dsUnique(),
-            dsMap((v) => {
-                return v.toString();
-            }),
+            dsMap((value) => typeof value === 'string' ? value : serializeStyleSnapshot(value as Styles)),
             cleanUp
         );
     } else if (data instanceof MapDataSource) {
@@ -106,6 +108,18 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
     } else {
         return '';
     }
+}
+
+function serializeStyleSnapshot(styles: Styles): string {
+    let result = '';
+    for (const key in styles) {
+        const raw = styles[key as keyof Styles];
+        const value = raw instanceof DataSource ? raw.value : raw;
+        if (value !== undefined && value !== null) {
+            result += `${camelCaseToKebabCase(key)}:${transformStyle(key, value)};`;
+        }
+    }
+    return result;
 }
 
 const stylesWithUnits = new Set([

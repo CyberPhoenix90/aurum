@@ -5,6 +5,7 @@ import {
     AurumElementModel,
     aurumElementModelIdentitiy,
     createComponentHandle,
+    createContext,
     createLifeCycle,
     Renderable
 } from '../src/rendering/aurum_element.js';
@@ -40,6 +41,34 @@ function component<T>(
 }
 
 describe('RenderTree', () => {
+    it('treats boolean renderables as empty, including reactive transitions', () => {
+        const conditional = new DataSource<Renderable>(false);
+        const tree = renderToTree(['before', false, true, conditional, 'after']);
+
+        assert.deepEqual(tree.roots.map((node) => node.text), ['before', undefined, 'after']);
+        assert.deepEqual(tree.roots[1].children, []);
+
+        conditional.update('visible');
+        assert.deepEqual(tree.roots[1].children?.map((node) => node.text), ['visible']);
+        conditional.update(false);
+        assert.deepEqual(tree.roots[1].children, []);
+    });
+
+    it('scopes context values to provider descendants', () => {
+        const Theme = createContext('default');
+        const ReadTheme = (_props: object, _children: Renderable[], api: AurumComponentAPI): Renderable =>
+            api.readContext(Theme);
+        const provider = (value: string, children: Renderable[]) => component(Theme.Provider, { value }, children);
+
+        const tree = renderToTree([
+            component(ReadTheme, {}),
+            provider('outer', [component(ReadTheme, {}), provider('inner', [component(ReadTheme, {})])]),
+            component(ReadTheme, {})
+        ]);
+
+        assert.deepEqual(tree.roots.map((node) => node.text), ['default', 'outer', 'inner', 'default']);
+    });
+
     it('exposes a typed component handle only for the attached component lifetime', () => {
         interface EditorHandle {
             focus(): string;

@@ -18,7 +18,7 @@ npm run build --workspace @aurum/devtools-extension
 
 Then open `chrome://extensions` in Chrome or Chromium, enable **Developer mode**, choose **Load unpacked**, and select `packages/aurum-devtools-extension/dist`. Open DevTools on an Aurum application and select the **Aurum** panel.
 
-The extension requests no host permissions. It evaluates its read-only bridge through the inspected-page API that Chromium exposes specifically to DevTools extensions.
+The extension requests no host permissions. It evaluates an isolated inspection bridge through the inspected-page API that Chromium exposes specifically to DevTools extensions.
 
 ## What the panel shows
 
@@ -27,11 +27,18 @@ The extension requests no host permissions. It evaluates its read-only bridge th
 - Per-channel subscription counts and navigable upstream/downstream relationships.
 - A live event timeline for node, edge, subscription, and configuration changes.
 - Debug-only names, value previews, annotations, edge metadata, creation stacks, and explicit inspection results.
+- Debug-only update breakpoints that pause JavaScript when a selected DataSource mutates.
 - Connection, runtime mode, protocol compatibility, capabilities, dropped-event, and weak-reference status.
 
 Live state is checked every 500 ms while the panel is visible. Native runtime revisions avoid snapshot creation, serialization, and DOM rebuilding when nothing changed. Each page-side client queue is capped at 2,000 entries and approximately 1.5 MiB, and abandoned clients expire after five seconds. Hiding, pausing, or closing the panel unsubscribes it immediately.
 
 Graph rendering is capped at 250 visible nodes. The node table renders pages of 200 rows, while search and kind filters can narrow larger applications. Multiple DevTools windows share one inspected-page subscription but retain independent event queues.
+
+### Tracing an update to its origin
+
+Select any scalar, array, object, map, set, duplex, or tree DataSource in the graph or node table, then choose **Break on updates** in its details pane. The toggle remains active for that node until disabled, the node is disposed, the page reloads, or the runtime switches to production mode.
+
+When the source next mutates, Chromium pauses at Aurum's synchronous mutation boundary before subscribers are notified. The **Call stack** in the Sources panel includes the application callback that initiated the update, even when the value is being propagated through derived sources. Resume execution to keep the breakpoint armed, or toggle it off in the Aurum panel.
 
 ## Runtime protocol
 

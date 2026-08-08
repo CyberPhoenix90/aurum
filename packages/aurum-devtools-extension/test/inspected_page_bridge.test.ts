@@ -6,6 +6,7 @@ import {
     createDisposeExpression,
     createHighlightExpression,
     createPollExpression,
+    createSetUpdateBreakpointExpression,
     normalizePollResult
 } from '../src/inspected_page_bridge.js';
 
@@ -28,6 +29,7 @@ interface MutableRegistry {
     subscribe(listener: (event: unknown) => void): () => void;
     highlightDomNode?(nodeId: string, duration?: number): boolean;
     clearDomNodeHighlight?(): void;
+    setUpdateBreakpoint?(nodeId: string, enabled: boolean): boolean;
 }
 
 function createRegistry(options: { runtimeId?: string; revision?: number; subscribeFailures?: number } = {}): {
@@ -248,6 +250,23 @@ describe('inspected-page bridge lifecycle', () => {
             ['data-node', 0]
         ]);
         expect(clears).toBe(1);
+    });
+
+    it('toggles update breakpoints inside the inspected page', () => {
+        const { registry } = createRegistry({ runtimeId: 'runtime', revision: 1 });
+        const requests: Array<[string, boolean]> = [];
+        registry.setUpdateBreakpoint = (nodeId, enabled): boolean => {
+            requests.push([nodeId, enabled]);
+            return enabled;
+        };
+        const page = createPage(registry);
+
+        expect(page.evaluate(createSetUpdateBreakpointExpression('source-1', true))).toBe(true);
+        expect(page.evaluate(createSetUpdateBreakpointExpression('source-1', false))).toBe(false);
+        expect(requests).toEqual([
+            ['source-1', true],
+            ['source-1', false]
+        ]);
     });
 
     it('retries a failed subscription without losing snapshot inspection', () => {

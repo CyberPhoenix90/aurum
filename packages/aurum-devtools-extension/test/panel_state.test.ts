@@ -7,13 +7,17 @@ import {
     createPanelRevision,
     filterComponentTree,
     filterNodes,
+    isComponentTreeNode,
+    isDataSourceNode,
     layoutGraph,
     mergeEvents,
+    navigateComponentTree,
     paginateItems,
     relatedGraphNodeIds,
     shouldPollPanel,
     shouldRefreshInspection,
-    updatedNodeIds
+    updatedNodeIds,
+    visibleComponentTree
 } from '../src/panel_state.js';
 
 function event(id: string, timestamp: number): DevtoolsEvent {
@@ -75,6 +79,13 @@ describe('panel state', () => {
         expect(filterNodes([valueOnlyMatch], 'hidden-value-needle', '')).toEqual([]);
     });
 
+    it('recognizes every DataSource family supported by update breakpoints', () => {
+        expect(isDataSourceNode(node('scalar', 'data-source'))).toBe(true);
+        expect(isDataSourceNode(node('array', 'array-data-source'))).toBe(true);
+        expect(isDataSourceNode(node('object', 'ObjectDataSource'))).toBe(true);
+        expect(isDataSourceNode(node('component', 'component'))).toBe(false);
+    });
+
     it('uses structured preview summaries in compact value labels', () => {
         expect(compactValue({ type: 'array', summary: 'Array(1,000)', size: 1000 })).toBe('Array(1,000)');
         expect(compactValue('abcdefghijklmnopqrstuvwxyz', 8)).toBe('abcdefg…');
@@ -107,6 +118,62 @@ describe('panel state', () => {
             ['span', 3, 'child']
         ]);
         expect(filterComponentTree(entries, 'span', '').map((entry) => entry.node.id)).toEqual(['application', 'div', 'child', 'span']);
+    });
+
+    it('keeps every component in forests with detached roots and tolerant kind names', () => {
+        const entries = buildComponentTree(
+            [
+                node('application', 'Component', 'Application'),
+                node('main', 'DOMElement', '<main>'),
+                node('child', 'aurum-component', 'Child'),
+                node('detached', 'component', 'Detached'),
+                node('unrelated', 'DataSource', 'source')
+            ],
+            [
+                { source: 'application', target: 'child', kind: 'component-child' },
+                { source: 'application', target: 'main', kind: 'component-output' }
+            ]
+        );
+
+        expect(entries.map((entry) => entry.node.id)).toEqual(['application', 'main', 'child', 'detached']);
+        expect(entries.filter((entry) => isComponentTreeNode(entry.node))).toHaveLength(4);
+    });
+
+    it('hides collapsed descendants and applies hierarchy-aware keyboard navigation', () => {
+        const entries = buildComponentTree(
+            [
+                node('application', 'component', 'Application'),
+                node('main', 'dom-element', '<main>'),
+                node('child', 'component', 'Child'),
+                node('span', 'dom-element', '<span>'),
+                node('sibling', 'component', 'Sibling')
+            ],
+            [
+                { source: 'application', target: 'child', kind: 'component-child' },
+                { source: 'application', target: 'sibling', kind: 'component-child' },
+                { source: 'application', target: 'main', kind: 'component-output' },
+                { source: 'child', target: 'span', kind: 'component-output' },
+                { source: 'main', target: 'span', kind: 'dom-child' }
+            ]
+        );
+        const collapsed = new Set(['main']);
+        const visible = visibleComponentTree(entries, collapsed);
+
+        expect(visible.map((entry) => entry.node.id)).toEqual(['application', 'main', 'sibling']);
+        expect(navigateComponentTree(entries, visible, 'main', collapsed, 'ArrowRight')).toEqual({
+            focusId: 'main',
+            expandId: 'main'
+        });
+
+        collapsed.delete('main');
+        const expanded = visibleComponentTree(entries, collapsed);
+        expect(navigateComponentTree(entries, expanded, 'main', collapsed, 'ArrowRight')).toEqual({ focusId: 'child' });
+        expect(navigateComponentTree(entries, expanded, 'child', collapsed, 'ArrowLeft')).toEqual({
+            focusId: 'child',
+            collapseId: 'child'
+        });
+        expect(navigateComponentTree(entries, expanded, 'span', collapsed, 'ArrowLeft')).toEqual({ focusId: 'child' });
+        expect(navigateComponentTree(entries, expanded, 'application', collapsed, 'End')).toEqual({ focusId: 'sibling' });
     });
 
     it('lays acyclic data flow from left to right', () => {

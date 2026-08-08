@@ -30,6 +30,14 @@ export interface ComponentTreeEntry {
     parentId?: string;
 }
 
+export type ComponentTreeNavigationKey = 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'End' | 'Home';
+
+export interface ComponentTreeNavigation {
+    focusId?: string;
+    collapseId?: string;
+    expandId?: string;
+}
+
 export interface ArrayPreview {
     size: number;
     truncated: boolean;
@@ -95,6 +103,10 @@ export function isArrayDataSourceNode(node: Pick<DevtoolsNode, 'kind'>): boolean
     return node.kind.toLocaleLowerCase().replace(/[^a-z]/g, '').includes('arraydatasource');
 }
 
+export function isDataSourceNode(node: Pick<DevtoolsNode, 'kind'>): boolean {
+    return node.kind.toLocaleLowerCase().replace(/[^a-z]/g, '').includes('datasource');
+}
+
 export function arrayPreview(value: unknown): ArrayPreview | undefined {
     if (typeof value !== 'object' || value === null) return undefined;
     const preview = value as { type?: unknown; size?: unknown; entries?: unknown; truncated?: unknown };
@@ -112,7 +124,7 @@ export function arrayPreview(value: unknown): ArrayPreview | undefined {
 }
 
 export function buildComponentTree(nodes: DevtoolsNode[], edges: DevtoolsEdge[]): ComponentTreeEntry[] {
-    const relevantNodes = nodes.filter((node) => node.kind === 'component' || node.kind === 'dom-element');
+    const relevantNodes = nodes.filter(isComponentTreeNode);
     const nodeById = new Map(relevantNodes.map((node) => [node.id, node]));
     const componentParents = new Map<string, string>();
     const domParents = new Map<string, string>();
@@ -122,18 +134,18 @@ export function buildComponentTree(nodes: DevtoolsNode[], edges: DevtoolsEdge[])
         const source = nodeById.get(edge.source);
         const target = nodeById.get(edge.target);
         if (source === undefined || target === undefined) continue;
-        if (edge.kind === 'component-child' && source.kind === 'component' && target.kind === 'component') {
+        if (edge.kind === 'component-child' && isComponentNode(source) && isComponentNode(target)) {
             componentParents.set(target.id, source.id);
-        } else if (edge.kind === 'dom-child' && source.kind === 'dom-element' && target.kind === 'dom-element') {
+        } else if (edge.kind === 'dom-child' && isDomElementNode(source) && isDomElementNode(target)) {
             domParents.set(target.id, source.id);
-        } else if (edge.kind === 'component-output' && source.kind === 'component' && target.kind === 'dom-element') {
+        } else if (edge.kind === 'component-output' && isComponentNode(source) && isDomElementNode(target)) {
             domOwners.set(target.id, source.id);
         }
     }
 
     const parentById = new Map<string, string>();
     for (const node of relevantNodes) {
-        if (node.kind === 'component') {
+        if (isComponentNode(node)) {
             let hostParent: string | undefined;
             for (const [domId, ownerId] of domOwners) {
                 const domParent = domParents.get(domId);
@@ -199,6 +211,78 @@ export function filterComponentTree(entries: ComponentTreeEntry[], query: string
     return entries.filter((entry) => included.has(entry.node.id));
 }
 
+/** Returns the rendered tree rows while retaining the full hierarchy for navigation. */
+export function visibleComponentTree(
+    entries: readonly ComponentTreeEntry[],
+    collapsedNodeIds: ReadonlySet<string>
+): ComponentTreeEntry[] {
+    if (collapsedNodeIds.size === 0) return entries.slice();
+    const byId = new Map(entries.map((entry) => [entry.node.id, entry]));
+    return entries.filter((entry) => {
+        const visited = new Set<string>();
+        let parentId = entry.parentId;
+        while (parentId !== undefined && !visited.has(parentId)) {
+            if (collapsedNodeIds.has(parentId)) return false;
+            visited.add(parentId);
+            parentId = byId.get(parentId)?.parentId;
+        }
+        return true;
+    });
+}
+
+/** Resolves Elements-style tree navigation without coupling it to DOM focus. */
+export function navigateComponentTree(
+    entries: readonly ComponentTreeEntry[],
+    visibleEntries: readonly ComponentTreeEntry[],
+    focusedNodeId: string | undefined,
+    collapsedNodeIds: ReadonlySet<string>,
+    key: ComponentTreeNavigationKey
+): ComponentTreeNavigation {
+    if (visibleEntries.length === 0) return {};
+    const focusedIndex = Math.max(0, visibleEntries.findIndex((entry) => entry.node.id === focusedNodeId));
+    const focused = visibleEntries[focusedIndex];
+    const children = new Map<string, ComponentTreeEntry[]>();
+    for (const entry of entries) {
+        if (entry.parentId === undefined) continue;
+        const siblings = children.get(entry.parentId) ?? [];
+        siblings.push(entry);
+        children.set(entry.parentId, siblings);
+    }
+
+    if (key === 'Home') return { focusId: visibleEntries[0].node.id };
+    if (key === 'End') return { focusId: visibleEntries[visibleEntries.length - 1].node.id };
+    if (key === 'ArrowUp') return { focusId: visibleEntries[Math.max(0, focusedIndex - 1)].node.id };
+    if (key === 'ArrowDown') return { focusId: visibleEntries[Math.min(visibleEntries.length - 1, focusedIndex + 1)].node.id };
+    if (key === 'ArrowRight') {
+        const firstChild = children.get(focused.node.id)?.[0];
+        if (firstChild === undefined) return { focusId: focused.node.id };
+        if (collapsedNodeIds.has(focused.node.id)) return { focusId: focused.node.id, expandId: focused.node.id };
+        return { focusId: firstChild.node.id };
+    }
+    if (children.has(focused.node.id) && !collapsedNodeIds.has(focused.node.id)) {
+        return { focusId: focused.node.id, collapseId: focused.node.id };
+    }
+    return { focusId: focused.parentId ?? focused.node.id };
+}
+
+export function isComponentNode(node: Pick<DevtoolsNode, 'kind'>): boolean {
+    const kind = normalizeTreeKind(node.kind);
+    return kind === 'component' || kind === 'aurumcomponent';
+}
+
+export function isDomElementNode(node: Pick<DevtoolsNode, 'kind'>): boolean {
+    const kind = normalizeTreeKind(node.kind);
+    return kind === 'domelement' || kind === 'htmlelement' || kind === 'svgelement';
+}
+
+export function isComponentTreeNode(node: Pick<DevtoolsNode, 'kind'>): boolean {
+    return isComponentNode(node) || isDomElementNode(node);
+}
+
+function normalizeTreeKind(kind: string): string {
+    return kind.toLocaleLowerCase().replace(/[^a-z]/g, '');
+}
+
 export function paginateItems<Item>(items: Item[], requestedPage: number, pageSize: number): PageSlice<Item> {
     const normalizedPageSize = Number.isFinite(pageSize) ? Math.max(1, Math.floor(pageSize)) : 1;
     const pageCount = Math.max(1, Math.ceil(items.length / normalizedPageSize));
@@ -258,6 +342,7 @@ export function createPanelRevision(snapshot: DevtoolsSnapshot, events: Devtools
             add(node.name);
             add(node.version);
             add(node.subscriberCount);
+            add(node.breakOnUpdate);
             add(compactValue(node.value));
             for (const channel of Object.keys(node.subscriptions).sort()) {
                 add(channel);

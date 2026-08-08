@@ -275,7 +275,7 @@ export function renderInternal(element: DOMRenderInput, session: RenderSession, 
 export function renderInternal(element: DOMRenderInput, session: RenderSession, prerendering: true): DOMPrerendered | DOMPrerendered[];
 export function renderInternal(element: DOMRenderInput, session: RenderSession, prerendering: boolean): DOMRenderInput;
 export function renderInternal(element: DOMRenderInput, session: RenderSession, prerendering: boolean = false): DOMRenderInput {
-    if (element == undefined) {
+    if (element == undefined || typeof element === 'boolean') {
         return undefined;
     }
 
@@ -299,7 +299,7 @@ export function renderInternal(element: DOMRenderInput, session: RenderSession, 
         const type = typeof element;
         if (type === 'string') {
             return document.createTextNode(element as string);
-        } else if (type === 'number' || type === 'bigint' || type === 'boolean') {
+        } else if (type === 'number' || type === 'bigint') {
             return document.createTextNode(element.toString());
         }
 
@@ -786,7 +786,7 @@ export class ArrayAurumElement extends AurumElement {
         attachCalls: Array<() => void>
     ): ArrayRenderEntry {
         const sourceType = typeof sourceValue;
-        if (sourceType === 'string' || sourceType === 'number' || sourceType === 'bigint' || sourceType === 'boolean') {
+        if (sourceType === 'string' || sourceType === 'number' || sourceType === 'bigint') {
             return {
                 identity,
                 sourceValue,
@@ -945,7 +945,7 @@ export class SingularAurumElement extends AurumElement {
         let optimized = false;
         if (this.children.length === 1 && this.children[0] instanceof Text) {
             const type = typeof newValue;
-            if (type === 'string' || type === 'bigint' || type === 'number' || type === 'boolean') {
+            if (type === 'string' || type === 'bigint' || type === 'number') {
                 this.children[0].nodeValue = String(newValue);
                 optimized = true;
             }

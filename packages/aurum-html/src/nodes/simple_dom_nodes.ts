@@ -115,6 +115,7 @@ export const NoScript = DomNodeCreator<HTMLNodeProps<HTMLElement>>('noscript');
 export interface VideoProps extends HTMLNodeProps<HTMLVideoElement> {
     controls?: AttributeValue;
     autoplay?: AttributeValue;
+    autoPlay?: AttributeValue;
     loop?: AttributeValue;
     muted?: AttributeValue;
     preload?: AttributeValue;
@@ -254,6 +255,7 @@ export const Hr = DomNodeCreator<HTMLNodeProps<HTMLHRElement>>('hr');
 export interface AudioProps extends HTMLNodeProps<HTMLAudioElement> {
     controls?: AttributeValue;
     autoplay?: AttributeValue;
+    autoPlay?: AttributeValue;
     loop?: AttributeValue;
     muted?: AttributeValue;
     preload?: AttributeValue;
@@ -754,6 +756,7 @@ export const Script = DomNodeCreator<ScriptProps>('script', [
 ]);
 
 const commonSvgProps = [
+    'focusable',
     'clip-path',
     'clip-rule',
     'color',
@@ -783,6 +786,7 @@ const commonSvgProps = [
 ];
 
 export interface SVGNodeProps extends HTMLNodeProps<SVGSVGElement> {
+    focusable?: AttributeValue;
     'clip-path'?: AttributeValue;
     'clip-rule'?: AttributeValue;
     color?: AttributeValue;
@@ -802,10 +806,13 @@ export interface SVGNodeProps extends HTMLNodeProps<SVGSVGElement> {
     'stroke-dasharray'?: AttributeValue;
     'stroke-dashoffset'?: AttributeValue;
     'stroke-linecap'?: AttributeValue;
+    strokeLinecap?: AttributeValue;
     'stroke-linejoin'?: AttributeValue;
+    strokeLinejoin?: AttributeValue;
     'stroke-miterlimit'?: AttributeValue;
     'stroke-opacity'?: AttributeValue;
     'stroke-width'?: AttributeValue;
+    strokeWidth?: AttributeValue;
     transform?: AttributeValue;
     'vector-effect'?: AttributeValue;
     visibility?: AttributeValue;

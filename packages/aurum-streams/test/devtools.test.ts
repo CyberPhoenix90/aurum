@@ -19,6 +19,7 @@ import {
     previewAurumDevtoolsValue,
     registerAurumDevtoolsNode,
     resolveAurumDevtoolsNodeId,
+    setAurumDevtoolsUpdateBreakpoint,
     setAurumDevtoolsSubscriptionCount,
     SetDataSource,
     TreeDataSource,
@@ -224,6 +225,32 @@ describe('Aurum developer tools protocol', () => {
 
         token.cancel();
         expect(registry.inspect(id)?.subscriptions).toEqual({ updates: 0, errors: 0 });
+    });
+
+    it('arms persistent update breakpoints only in debug mode', () => {
+        const registry = configureAurumDevtools({ mode: 'debug', captureStacks: false, historyLimit: 20 });
+        const source = new DataSource(1, 'breakpoint source');
+        cleanupTargets.push(source);
+        const id = resolveAurumDevtoolsNodeId(source)!;
+
+        expect(registry.capabilities).toContain('update-breakpoints');
+        expect(setAurumDevtoolsUpdateBreakpoint(source, true)).toBe(true);
+        expect(registry.inspect(id)?.breakOnUpdate).toBe(true);
+        const events = registry.getSnapshot().events;
+        expect(events[events.length - 1]).toMatchObject({
+            nodeId: id,
+            updateKind: 'breakpoint-enabled'
+        });
+
+        source.update(2);
+        expect(registry.inspect(id)).toMatchObject({ version: 1, breakOnUpdate: true });
+        expect(setAurumDevtoolsUpdateBreakpoint(id, false)).toBe(false);
+        expect(registry.inspect(id)?.breakOnUpdate).toBeUndefined();
+
+        configureAurumDevtools({ mode: 'production' });
+        expect(registry.capabilities).not.toContain('update-breakpoints');
+        expect(setAurumDevtoolsUpdateBreakpoint(source, true)).toBe(false);
+        expect(registry.inspect(id)?.breakOnUpdate).toBeUndefined();
     });
 
     it('tracks one-time subscriptions when they fire or are cancelled', () => {

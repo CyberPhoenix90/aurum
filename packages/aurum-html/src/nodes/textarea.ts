@@ -1,17 +1,19 @@
 import { BindableSource } from '@aurum/streams';
-import { AttributeValue, DataDrain } from '@aurum/streams';
+import { AttributeValue, DataDrain, ReadOnlyDataSource } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
-import { HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
+import { DOMEvent, HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
 import { queueRenderUpdate, renderBatchState } from '../rendering/render_batch.js';
+import { isDataWriter } from './rendering_helpers.js';
 
 export interface TextAreaProps extends HTMLNodeProps<HTMLTextAreaElement> {
     placeholder?: AttributeValue;
     readonly?: AttributeValue;
     readOnly?: AttributeValue;
     disabled?: AttributeValue;
-    onChange?: DataDrain<InputEvent>;
-    onInput?: DataDrain<InputEvent>;
-    value?: BindableSource<string> | string;
+    onChange?: DataDrain<DOMEvent<InputEvent, HTMLTextAreaElement>>;
+    onInput?: DataDrain<DOMEvent<InputEvent, HTMLTextAreaElement>>;
+    value?: ReadOnlyDataSource<string> | string;
+    defaultValue?: string;
     cols?: AttributeValue;
     rows?: AttributeValue;
     wrap?: AttributeValue;
@@ -67,9 +69,10 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
     textAreaEvents,
     (node: HTMLElement, props: TextAreaProps, cleanUp: CancellationToken) => {
         const textArea = node as HTMLTextAreaElement;
+        if (props?.defaultValue !== undefined) textArea.defaultValue = props.defaultValue;
         if (props?.value !== undefined) {
             if (typeof props.value !== 'string') {
-                const value = props.value as BindableSource<string>;
+                const value = props.value as ReadOnlyDataSource<string>;
                 const updateValue = (v: string): void => {
                     if (cleanUp.isCancelled) return;
                     textArea.value = v;
@@ -78,9 +81,11 @@ export const TextArea = DomNodeCreator<TextAreaProps>(
                     if (renderBatchState.active) queueRenderUpdate(updateValue, updateValue, v);
                     else updateValue(v);
                 }, cleanUp);
-                cleanUp.registerDomEvent(textArea, 'input', () => {
-                    value.write(textArea.value);
-                });
+                if (isDataWriter(value)) {
+                    cleanUp.registerDomEvent(textArea, 'input', () => {
+                        value.write(textArea.value);
+                    });
+                }
             } else {
                 textArea.value = props.value as string;
             }

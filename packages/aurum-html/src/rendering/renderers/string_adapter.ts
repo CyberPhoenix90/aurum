@@ -22,7 +22,7 @@ async function aurumToStringItem(
     config: HTMLSanitizeConfig,
     parentSession?: RenderSession
 ): Promise<string> {
-    if (content === undefined || content === null) {
+    if (content === undefined || content === null || typeof content === 'boolean') {
         return '';
     }
 
@@ -38,7 +38,7 @@ async function aurumToStringItem(
         return aurumToStringItem((await (content as Promise<unknown>)) as Renderable, config, parentSession);
     }
 
-    if (['number', 'string', 'bigint', 'boolean'].includes(typeof content)) {
+    if (['number', 'string', 'bigint'].includes(typeof content)) {
         return content.toString();
     } else if (content instanceof DataSource) {
         return aurumToStringItem(content.value, config, parentSession);

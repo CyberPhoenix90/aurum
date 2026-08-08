@@ -1,6 +1,6 @@
 {
     "name": "@aurum/streams",
-    "version": "0.10.0",
+    "version": "0.10.3",
     "description": "Reactive data sources and stream primitives for Aurum",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",

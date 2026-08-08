@@ -168,6 +168,45 @@ try {
     await page.getByRole('button', { name: 'Components' }).click();
     await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 4);
     assert.deepEqual(await page.locator('.component-row .component-label').allTextContents(), ['Application', '<main>', 'ResultList', '<ul>']);
+    assert.equal(await page.locator('.component-count').textContent(), '2 components · 2 elements');
+
+    await page.locator('.component-row[data-node-id="component-app"]').focus();
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-node-id')), 'dom-main');
+    assert.equal(await page.locator('.component-row[data-node-id="dom-main"]').getAttribute('aria-selected'), 'true');
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-node-id')), 'component-child');
+    await page.keyboard.press('ArrowLeft');
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 3);
+    assert.equal(await page.locator('.component-row[data-node-id="component-child"]').getAttribute('aria-expanded'), 'false');
+    assert.deepEqual(await page.locator('.component-row .component-label').allTextContents(), ['Application', '<main>', 'ResultList']);
+
+    await page.evaluate(() =>
+        window.__enqueuePoll(2.5, 39, 1, [
+            { sequence: 2, timestamp: 2.5, type: 'node-updated', nodeId: 'node-39', updateKind: 'value' }
+        ])
+    );
+    await page.waitForFunction(
+        () => document.querySelector('.component-row[data-node-id="component-child"]')?.getAttribute('aria-expanded') === 'false'
+    );
+    assert.equal(await page.locator('.component-row').count(), 3, 'live refresh must preserve collapsed branches');
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 4);
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-node-id')), 'component-child');
+
+    await page.getByRole('button', { name: 'Nodes' }).click();
+    await page.locator('#kind-select').selectOption('data-source');
+    await page.getByRole('button', { name: 'Components' }).click();
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 4);
+    assert.equal(await page.locator('#kind-select').inputValue(), '', 'non-tree filters must not make components appear missing');
+    await page.locator('.component-row[data-node-id="component-child"] .component-disclosure').click();
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 3);
+    await page.locator('.component-row[data-node-id="component-child"] .component-disclosure').click();
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 4);
+    await page.getByRole('button', { name: 'Collapse all' }).click();
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 1);
+    await page.getByRole('button', { name: 'Expand all' }).click();
+    await page.waitForFunction(() => document.querySelectorAll('.component-row').length === 4);
 
     await page.getByRole('button', { name: 'Arrays' }).click();
     await page.waitForFunction(() => document.querySelectorAll('.data-table tbody tr').length === 1);

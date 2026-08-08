@@ -1,4 +1,5 @@
-import { ArrayDataSource, Aurum, type CancellationToken, type Renderable } from '@aurum/html';
+import { Aurum, type Renderable } from '@aurum/html';
+import { ArrayDataSource, type CancellationToken } from '@aurum/streams';
 import { InspectedPageBridge } from './inspected_page_bridge.js';
 import {
     SUPPORTED_PROTOCOL_VERSION,
@@ -18,15 +19,22 @@ import {
     detailedValue,
     filterComponentTree,
     filterNodes,
+    isComponentNode,
+    isDataSourceNode,
+    isDomElementNode,
     isArrayDataSourceNode,
     layoutGraph,
     mergeEvents,
+    navigateComponentTree,
     nodeLabel,
     paginateItems,
     relatedGraphNodeIds,
     shouldPollPanel,
     shouldRefreshInspection,
-    updatedNodeIds
+    updatedNodeIds,
+    visibleComponentTree,
+    type ComponentTreeEntry,
+    type ComponentTreeNavigationKey
 } from './panel_state.js';
 
 type PanelView = 'graph' | 'components' | 'arrays' | 'nodes' | 'events';
@@ -63,7 +71,7 @@ interface EventItemElement {
 }
 
 interface ComponentRowElement {
-    row: HTMLButtonElement;
+    row: HTMLDivElement;
     disclosure: HTMLSpanElement;
     icon: HTMLSpanElement;
     label: HTMLSpanElement;
@@ -103,8 +111,11 @@ class AurumDevtoolsPanel {
     private renderedRevision?: string;
     private inspectionRevision?: string;
     private hoveredGraphNodeId?: string;
+    private focusedComponentNodeId?: string;
+    private readonly collapsedComponentNodeIds = new Set<string>();
     private readonly flashingNodeIds = new Set<string>();
     private readonly nodeFlashTimers = new Map<string, number>();
+    private readonly breakpointRequests = new Set<string>();
     private readonly graphNodes = new ArrayDataSource<Renderable>();
     private readonly graphEdges = new ArrayDataSource<Renderable>();
     private readonly componentRows = new ArrayDataSource<Renderable>();
@@ -138,6 +149,10 @@ class AurumDevtoolsPanel {
     private readonly graphNodeGroup: SVGGElement;
     private readonly componentsView: HTMLElement;
     private readonly componentsEmpty: HTMLElement;
+    private readonly componentToolbar: HTMLElement;
+    private readonly componentCount: HTMLElement;
+    private readonly componentExpandAllButton: HTMLButtonElement;
+    private readonly componentCollapseAllButton: HTMLButtonElement;
     private readonly componentList: HTMLElement;
     private readonly nodesView: HTMLElement;
     private readonly nodesEmpty: HTMLElement;
@@ -225,9 +240,19 @@ class AurumDevtoolsPanel {
             'No component hierarchy',
             'Component and host DOM hierarchy is collected only by debug/dev instrumented builds.'
         );
+        this.componentToolbar = htmlElement('div', 'component-toolbar');
+        this.componentCount = htmlElement('span', 'component-count');
+        const componentToolbarActions = htmlElement('span', 'component-toolbar-actions');
+        this.componentExpandAllButton = htmlElement('button', 'tree-tool-button', 'Expand all') as HTMLButtonElement;
+        this.componentExpandAllButton.type = 'button';
+        this.componentCollapseAllButton = htmlElement('button', 'tree-tool-button', 'Collapse all') as HTMLButtonElement;
+        this.componentCollapseAllButton.type = 'button';
+        componentToolbarActions.append(this.componentExpandAllButton, this.componentCollapseAllButton);
+        this.componentToolbar.append(this.componentCount, componentToolbarActions);
         this.componentList = htmlElement('div', 'component-tree');
         this.componentList.setAttribute('role', 'tree');
-        this.componentsView.append(this.componentsEmpty, this.componentList);
+        this.componentList.setAttribute('aria-label', 'Aurum component and host element hierarchy');
+        this.componentsView.append(this.componentsEmpty, this.componentToolbar, this.componentList);
 
         this.nodesView = htmlElement('div', 'panel-view');
         this.nodesEmpty = emptyState('No matching nodes', 'Change the search or kind filter to inspect another source.');
@@ -301,6 +326,7 @@ class AurumDevtoolsPanel {
             this.selectedNodeId = undefined;
             this.selectedInspection = undefined;
             this.inspectionRevision = undefined;
+            this.resetComponentTreeState();
             this.clearNodeUpdateFlashes();
             this.status = { available: false, mode: 'unknown', capabilities: [], droppedEvents: 0 };
             this.render(true);
@@ -343,10 +369,27 @@ class AurumDevtoolsPanel {
             this.nodePage = 0;
             this.renderContent();
         });
+        this.componentExpandAllButton.addEventListener('click', () => {
+            this.collapsedComponentNodeIds.clear();
+            this.renderComponents();
+            this.focusComponentRow(this.focusedComponentNodeId);
+        });
+        this.componentCollapseAllButton.addEventListener('click', () => {
+            const entries = this.filteredComponentTree();
+            const parentIds = new Set(entries.flatMap((entry) => (entry.parentId === undefined ? [] : [entry.parentId])));
+            this.collapsedComponentNodeIds.clear();
+            for (const parentId of parentIds) this.collapsedComponentNodeIds.add(parentId);
+            this.renderComponents();
+            this.focusComponentRow(this.focusedComponentNodeId);
+        });
 
         for (const button of this.viewButtons) {
             button.addEventListener('click', () => {
                 this.view = button.dataset.view as PanelView;
+                if (this.view === 'components' && this.kind !== '' && this.kind !== 'component' && this.kind !== 'dom-element') {
+                    this.kind = '';
+                    this.kindSelect.value = '';
+                }
                 this.render(true);
             });
         }
@@ -375,6 +418,7 @@ class AurumDevtoolsPanel {
                 this.selectedNodeId = undefined;
                 this.selectedInspection = undefined;
                 this.inspectionRevision = undefined;
+                this.resetComponentTreeState();
                 this.clearNodeUpdateFlashes();
                 forceInspection = true;
             }
@@ -386,6 +430,7 @@ class AurumDevtoolsPanel {
                 this.selectedNodeId = undefined;
                 this.selectedInspection = undefined;
                 this.inspectionRevision = undefined;
+                this.resetComponentTreeState();
                 this.clearNodeUpdateFlashes();
             }
             this.status = result;
@@ -592,9 +637,20 @@ class AurumDevtoolsPanel {
     }
 
     private renderComponents(): void {
-        const entries = filterComponentTree(buildComponentTree(this.snapshot.nodes, this.snapshot.edges), this.search, this.kind);
+        const componentTree = buildComponentTree(this.snapshot.nodes, this.snapshot.edges);
+        const entries = filterComponentTree(componentTree, this.search, this.kind);
         if (entries.length === 0) {
+            if (componentTree.length === 0) {
+                setEmptyState(
+                    this.componentsEmpty,
+                    'No component hierarchy',
+                    'Component and host DOM hierarchy is collected only by debug/dev instrumented builds.'
+                );
+            } else {
+                setEmptyState(this.componentsEmpty, 'No matching components', 'Change the search or kind filter to reveal the hierarchy.');
+            }
             this.componentsEmpty.hidden = false;
+            this.componentToolbar.hidden = true;
             this.componentList.hidden = true;
             this.componentRows.merge([]);
             this.componentRowElements.clear();
@@ -602,54 +658,185 @@ class AurumDevtoolsPanel {
         }
 
         this.componentsEmpty.hidden = true;
+        this.componentToolbar.hidden = false;
         this.componentList.hidden = false;
         const parentIds = new Set(entries.flatMap((entry) => (entry.parentId === undefined ? [] : [entry.parentId])));
+        for (const nodeId of Array.from(this.collapsedComponentNodeIds)) {
+            if (!parentIds.has(nodeId)) this.collapsedComponentNodeIds.delete(nodeId);
+        }
+        // Search results should never be hidden behind an old collapsed ancestor.
+        const effectiveCollapsedIds = this.search.trim() === '' ? this.collapsedComponentNodeIds : new Set<string>();
+        const visibleEntries = visibleComponentTree(entries, effectiveCollapsedIds);
+        const componentCount = entries.filter((entry) => isComponentNode(entry.node)).length;
+        const elementCount = entries.filter((entry) => isDomElementNode(entry.node)).length;
+        const hiddenCount = entries.length - visibleEntries.length;
+        this.componentCount.textContent = `${componentCount} component${componentCount === 1 ? '' : 's'} · ${elementCount} element${elementCount === 1 ? '' : 's'}${
+            hiddenCount === 0 ? '' : ` · ${hiddenCount} collapsed`
+        }`;
+        this.componentExpandAllButton.disabled = this.collapsedComponentNodeIds.size === 0;
+        this.componentCollapseAllButton.disabled = parentIds.size === 0 || parentIds.size === this.collapsedComponentNodeIds.size;
+
+        const visibleEntryIds = new Set(visibleEntries.map((entry) => entry.node.id));
+        if (this.focusedComponentNodeId === undefined || !visibleEntryIds.has(this.focusedComponentNodeId)) {
+            this.focusedComponentNodeId =
+                (this.selectedNodeId !== undefined && visibleEntryIds.has(this.selectedNodeId) ? this.selectedNodeId : undefined) ??
+                visibleEntries[0]?.node.id;
+        }
         const visibleIds = new Set<string>();
         const rows: Renderable[] = [];
-        for (const entry of entries) {
+        const siblingMetadata = componentTreeSiblingMetadata(entries);
+        for (const entry of visibleEntries) {
             const node = entry.node;
             visibleIds.add(node.id);
             let rendered = this.componentRowElements.get(node.id);
             if (rendered === undefined) {
-                const row = htmlElement('button', 'component-row') as HTMLButtonElement;
-                row.type = 'button';
+                const row = htmlElement('div', 'component-row') as HTMLDivElement;
                 row.setAttribute('role', 'treeitem');
                 row.dataset.nodeId = node.id;
                 const disclosure = htmlElement('span', 'component-disclosure');
+                disclosure.setAttribute('aria-hidden', 'true');
                 const icon = htmlElement('span', 'component-icon');
+                icon.setAttribute('aria-hidden', 'true');
                 const label = htmlElement('span', 'component-label');
                 const detail = htmlElement('span', 'component-detail');
                 row.append(disclosure, icon, label, detail);
-                row.addEventListener('click', () => this.selectNode(node.id));
+                row.addEventListener('click', (event) => {
+                    const nodeId = row.dataset.nodeId;
+                    if (nodeId === undefined) return;
+                    this.focusedComponentNodeId = nodeId;
+                    if (
+                        (event.target as Element | null)?.closest('.component-disclosure') !== null &&
+                        this.componentNodeHasChildren(nodeId)
+                    ) {
+                        this.toggleComponentNode(nodeId);
+                        this.focusComponentRow(nodeId);
+                        return;
+                    }
+                    this.selectNode(nodeId);
+                });
+                row.addEventListener('dblclick', (event) => {
+                    const nodeId = row.dataset.nodeId;
+                    if (nodeId === undefined || !this.componentNodeHasChildren(nodeId)) return;
+                    event.preventDefault();
+                    this.toggleComponentNode(nodeId);
+                    this.focusComponentRow(nodeId);
+                });
+                row.addEventListener('keydown', (event) => this.handleComponentTreeKeyDown(event));
                 row.addEventListener('mouseenter', () => {
-                    if (node.kind === 'dom-element') this.highlightDomNode(node.id, 0);
+                    const hoveredNode = this.snapshot.nodes.find((candidate) => candidate.id === row.dataset.nodeId);
+                    if (hoveredNode !== undefined && isDomElementNode(hoveredNode)) this.highlightDomNode(hoveredNode.id, 0);
                 });
                 row.addEventListener('mouseleave', () => {
-                    if (node.kind === 'dom-element') this.clearDomNodeHighlight();
+                    this.clearDomNodeHighlight();
                 });
                 row.addEventListener('focus', () => {
-                    if (node.kind === 'dom-element') this.highlightDomNode(node.id, DOM_SELECTION_HIGHLIGHT_DURATION);
+                    const focusedNode = this.snapshot.nodes.find((candidate) => candidate.id === row.dataset.nodeId);
+                    if (focusedNode === undefined) return;
+                    this.focusedComponentNodeId = focusedNode.id;
+                    this.updateComponentTabStops();
+                    if (isDomElementNode(focusedNode)) this.highlightDomNode(focusedNode.id, DOM_SELECTION_HIGHLIGHT_DURATION);
                 });
                 row.addEventListener('blur', () => {
-                    if (node.kind === 'dom-element') this.clearDomNodeHighlight();
+                    this.clearDomNodeHighlight();
                 });
                 rendered = { row, disclosure, icon, label, detail };
                 this.componentRowElements.set(node.id, rendered);
             }
+            rendered.row.dataset.nodeId = node.id;
             rendered.row.style.setProperty('--tree-depth', String(entry.depth));
             rendered.row.setAttribute('aria-level', String(entry.depth + 1));
+            const siblings = siblingMetadata.get(node.id);
+            if (siblings !== undefined) {
+                rendered.row.setAttribute('aria-posinset', String(siblings.position));
+                rendered.row.setAttribute('aria-setsize', String(siblings.size));
+            }
+            rendered.row.tabIndex = node.id === this.focusedComponentNodeId ? 0 : -1;
             rendered.row.classList.toggle('selected', node.id === this.selectedNodeId);
-            rendered.row.classList.toggle('host-node', node.kind === 'dom-element');
-            rendered.disclosure.textContent = parentIds.has(node.id) ? '⌄' : '';
-            rendered.icon.textContent = node.kind === 'component' ? '◇' : '<>';
+            rendered.row.setAttribute('aria-selected', String(node.id === this.selectedNodeId));
+            rendered.row.classList.toggle('host-node', isDomElementNode(node));
+            rendered.row.classList.toggle('has-children', parentIds.has(node.id));
+            rendered.row.classList.toggle('collapsed', effectiveCollapsedIds.has(node.id));
+            if (parentIds.has(node.id)) {
+                rendered.row.setAttribute('aria-expanded', String(!effectiveCollapsedIds.has(node.id)));
+            } else {
+                rendered.row.removeAttribute('aria-expanded');
+            }
+            rendered.disclosure.textContent = '';
+            rendered.icon.textContent = isComponentNode(node) ? '◆' : '<>';
             rendered.label.textContent = node.name ?? node.id;
-            rendered.detail.textContent = node.kind === 'component' ? 'Component' : compactValue(node.value, 70);
+            rendered.detail.textContent = isComponentNode(node) ? componentDetail(node) : compactValue(node.value, 90);
             rows.push(rendered.row as unknown as Renderable);
         }
         this.componentRows.merge(rows);
         for (const nodeId of this.componentRowElements.keys()) {
             if (!visibleIds.has(nodeId)) this.componentRowElements.delete(nodeId);
         }
+    }
+
+    private filteredComponentTree(): ComponentTreeEntry[] {
+        return filterComponentTree(buildComponentTree(this.snapshot.nodes, this.snapshot.edges), this.search, this.kind);
+    }
+
+    private toggleComponentNode(nodeId: string): void {
+        if (this.collapsedComponentNodeIds.has(nodeId)) this.collapsedComponentNodeIds.delete(nodeId);
+        else this.collapsedComponentNodeIds.add(nodeId);
+        this.renderComponents();
+    }
+
+    private componentNodeHasChildren(nodeId: string): boolean {
+        return this.filteredComponentTree().some((entry) => entry.parentId === nodeId);
+    }
+
+    private handleComponentTreeKeyDown(event: KeyboardEvent): void {
+        const row = event.currentTarget as HTMLElement;
+        const focusedNodeId = row.dataset.nodeId;
+        if (focusedNodeId === undefined) return;
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.selectNode(focusedNodeId);
+            return;
+        }
+        if (event.key === ' ') {
+            event.preventDefault();
+            const entries = this.filteredComponentTree();
+            if (entries.some((entry) => entry.parentId === focusedNodeId)) this.toggleComponentNode(focusedNodeId);
+            else this.selectNode(focusedNodeId);
+            this.focusComponentRow(focusedNodeId);
+            return;
+        }
+        if (!isComponentTreeNavigationKey(event.key)) return;
+        event.preventDefault();
+        const entries = this.filteredComponentTree();
+        const effectiveCollapsedIds = this.search.trim() === '' ? this.collapsedComponentNodeIds : new Set<string>();
+        const visibleEntries = visibleComponentTree(entries, effectiveCollapsedIds);
+        const navigation = navigateComponentTree(entries, visibleEntries, focusedNodeId, effectiveCollapsedIds, event.key);
+        if (navigation.expandId !== undefined) this.collapsedComponentNodeIds.delete(navigation.expandId);
+        if (navigation.collapseId !== undefined) this.collapsedComponentNodeIds.add(navigation.collapseId);
+        if (navigation.expandId !== undefined || navigation.collapseId !== undefined) this.renderComponents();
+        this.focusComponentRow(navigation.focusId, true);
+    }
+
+    private focusComponentRow(nodeId: string | undefined, select = false): void {
+        if (nodeId === undefined) return;
+        if (select && this.selectedNodeId !== nodeId) this.selectNode(nodeId);
+        const row = this.componentRowElements.get(nodeId)?.row;
+        if (row === undefined) return;
+        this.focusedComponentNodeId = nodeId;
+        this.updateComponentTabStops();
+        row.focus({ preventScroll: true });
+        row.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+
+    private updateComponentTabStops(): void {
+        for (const [nodeId, rendered] of this.componentRowElements) {
+            rendered.row.tabIndex = nodeId === this.focusedComponentNodeId ? 0 : -1;
+        }
+    }
+
+    private resetComponentTreeState(): void {
+        this.focusedComponentNodeId = undefined;
+        this.collapsedComponentNodeIds.clear();
+        this.componentRowElements.clear();
     }
 
     private renderGraph(): void {
@@ -962,6 +1149,31 @@ class AurumDevtoolsPanel {
         );
         this.details.append(header);
 
+        if (
+            this.status.mode === 'debug' &&
+            this.status.capabilities.includes('update-breakpoints') &&
+            isDataSourceNode(detailedNode)
+        ) {
+            const breakpointEnabled = detailedNode.breakOnUpdate === true;
+            const breakpointButton = htmlElement(
+                'button',
+                `breakpoint-button${breakpointEnabled ? ' active' : ''}`,
+                breakpointEnabled ? 'Break on updates: on' : 'Break on updates'
+            ) as HTMLButtonElement;
+            breakpointButton.type = 'button';
+            breakpointButton.disabled = this.breakpointRequests.has(node.id);
+            breakpointButton.setAttribute('aria-pressed', String(breakpointEnabled));
+            breakpointButton.title = breakpointEnabled
+                ? 'Disable the debugger breakpoint for this DataSource'
+                : 'Pause JavaScript at the synchronous mutation that updates this DataSource';
+            breakpointButton.addEventListener('click', () => {
+                void this.toggleUpdateBreakpoint(node.id, !breakpointEnabled);
+            });
+            const breakpointActions = htmlElement('div', 'details-actions');
+            breakpointActions.append(breakpointButton);
+            this.details.append(breakpointActions);
+        }
+
         const facts = htmlElement('dl', 'facts');
         appendFact(facts, 'ID', node.id);
         appendFact(facts, 'Version', detailedNode.version === undefined ? '—' : String(detailedNode.version));
@@ -1052,10 +1264,48 @@ class AurumDevtoolsPanel {
         this.selectedNodeId = nodeId;
         this.selectedInspection = undefined;
         this.inspectionRevision = undefined;
+        if (this.view === 'components') this.revealComponentNode(nodeId);
         this.renderContent();
         this.renderDetails();
         this.highlightDomNode(nodeId, DOM_SELECTION_HIGHLIGHT_DURATION);
         void this.inspectSelectedNode(nodeId);
+    }
+
+    private async toggleUpdateBreakpoint(nodeId: string, enabled: boolean): Promise<void> {
+        if (this.breakpointRequests.has(nodeId)) return;
+        this.breakpointRequests.add(nodeId);
+        this.renderDetails();
+        const generation = this.bridgeGeneration;
+        try {
+            const result = await this.bridge.setUpdateBreakpoint(nodeId, enabled);
+            if (result === undefined || generation !== this.bridgeGeneration || this.disposed) return;
+            const node = this.snapshot.nodes.find((candidate) => candidate.id === nodeId);
+            if (node !== undefined) {
+                if (result) node.breakOnUpdate = true;
+                else delete node.breakOnUpdate;
+            }
+            if (this.selectedNodeId === nodeId) {
+                this.selectedInspection = undefined;
+                this.inspectionRevision = undefined;
+            }
+            this.renderedRevision = undefined;
+        } finally {
+            this.breakpointRequests.delete(nodeId);
+            this.renderDetails();
+        }
+        await this.refresh();
+    }
+
+    private revealComponentNode(nodeId: string): void {
+        const entries = this.filteredComponentTree();
+        const byId = new Map(entries.map((entry) => [entry.node.id, entry]));
+        const visited = new Set<string>();
+        let parentId = byId.get(nodeId)?.parentId;
+        while (parentId !== undefined && !visited.has(parentId)) {
+            visited.add(parentId);
+            this.collapsedComponentNodeIds.delete(parentId);
+            parentId = byId.get(parentId)?.parentId;
+        }
     }
 
     private flashUpdatedNodes(events: readonly DevtoolsEvent[]): void {
@@ -1158,6 +1408,38 @@ function clear(element: Element): void {
 
 function graphEdgeKey(edge: DevtoolsSnapshot['edges'][number]): string {
     return edge.id ?? `${edge.source}\u0000${edge.target}\u0000${edge.kind ?? ''}\u0000${edge.label ?? ''}`;
+}
+
+function componentTreeSiblingMetadata(entries: readonly ComponentTreeEntry[]): Map<string, { position: number; size: number }> {
+    const groups = new Map<string, ComponentTreeEntry[]>();
+    for (const entry of entries) {
+        const key = entry.parentId ?? '';
+        const siblings = groups.get(key) ?? [];
+        siblings.push(entry);
+        groups.set(key, siblings);
+    }
+    const result = new Map<string, { position: number; size: number }>();
+    for (const siblings of groups.values()) {
+        for (let index = 0; index < siblings.length; index++) {
+            result.set(siblings[index].node.id, { position: index + 1, size: siblings.length });
+        }
+    }
+    return result;
+}
+
+function componentDetail(node: DevtoolsNode): string {
+    if (typeof node.value !== 'object' || node.value === null) return 'Component';
+    const entries = (node.value as { entries?: unknown }).entries;
+    if (!Array.isArray(entries)) return 'Component';
+    const childCountEntry = entries.find(
+        (entry) => typeof entry === 'object' && entry !== null && (entry as { key?: unknown }).key === 'childCount'
+    ) as { value?: unknown } | undefined;
+    const childCount = previewScalar(childCountEntry?.value);
+    return childCount === undefined ? 'Component' : `${childCount} JSX child${childCount === '1' ? '' : 'ren'}`;
+}
+
+function isComponentTreeNavigationKey(key: string): key is ComponentTreeNavigationKey {
+    return key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'End' || key === 'Home';
 }
 
 function emptyState(title: string, description: string): HTMLElement {

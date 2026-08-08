@@ -11,11 +11,21 @@ import {
 import { AurumElement, Rendered, renderInternal } from '../dom_runtime.js';
 import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, DataSource } from '@aurum/streams';
 import { CancellationToken } from '@aurum/streams';
-import { AttributeValue, Callback, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurum/streams';
+import { AttributeValue, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurum/streams';
 import { AurumDecorator } from '../../utilities/aurum.js';
 import { queueRenderUpdate, renderBatchState } from '../render_batch.js';
 
+/** A DOM event contextualized with the element whose Aurum handler receives it. */
+export type DOMEvent<E extends Event, T> = E & {
+    readonly currentTarget: T;
+    readonly target: EventTarget & T;
+};
+
 export interface HTMLNodeProps<T> {
+    /** Present for the automatic JSX runtime; Aurum still supplies children as the component's second argument. */
+    children?: Renderable | Renderable[];
+    /** Automatic JSX uses this for identity; it is non-enumerable at runtime. */
+    key?: string | number;
     decorate?: AurumDecorator | AurumDecorator[];
     id?: AttributeValue;
     name?: AttributeValue;
@@ -37,6 +47,8 @@ export interface HTMLNodeProps<T> {
     dir?: AttributeValue;
     enterkeyhint?: AttributeValue;
     hidden?: AttributeValue;
+    open?: AttributeValue;
+    dangerouslySetInnerHTML?: { __html: string };
     inert?: AttributeValue;
     inputmode?: AttributeValue;
     is?: AttributeValue;
@@ -107,73 +119,73 @@ export interface HTMLNodeProps<T> {
     ariaValueNow?: AttributeValue;
     ariaValueText?: AttributeValue;
 
-    onContextMenu?: DataDrain<MouseEvent>;
-    onDblClick?: DataDrain<MouseEvent>;
-    onDoubleClick?: DataDrain<MouseEvent>;
-    onClick?: DataDrain<MouseEvent>;
-    onKeyDown?: DataDrain<KeyboardEvent>;
-    onKeyUp?: DataDrain<KeyboardEvent>;
-    onKeyPress?: DataDrain<KeyboardEvent>;
-    onMouseDown?: DataDrain<MouseEvent>;
-    onMouseUp?: DataDrain<MouseEvent>;
-    onMouseEnter?: DataDrain<MouseEvent>;
-    onMouseLeave?: DataDrain<MouseEvent>;
-    onMouseMove?: DataDrain<MouseEvent>;
-    onMouseWheel?: DataDrain<WheelEvent>;
-    onWheel?: DataDrain<WheelEvent>;
-    onBlur?: DataDrain<FocusEvent>;
-    onFocus?: DataDrain<FocusEvent>;
-    onDrag?: DataDrain<DragEvent>;
-    onDragEnd?: DataDrain<DragEvent>;
-    onDragEnter?: DataDrain<DragEvent>;
-    onDragExit?: DataDrain<DragEvent>;
-    onDragLeave?: DataDrain<DragEvent>;
-    onDragOver?: DataDrain<DragEvent>;
-    onDragStart?: DataDrain<DragEvent>;
-    onDrop?: DataDrain<DragEvent>;
+    onContextMenu?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onDblClick?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onDoubleClick?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onClick?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onKeyDown?: DataDrain<DOMEvent<KeyboardEvent, T>>;
+    onKeyUp?: DataDrain<DOMEvent<KeyboardEvent, T>>;
+    onKeyPress?: DataDrain<DOMEvent<KeyboardEvent, T>>;
+    onMouseDown?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onMouseUp?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onMouseEnter?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onMouseLeave?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onMouseMove?: DataDrain<DOMEvent<MouseEvent, T>>;
+    onMouseWheel?: DataDrain<DOMEvent<WheelEvent, T>>;
+    onWheel?: DataDrain<DOMEvent<WheelEvent, T>>;
+    onBlur?: DataDrain<DOMEvent<FocusEvent, T>>;
+    onFocus?: DataDrain<DOMEvent<FocusEvent, T>>;
+    onDrag?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragEnd?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragEnter?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragExit?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragLeave?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragOver?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDragStart?: DataDrain<DOMEvent<DragEvent, T>>;
+    onDrop?: DataDrain<DOMEvent<DragEvent, T>>;
     onLoad?: DataDrain<Event>;
-    onError?: DataDrain<ErrorEvent>;
-    onTransitionEnd?: DataDrain<TransitionEvent>;
-    onTransitionStart?: DataDrain<TransitionEvent>;
-    onTransitionRun?: DataDrain<TransitionEvent>;
-    onTransitionCancel?: DataDrain<TransitionEvent>;
-    onAnimationEnd?: DataDrain<AnimationEvent>;
-    onAnimationStart?: DataDrain<AnimationEvent>;
-    onAnimationIteration?: DataDrain<AnimationEvent>;
-    onAnimationCancel?: DataDrain<AnimationEvent>;
-    onAuxClick?: DataDrain<PointerEvent>;
-    onBeforeInput?: DataDrain<InputEvent>;
+    onError?: DataDrain<DOMEvent<ErrorEvent, T>>;
+    onTransitionEnd?: DataDrain<DOMEvent<TransitionEvent, T>>;
+    onTransitionStart?: DataDrain<DOMEvent<TransitionEvent, T>>;
+    onTransitionRun?: DataDrain<DOMEvent<TransitionEvent, T>>;
+    onTransitionCancel?: DataDrain<DOMEvent<TransitionEvent, T>>;
+    onAnimationEnd?: DataDrain<DOMEvent<AnimationEvent, T>>;
+    onAnimationStart?: DataDrain<DOMEvent<AnimationEvent, T>>;
+    onAnimationIteration?: DataDrain<DOMEvent<AnimationEvent, T>>;
+    onAnimationCancel?: DataDrain<DOMEvent<AnimationEvent, T>>;
+    onAuxClick?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onBeforeInput?: DataDrain<DOMEvent<InputEvent, T>>;
     onBeforeMatch?: DataDrain<Event>;
-    onCompositionEnd?: DataDrain<CompositionEvent>;
-    onCompositionStart?: DataDrain<CompositionEvent>;
-    onCompositionUpdate?: DataDrain<CompositionEvent>;
+    onCompositionEnd?: DataDrain<DOMEvent<CompositionEvent, T>>;
+    onCompositionStart?: DataDrain<DOMEvent<CompositionEvent, T>>;
+    onCompositionUpdate?: DataDrain<DOMEvent<CompositionEvent, T>>;
     onContentVisibilityAutoStateChange?: DataDrain<Event>;
-    onCopy?: DataDrain<ClipboardEvent>;
-    onCut?: DataDrain<ClipboardEvent>;
-    onPaste?: DataDrain<ClipboardEvent>;
-    onFocusIn?: DataDrain<FocusEvent>;
-    onFocusOut?: DataDrain<FocusEvent>;
+    onCopy?: DataDrain<DOMEvent<ClipboardEvent, T>>;
+    onCut?: DataDrain<DOMEvent<ClipboardEvent, T>>;
+    onPaste?: DataDrain<DOMEvent<ClipboardEvent, T>>;
+    onFocusIn?: DataDrain<DOMEvent<FocusEvent, T>>;
+    onFocusOut?: DataDrain<DOMEvent<FocusEvent, T>>;
     onFullscreenChange?: DataDrain<Event>;
-    onFullscreenError?: DataDrain<ErrorEvent>;
-    onGotPointerCapture?: DataDrain<PointerEvent>;
-    onLostPointerCapture?: DataDrain<PointerEvent>;
-    onPointerCancel?: DataDrain<PointerEvent>;
-    onPointerDown?: DataDrain<PointerEvent>;
-    onPointerEnter?: DataDrain<PointerEvent>;
-    onPointerLeave?: DataDrain<PointerEvent>;
-    onPointerMove?: DataDrain<PointerEvent>;
-    onPointerOut?: DataDrain<PointerEvent>;
-    onPointerOver?: DataDrain<PointerEvent>;
-    onPointerUp?: DataDrain<PointerEvent>;
-    onScroll?: DataDrain<UIEvent>;
-    onScrollEnd?: DataDrain<UIEvent>;
-    onSecurityPolicyViolation?: DataDrain<SecurityPolicyViolationEvent>;
-    onTouchCancel?: DataDrain<TouchEvent>;
-    onTouchEnd?: DataDrain<TouchEvent>;
-    onTouchMove?: DataDrain<TouchEvent>;
-    onTouchStart?: DataDrain<TouchEvent>;
-    onAttach?: Callback<T>;
-    onDetach?: Callback<T>;
+    onFullscreenError?: DataDrain<DOMEvent<ErrorEvent, T>>;
+    onGotPointerCapture?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onLostPointerCapture?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerCancel?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerDown?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerEnter?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerLeave?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerMove?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerOut?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerOver?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onPointerUp?: DataDrain<DOMEvent<PointerEvent, T>>;
+    onScroll?: DataDrain<DOMEvent<UIEvent, T>>;
+    onScrollEnd?: DataDrain<DOMEvent<UIEvent, T>>;
+    onSecurityPolicyViolation?: DataDrain<DOMEvent<SecurityPolicyViolationEvent, T>>;
+    onTouchCancel?: DataDrain<DOMEvent<TouchEvent, T>>;
+    onTouchEnd?: DataDrain<DOMEvent<TouchEvent, T>>;
+    onTouchMove?: DataDrain<DOMEvent<TouchEvent, T>>;
+    onTouchStart?: DataDrain<DOMEvent<TouchEvent, T>>;
+    onAttach?: (element: T) => void;
+    onDetach?: (element: T) => void;
 }
 
 export type GenericHTMLNodeProps<T extends HTMLElement = HTMLElement> = HTMLNodeProps<T>;
@@ -462,6 +474,11 @@ function processHTMLNodeInternal(
         const value = (props as Record<string, unknown>)[key];
         if (value === undefined) continue;
 
+        if (key === 'dangerouslySetInnerHTML') {
+            node.innerHTML = (value as { __html: string }).__html;
+            continue;
+        }
+
         const eventName = eventByProp.get(key);
         if (eventName !== undefined) {
             if (value) node.addEventListener(eventName === 'doubleclick' ? 'dblclick' : eventName, (event) => writeTo(value as never, event));
@@ -527,7 +544,11 @@ const attributeAliases: Record<string, string> = {
     spellCheck: 'spellcheck',
     srcSet: 'srcset',
     tabIndex: 'tabindex',
-    useMap: 'usemap'
+    useMap: 'usemap',
+    autoPlay: 'autoplay',
+    strokeWidth: 'stroke-width',
+    strokeLinecap: 'stroke-linecap',
+    strokeLinejoin: 'stroke-linejoin'
 };
 
 const propertyNamesByAttribute: Record<string, string> = {
@@ -603,7 +624,7 @@ function bindClass(
 ): void {
     if (!value) return;
     if (typeof value === 'string') {
-        node.className = value;
+        node.setAttribute('class', value);
         return;
     }
     if (value instanceof DataSource) {
@@ -612,10 +633,10 @@ function bindClass(
         const normalize = (next: unknown): string => Array.isArray(next) ? next.filter(Boolean).join(' ') : String(next ?? '');
         const updateClass = (next: unknown): void => {
             if (cleanUp.isCancelled) return;
-            node.className = normalize(next);
+            node.setAttribute('class', normalize(next));
         };
         let previousValue = normalize(value.value);
-        node.className = previousValue;
+        node.setAttribute('class', previousValue);
         value.listen((next) => {
             const normalized = normalize(next);
             if (normalized === previousValue) return;
@@ -631,14 +652,14 @@ function bindClass(
         registerAurumRenderBinding(result, node, 'class', cleanUp, renderSession);
         const updateClass = (next: string): void => {
             if (cleanUp.isCancelled) return;
-            node.className = next;
+            node.setAttribute('class', next);
         };
         result.listenAndRepeat((next) => {
             if (renderBatchState.active) queueRenderUpdate(updateClass, updateClass, next);
             else updateClass(next);
         }, cleanUp);
     } else {
-        node.className = result;
+        node.setAttribute('class', result);
     }
 }
 
@@ -651,25 +672,6 @@ function bindStyle(
     if (!value) return;
     if (typeof value === 'string') {
         node.setAttribute('style', value);
-        return;
-    }
-    if (value instanceof DataSource) {
-        const cleanUp = getCleanUp();
-        registerAurumRenderBinding(value, node, 'style', cleanUp, renderSession);
-        const normalize = (next: unknown): string => String(next ?? '');
-        const updateStyle = (next: unknown): void => {
-            if (cleanUp.isCancelled) return;
-            node.setAttribute('style', normalize(next));
-        };
-        let previousValue = normalize(value.value);
-        node.setAttribute('style', previousValue);
-        value.listen((next) => {
-            const normalized = normalize(next);
-            if (normalized === previousValue) return;
-            previousValue = normalized;
-            if (renderBatchState.active) queueRenderUpdate(updateStyle, updateStyle, normalized);
-            else updateStyle(normalized);
-        }, cleanUp);
         return;
     }
     const cleanUp = getCleanUp();

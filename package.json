@@ -8,6 +8,7 @@
         "packages/aurum-remote",
         "packages/aurum-rendering",
         "packages/aurum-html",
+        "packages/aurum-compat",
         "packages/aurum-canvas",
         "packages/aurum-components",
         "packages/aurum-server",

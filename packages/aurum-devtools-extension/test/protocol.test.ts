@@ -16,6 +16,7 @@ describe('devtools protocol normalization', () => {
                     name: 'counter',
                     createdAt: 100,
                     version: 4,
+                    breakOnUpdate: true,
                     subscriptions: { updates: 2, cancellation: 1 },
                     value: { type: 'number', summary: '42', value: 42 },
                     metadata: { owner: { type: 'string', summary: 'Counter' } },
@@ -63,6 +64,7 @@ describe('devtools protocol normalization', () => {
             subscriberCount: 3,
             subscriptions: { updates: 2, cancellation: 1 },
             stack: 'at createCounter (counter.ts:10:2)',
+            breakOnUpdate: true,
             annotations: { owner: { type: 'string', summary: 'Counter' } }
         });
         expect(snapshot.edges).toEqual([

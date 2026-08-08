@@ -16,6 +16,7 @@ export interface DevtoolsNode {
     annotations?: unknown;
     createdAt?: number | string;
     details?: unknown;
+    breakOnUpdate?: boolean;
 }
 
 export interface DevtoolsEdge {
@@ -126,6 +127,7 @@ export function normalizeNode(raw: unknown, index = 0): DevtoolsNode {
     const subscriptions = normalizeSubscriptions(source.subscriptions);
     const name = nonEmptyString(source.name ?? source.debugName ?? source.label);
     const stack = nonEmptyString(source.stack ?? source.creationStack ?? source.createdAtStack);
+    const breakOnUpdate = source.breakOnUpdate === true;
 
     return {
         id,
@@ -140,6 +142,7 @@ export function normalizeNode(raw: unknown, index = 0): DevtoolsNode {
         upstream: identifierArray(source.upstream ?? source.inputs ?? source.dependencies ?? source.parents),
         downstream: identifierArray(source.downstream ?? source.outputs ?? source.dependents ?? source.children),
         ...(stack === undefined ? {} : { stack }),
+        ...(breakOnUpdate ? { breakOnUpdate: true } : {}),
         ...(!('annotations' in source || 'metadata' in source) ? {} : { annotations: source.annotations ?? source.metadata }),
         ...(!('createdAt' in source) ? {} : { createdAt: normalizeCreatedAt(source.createdAt) }),
         ...(!('details' in source || 'metadata' in source) ? {} : { details: source.details ?? source.metadata })

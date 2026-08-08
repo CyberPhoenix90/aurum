@@ -11,7 +11,8 @@
         "clean": "node scripts/clean.mjs"
     },
     "dependencies": {
-        "@aurum/html": "^0.10.0"
+        "@aurum/html": "^0.10.0",
+        "@aurum/streams": "^0.10.0"
     },
     "devDependencies": {
         "playwright": "^1.62.1",

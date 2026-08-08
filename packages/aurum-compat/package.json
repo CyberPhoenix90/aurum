@@ -1,7 +1,7 @@
 {
-    "name": "@aurum/html",
-    "version": "0.10.12",
-    "description": "HTML nodes, DOM rendering, styling, and HTML JSX types for Aurum",
+    "name": "@aurum/compat",
+    "version": "0.10.0",
+    "description": "Optional React-shaped migration runtime backed by Aurum rendering and streams",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",
     "types": "./prebuilt/esnext/index.d.ts",
@@ -9,6 +9,14 @@
         ".": {
             "types": "./prebuilt/esnext/index.d.ts",
             "import": "./prebuilt/esnext/index.js"
+        },
+        "./client": {
+            "types": "./prebuilt/esnext/client.d.ts",
+            "import": "./prebuilt/esnext/client.js"
+        },
+        "./test-utils": {
+            "types": "./prebuilt/esnext/test-utils.d.ts",
+            "import": "./prebuilt/esnext/test-utils.js"
         },
         "./jsx-runtime": {
             "types": "./prebuilt/esnext/jsx-runtime.d.ts",
@@ -19,33 +27,20 @@
             "import": "./prebuilt/esnext/jsx-dev-runtime.js"
         }
     },
-    "files": [
-        "prebuilt",
-        "README.md",
-        "LICENSE"
-    ],
+    "files": ["prebuilt", "README.md", "LICENSE"],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run",
-        "benchmark": "tsc -p tsconfig.bench.json && vitest bench --config vite.bench.config.ts --run",
-        "benchmark:devtools": "tsc -p tsconfig.bench.json && vitest bench --config vite.devtools-bench.config.ts --run",
-        "benchmark:save": "npm run benchmark -- --outputJson .benchmark-baseline.json",
-        "benchmark:compare": "npm run benchmark -- --compare .benchmark-baseline.json",
         "prepack": "npm run build"
     },
     "dependencies": {
+        "@aurum/html": "^0.10.0",
         "@aurum/rendering": "^0.10.0",
         "@aurum/streams": "^0.10.0"
     },
     "devDependencies": {
-        "@types/react": "^19.2.18",
-        "@types/react-dom": "^19.2.4",
-        "@types/sinon": "^9.0.4",
         "@vitest/browser": "^4.0.16",
         "@vitest/browser-playwright": "^4.0.16",
-        "react": "^19.2.8",
-        "react-dom": "^19.2.8",
-        "sinon": "^9.0.3",
         "vitest": "^4.0.16"
     },
     "license": "MIT"

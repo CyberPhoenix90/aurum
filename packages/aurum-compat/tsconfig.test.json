@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "dist_test",
+        "declaration": false,
+        "declarationMap": false,
+        "baseUrl": ".",
+        "paths": {
+            "@aurum/compat": ["src/index.ts"],
+            "@aurum/compat/jsx-runtime": ["src/jsx-runtime.ts"],
+            "@aurum/compat/jsx-dev-runtime": ["src/jsx-dev-runtime.ts"]
+        }
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"]
+}

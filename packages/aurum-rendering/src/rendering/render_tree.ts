@@ -287,7 +287,7 @@ function renderContent(
     renderSession?: RenderSession,
     index?: number
 ): RenderTreeNode[] {
-    if (content === undefined || content === null || lifetime.isCancelled) return [];
+    if (content === undefined || content === null || typeof content === 'boolean' || lifetime.isCancelled) return [];
     const targetIndex = index ?? (parent ? ensureChildren(parent).length : tree.roots.length);
 
     if (Array.isArray(content)) {
@@ -633,7 +633,7 @@ function ensureChildren(node: RenderTreeNode): RenderTreeNode[] {
     return node.children;
 }
 
-function isPrimitive(value: unknown): value is string | number | bigint | boolean {
+function isPrimitive(value: unknown): value is string | number | bigint {
     const type = typeof value;
-    return type === 'string' || type === 'number' || type === 'bigint' || type === 'boolean';
+    return type === 'string' || type === 'number' || type === 'bigint';
 }

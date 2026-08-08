@@ -36,7 +36,11 @@ export function renderBottomDock(
                 ['bottom-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={combineStyle(cancellationToken, model.props.style, size.transform(dsMap((size) => `width:100%; height:${size}px`)))}
+            style={combineStyle(
+                cancellationToken,
+                model.props.style,
+                size.transform<string>(dsMap<number, string>((size) => `width:100%; height:${size}px`))
+            )}
         >
             {DataSource.toDataSource(model.props.resizable).transform(
                 dsMap((v) =>
@@ -63,7 +67,11 @@ export function renderTopDock(
                 ['top-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={combineStyle(cancellationToken, model.props.style, size.transform(dsMap((topSize) => `width:100%; height:${topSize}px`)))}
+            style={combineStyle(
+                cancellationToken,
+                model.props.style,
+                size.transform<string>(dsMap<number, string>((topSize) => `width:100%; height:${topSize}px`))
+            )}
         >
             {model.children}
         </div>
@@ -89,7 +97,7 @@ export function renderLeftDock(
             style={combineStyle(
                 cancellationToken,
                 model.props.style,
-                size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`))
+                size.transform<string>(dsMap<number, string>((s) => `height:100%; width:${model.props.resizable ? s - dragHandleThickness : s}px`))
             )}
         >
             {model.children}
@@ -133,7 +141,7 @@ export function renderRightDock(
             style={combineStyle(
                 cancellationToken,
                 model.props.style,
-                size.transform(dsMap((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`))
+                size.transform<string>(dsMap<number, string>((s) => `height:100%; width:${model.props.resizable ? s - 4 : s}px`))
             )}
         >
             {model.children}

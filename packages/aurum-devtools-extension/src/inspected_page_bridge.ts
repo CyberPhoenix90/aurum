@@ -23,6 +23,11 @@ export class InspectedPageBridge {
         await evaluateInPage(createClearHighlightExpression());
     }
 
+    public async setUpdateBreakpoint(nodeId: string, enabled: boolean): Promise<boolean | undefined> {
+        const result = await evaluateInPage(createSetUpdateBreakpointExpression(nodeId, enabled));
+        return typeof result === 'boolean' ? result : undefined;
+    }
+
     public async dispose(): Promise<void> {
         await this.clearDomNodeHighlight().catch((_error: unknown): undefined => undefined);
         await evaluateInPage(createDisposeExpression(this.clientId)).catch((_error: unknown): undefined => undefined);
@@ -438,6 +443,17 @@ export function createClearHighlightExpression(): string {
         try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
         if (!registry || typeof registry.clearDomNodeHighlight !== 'function') return;
         try { registry.clearDomNodeHighlight(); } catch {}
+    })()`;
+}
+
+export function createSetUpdateBreakpointExpression(nodeId: string, enabled: boolean): string {
+    const encodedId = JSON.stringify(nodeId);
+    return String.raw`(() => {
+        let registry;
+        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        if (!registry || typeof registry.setUpdateBreakpoint !== 'function') return undefined;
+        try { return registry.setUpdateBreakpoint(${encodedId}, ${enabled}) === true; }
+        catch { return undefined; }
     })()`;
 }
 

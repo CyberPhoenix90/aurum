@@ -33,7 +33,8 @@ export type AurumDevtoolsCapability =
     | 'array-data-sources'
     | 'component-tree'
     | 'weak-targets'
-    | 'dom-highlighting';
+    | 'dom-highlighting'
+    | 'update-breakpoints';
 
 export interface AurumDevtoolsConfig {
     mode?: AurumDevtoolsMode;
@@ -112,6 +113,8 @@ export interface AurumDevtoolsNodeSnapshot {
     value?: AurumDevtoolsValuePreview;
     metadata?: Readonly<Record<string, AurumDevtoolsValuePreview>>;
     creationStack?: string;
+    /** Debug-only flag that pauses the JavaScript debugger on the next and subsequent updates. */
+    breakOnUpdate?: boolean;
 }
 
 export interface AurumDevtoolsEdgeSnapshot {
@@ -191,6 +194,8 @@ export interface AurumDevtoolsRegistry {
     ): string | undefined;
     unlinkEdge(edgeOrId: AurumDevtoolsEdgeSnapshot | string): void;
     emitUpdate(targetOrId: AurumDevtoolsNodeReference, update?: AurumDevtoolsUpdateDescriptor): void;
+    /** Enables or disables a persistent debugger breakpoint for one registered node. */
+    setUpdateBreakpoint(targetOrId: AurumDevtoolsNodeReference, enabled: boolean): boolean;
     setSubscriptionCount(targetOrId: AurumDevtoolsNodeReference, count: number, channel?: string): void;
     annotateNode(targetOrId: AurumDevtoolsNodeReference, annotations: Record<string, unknown>): void;
     inspect(nodeOrId: AurumDevtoolsNodeReference): AurumDevtoolsNodeSnapshot | undefined;
@@ -263,6 +268,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     private readonly idsByTarget = new WeakMap<object, string>();
     private readonly listeners = new Set<AurumDevtoolsListener>();
     private readonly events: AurumDevtoolsEvent[] = [];
+    private readonly updateBreakpoints = new Set<string>();
     private readonly weakReferenceConstructor?: WeakReferenceConstructorLike;
     private readonly finalizationRegistry?: FinalizationRegistryLike<string>;
     private nodeSequence = 0;
@@ -299,7 +305,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
 
     public get capabilities(): readonly AurumDevtoolsCapability[] {
         const capabilities: AurumDevtoolsCapability[] = ['graph', 'events', 'inspect', 'subscriptions', 'array-data-sources'];
-        if (this.resolvedConfig.mode === 'debug') capabilities.push('annotations', 'component-tree');
+        if (this.resolvedConfig.mode === 'debug') capabilities.push('annotations', 'component-tree', 'update-breakpoints');
         if (this.weakReferences) capabilities.push('weak-targets');
         if (pageGlobalAvailable) capabilities.push('dom-highlighting');
         return Object.freeze(capabilities);
@@ -311,6 +317,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
         if (previousMode !== this.resolvedConfig.mode) this.clearDomNodeHighlight();
         if (previousMode === 'debug' && this.resolvedConfig.mode === 'production') {
             this.events.length = 0;
+            this.updateBreakpoints.clear();
             for (const node of this.nodes.values()) {
                 node.name = undefined;
                 node.metadata = undefined;
@@ -408,6 +415,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
 
     private removeNode(entry: DevtoolsNodeEntry): void {
         if (this.highlightedDomNodeId === entry.id) this.clearDomNodeHighlight();
+        this.updateBreakpoints.delete(entry.id);
         const target = this.dereference(entry);
         if (target) this.idsByTarget.delete(target);
         if (entry.finalizationToken) this.finalizationRegistry?.unregister(entry.finalizationToken);
@@ -525,6 +533,15 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     public emitUpdate(targetOrId: AurumDevtoolsNodeReference, update: AurumDevtoolsUpdateDescriptor = {}): void {
         const entry = this.getEntry(targetOrId);
         if (!entry) return;
+        if (
+            AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED &&
+            this.resolvedConfig.mode === 'debug' &&
+            this.updateBreakpoints.has(entry.id)
+        ) {
+            // Intentionally pauses at the synchronous mutation boundary. The
+            // caller frames identify the application code that caused it.
+            debugger;
+        }
         entry.version++;
         this.touch();
 
@@ -576,6 +593,23 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
             value: preview,
             details
         });
+    }
+
+    public setUpdateBreakpoint(targetOrId: AurumDevtoolsNodeReference, enabled: boolean): boolean {
+        if (!AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED || this.resolvedConfig.mode !== 'debug') return false;
+        const entry = this.getEntry(targetOrId);
+        if (!entry) return false;
+        const currentlyEnabled = this.updateBreakpoints.has(entry.id);
+        if (currentlyEnabled === enabled) return currentlyEnabled;
+        if (enabled) this.updateBreakpoints.add(entry.id);
+        else this.updateBreakpoints.delete(entry.id);
+        this.touch();
+        this.publish({
+            type: 'node-updated',
+            nodeId: entry.id,
+            updateKind: enabled ? 'breakpoint-enabled' : 'breakpoint-disabled'
+        });
+        return enabled;
     }
 
     public setSubscriptionCount(targetOrId: AurumDevtoolsNodeReference, count: number, channel: string = 'updates'): void {
@@ -683,7 +717,8 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
             subscriptions: { ...entry.subscriptions },
             ...(clonedValue === undefined ? {} : { value: clonedValue }),
             ...(metadata === undefined ? {} : { metadata }),
-            ...(entry.creationStack === undefined ? {} : { creationStack: entry.creationStack })
+            ...(entry.creationStack === undefined ? {} : { creationStack: entry.creationStack }),
+            ...(this.updateBreakpoints.has(entry.id) ? { breakOnUpdate: true } : {})
         };
     }
 
@@ -785,6 +820,7 @@ function createAurumDevtoolsRegistryFacade(internal: DefaultAurumDevtoolsRegistr
         linkNodes: internal.linkNodes.bind(internal),
         unlinkEdge: internal.unlinkEdge.bind(internal),
         emitUpdate: internal.emitUpdate.bind(internal),
+        setUpdateBreakpoint: internal.setUpdateBreakpoint.bind(internal),
         setSubscriptionCount: internal.setSubscriptionCount.bind(internal),
         annotateNode: internal.annotateNode.bind(internal),
         inspect: internal.inspect.bind(internal),
@@ -876,6 +912,17 @@ export function unlinkAurumDevtoolsEdge(edgeOrId: AurumDevtoolsEdgeSnapshot | st
 export function emitAurumDevtoolsUpdate(targetOrId: AurumDevtoolsNodeReference, update?: AurumDevtoolsUpdateDescriptor): void {
     if (!AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) return;
     instrumentationRegistry.emitUpdate(targetOrId, update);
+}
+
+export function setAurumDevtoolsUpdateBreakpoint(targetOrId: AurumDevtoolsNodeReference, enabled: boolean): boolean {
+    if (!AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED) return false;
+    const setter = safeReadProperty(instrumentationRegistry, 'setUpdateBreakpoint');
+    if (typeof setter !== 'function') return false;
+    try {
+        return setter.call(instrumentationRegistry, targetOrId, enabled) === true;
+    } catch {
+        return false;
+    }
 }
 
 export function setAurumDevtoolsSubscriptionCount(targetOrId: AurumDevtoolsNodeReference, count: number, channel?: string): void {

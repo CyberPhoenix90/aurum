@@ -19,6 +19,10 @@
     --upstream-soft: #ebe9ff;
     --downstream: #16834b;
     --downstream-soft: #dff5e8;
+    --tree-selection: #d9e7ff;
+    --tree-selection-text: #15284a;
+    --component-name: #7b3fb2;
+    --element-name: #005cc5;
     --code: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 12px;
@@ -45,6 +49,10 @@
         --upstream-soft: #302d52;
         --downstream: #4ec885;
         --downstream-soft: #183d2b;
+        --tree-selection: #2d4f78;
+        --tree-selection-text: #f2f6ff;
+        --component-name: #d7a8ff;
+        --element-name: #8abfff;
     }
 }
 
@@ -181,6 +189,38 @@ select:focus-visible,
 }
 
 .tool-button:disabled {
+    cursor: progress;
+    opacity: 0.55;
+}
+
+.details-actions {
+    display: flex;
+    padding: 0 0 10px;
+}
+
+.breakpoint-button {
+    width: 100%;
+    min-height: 28px;
+    padding: 5px 9px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    cursor: pointer;
+    text-align: left;
+}
+
+.breakpoint-button:hover:not(:disabled) {
+    background: var(--surface-hover);
+}
+
+.breakpoint-button.active {
+    color: var(--error);
+    border-color: color-mix(in srgb, var(--error) 65%, var(--border));
+    background: color-mix(in srgb, var(--error) 12%, var(--surface));
+}
+
+.breakpoint-button:disabled {
     cursor: progress;
     opacity: 0.55;
 }
@@ -471,29 +511,80 @@ select:focus-visible,
 }
 
 .component-view {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
     background: var(--surface);
+}
+
+.component-view > .empty-state {
+    grid-row: 1 / -1;
+}
+
+.component-toolbar {
+    display: flex;
+    min-height: 31px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 7px 3px 10px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-raised);
+    font-size: 11px;
+}
+
+.component-toolbar-actions {
+    display: flex;
+    gap: 3px;
+}
+
+.tree-tool-button {
+    min-height: 23px;
+    padding: 2px 7px;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.tree-tool-button:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface-hover);
+}
+
+.tree-tool-button:disabled {
+    opacity: 0.45;
+    cursor: default;
 }
 
 .component-tree {
     min-width: max-content;
-    padding: 5px 0;
+    min-height: 0;
+    padding: 3px 0 12px;
+    overflow: auto;
+    background: var(--surface);
 }
 
 .component-row {
     display: grid;
     width: 100%;
     min-width: 420px;
-    min-height: 28px;
-    grid-template-columns: 14px 22px minmax(140px, auto) minmax(90px, 1fr);
+    height: 22px;
+    grid-template-columns: 13px 16px minmax(110px, max-content) minmax(90px, 1fr);
     align-items: center;
-    gap: 3px;
-    padding: 3px 10px 3px calc(9px + var(--tree-depth) * 18px);
+    gap: 2px;
+    padding: 0 10px 0 calc(5px + var(--tree-depth) * 14px);
     color: inherit;
     border: 0;
     border-radius: 0;
     background: transparent;
+    line-height: 22px;
     text-align: left;
     cursor: pointer;
+    user-select: none;
 }
 
 .component-row:hover {
@@ -501,32 +592,77 @@ select:focus-visible,
 }
 
 .component-row.selected {
-    background: var(--accent-soft);
+    color: var(--tree-selection-text);
+    background: var(--tree-selection);
+}
+
+.component-row:focus,
+.component-row:focus-visible {
+    outline: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
+    outline-offset: -1px;
 }
 
 .component-disclosure,
 .component-icon {
+    display: grid;
+    height: 100%;
+    place-items: center;
     color: var(--muted);
     font-family: var(--code);
     text-align: center;
 }
 
+.component-disclosure {
+    position: relative;
+}
+
+.component-row.has-children .component-disclosure::before {
+    width: 0;
+    height: 0;
+    border-top: 5px solid currentColor;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    content: '';
+    transition: transform 80ms ease;
+}
+
+.component-row.has-children.collapsed .component-disclosure::before {
+    transform: rotate(-90deg);
+}
+
+.component-icon {
+    font-size: 8px;
+}
+
 .component-row:not(.host-node) .component-icon,
 .component-row:not(.host-node) .component-label {
-    color: var(--accent-strong);
+    color: var(--component-name);
+}
+
+.component-row.host-node .component-label {
+    color: var(--element-name);
+}
+
+.component-row.selected .component-icon,
+.component-row.selected .component-label,
+.component-row.selected .component-detail,
+.component-row.selected .component-disclosure {
+    color: inherit;
 }
 
 .component-label {
     overflow: hidden;
     font-family: var(--code);
-    font-weight: 600;
+    font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .component-detail {
     overflow: hidden;
+    padding-left: 6px;
     color: var(--muted);
+    font-size: 11px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }

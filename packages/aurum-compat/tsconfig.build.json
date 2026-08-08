@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "ES2020",
+        "moduleResolution": "Bundler",
+        "lib": ["ES2019", "DOM", "DOM.Iterable"],
+        "rootDir": "src",
+        "outDir": "prebuilt/esnext",
+        "jsx": "react-jsx",
+        "jsxImportSource": "@aurum/compat",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "alwaysStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "newLine": "lf"
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
