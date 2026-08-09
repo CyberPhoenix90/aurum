@@ -87,19 +87,19 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
             cleanUp
         );
     } else if (typeof data === 'object' && !Array.isArray(data)) {
-        const result = new ArrayDataSource<[string, string]>();
+        const result = new ArrayDataSource<[string, string | number]>();
         const styles = data as Styles;
         let index = 0;
         for (const i in styles) {
             const value = styles[i as keyof Styles];
             if (value instanceof DataSource) {
                 const myIndex = index;
-                result.push([i, value.value.toString()]);
+                result.push([i, value.value]);
                 (value as ReadOnlyDataSource<string | number>).listen((v) => {
-                    result.set(myIndex, [i, v.toString()]);
+                    result.set(myIndex, [i, v]);
                 }, cleanUp);
             } else if (value !== undefined) {
-                result.push([i, value.toString()]);
+                result.push([i, value as string | number]);
             }
             index++;
         }

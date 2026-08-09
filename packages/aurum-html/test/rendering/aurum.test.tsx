@@ -428,7 +428,11 @@ describe('Aurum', () => {
                 <p
                     style={{
                         color: 'red',
-                        backgroundColor: 'green'
+                        backgroundColor: 'green',
+                        padding: 8,
+                        gap: 6,
+                        opacity: 0.5,
+                        lineHeight: 1.25
                     }}
                 >
                     Hello World
@@ -440,16 +444,22 @@ describe('Aurum', () => {
         assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.padding === '8px');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.gap === '6px');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.opacity === '0.5');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.lineHeight === '1.25');
     });
 
     it('should accept style objects with datasources for style attribute', () => {
         const ds = new DataSource('red');
+        const width = new DataSource(12);
         attachToken = Aurum.attach(
             <div>
                 <p
                     style={{
                         color: ds,
-                        backgroundColor: 'green'
+                        backgroundColor: 'green',
+                        width
                     }}
                 >
                     Hello World
@@ -461,11 +471,14 @@ describe('Aurum', () => {
         assert(document.getElementById('target').firstChild.firstChild instanceof HTMLParagraphElement);
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'red');
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.width === '12px');
 
         ds.update('blue');
+        width.update(20);
 
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.color === 'blue');
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.backgroundColor === 'green');
+        assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.width === '20px');
     });
 
     it('should accept map data sources for style', () => {
