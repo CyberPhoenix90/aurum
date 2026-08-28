@@ -1,51 +1,51 @@
-import { Aurum, BindableSource, Renderable, combineClass, AurumComponentAPI, css, DataSource } from '@aurum/html';
+import { Aurum, BindableSource, Renderable, combineClass, AurumComponentAPI, css, DataSource } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
 const { fontFamily, baseFontSize: size, themeColor0: color0, themeColor1: color1, baseFontColor, primary: action } = theme;
 const toggleStyle = css`
-            font-family: ${fontFamily};
-            font-size: ${size};
-            outline: none;
-            padding: 6px;
-            user-select: none;
-            border-radius: 4px;
-            border: 2px solid ${color1};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            width: 50px;
-            height: 25px;
-            position: relative;
+    font-family: ${fontFamily};
+    font-size: ${size};
+    outline: none;
+    padding: 6px;
+    user-select: none;
+    border-radius: 4px;
+    border: 2px solid ${color1};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 50px;
+    height: 25px;
+    position: relative;
 
-            &.on {
-                background-color: ${action};
-                color: white;
-            }
+    &.on {
+        background-color: ${action};
+        color: white;
+    }
 
-            &.off {
-                background-color: ${color0};
-                color: ${baseFontColor};
-            }
+    &.off {
+        background-color: ${color0};
+        color: ${baseFontColor};
+    }
 
-            .toggle-knob {
-                position: absolute;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background-color: white;
-                transition: transform 0.2s;
-            }
+    .toggle-knob {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: white;
+        transition: transform 0.2s;
+    }
 
-            &.on .toggle-knob {
-                transform: translateX(25px);
-            }
+    &.on .toggle-knob {
+        transform: translateX(25px);
+    }
 
-            &.off .toggle-knob {
-                transform: translateX(0);
-            }
-        `;
+    &.off .toggle-knob {
+        transform: translateX(0);
+    }
+`;
 
 export type ToggleState = 'on' | 'off';
 

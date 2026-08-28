@@ -1,12 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-    Aurum,
-    configureAurumDevtools,
-    DataSource,
-    getAurumDevtoolsRegistry,
-    Renderable,
-    resolveAurumDevtoolsNodeId
-} from '../../src/index.js';
+import { Aurum, configureAurumDevtools, DataSource, getAurumDevtoolsRegistry, Renderable, resolveAurumDevtoolsNodeId } from '../../src/index.js';
 
 describe('HTML developer tooling', () => {
     afterEach(() => {
@@ -17,7 +10,7 @@ describe('HTML developer tooling', () => {
 
     it('links component content and attributes to their source nodes in debug mode', () => {
         configureAurumDevtools({ mode: 'debug', captureStacks: false, historyLimit: 20 });
-        expect((globalThis as Record<PropertyKey, unknown>)[Symbol.for('@aurum/devtools')]).toBe(getAurumDevtoolsRegistry());
+        expect((globalThis as Record<PropertyKey, unknown>)[Symbol.for('@aurumjs/devtools')]).toBe(getAurumDevtoolsRegistry());
         const title = new DataSource('initial title', 'title');
         const content = new DataSource<Renderable>('initial content', 'content');
 
@@ -33,9 +26,7 @@ describe('HTML developer tooling', () => {
         const contentId = resolveAurumDevtoolsNodeId(content);
         const application = snapshot.nodes.find((node) => node.kind === 'component' && node.name === 'Application');
         const elementBinding = snapshot.nodes.find((node) => node.kind === 'dom-element' && node.name === '<div>');
-        const contentBinding = snapshot.nodes.find(
-            (node) => node.kind === 'render-binding' && node.name === 'SingularAurumElement'
-        );
+        const contentBinding = snapshot.nodes.find((node) => node.kind === 'render-binding' && node.name === 'SingularAurumElement');
 
         expect(application).toBeDefined();
         expect(elementBinding).toBeDefined();
@@ -46,23 +37,17 @@ describe('HTML developer tooling', () => {
         expect(snapshot.edges).toContainEqual(
             expect.objectContaining({ source: contentId, target: contentBinding?.id, kind: 'render', label: 'DOM reactive content' })
         );
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: application?.id, target: elementBinding?.id, kind: 'component-output' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: application?.id, target: elementBinding?.id, kind: 'component-output' }));
 
         const registry = getAurumDevtoolsRegistry();
         expect(registry.capabilities).toContain('dom-highlighting');
         expect(registry.highlightDomNode?.(elementBinding!.id)).toBe(true);
-        expect(document.querySelector('[data-aurum-devtools-highlight]')?.getAttribute('data-aurum-devtools-highlight')).toBe(
-            elementBinding!.id
-        );
+        expect(document.querySelector('[data-aurum-devtools-highlight]')?.getAttribute('data-aurum-devtools-highlight')).toBe(elementBinding!.id);
         registry.clearDomNodeHighlight?.();
         expect(document.querySelector('[data-aurum-devtools-highlight]')).toBeNull();
         expect(registry.highlightDomNode?.(application!.id)).toBe(false);
 
-        const rendererIds = snapshot.nodes
-            .filter((node) => node.kind === 'component' || node.kind === 'render-binding')
-            .map((node) => node.id);
+        const rendererIds = snapshot.nodes.filter((node) => node.kind === 'component' || node.kind === 'render-binding').map((node) => node.id);
         lifetime.cancel();
         const afterDispose = getAurumDevtoolsRegistry().getSnapshot();
         expect(afterDispose.nodes.filter((node) => rendererIds.includes(node.id))).toEqual([]);
@@ -100,17 +85,11 @@ describe('HTML developer tooling', () => {
         expect(main).toBeDefined();
         expect(div).toBeDefined();
         expect(span).toBeDefined();
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: application?.id, target: child?.id, kind: 'component-child' })
-        );
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: application?.id, target: main?.id, kind: 'component-output' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: application?.id, target: child?.id, kind: 'component-child' }));
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: application?.id, target: main?.id, kind: 'component-output' }));
         expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: main?.id, target: div?.id, kind: 'dom-child' }));
         expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: div?.id, target: span?.id, kind: 'dom-child' }));
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: child?.id, target: span?.id, kind: 'component-output' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: child?.id, target: span?.id, kind: 'component-output' }));
 
         lifetime.cancel();
     });
@@ -139,9 +118,7 @@ describe('HTML developer tooling', () => {
         const span = snapshot.nodes.find((node) => node.kind === 'dom-element' && node.name === '<span>');
         expect(parent).toBeDefined();
         expect(child).toBeDefined();
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' }));
         expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: div?.id, target: span?.id, kind: 'dom-child' }));
 
         lifetime.cancel();
@@ -151,10 +128,18 @@ describe('HTML developer tooling', () => {
         configureAurumDevtools({ mode: 'production', captureStacks: false, historyLimit: 0 });
 
         function ProductionApplication(): Renderable {
-            return <div><span>production</span></div>;
+            return (
+                <div>
+                    <span>production</span>
+                </div>
+            );
         }
 
-        const before = new Set(getAurumDevtoolsRegistry().getSnapshot().nodes.map((node) => node.id));
+        const before = new Set(
+            getAurumDevtoolsRegistry()
+                .getSnapshot()
+                .nodes.map((node) => node.id)
+        );
         const lifetime = Aurum.attach(<ProductionApplication />, document.body);
         const added = getAurumDevtoolsRegistry()
             .getSnapshot()

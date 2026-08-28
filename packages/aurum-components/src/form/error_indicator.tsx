@@ -1,4 +1,4 @@
-import { Aurum } from '@aurum/html';
+import { Aurum } from '@aurumjs/html';
 import { FormType } from './form.js';
 
 export interface ErrorIndicatorProps<T extends object = Record<string, unknown>, O = unknown> {

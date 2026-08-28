@@ -14,7 +14,7 @@ import {
     dsTap,
     StyleType,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { Dialog } from '../dialog/dialog.js';
 import { ContextMenu } from '../dialog/context_menu.js';
@@ -22,27 +22,27 @@ import { Button } from '../aurum-components.js';
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor4: color4, themeColor2: color2 } = theme;
 const style = css`
-            display: flex;
-            width: 100%;
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            background-color: ${color2};
+    display: flex;
+    width: 100%;
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    background-color: ${color2};
 
-            > span {
-                padding: 6px 8px;
-                cursor: pointer;
-                user-select: none;
-            }
+    > span {
+        padding: 6px 8px;
+        cursor: pointer;
+        user-select: none;
+    }
 
-            > span:hover {
-                background-color: ${color4};
-            }
+    > span:hover {
+        background-color: ${color4};
+    }
 
-            > span.menustrip-radio-button.active {
-                background-color: ${color4};
-            }
-        `;
+    > span.menustrip-radio-button.active {
+        background-color: ${color4};
+    }
+`;
 
 export function MenuStrip(
     props: {

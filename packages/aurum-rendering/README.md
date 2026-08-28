@@ -1,15 +1,15 @@
-# @aurum/rendering
+# @aurumjs/rendering
 
 The component model and renderer-facing primitives for Aurum. Its JSX factory accepts components but deliberately exposes no implicit intrinsic tags.
 
-`Renderable` recursively describes primitives, nested arrays, promises, scalar sources, collection sources, and element models. Component prerender results are generic, allowing renderer extensions to declare their native intermediate model without falling back to `any`. Browser node types and the DOM marker runtime live in `@aurum/html`, not this package.
+`Renderable` recursively describes primitives, nested arrays, promises, scalar sources, collection sources, and element models. Component prerender results are generic, allowing renderer extensions to declare their native intermediate model without falling back to `any`. Browser node types and the DOM marker runtime live in `@aurumjs/html`, not this package.
 
 ## Custom rendering hosts
 
 `renderToTree` evaluates Aurum components into a persistent, host-neutral `RenderTree`. Reactive values update that tree in place, collection entries retain identity across incremental mutations, and `onPatch` reports inserts, removals, moves, text changes, and property changes.
 
 ```ts
-import { renderToTree } from '@aurum/rendering';
+import { renderToTree } from '@aurumjs/rendering';
 
 const tree = renderToTree(application, { cancellationToken: lifetime });
 tree.onPatch.subscribe((patch) => terminalRenderer.apply(patch), lifetime);
@@ -37,7 +37,7 @@ function Editor(props: { handle: ComponentHandle<EditorHandle> }, children, api:
         focus: () => input.focus(),
         getSelection: () => input.value
     });
-    return <textarea onAttach={(node) => input = node} />;
+    return <textarea onAttach={(node) => (input = node)} />;
 }
 
 const editorAPI = await editor.awaitValue(cancellationToken);
@@ -50,7 +50,7 @@ In an Aurum debug build, component evaluations are registered as inspectable
 instances. Parent/child component edges and links from reactive sources to
 render ranges are removed with the same cancellation scopes that own the
 rendered content. Production builds omit these renderer-level records while
-retaining the lightweight source graph supplied by `@aurum/streams`.
+retaining the lightweight source graph supplied by `@aurumjs/streams`.
 
 Custom hosts built with `renderToTree` or `renderToHost` receive this behavior
 automatically. A renderer with its own mutation loop can call

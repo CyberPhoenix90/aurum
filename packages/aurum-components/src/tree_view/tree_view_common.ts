@@ -1,4 +1,4 @@
-import { getValueOf } from '@aurum/html';
+import { getValueOf } from '@aurumjs/html';
 import { TreeEntry } from './tree_view_model.js';
 
 export enum TreeViewSorting {

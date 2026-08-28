@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/server",
+    "name": "@aurumjs/server",
     "version": "0.10.0",
     "description": "WebSocket-powered server for synchronizing Aurum data sources between a server and client",
     "type": "module",
@@ -11,7 +11,11 @@
             "import": "./prebuilt/esnext/aurum-server.js"
         }
     },
-    "files": ["prebuilt", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run",
@@ -19,8 +23,8 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/remote": "^0.10.0",
-        "@aurum/streams": "^0.10.0",
+        "@aurumjs/remote": "^0.10.0",
+        "@aurumjs/streams": "^0.10.0",
         "ws": "^7.3.1"
     },
     "devDependencies": {
@@ -33,7 +37,11 @@
         "url": "git+https://github.com/CyberPhoenix90/aurum.git",
         "directory": "packages/aurum-server"
     },
-    "keywords": ["aurum", "websocket", "rpc"],
+    "keywords": [
+        "aurum",
+        "websocket",
+        "rpc"
+    ],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT"
 }

@@ -1,4 +1,4 @@
-import { DataSource, Renderable, AurumComponentAPI, createLifeCycle } from '@aurum/rendering';
+import { DataSource, Renderable, AurumComponentAPI, createLifeCycle } from '@aurumjs/rendering';
 import { ComponentModel, ComponentType } from '../component_model.js';
 export const stateSymbol = Symbol('state');
 

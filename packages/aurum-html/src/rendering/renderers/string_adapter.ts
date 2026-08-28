@@ -6,22 +6,18 @@ import {
     Renderable,
     RenderSession,
     traceAurumComponentRender
-} from '@aurum/rendering';
-import { ArrayDataSource, DataSource } from '@aurum/streams';
-import { camelCaseToKebabCase } from '@aurum/streams';
-import { getValueOf } from '@aurum/streams';
+} from '@aurumjs/rendering';
+import { ArrayDataSource, DataSource } from '@aurumjs/streams';
+import { camelCaseToKebabCase } from '@aurumjs/streams';
+import { getValueOf } from '@aurumjs/streams';
 import { HTMLSanitizeConfig } from '../../utilities/sanitize.js';
-import { isAurumStyleClass } from '@aurum/streams';
+import { isAurumStyleClass } from '@aurumjs/streams';
 
 export async function aurumToString(content: Renderable, config: HTMLSanitizeConfig = {}): Promise<string> {
     return aurumToStringItem(content, config);
 }
 
-async function aurumToStringItem(
-    content: Renderable,
-    config: HTMLSanitizeConfig,
-    parentSession?: RenderSession
-): Promise<string> {
+async function aurumToStringItem(content: Renderable, config: HTMLSanitizeConfig, parentSession?: RenderSession): Promise<string> {
     if (content === undefined || content === null || typeof content === 'boolean') {
         return '';
     }

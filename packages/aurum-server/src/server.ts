@@ -7,8 +7,8 @@ import {
     ReadOnlyDataSource,
     ReadOnlyObjectDataSource,
     ReadOnlySetDataSource
-} from '@aurum/streams';
-import { RemoteMessage, RemoteProtocol, ProtocolError, decodeRemoteMessages } from '@aurum/remote/protocol';
+} from '@aurumjs/streams';
+import { RemoteMessage, RemoteProtocol, ProtocolError, decodeRemoteMessages } from '@aurumjs/remote/protocol';
 import { Server as HttpServer, IncomingMessage } from 'http';
 import { Server as HttpsServer } from 'https';
 import ws from 'ws';
@@ -36,7 +36,9 @@ export interface AurumServerConfig<T> {
     onError?: (session: Session<T> | undefined, error: Error) => void;
 }
 
-interface NormalizedConfig<T> extends Required<Omit<AurumServerConfig<T>, 'reuseServer' | 'host' | 'path' | 'onClientConnected' | 'onClientDisconnected' | 'onError'>> {
+interface NormalizedConfig<T> extends Required<
+    Omit<AurumServerConfig<T>, 'reuseServer' | 'host' | 'path' | 'onClientConnected' | 'onClientDisconnected' | 'onError'>
+> {
     reuseServer?: HttpServer | HttpsServer;
     host?: string;
     path?: string;
@@ -509,7 +511,10 @@ export class AurumServer<T = void> {
         message: RemoteMessage
     ): Promise<boolean> {
         try {
-            const accepted = operation === undefined ? await (endpoint as RPCEndpoint<any, any>).authenticator(token) : await (endpoint as Endpoint<unknown>).authenticator(token, operation);
+            const accepted =
+                operation === undefined
+                    ? await (endpoint as RPCEndpoint<any, any>).authenticator(token)
+                    : await (endpoint as Endpoint<unknown>).authenticator(token, operation);
             if (!accepted) {
                 sender.sendMessage(errorType, {
                     id: message.id,

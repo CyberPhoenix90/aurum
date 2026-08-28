@@ -1,44 +1,33 @@
-import {
-    Aurum,
-    AurumComponentAPI,
-    BindableSource,
-    combineClass,
-    css,
-    getValueOf,
-    InputProps,
-    ReadOnlyDataSource,
-    Renderable,
-    writeTo
-} from '@aurum/html';
+import { Aurum, AurumComponentAPI, BindableSource, combineClass, css, getValueOf, InputProps, ReadOnlyDataSource, Renderable, writeTo } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
 const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor0: color0, themeColor2: color2, primary } = theme;
 const fieldStyle = css`
-            position: relative;
-            display: inline-flex;
-            width: 200px;
-            .invalid {
-                border-color: red;
-            }
+    position: relative;
+    display: inline-flex;
+    width: 200px;
+    .invalid {
+        border-color: red;
+    }
 
-            > input {
-                border-radius: 4px;
-                background-color: ${color0};
-                font-family: ${fontFamily};
-                font-size: ${size};
-                outline: none;
-                height: 24px;
-                color: ${highlightFont};
-                border-color: ${color2};
-                flex-grow: 1;
-                width: 100%;
+    > input {
+        border-radius: 4px;
+        background-color: ${color0};
+        font-family: ${fontFamily};
+        font-size: ${size};
+        outline: none;
+        height: 24px;
+        color: ${highlightFont};
+        border-color: ${color2};
+        flex-grow: 1;
+        width: 100%;
 
-                &:focus {
-                    outline: ${primary} auto 5px;
-                }
-            }
-        `;
+        &:focus {
+            outline: ${primary} auto 5px;
+        }
+    }
+`;
 
 export interface FormFieldInputProps<T extends object, V> extends Omit<InputProps, 'name'> {
     form?: FormType<T, unknown>;
@@ -47,11 +36,7 @@ export interface FormFieldInputProps<T extends object, V> extends Omit<InputProp
 }
 
 /** Shared implementation for the public, value-specific input controls. */
-export function FormFieldInput<T extends object, V>(
-    props: FormFieldInputProps<T, V>,
-    _children: Renderable[],
-    api: AurumComponentAPI
-): Renderable {
+export function FormFieldInput<T extends object, V>(props: FormFieldInputProps<T, V>, _children: Renderable[], api: AurumComponentAPI): Renderable {
     let { decorators, style, name, form, value, ...inputProps } = props;
 
     if (form && name) {

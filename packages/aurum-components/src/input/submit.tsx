@@ -1,4 +1,4 @@
-import { Aurum, AurumComponentAPI, Renderable, writeTo } from '@aurum/html';
+import { Aurum, AurumComponentAPI, Renderable, writeTo } from '@aurumjs/html';
 import { Button, ButtonComponentProps } from './button.js';
 import { FormType } from '../form/form.js';
 

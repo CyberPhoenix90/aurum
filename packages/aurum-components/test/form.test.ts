@@ -1,4 +1,4 @@
-import { DataSource } from '@aurum/html';
+import { DataSource } from '@aurumjs/html';
 import { assert, describe, it } from 'vitest';
 import { createForm, FormViolation, FormViolationType } from '../src/form/form.js';
 
@@ -66,10 +66,7 @@ describe('form validation', () => {
 
     it('treats absent optional values as valid and validates oneOf when present', async () => {
         const value = new DataSource<string>(undefined);
-        const form = createForm<{ value: string }>(
-            { fields: { value: { source: value, minLength: 2, oneOf: ['ok'] } } },
-            async (): Promise<void> => undefined
-        );
+        const form = createForm<{ value: string }>({ fields: { value: { source: value, minLength: 2, oneOf: ['ok'] } } }, async (): Promise<void> => undefined);
 
         assert.isUndefined(await form.validateField('value'));
         value.update('no');
@@ -111,14 +108,11 @@ describe('form validation', () => {
         const value = new DataSource('ready');
         let submitCalls = 0;
         let finish: (value: string) => void;
-        const form = createForm<{ value: string }, string>(
-            { fields: { value: { source: value, required: true } } },
-            (_object, markAsFailed) => {
-                submitCalls++;
-                markAsFailed('server rejected');
-                return new Promise<string>((resolve) => (finish = resolve));
-            }
-        );
+        const form = createForm<{ value: string }, string>({ fields: { value: { source: value, required: true } } }, (_object, markAsFailed) => {
+            submitCalls++;
+            markAsFailed('server rejected');
+            return new Promise<string>((resolve) => (finish = resolve));
+        });
 
         const first = form.submit();
         const second = form.submit();

@@ -14,7 +14,7 @@ import {
     dsUpdateToken,
     resolveChildren,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 export interface AccordionProps {
@@ -38,68 +38,76 @@ export interface AccordionItemProps {
     expanded?: boolean | DataSource<boolean>;
 }
 
-const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, themeColor3: color3, themeColor2: color2, highlightColor1: highlight } = theme;
+const {
+    fontFamily,
+    baseFontSize: size,
+    baseFontColor: fontColor,
+    themeColor1: color1,
+    themeColor3: color3,
+    themeColor2: color2,
+    highlightColor1: highlight
+} = theme;
 const style = css`
-            background-color: ${color1};
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
+    background-color: ${color1};
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
 
-            display: flex;
-            flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-            &.fit-content {
-                .content {
-                    transition: max-height 0.2s ease-out;
-                }
+    &.fit-content {
+        .content {
+            transition: max-height 0.2s ease-out;
+        }
+    }
+
+    &.even-share .open {
+        flex: 1;
+        .content {
+            flex-grow: 1;
+            flex-shrink: 1;
+            flex-basis: 0;
+            overflow-y: auto;
+        }
+    }
+
+    .accordion-item {
+        .content {
+            width: 100%;
+            overflow: hidden;
+            max-height: 0;
+        }
+
+        .header {
+            &:focus-visible {
+                position: relative;
+                outline: solid ${highlight} 4px;
             }
 
-            &.even-share .open {
-                flex: 1;
-                .content {
-                    flex-grow: 1;
-                    flex-shrink: 1;
-                    flex-basis: 0;
-                    overflow-y: auto;
-                }
+            user-select: none;
+            background-color: ${color2};
+            cursor: pointer;
+            padding-top: 6px;
+            padding-bottom: 6px;
+            padding-left: 8px;
+            width: calc(100% - 8px);
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: background-color 0.4s;
+
+            &:hover {
+                background-color: ${color3};
             }
 
-            .accordion-item {
-                .content {
-                    width: 100%;
-                    overflow: hidden;
-                    max-height: 0;
-                }
-
-                .header {
-                    &:focus-visible {
-                        position: relative;
-                        outline: solid ${highlight} 4px;
-                    }
-
-                    user-select: none;
-                    background-color: ${color2};
-                    cursor: pointer;
-                    padding-top: 6px;
-                    padding-bottom: 6px;
-                    padding-left: 8px;
-                    width: calc(100% - 8px);
-                    text-align: left;
-                    border: none;
-                    outline: none;
-                    transition: background-color 0.4s;
-
-                    &:hover {
-                        background-color: ${color3};
-                    }
-
-                    i {
-                        margin-right: 8px;
-                        float: right;
-                    }
-                }
+            i {
+                margin-right: 8px;
+                float: right;
             }
-        `;
+        }
+    }
+`;
 
 export function Accordion(props: AccordionProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     const accordionItems = resolveChildren<AurumElementModel<AccordionItemProps>>(

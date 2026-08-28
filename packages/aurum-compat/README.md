@@ -1,10 +1,10 @@
-# @aurum/compat
+# @aurumjs/compat
 
-`@aurum/compat` is an optional migration runtime for React-shaped function
+`@aurumjs/compat` is an optional migration runtime for React-shaped function
 components. It provides automatic JSX, keyed reconciliation, common hooks,
 contexts, refs, portals, and a `createRoot` API while rendering through Aurum.
 
-New Aurum applications should normally use `@aurum/html` and reactive data
+New Aurum applications should normally use `@aurumjs/html` and reactive data
 sources directly. This package is intended for incremental ports where keeping
 component identity and familiar hook semantics materially reduces migration
 risk.
@@ -13,13 +13,13 @@ risk.
 {
     "compilerOptions": {
         "jsx": "react-jsx",
-        "jsxImportSource": "@aurum/compat"
+        "jsxImportSource": "@aurumjs/compat"
     }
 }
 ```
 
 ```tsx
-import { createRoot, useState } from '@aurum/compat';
+import { createRoot, useState } from '@aurumjs/compat';
 
 function Counter() {
     const [count, setCount] = useState(0);

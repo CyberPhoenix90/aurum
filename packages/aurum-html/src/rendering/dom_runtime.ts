@@ -1,4 +1,4 @@
-import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, ArrayDataSource, CollectionChange, CollectionItemIdentity, DataSource } from '@aurum/streams';
+import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, ArrayDataSource, CollectionChange, CollectionItemIdentity, DataSource } from '@aurumjs/streams';
 import {
     AurumComponentAPI,
     AurumElementModel,
@@ -11,7 +11,7 @@ import {
     Renderable,
     RenderSession,
     traceAurumComponentRender
-} from '@aurum/rendering';
+} from '@aurumjs/rendering';
 import { listenToRenderBatchState, queueRenderUpdate } from './render_batch.js';
 
 export type Rendered = AurumElement | HTMLElement | Text | SVGElement;
@@ -319,9 +319,7 @@ export function renderInternal(element: DOMRenderInput, session: RenderSession, 
         const model: AurumElementModel<any> = element as any as AurumElementModel<any>;
         if (model.isIntrinsic) {
             // Optimization: skip creating API for no-props basic HTML nodes because they are by far the most frequent.
-            const api = model.props
-                ? (createDOMAPI(session) as AurumComponentAPI)
-                : ({ renderSession: session } as AurumComponentAPI);
+            const api = model.props ? (createDOMAPI(session) as AurumComponentAPI) : ({ renderSession: session } as AurumComponentAPI);
             return renderInternal(model.factory(model.props, model.children, api), session, prerendering);
         }
         return traceAurumComponentRender(model, session, () => {
@@ -426,9 +424,7 @@ export class ArrayAurumElement extends AurumElement {
     }
 
     public static setRenderBatching(active: boolean): void {
-        ArrayAurumElement.prototype.handleNewContent = active
-            ? ArrayAurumElement.prototype.queueBatchedContent
-            : ArrayAurumElement.immediateContentCommit;
+        ArrayAurumElement.prototype.handleNewContent = active ? ArrayAurumElement.prototype.queueBatchedContent : ArrayAurumElement.immediateContentCommit;
     }
 
     private handleBatchedContent(change: CollectionChange<DOMRenderInput>): void {
@@ -477,8 +473,7 @@ export class ArrayAurumElement extends AurumElement {
         if (entries.every((entry) => !(entry.rendered instanceof AurumElement))) {
             const fragment = document.createDocumentFragment();
             for (const entry of entries) fragment.appendChild(entry.rendered as Node);
-            const referenceNode =
-                anchor instanceof AurumElement ? this.hostNode.childNodes[this.getEntryDomIndex(anchorIndex)] : (anchor as Node);
+            const referenceNode = anchor instanceof AurumElement ? this.hostNode.childNodes[this.getEntryDomIndex(anchorIndex)] : (anchor as Node);
             this.hostNode.insertBefore(fragment, referenceNode);
             this.lastEndIndex = undefined;
             return;
@@ -514,9 +509,7 @@ export class ArrayAurumElement extends AurumElement {
         // Ranges still require a numeric DOM position. Resolve it before changing
         // the entry array, but avoid the scan for the overwhelmingly common case
         // where both the inserted entries and their anchor are ordinary nodes.
-        const targetIndex = newEntries.some((entry) => entry.rendered instanceof AurumElement)
-            ? this.getEntryDomIndex(index)
-            : undefined;
+        const targetIndex = newEntries.some((entry) => entry.rendered instanceof AurumElement) ? this.getEntryDomIndex(index) : undefined;
         this.entries.splice(index, 0, ...newEntries);
         this.children.splice(index, 0, ...newEntries.map((entry) => entry.rendered));
 
@@ -544,10 +537,7 @@ export class ArrayAurumElement extends AurumElement {
         let removalStart = -1;
 
         for (let entryIndex = 0; entryIndex < this.entries.length; entryIndex++) {
-            if (
-                desiredIndex < desiredIdentities.length &&
-                this.entries[entryIndex].identity === desiredIdentities[desiredIndex]
-            ) {
+            if (desiredIndex < desiredIdentities.length && this.entries[entryIndex].identity === desiredIdentities[desiredIndex]) {
                 if (removalStart !== -1) {
                     removals.push({ index: removalStart, count: entryIndex - removalStart });
                     removalStart = -1;
@@ -584,10 +574,7 @@ export class ArrayAurumElement extends AurumElement {
         let gapStart = -1;
 
         for (let desiredIndex = 0; desiredIndex < desiredIdentities.length; desiredIndex++) {
-            if (
-                entryIndex < this.entries.length &&
-                desiredIdentities[desiredIndex] === this.entries[entryIndex].identity
-            ) {
+            if (entryIndex < this.entries.length && desiredIdentities[desiredIndex] === this.entries[entryIndex].identity) {
                 if (gapStart !== -1) {
                     gaps.push({ valueIndex: gapStart, end: desiredIndex, entryIndex });
                     gapStart = -1;
@@ -775,10 +762,7 @@ export class ArrayAurumElement extends AurumElement {
                 }
                 const sharedPrefixLength = Math.min(this.entries.length, desiredIdentities.length);
                 let retainedPrefixLength = 0;
-                while (
-                    retainedPrefixLength < sharedPrefixLength &&
-                    this.entries[retainedPrefixLength].identity === desiredIdentities[retainedPrefixLength]
-                ) {
+                while (retainedPrefixLength < sharedPrefixLength && this.entries[retainedPrefixLength].identity === desiredIdentities[retainedPrefixLength]) {
                     retainedPrefixLength++;
                 }
 
@@ -877,11 +861,7 @@ export class ArrayAurumElement extends AurumElement {
         }
     }
 
-    private renderEntry(
-        sourceValue: unknown,
-        identity: CollectionItemIdentity,
-        attachCalls: Array<() => void>
-    ): ArrayRenderEntry {
+    private renderEntry(sourceValue: unknown, identity: CollectionItemIdentity, attachCalls: Array<() => void>): ArrayRenderEntry {
         const sourceType = typeof sourceValue;
         if (sourceType === 'string' || sourceType === 'number' || sourceType === 'bigint') {
             return {

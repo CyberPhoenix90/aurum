@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, createRoot, useState, type CSSProperties } from '../src/index.js';
 
-describe('@aurum/compat host semantics', () => {
+describe('@aurumjs/compat host semantics', () => {
     let root: ReturnType<typeof createRoot> | undefined;
     let container: HTMLElement | undefined;
 
@@ -26,7 +26,12 @@ describe('@aurum/compat host semantics', () => {
             const [active, setActive] = useState(true);
             toggle = () => setActive((value) => !value);
             const style: CSSProperties = active ? { width: 12, opacity: 0.5, '--accent': 3 } : { height: 8 };
-            return <div className={active ? 'on' : 'off'} style={style} aria-pressed={active}>{false}{active && 'yes'}</div>;
+            return (
+                <div className={active ? 'on' : 'off'} style={style} aria-pressed={active}>
+                    {false}
+                    {active && 'yes'}
+                </div>
+            );
         }
 
         const host = mount(<Example />).querySelector('div')!;

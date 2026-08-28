@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/rendering",
+    "name": "@aurumjs/rendering",
     "version": "0.10.2",
     "description": "Renderer-independent component model and rendering primitives for Aurum",
     "type": "module",
@@ -11,14 +11,18 @@
             "import": "./prebuilt/esnext/index.js"
         }
     },
-    "files": ["prebuilt", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json --noEmit --declaration false --declarationMap false && vitest run",
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/streams": "^0.10.0"
+        "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
         "vitest": "^4.0.16"

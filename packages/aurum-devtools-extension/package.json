@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/devtools-extension",
+    "name": "@aurumjs/devtools-extension",
     "version": "0.10.0",
     "private": true,
     "description": "Chromium DevTools extension for inspecting Aurum data flow",
@@ -11,8 +11,8 @@
         "clean": "node scripts/clean.mjs"
     },
     "dependencies": {
-        "@aurum/html": "^0.10.0",
-        "@aurum/streams": "^0.10.0"
+        "@aurumjs/html": "^0.10.0",
+        "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
         "playwright": "^1.62.1",

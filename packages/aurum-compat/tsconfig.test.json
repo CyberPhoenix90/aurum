@@ -7,9 +7,9 @@
         "declarationMap": false,
         "baseUrl": ".",
         "paths": {
-            "@aurum/compat": ["src/index.ts"],
-            "@aurum/compat/jsx-runtime": ["src/jsx-runtime.ts"],
-            "@aurum/compat/jsx-dev-runtime": ["src/jsx-dev-runtime.ts"]
+            "@aurumjs/compat": ["src/index.ts"],
+            "@aurumjs/compat/jsx-runtime": ["src/jsx-runtime.ts"],
+            "@aurumjs/compat/jsx-dev-runtime": ["src/jsx-dev-runtime.ts"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"]

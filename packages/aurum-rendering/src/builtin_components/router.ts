@@ -1,6 +1,6 @@
-import { DataSource, DataWriter, ReadOnlyDataSource } from '@aurum/streams';
+import { DataSource, DataWriter, ReadOnlyDataSource } from '@aurumjs/streams';
 import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element.js';
-import { urlHashEmitter, urlPathEmitter } from '@aurum/streams';
+import { urlHashEmitter, urlPathEmitter } from '@aurumjs/streams';
 import { resolveChildren } from '../utilities/transclusion.js';
 
 export interface RouteMatch {
@@ -93,7 +93,7 @@ function buildRouteRecords(routes: readonly AurumElementModel<RouteProps>[], par
         const nestedRoutes = directChildren.filter(isRouteElement);
         const content = directChildren.filter((child) => !isRouteElement(child));
         const isDefault = route.factory === DefaultRoute;
-        const fullPath = isDefault ? parent?.fullPath ?? '/' : joinRoutePaths(parent?.fullPath, route.props.href);
+        const fullPath = isDefault ? (parent?.fullPath ?? '/') : joinRoutePaths(parent?.fullPath, route.props.href);
         const record: RouteRecord = { route, parent, fullPath, content, isDefault };
         records.push(record, ...buildRouteRecords(nestedRoutes, record));
     }
@@ -245,11 +245,7 @@ function notifyNavigation(previous: RouteSelection | undefined, next: RouteSelec
     const previousRecords = previous?.records ?? [];
     const nextRecords = next?.records ?? [];
     let shared = 0;
-    while (
-        shared < previousRecords.length &&
-        shared < nextRecords.length &&
-        previousRecords[shared].route === nextRecords[shared].route
-    ) {
+    while (shared < previousRecords.length && shared < nextRecords.length && previousRecords[shared].route === nextRecords[shared].route) {
         shared++;
     }
 

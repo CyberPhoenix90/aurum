@@ -1,5 +1,5 @@
-import { Aurum, type Renderable } from '@aurum/html';
-import { ArrayDataSource, type CancellationToken } from '@aurum/streams';
+import { Aurum, type Renderable } from '@aurumjs/html';
+import { ArrayDataSource, type CancellationToken } from '@aurumjs/streams';
 import { InspectedPageBridge } from './inspected_page_bridge.js';
 import {
     SUPPORTED_PROTOCOL_VERSION,
@@ -236,10 +236,7 @@ class AurumDevtoolsPanel {
         this.graphView.append(this.graphEmpty, this.graphLimit, this.graphSvg);
 
         this.componentsView = htmlElement('div', 'panel-view component-view');
-        this.componentsEmpty = emptyState(
-            'No component hierarchy',
-            'Component and host DOM hierarchy is collected only by debug/dev instrumented builds.'
-        );
+        this.componentsEmpty = emptyState('No component hierarchy', 'Component and host DOM hierarchy is collected only by debug/dev instrumented builds.');
         this.componentToolbar = htmlElement('div', 'component-toolbar');
         this.componentCount = htmlElement('span', 'component-count');
         const componentToolbarActions = htmlElement('span', 'component-toolbar-actions');
@@ -458,14 +455,10 @@ class AurumDevtoolsPanel {
                 const queuedEvents = normalizeEvents(result.events, this.snapshot.timestamp);
                 this.flashUpdatedNodes(queuedEvents);
                 const incomingEvents = [...snapshotEvents, ...queuedEvents].filter(
-                    (event) =>
-                        !this.hiddenEventIds.has(event.id) &&
-                        (event.sequence === undefined || event.sequence > this.hiddenThroughSequence)
+                    (event) => !this.hiddenEventIds.has(event.id) && (event.sequence === undefined || event.sequence > this.hiddenThroughSequence)
                 );
                 const knownEventIds =
-                    this.snapshot.revision === undefined && this.selectedNodeId !== undefined
-                        ? new Set(this.events.map((event) => event.id))
-                        : undefined;
+                    this.snapshot.revision === undefined && this.selectedNodeId !== undefined ? new Set(this.events.map((event) => event.id)) : undefined;
                 this.events = mergeEvents(this.events, incomingEvents);
                 selectedNodeLegacyEvent =
                     knownEventIds !== undefined &&
@@ -487,8 +480,7 @@ class AurumDevtoolsPanel {
 
         const selectedNodeAfter = this.snapshot.nodes.find((node) => node.id === this.selectedNodeId);
         const shouldInspect =
-            this.selectedNodeId !== undefined &&
-            shouldRefreshInspection(forceInspection, selectedNodeBefore, selectedNodeAfter, selectedNodeLegacyEvent);
+            this.selectedNodeId !== undefined && shouldRefreshInspection(forceInspection, selectedNodeBefore, selectedNodeAfter, selectedNodeLegacyEvent);
         if (shouldInspect && !forceInspection) {
             this.selectedInspection = undefined;
             this.inspectionRevision = undefined;
@@ -545,22 +537,18 @@ class AurumDevtoolsPanel {
             this.statusBadge.classList.add(this.status.error === undefined ? 'waiting' : 'error');
             this.statusText.textContent = this.status.error === undefined ? 'Waiting for an Aurum runtime' : 'Could not inspect this page';
             this.modeNote.textContent =
-                this.status.error ?? 'Load or refresh a page built with an instrumented @aurum/streams runtime to begin inspecting it.';
+                this.status.error ?? 'Load or refresh a page built with an instrumented @aurumjs/streams runtime to begin inspecting it.';
             return;
         }
 
         const unsupported = this.status.protocolVersion !== SUPPORTED_PROTOCOL_VERSION;
         this.statusBadge.classList.add(unsupported ? 'warning' : 'connected');
         const versionText = this.status.protocolVersion === undefined ? 'unknown protocol' : `protocol v${this.status.protocolVersion}`;
-        this.statusText.textContent = unsupported
-            ? `Connected with unsupported ${versionText}`
-            : `Connected · ${this.status.mode} · ${versionText}`;
+        this.statusText.textContent = unsupported ? `Connected with unsupported ${versionText}` : `Connected · ${this.status.mode} · ${versionText}`;
 
         const capabilityText = this.status.capabilities.length === 0 ? '' : ` Capabilities: ${this.status.capabilities.join(', ')}.`;
         const weakReferenceText =
-            this.snapshot.weakReferences === false
-                ? ' This browser lacks WeakRef support, so the runtime bounds retained inspection records.'
-                : '';
+            this.snapshot.weakReferences === false ? ' This browser lacks WeakRef support, so the runtime bounds retained inspection records.' : '';
         if (unsupported) {
             this.modeNote.textContent = `This extension supports protocol v${SUPPORTED_PROTOCOL_VERSION}; partial data is shown where possible.${capabilityText}`;
         } else if (this.status.mode === 'debug') {
@@ -679,8 +667,7 @@ class AurumDevtoolsPanel {
         const visibleEntryIds = new Set(visibleEntries.map((entry) => entry.node.id));
         if (this.focusedComponentNodeId === undefined || !visibleEntryIds.has(this.focusedComponentNodeId)) {
             this.focusedComponentNodeId =
-                (this.selectedNodeId !== undefined && visibleEntryIds.has(this.selectedNodeId) ? this.selectedNodeId : undefined) ??
-                visibleEntries[0]?.node.id;
+                (this.selectedNodeId !== undefined && visibleEntryIds.has(this.selectedNodeId) ? this.selectedNodeId : undefined) ?? visibleEntries[0]?.node.id;
         }
         const visibleIds = new Set<string>();
         const rows: Renderable[] = [];
@@ -704,10 +691,7 @@ class AurumDevtoolsPanel {
                     const nodeId = row.dataset.nodeId;
                     if (nodeId === undefined) return;
                     this.focusedComponentNodeId = nodeId;
-                    if (
-                        (event.target as Element | null)?.closest('.component-disclosure') !== null &&
-                        this.componentNodeHasChildren(nodeId)
-                    ) {
+                    if ((event.target as Element | null)?.closest('.component-disclosure') !== null && this.componentNodeHasChildren(nodeId)) {
                         this.toggleComponentNode(nodeId);
                         this.focusComponentRow(nodeId);
                         return;
@@ -899,10 +883,7 @@ class AurumDevtoolsPanel {
             const endX = target.x;
             const endY = target.y + target.height / 2;
             const bend = Math.max(30, Math.abs(endX - startX) / 2);
-            rendered.path.setAttribute(
-                'd',
-                `M ${startX} ${startY} C ${startX + bend} ${startY}, ${endX - bend} ${endY}, ${endX} ${endY}`
-            );
+            rendered.path.setAttribute('d', `M ${startX} ${startY} C ${startX + bend} ${startY}, ${endX - bend} ${endY}, ${endX} ${endY}`);
             rendered.path.classList.toggle('upstream', edge.target === this.selectedNodeId);
             rendered.path.classList.toggle('downstream', edge.source === this.selectedNodeId);
             rendered.title.textContent = edge.label ?? edge.kind ?? `${edge.source} → ${edge.target}`;
@@ -985,9 +966,7 @@ class AurumDevtoolsPanel {
     private renderNodes(arrayOnly = false): void {
         const nodes = filterNodes(this.snapshot.nodes, this.search, arrayOnly ? '' : this.kind)
             .filter((node) => !arrayOnly || isArrayDataSourceNode(node))
-            .sort((left, right) =>
-            nodeLabel(left).localeCompare(nodeLabel(right))
-        );
+            .sort((left, right) => nodeLabel(left).localeCompare(nodeLabel(right)));
         if (nodes.length === 0) {
             this.nodesEmpty.hidden = false;
             this.nodeSurface.hidden = true;
@@ -1036,11 +1015,7 @@ class AurumDevtoolsPanel {
             name.textContent = node.name ?? node.id;
             kind.textContent = node.kind;
             value.textContent =
-                node.value === undefined
-                    ? this.status.mode === 'production'
-                        ? 'Not captured'
-                        : 'Select to inspect'
-                    : compactValue(node.value, 100);
+                node.value === undefined ? (this.status.mode === 'production' ? 'Not captured' : 'Select to inspect') : compactValue(node.value, 100);
             version.textContent = node.version === undefined ? '—' : String(node.version);
             subscriptions.textContent = String(node.subscriberCount);
             rows.push(row as unknown as Renderable);
@@ -1114,13 +1089,10 @@ class AurumDevtoolsPanel {
             details.hidden = event.details === undefined;
             details.textContent = event.details === undefined ? '' : detailedValue(event.details);
 
-            const relatedEdge =
-                event.edgeId === undefined ? undefined : this.snapshot.edges.find((edge) => edge.id === event.edgeId);
+            const relatedEdge = event.edgeId === undefined ? undefined : this.snapshot.edges.find((edge) => edge.id === event.edgeId);
             const relatedNodeId = event.nodeId ?? event.sourceId ?? event.targetId ?? relatedEdge?.source ?? relatedEdge?.target;
             rendered.relatedNodeId =
-                relatedNodeId !== undefined && this.snapshot.nodes.some((candidate) => candidate.id === relatedNodeId)
-                    ? relatedNodeId
-                    : undefined;
+                relatedNodeId !== undefined && this.snapshot.nodes.some((candidate) => candidate.id === relatedNodeId) ? relatedNodeId : undefined;
             item.classList.toggle('selectable', rendered.relatedNodeId !== undefined);
             items.push(item as unknown as Renderable);
         }
@@ -1143,17 +1115,10 @@ class AurumDevtoolsPanel {
         const detailedNode = inspectedNode?.id === node.id ? inspectedNode : node;
 
         const header = htmlElement('div', 'details-header');
-        header.append(
-            htmlElement('span', 'kind-pill', detailedNode.kind),
-            htmlElement('h2', '', detailedNode.name ?? node.name ?? node.id)
-        );
+        header.append(htmlElement('span', 'kind-pill', detailedNode.kind), htmlElement('h2', '', detailedNode.name ?? node.name ?? node.id));
         this.details.append(header);
 
-        if (
-            this.status.mode === 'debug' &&
-            this.status.capabilities.includes('update-breakpoints') &&
-            isDataSourceNode(detailedNode)
-        ) {
+        if (this.status.mode === 'debug' && this.status.capabilities.includes('update-breakpoints') && isDataSourceNode(detailedNode)) {
             const breakpointEnabled = detailedNode.breakOnUpdate === true;
             const breakpointButton = htmlElement(
                 'button',
@@ -1184,9 +1149,7 @@ class AurumDevtoolsPanel {
         this.details.append(
             detailSection(
                 'Current value',
-                detailedNode.value === undefined && this.status.mode === 'production'
-                    ? 'Not captured in production'
-                    : detailedValue(detailedNode.value),
+                detailedNode.value === undefined && this.status.mode === 'production' ? 'Not captured in production' : detailedValue(detailedNode.value),
                 'value-detail'
             )
         );
@@ -1197,10 +1160,7 @@ class AurumDevtoolsPanel {
                 const items = htmlElement('div', 'array-items');
                 for (const item of preview.items) {
                     const row = htmlElement('div', 'array-item');
-                    row.append(
-                        htmlElement('span', 'array-index', item.index),
-                        htmlElement('code', 'array-value', compactValue(item.value, 160))
-                    );
+                    row.append(htmlElement('span', 'array-index', item.index), htmlElement('code', 'array-value', compactValue(item.value, 160)));
                     items.append(row);
                 }
                 if (preview.items.length === 0) items.append(htmlElement('span', 'empty-inline', 'Empty array'));
@@ -1222,8 +1182,18 @@ class AurumDevtoolsPanel {
 
         const incoming = this.snapshot.edges.filter((edge) => edge.target === node.id);
         const outgoing = this.snapshot.edges.filter((edge) => edge.source === node.id);
-        this.details.append(this.relationshipSection('Upstream', incoming.map((edge) => ({ id: edge.source, edge }))));
-        this.details.append(this.relationshipSection('Downstream', outgoing.map((edge) => ({ id: edge.target, edge }))));
+        this.details.append(
+            this.relationshipSection(
+                'Upstream',
+                incoming.map((edge) => ({ id: edge.source, edge }))
+            )
+        );
+        this.details.append(
+            this.relationshipSection(
+                'Downstream',
+                outgoing.map((edge) => ({ id: edge.target, edge }))
+            )
+        );
 
         if (detailedNode.annotations !== undefined) {
             this.details.append(detailSection('Metadata', detailedValue(detailedNode.annotations), 'metadata-detail'));
@@ -1237,10 +1207,7 @@ class AurumDevtoolsPanel {
         this.details.scrollTop = previousScrollTop;
     }
 
-    private relationshipSection(
-        title: string,
-        relationships: Array<{ id: string; edge: DevtoolsSnapshot['edges'][number] }>
-    ): HTMLElement {
+    private relationshipSection(title: string, relationships: Array<{ id: string; edge: DevtoolsSnapshot['edges'][number] }>): HTMLElement {
         const list = htmlElement('div', 'relationship-list');
         if (relationships.length === 0) {
             list.append(htmlElement('span', 'empty-inline', 'None'));
@@ -1374,11 +1341,7 @@ function requiredElement<ElementType extends Element>(root: ParentNode, selector
     return result;
 }
 
-function htmlElement<Tag extends keyof HTMLElementTagNameMap>(
-    tag: Tag,
-    className = '',
-    text?: string
-): HTMLElementTagNameMap[Tag] {
+function htmlElement<Tag extends keyof HTMLElementTagNameMap>(tag: Tag, className = '', text?: string): HTMLElementTagNameMap[Tag] {
     const result = document.createElement(tag);
     if (className !== '') {
         result.className = className;
@@ -1431,9 +1394,9 @@ function componentDetail(node: DevtoolsNode): string {
     if (typeof node.value !== 'object' || node.value === null) return 'Component';
     const entries = (node.value as { entries?: unknown }).entries;
     if (!Array.isArray(entries)) return 'Component';
-    const childCountEntry = entries.find(
-        (entry) => typeof entry === 'object' && entry !== null && (entry as { key?: unknown }).key === 'childCount'
-    ) as { value?: unknown } | undefined;
+    const childCountEntry = entries.find((entry) => typeof entry === 'object' && entry !== null && (entry as { key?: unknown }).key === 'childCount') as
+        | { value?: unknown }
+        | undefined;
     const childCount = previewScalar(childCountEntry?.value);
     return childCount === undefined ? 'Component' : `${childCount} JSX child${childCount === '1' ? '' : 'ren'}`;
 }
@@ -1501,7 +1464,12 @@ function arrayMutationDescription(event: DevtoolsEvent): string | undefined {
     const index = previewScalar(details?.index);
     const index2 = previewScalar(details?.index2);
     const count = previewScalar(details?.count);
-    return [operation, index === undefined ? undefined : `index ${index}`, index2 === undefined ? undefined : `to ${index2}`, count === undefined ? undefined : `count ${count}`]
+    return [
+        operation,
+        index === undefined ? undefined : `index ${index}`,
+        index2 === undefined ? undefined : `to ${index2}`,
+        count === undefined ? undefined : `count ${count}`
+    ]
         .filter((part): part is string => part !== undefined)
         .join(' · ');
 }

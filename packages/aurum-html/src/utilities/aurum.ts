@@ -156,19 +156,13 @@ import {
 } from '../nodes/simple_dom_nodes.js';
 import { createGenericIntrinsicFactory, GenericHTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
 import { TextArea, TextAreaProps } from '../nodes/textarea.js';
-import {
-    AurumComponentAPI,
-    AurumElementModel,
-    aurumElementModelIdentitiy,
-    createRenderSession,
-    Renderable
-} from '@aurum/rendering';
+import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, createRenderSession, Renderable } from '@aurumjs/rendering';
 import { ArrayAurumElement, AurumElement, createDOMAPI, renderInternal } from '../rendering/dom_runtime.js';
 import { batchRender } from '../rendering/render_batch.js';
-import { ArrayDataSource, DataSource } from '@aurum/streams';
-import { CancellationToken, MapLike } from '@aurum/streams';
+import { ArrayDataSource, DataSource } from '@aurumjs/streams';
+import { CancellationToken, MapLike } from '@aurumjs/streams';
 import { HTMLSanitizeConfig, insertSanitizedHTML, setSanitizedHTML } from './sanitize.js';
-import { dsTap, dsUnique, dsUpdateToken } from '@aurum/streams';
+import { dsTap, dsUnique, dsUpdateToken } from '@aurumjs/streams';
 
 export type AurumDecorator = (model: AurumElementModel<any>) => Renderable;
 

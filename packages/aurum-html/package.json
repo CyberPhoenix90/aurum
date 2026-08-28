@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/html",
+    "name": "@aurumjs/html",
     "version": "0.10.12",
     "description": "HTML nodes, DOM rendering, styling, and HTML JSX types for Aurum",
     "type": "module",
@@ -34,8 +34,8 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/rendering": "^0.10.0",
-        "@aurum/streams": "^0.10.0"
+        "@aurumjs/rendering": "^0.10.0",
+        "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
         "@types/react": "^19.2.18",

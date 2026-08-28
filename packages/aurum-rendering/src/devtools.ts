@@ -6,7 +6,7 @@ import {
     linkAurumDevtoolsNodes,
     registerAurumDevtoolsNode,
     resolveAurumDevtoolsNodeId
-} from '@aurum/streams';
+} from '@aurumjs/streams';
 import type { RenderSession } from './rendering/aurum_element.js';
 
 interface InspectableComponentModel {
@@ -34,11 +34,7 @@ export function getAurumDevtoolsActiveComponent(session: RenderSession | undefin
 }
 
 /** Registers a concrete host DOM element for the component/DOM inspector. */
-export function registerAurumDomNode(
-    target: object,
-    cancellationToken?: AurumDevtoolsCancellation,
-    session?: RenderSession
-): void {
+export function registerAurumDomNode(target: object, cancellationToken?: AurumDevtoolsCancellation, session?: RenderSession): void {
     if (!isAurumDevtoolsDebugBuild()) return;
 
     registerAurumDevtoolsNode(
@@ -59,11 +55,7 @@ export function registerAurumDomNode(
 }
 
 /** Links host elements after insertion so the inspector mirrors actual DOM nesting. */
-export function linkAurumDomNodeChildren(
-    parent: object,
-    children: readonly object[],
-    cancellationToken?: AurumDevtoolsCancellation
-): void {
+export function linkAurumDomNodeChildren(parent: object, children: readonly object[], cancellationToken?: AurumDevtoolsCancellation): void {
     if (!isAurumDevtoolsDebugBuild()) return;
     for (const child of children) {
         if (resolveAurumDevtoolsNodeId(child) !== undefined) {

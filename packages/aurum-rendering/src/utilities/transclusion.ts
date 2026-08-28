@@ -1,6 +1,6 @@
 import { Renderable } from '../rendering/aurum_element.js';
-import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
+import { ArrayDataSource, DataSource, ReadOnlyArrayDataSource } from '@aurumjs/streams';
+import { CancellationToken } from '@aurumjs/streams';
 
 /**
  * Simplifies the children of a component by resolving the different types of children into an array data source

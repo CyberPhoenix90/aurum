@@ -12,16 +12,12 @@ export type AurumDecorator = (model: CoreElementModel<unknown>) => CoreRenderabl
 export class Aurum {
     public static fragment(_props?: unknown, _children?: CoreRenderable[], _api?: CoreComponentAPI): void {}
 
-    public static factory<T>(
-        component: CoreComponent<T> | string,
-        props: T | null,
-        ...children: CoreRenderable[]
-    ): CoreElementModel<T> | typeof children {
+    public static factory<T>(component: CoreComponent<T> | string, props: T | null, ...children: CoreRenderable[]): CoreElementModel<T> | typeof children {
         if (component === Aurum.fragment) {
             return children;
         }
         if (typeof component === 'string') {
-            throw new Error(`Intrinsic tag ${component} requires @aurum/html`);
+            throw new Error(`Intrinsic tag ${component} requires @aurumjs/html`);
         }
 
         let model: CoreElementModel<T> = {
@@ -53,7 +49,7 @@ export namespace Aurum {
         }
 
         // Intentionally empty. Renderer packages add only the intrinsic nodes
-        // they implement; importing @aurum/html supplies the HTML tag set.
+        // they implement; importing @aurumjs/html supplies the HTML tag set.
         export interface IntrinsicElements {}
     }
 }

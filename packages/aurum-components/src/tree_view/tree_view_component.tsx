@@ -11,7 +11,7 @@ import {
     dsMap,
     getValueOf,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { TreeEntry } from './tree_view_model.js';
 import { TreeEntryRenderable } from './tree_view_node.js';
@@ -46,65 +46,65 @@ export interface TreeViewComponentProps<T> {
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor4: color4, themeColor1: color1, highlightColor1 } = theme;
 const style = css`
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
 
-            .drop-ok {
-                outline: white solid 1px !important;
+    .drop-ok {
+        outline: white solid 1px !important;
+    }
+
+    .node {
+        outline: none;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        padding-left: 9px;
+        min-height: 20px;
+
+        &.hasFocus {
+            &.isActive {
+                border: 0;
+                margin: 0;
+                background-color: ${highlightColor1};
             }
 
-            .node {
-                outline: none;
-                padding-top: 2px;
-                padding-bottom: 2px;
-                user-select: none;
-                display: flex;
-                align-items: center;
-                padding-left: 9px;
-                min-height: 20px;
+            outline: 1px solid ${color4};
 
-                &.hasFocus {
-                    &.isActive {
-                        border: 0;
-                        margin: 0;
-                        background-color: ${highlightColor1};
-                    }
+            border-width: 1px 0;
+            background-color: ${color1};
+        }
 
-                    outline: 1px solid ${color4};
+        .file-name-nowrap {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
 
-                    border-width: 1px 0;
-                    background-color: ${color1};
-                }
+    .arrow-loading::before {
+        content: '⏳';
+        position: relative;
+        padding-right: 4px;
+    }
 
-                .file-name-nowrap {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-            }
+    .arrow-right::before {
+        position: relative;
+        padding-right: 4px;
+        content: '▶';
+    }
 
-            .arrow-loading::before {
-                content: '⏳';
-                position: relative;
-                padding-right: 4px;
-            }
+    .arrow-down::before {
+        padding-right: 4px;
+        content: '▼';
+    }
 
-            .arrow-right::before {
-                position: relative;
-                padding-right: 4px;
-                content: '▶';
-            }
-
-            .arrow-down::before {
-                padding-right: 4px;
-                content: '▼';
-            }
-
-            .no-arrow {
-                padding-left: 18px;
-            }
-        `;
+    .no-arrow {
+        padding-left: 18px;
+    }
+`;
 
 export function TreeViewComponent<T>(props: TreeViewComponentProps<T>) {
     return (

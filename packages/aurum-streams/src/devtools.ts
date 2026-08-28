@@ -11,17 +11,15 @@ declare const __AURUM_DEVTOOLS_HISTORY_LIMIT__: unknown;
 declare const __AURUM_DEVTOOLS_INSTRUMENTATION__: unknown;
 
 /** Compile-time switch used by performance-critical builds to remove graph instrumentation calls. */
-export const AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED =
-    typeof __AURUM_DEVTOOLS_INSTRUMENTATION__ === 'undefined' || __AURUM_DEVTOOLS_INSTRUMENTATION__ !== false;
+export const AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED = typeof __AURUM_DEVTOOLS_INSTRUMENTATION__ === 'undefined' || __AURUM_DEVTOOLS_INSTRUMENTATION__ !== false;
 
 /** Compile-time switch for metadata that exists only in debug/development builds. */
-export const AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED =
-    typeof __AURUM_DEVTOOLS_MODE__ === 'undefined' || __AURUM_DEVTOOLS_MODE__ === 'debug';
+export const AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED = typeof __AURUM_DEVTOOLS_MODE__ === 'undefined' || __AURUM_DEVTOOLS_MODE__ === 'debug';
 
 export const AURUM_DEVTOOLS_PROTOCOL_VERSION = 1;
 export const AURUM_DEVTOOLS_GLOBAL_KEY = '__AURUM_DEVTOOLS__' as const;
 export const AURUM_DEVTOOLS_CONFIG_GLOBAL_KEY = '__AURUM_DEVTOOLS_CONFIG__' as const;
-export const AURUM_DEVTOOLS_SYMBOL = Symbol.for('@aurum/devtools');
+export const AURUM_DEVTOOLS_SYMBOL = Symbol.for('@aurumjs/devtools');
 
 export type AurumDevtoolsMode = 'debug' | 'production';
 export type AurumDevtoolsCapability =
@@ -127,14 +125,7 @@ export interface AurumDevtoolsEdgeSnapshot {
     metadata?: Readonly<Record<string, AurumDevtoolsValuePreview>>;
 }
 
-export type AurumDevtoolsEventType =
-    | 'node-added'
-    | 'node-updated'
-    | 'node-removed'
-    | 'edge-added'
-    | 'edge-removed'
-    | 'subscriptions-changed'
-    | 'configured';
+export type AurumDevtoolsEventType = 'node-added' | 'node-updated' | 'node-removed' | 'edge-added' | 'edge-removed' | 'subscriptions-changed' | 'configured';
 
 export interface AurumDevtoolsEvent {
     sequence: number;
@@ -278,7 +269,10 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     private highlightedDomNodeId?: string;
     private domHighlightCleanup?: () => void;
 
-    public constructor(config: AurumDevtoolsConfig, public readonly productionLocked: boolean = false) {
+    public constructor(
+        config: AurumDevtoolsConfig,
+        public readonly productionLocked: boolean = false
+    ) {
         this.resolvedConfig = resolveConfig(config, undefined, productionLocked);
         const constructors = globalThis as unknown as {
             WeakRef?: WeakReferenceConstructorLike;
@@ -341,11 +335,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
         this.publish({ type: 'configured' });
     }
 
-    public registerNode<T extends object>(
-        target: T,
-        descriptor: AurumDevtoolsNodeDescriptor<T>,
-        cancellationToken?: AurumDevtoolsCancellation
-    ): string {
+    public registerNode<T extends object>(target: T, descriptor: AurumDevtoolsNodeDescriptor<T>, cancellationToken?: AurumDevtoolsCancellation): string {
         assertTarget(target);
         let id = this.idsByTarget.get(target);
         if (id) {
@@ -354,7 +344,10 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
                 entry.registrationCount++;
                 this.applyPatch(entry, descriptor as AurumDevtoolsNodePatch<object>);
                 this.touch();
-                attachCancellation(cancellationToken, once(() => this.releaseRegistration(id!)));
+                attachCancellation(
+                    cancellationToken,
+                    once(() => this.releaseRegistration(id!))
+                );
                 return id;
             }
         }
@@ -370,10 +363,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
             subscriptions: createSubscriptionCountRecord(),
             subscriptionChannels: new Map(),
             target: this.weakReferenceConstructor ? new this.weakReferenceConstructor(target) : target,
-            getValue:
-                this.resolvedConfig.mode === 'debug'
-                    ? (descriptor.getValue as ((target: object) => unknown) | undefined)
-                    : undefined,
+            getValue: this.resolvedConfig.mode === 'debug' ? (descriptor.getValue as ((target: object) => unknown) | undefined) : undefined,
             metadata: this.resolvedConfig.mode === 'debug' ? previewRecord(descriptor.metadata, this.resolvedConfig) : undefined,
             creationStack: this.resolvedConfig.captureStacks ? captureCreationStack() : undefined,
             finalizationToken,
@@ -387,7 +377,10 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
         this.trimFallbackNodes();
         this.touch();
         this.publish({ type: 'node-added', nodeId: id });
-        attachCancellation(cancellationToken, once(() => this.releaseRegistration(id!)));
+        attachCancellation(
+            cancellationToken,
+            once(() => this.releaseRegistration(id!))
+        );
         return id;
     }
 
@@ -533,11 +526,7 @@ class DefaultAurumDevtoolsRegistry implements AurumDevtoolsRegistry {
     public emitUpdate(targetOrId: AurumDevtoolsNodeReference, update: AurumDevtoolsUpdateDescriptor = {}): void {
         const entry = this.getEntry(targetOrId);
         if (!entry) return;
-        if (
-            AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED &&
-            this.resolvedConfig.mode === 'debug' &&
-            this.updateBreakpoints.has(entry.id)
-        ) {
+        if (AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED && this.resolvedConfig.mode === 'debug' && this.updateBreakpoints.has(entry.id)) {
             // Intentionally pauses at the synchronous mutation boundary. The
             // caller frames identify the application code that caused it.
             debugger;
@@ -1061,12 +1050,7 @@ function asDomElement(target: object): Element | undefined {
     try {
         const candidate = target as Partial<Element>;
         const document = candidate.ownerDocument;
-        if (
-            candidate.nodeType !== 1 ||
-            document === null ||
-            document === undefined ||
-            typeof candidate.getBoundingClientRect !== 'function'
-        ) {
+        if (candidate.nodeType !== 1 || document === null || document === undefined || typeof candidate.getBoundingClientRect !== 'function') {
             return undefined;
         }
         const elementConstructor = document.defaultView?.Element;
@@ -1121,9 +1105,7 @@ function redactDevtoolsEvent(event: AurumDevtoolsEvent): AurumDevtoolsEvent {
     return redacted;
 }
 
-function clonePreviewRecord(
-    record: Readonly<Record<string, AurumDevtoolsValuePreview>> | undefined
-): Record<string, AurumDevtoolsValuePreview> | undefined {
+function clonePreviewRecord(record: Readonly<Record<string, AurumDevtoolsValuePreview>> | undefined): Record<string, AurumDevtoolsValuePreview> | undefined {
     if (!record) return undefined;
     const result: Record<string, AurumDevtoolsValuePreview> = Object.create(null) as Record<string, AurumDevtoolsValuePreview>;
     for (const key of Object.keys(record)) result[key] = cloneValuePreview(record[key]);
@@ -1151,17 +1133,12 @@ function readCompileTimeConfig(): AurumDevtoolsConfig {
     return result;
 }
 
-function resolveConfig(
-    config: AurumDevtoolsConfig,
-    previous?: AurumDevtoolsResolvedConfig,
-    productionLocked: boolean = false
-): AurumDevtoolsResolvedConfig {
-    const mode = productionLocked ? 'production' : config.mode ?? previous?.mode ?? 'production';
+function resolveConfig(config: AurumDevtoolsConfig, previous?: AurumDevtoolsResolvedConfig, productionLocked: boolean = false): AurumDevtoolsResolvedConfig {
+    const mode = productionLocked ? 'production' : (config.mode ?? previous?.mode ?? 'production');
     const modeChanged = previous !== undefined && config.mode !== undefined && config.mode !== previous.mode;
     return Object.freeze({
         mode,
-        captureStacks:
-            mode === 'production' ? false : config.captureStacks ?? (previous && config.mode === undefined ? previous.captureStacks : true),
+        captureStacks: mode === 'production' ? false : (config.captureStacks ?? (previous && config.mode === undefined ? previous.captureStacks : true)),
         historyLimit: productionLocked
             ? 0
             : normalizeNonNegativeInteger(config.historyLimit, !modeChanged && previous ? previous.historyLimit : mode === 'debug' ? 200 : 0),

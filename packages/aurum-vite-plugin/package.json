@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/vite-plugin",
+    "name": "@aurumjs/vite-plugin",
     "version": "0.10.0",
     "description": "Vite build policy for Aurum developer tooling metadata",
     "type": "module",
@@ -14,7 +14,12 @@
             "types": "./client.d.ts"
         }
     },
-    "files": ["prebuilt", "client.d.ts", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "client.d.ts",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run --config vitest.config.ts",

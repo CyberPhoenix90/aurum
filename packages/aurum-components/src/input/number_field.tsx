@@ -1,9 +1,11 @@
-import { Aurum, AurumComponentAPI, BindableSource, DataSource, GenericDataSource, dsMap, getValueOf } from '@aurum/html';
+import { Aurum, AurumComponentAPI, BindableSource, DataSource, GenericDataSource, dsMap, getValueOf } from '@aurumjs/html';
 import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 import { getFormFieldSource } from '../form/form.js';
 
-export interface NumberFieldProps<T extends object = Record<string, number>>
-    extends Omit<FormFieldInputProps<T, number>, 'type' | 'step' | 'value' | 'min' | 'max'> {
+export interface NumberFieldProps<T extends object = Record<string, number>> extends Omit<
+    FormFieldInputProps<T, number>,
+    'type' | 'step' | 'value' | 'min' | 'max'
+> {
     numberType?: NumberType;
     value?: BindableSource<number> | number;
     min?: number | GenericDataSource<number>;

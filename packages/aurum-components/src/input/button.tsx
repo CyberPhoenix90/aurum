@@ -1,4 +1,4 @@
-import { ButtonProps, Aurum, Renderable, combineClass, AurumComponentAPI, css } from '@aurum/html';
+import { ButtonProps, Aurum, Renderable, combineClass, AurumComponentAPI, css } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 const style = css`

@@ -1,9 +1,11 @@
-import { Aurum, BindableSource, getValueOf } from '@aurum/html';
+import { Aurum, BindableSource, getValueOf } from '@aurumjs/html';
 import { getFormFieldSource } from '../form/form.js';
 import { FormFieldInput, FormFieldInputProps } from './form_field_input.js';
 
-export interface CheckboxFieldProps<T extends object = Record<string, boolean>>
-    extends Omit<FormFieldInputProps<T, boolean>, 'type' | 'step' | 'value' | 'min' | 'max'> {
+export interface CheckboxFieldProps<T extends object = Record<string, boolean>> extends Omit<
+    FormFieldInputProps<T, boolean>,
+    'type' | 'step' | 'value' | 'min' | 'max'
+> {
     value?: BindableSource<boolean> | boolean;
 }
 

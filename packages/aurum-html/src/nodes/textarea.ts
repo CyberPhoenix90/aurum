@@ -1,6 +1,6 @@
-import { BindableSource } from '@aurum/streams';
-import { AttributeValue, DataDrain, ReadOnlyDataSource } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
+import { BindableSource } from '@aurumjs/streams';
+import { AttributeValue, DataDrain, ReadOnlyDataSource } from '@aurumjs/streams';
+import { CancellationToken } from '@aurumjs/streams';
 import { DOMEvent, HTMLNodeProps, DomNodeCreator } from '../rendering/renderers/dom_adapter.js';
 import { queueRenderUpdate, renderBatchState } from '../rendering/render_batch.js';
 import { isDataWriter } from './rendering_helpers.js';

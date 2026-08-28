@@ -7,7 +7,7 @@ import {
     MapDataSource,
     ObjectDataSource,
     SetDataSource
-} from '@aurum/streams';
+} from '@aurumjs/streams';
 import { RemoteMessage, RemoteProtocol, createRemoteMessage, decodeRemoteMessages } from './protocol.js';
 
 export interface WebSocketLike {
@@ -195,19 +195,14 @@ export class RemoteClient {
     }
 
     public syncDataSource<T>(source: DataSource<T>, id: string, options: RemoteSourceOptions): void {
-        this.bind(source, id, options, RemoteProtocol.LISTEN_DATASOURCE, RemoteProtocol.CANCEL_DATASOURCE, (message) =>
-            source.update(message.value as T)
-        );
+        this.bind(source, id, options, RemoteProtocol.LISTEN_DATASOURCE, RemoteProtocol.CANCEL_DATASOURCE, (message) => source.update(message.value as T));
     }
 
     public syncDuplexDataSource<T>(source: DuplexDataSource<T>, id: string, options: RemoteSourceOptions): void {
         this.bind(source, id, options, RemoteProtocol.LISTEN_DUPLEX_DATASOURCE, RemoteProtocol.CANCEL_DUPLEX_DATASOURCE, (message) =>
             source.updateDownstream(message.value as T)
         );
-        source.listenUpstream(
-            (value) => this.send(RemoteProtocol.UPDATE_DUPLEX_DATASOURCE, { id, token: options.token, value }),
-            options.cancellationToken
-        );
+        source.listenUpstream((value) => this.send(RemoteProtocol.UPDATE_DUPLEX_DATASOURCE, { id, token: options.token, value }), options.cancellationToken);
     }
 
     public syncArrayDataSource<T>(source: ArrayDataSource<T>, id: string, options: RemoteSourceOptions): void {
@@ -590,45 +585,25 @@ export function getRemoteFunction<I, O>(client: RemoteClient, id: string, option
     return (input) => client.call<I, O>(id, input, options);
 }
 
-export function createRemoteDataSource<T>(
-    client: RemoteClient,
-    id: string,
-    options: RemoteSourceOptions,
-    initialValue?: T
-): DataSource<T> {
+export function createRemoteDataSource<T>(client: RemoteClient, id: string, options: RemoteSourceOptions, initialValue?: T): DataSource<T> {
     const source = new DataSource<T>(initialValue);
     client.syncDataSource(source, id, options);
     return source;
 }
 
-export function createRemoteDuplexDataSource<T>(
-    client: RemoteClient,
-    id: string,
-    options: RemoteSourceOptions,
-    initialValue?: T
-): DuplexDataSource<T> {
+export function createRemoteDuplexDataSource<T>(client: RemoteClient, id: string, options: RemoteSourceOptions, initialValue?: T): DuplexDataSource<T> {
     const source = new DuplexDataSource<T>(initialValue, false);
     client.syncDuplexDataSource(source, id, options);
     return source;
 }
 
-export function createRemoteArrayDataSource<T>(
-    client: RemoteClient,
-    id: string,
-    options: RemoteSourceOptions,
-    initialValue: T[] = []
-): ArrayDataSource<T> {
+export function createRemoteArrayDataSource<T>(client: RemoteClient, id: string, options: RemoteSourceOptions, initialValue: T[] = []): ArrayDataSource<T> {
     const source = new ArrayDataSource<T>(initialValue);
     client.syncArrayDataSource(source, id, options);
     return source;
 }
 
-export function createRemoteMapDataSource<K, V>(
-    client: RemoteClient,
-    id: string,
-    options: RemoteSourceOptions,
-    initialValue?: Map<K, V>
-): MapDataSource<K, V> {
+export function createRemoteMapDataSource<K, V>(client: RemoteClient, id: string, options: RemoteSourceOptions, initialValue?: Map<K, V>): MapDataSource<K, V> {
     const source = new MapDataSource<K, V>(initialValue);
     client.syncMapDataSource(source, id, options);
     return source;
@@ -645,12 +620,7 @@ export function createRemoteObjectDataSource<T extends object>(
     return source;
 }
 
-export function createRemoteSetDataSource<T>(
-    client: RemoteClient,
-    id: string,
-    options: RemoteSourceOptions,
-    initialValue?: Set<T> | T[]
-): SetDataSource<T> {
+export function createRemoteSetDataSource<T>(client: RemoteClient, id: string, options: RemoteSourceOptions, initialValue?: Set<T> | T[]): SetDataSource<T> {
     const source = new SetDataSource<T>(initialValue);
     client.syncSetDataSource(source, id, options);
     return source;

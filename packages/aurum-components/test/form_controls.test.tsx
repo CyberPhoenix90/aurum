@@ -1,4 +1,4 @@
-import { AurumComponentAPI, AurumElementModel, CancellationToken, DataSource, DuplexDataSource, Renderable } from '@aurum/html';
+import { AurumComponentAPI, AurumElementModel, CancellationToken, DataSource, DuplexDataSource, Renderable } from '@aurumjs/html';
 import { assert, describe, it } from 'vitest';
 import { createForm } from '../src/form/form.js';
 import { CheckboxField } from '../src/input/checkbox_field.js';
@@ -44,13 +44,11 @@ describe('form controls', () => {
 
     it('forwards zero-valued constraints from a form schema', () => {
         const value = new DataSource(0);
-        const form = createForm<{ value: number }>(
-            { fields: { value: { source: value, min: 0, max: 0 } } },
-            async (): Promise<void> => undefined
-        );
+        const form = createForm<{ value: number }>({ fields: { value: { source: value, min: 0, max: 0 } } }, async (): Promise<void> => undefined);
         const rendered = NumberField({ form, name: 'value' }, [] as Renderable[], componentApi()) as AurumElementModel<any>;
         const inputWrapper = rendered as AurumElementModel<any>;
-        const input = (inputWrapper.factory(inputWrapper.props, inputWrapper.children, componentApi()) as AurumElementModel<any>).children[0] as AurumElementModel<any>;
+        const input = (inputWrapper.factory(inputWrapper.props, inputWrapper.children, componentApi()) as AurumElementModel<any>)
+            .children[0] as AurumElementModel<any>;
 
         assert.equal(input.props.min, 0);
         assert.equal(input.props.max, 0);

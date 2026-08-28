@@ -10,7 +10,7 @@ import {
     dsMap,
     Renderable,
     StyleType
-} from '@aurum/html';
+} from '@aurumjs/html';
 
 export type SizeTypes = BindableSource<number> | number;
 export interface PanelElementProps {
@@ -36,11 +36,7 @@ export function renderBottomDock(
                 ['bottom-dock']: true,
                 resizable: model.props.resizable
             })}
-            style={combineStyle(
-                cancellationToken,
-                model.props.style,
-                size.transform<string>(dsMap<number, string>((size) => `width:100%; height:${size}px`))
-            )}
+            style={combineStyle(cancellationToken, model.props.style, size.transform<string>(dsMap<number, string>((size) => `width:100%; height:${size}px`)))}
         >
             {DataSource.toDataSource(model.props.resizable).transform(
                 dsMap((v) =>
@@ -56,11 +52,7 @@ export function renderBottomDock(
     );
 }
 
-export function renderTopDock(
-    model: AurumElementModel<PanelElementProps>,
-    size: BindableSource<number>,
-    cancellationToken: CancellationToken
-): Renderable {
+export function renderTopDock(model: AurumElementModel<PanelElementProps>, size: BindableSource<number>, cancellationToken: CancellationToken): Renderable {
     return (
         <div
             class={combineClass(cancellationToken, model.props.class, {

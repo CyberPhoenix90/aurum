@@ -1,37 +1,37 @@
-import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, css, DataSource, dsMap, Renderable, StyleType } from '@aurum/html';
+import { AttributeValue, Aurum, AurumComponentAPI, ClassType, combineClass, css, DataSource, dsMap, Renderable, StyleType } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 const { themeColor2: color2, boxShadow, highContrastFontColor } = theme;
 const style = css`
-            margin: 8px;
-            padding: 8px;
-            border-radius: 4px;
-            background-color: ${color2};
-            box-shadow: ${boxShadow};
-            box-sizing: border-box;
-            position: relative;
+    margin: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: ${color2};
+    box-shadow: ${boxShadow};
+    box-sizing: border-box;
+    position: relative;
 
-            .card-content {
-                h1:first-child,
-                h2:first-child,
-                h3:first-child,
-                h4:first-child,
-                h5:first-child,
-                h6:first-child {
-                    margin-top: 0;
-                }
-            }
+    .card-content {
+        h1:first-child,
+        h2:first-child,
+        h3:first-child,
+        h4:first-child,
+        h5:first-child,
+        h6:first-child {
+            margin-top: 0;
+        }
+    }
 
-            .close-button {
-                position: absolute;
-                right: 8px;
-                cursor: pointer;
-                font-size: 24px;
-                &:hover {
-                    color: ${highContrastFontColor};
-                }
-            }
-        `;
+    .close-button {
+        position: absolute;
+        right: 8px;
+        cursor: pointer;
+        font-size: 24px;
+        &:hover {
+            color: ${highContrastFontColor};
+        }
+    }
+`;
 
 interface CardProps {
     onClose?: (e: MouseEvent) => void;

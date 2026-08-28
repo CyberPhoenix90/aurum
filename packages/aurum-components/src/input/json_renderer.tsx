@@ -1,44 +1,52 @@
-import { Aurum, AurumComponentAPI, css, DataSource, dsMap, dsUnique, getValueOf, Renderable } from '@aurum/html';
+import { Aurum, AurumComponentAPI, css, DataSource, dsMap, dsUnique, getValueOf, Renderable } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { Button } from './button.js';
 
-const { fontFamily, baseFontSize: size, baseFontColor: fontColor, disabledFontColor, themeColor1: color1, themeColor2: color2, highlightColor1: highlightColor } = theme;
+const {
+    fontFamily,
+    baseFontSize: size,
+    baseFontColor: fontColor,
+    disabledFontColor,
+    themeColor1: color1,
+    themeColor2: color2,
+    highlightColor1: highlightColor
+} = theme;
 const style = css`
-            background-color: ${color1};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            color: ${fontColor};
-            background-color: ${color2};
-            padding-left: 10px;
-            padding-right: 10px;
+    background-color: ${color1};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    color: ${fontColor};
+    background-color: ${color2};
+    padding-left: 10px;
+    padding-right: 10px;
 
-            .special-value {
-                color: ${disabledFontColor};
-            }
+    .special-value {
+        color: ${disabledFontColor};
+    }
 
-            .hint {
-                color: ${disabledFontColor};
-                margin-left: 15px;
-                font-style: italic;
-            }
+    .hint {
+        color: ${disabledFontColor};
+        margin-left: 15px;
+        font-style: italic;
+    }
 
-            .expandable {
-                > span {
-                    cursor: pointer;
-                }
-            }
+    .expandable {
+        > span {
+            cursor: pointer;
+        }
+    }
 
-            .highlighted {
-                font-weight: bold;
-                cursor: pointer;
-                color: ${highlightColor};
-                user-select: none;
-            }
+    .highlighted {
+        font-weight: bold;
+        cursor: pointer;
+        color: ${highlightColor};
+        user-select: none;
+    }
 
-            .clickable {
-                cursor: pointer;
-            }
-        `;
+    .clickable {
+        cursor: pointer;
+    }
+`;
 
 export interface JSONRendererProps {
     datePreview?: {

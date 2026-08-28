@@ -2,7 +2,7 @@ import {
     AURUM_DEVTOOLS_INSTRUMENTATION_ENABLED,
     DataSource,
     getAurumDevtoolsRegistry
-} from '@aurum/streams';
+} from '@aurumjs/streams';
 
 const source = new DataSource('not registered', 'disabled instrumentation source');
 

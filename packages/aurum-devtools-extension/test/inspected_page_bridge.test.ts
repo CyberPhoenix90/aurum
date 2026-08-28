@@ -103,7 +103,7 @@ function createPage(registry: MutableRegistry): {
             timers.delete(id);
         }
     };
-    sandbox[Symbol.for('@aurum/devtools')] = registry;
+    sandbox[Symbol.for('@aurumjs/devtools')] = registry;
     const context: Context = createContext(sandbox);
 
     return {
@@ -122,7 +122,7 @@ function createPage(registry: MutableRegistry): {
             }
         },
         hasBridge(): boolean {
-            return runInContext("globalThis[Symbol.for('@aurum/devtools-extension-bridge')] !== undefined", context) as boolean;
+            return runInContext("globalThis[Symbol.for('@aurumjs/devtools-extension-bridge')] !== undefined", context) as boolean;
         }
     };
 }
@@ -306,7 +306,7 @@ describe('inspected-page bridge lifecycle', () => {
         // Node's contextified global cannot itself be frozen. A frozen,
         // non-writable bridge slot exercises the same failed-storage path.
         page.evaluate(
-            "Object.defineProperty(globalThis, Symbol.for('@aurum/devtools-extension-bridge'), { value: Object.freeze({}), writable: false, configurable: false })"
+            "Object.defineProperty(globalThis, Symbol.for('@aurumjs/devtools-extension-bridge'), { value: Object.freeze({}), writable: false, configurable: false })"
         );
         const first = normalizePollResult(page.evaluate(createPollExpression('panel', 'fallback')));
         const second = normalizePollResult(page.evaluate(createPollExpression('panel', 'fallback')));

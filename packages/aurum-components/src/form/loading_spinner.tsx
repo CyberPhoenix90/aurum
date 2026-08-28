@@ -1,4 +1,4 @@
-import { Aurum, DataSource, ReadOnlyDataSource, Renderable, css, dsMap, keyframes } from '@aurum/html';
+import { Aurum, DataSource, ReadOnlyDataSource, Renderable, css, dsMap, keyframes } from '@aurumjs/html';
 
 const spin = keyframes`
     from { transform: rotate(0deg); }

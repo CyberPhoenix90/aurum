@@ -1,4 +1,4 @@
-import { BindableSource, DataSource, ReadOnlyDataSource, SetDataSource, dsMap, dsUnique } from '@aurum/html';
+import { BindableSource, DataSource, ReadOnlyDataSource, SetDataSource, dsMap, dsUnique } from '@aurumjs/html';
 
 export type FormSchema<T extends object> = {
     defaultErrorMessages?: {
@@ -22,12 +22,12 @@ export type ValidationResult<T> = {
 export type FieldSchema<T> = [T] extends [string]
     ? StringFieldSchema<Extract<T, string>>
     : [T] extends [number]
-    ? NumberFieldSchema<Extract<T, number>>
-    : [T] extends [boolean]
-    ? BooleanFieldSchema<Extract<T, boolean>>
-    : [T] extends [Date]
-    ? DateFieldSchema<Extract<T, Date>>
-    : never;
+      ? NumberFieldSchema<Extract<T, number>>
+      : [T] extends [boolean]
+        ? BooleanFieldSchema<Extract<T, boolean>>
+        : [T] extends [Date]
+          ? DateFieldSchema<Extract<T, Date>>
+          : never;
 
 export interface StringFieldSchema<T extends string = string> {
     source: BindableSource<T>;
@@ -62,10 +62,7 @@ export interface DateFieldSchema<T extends Date = Date> {
     customValidator?: (value: T) => FormViolation | Promise<FormViolation> | undefined;
 }
 
-export type FormFieldName<T extends object, V> = Extract<
-    { [K in keyof T]-?: [T[K]] extends [V] ? ([V] extends [T[K]] ? K : never) : never }[keyof T],
-    string
->;
+export type FormFieldName<T extends object, V> = Extract<{ [K in keyof T]-?: [T[K]] extends [V] ? ([V] extends [T[K]] ? K : never) : never }[keyof T], string>;
 
 export function getFormFieldSource<T extends object, V>(form: FormType<T, unknown>, key: FormFieldName<T, V>): BindableSource<V> {
     // FormFieldName requires the model field and requested value type to be
@@ -236,20 +233,22 @@ export function createForm<T extends object, O = void>(
                 const result = customValidator(value as T[keyof T]);
 
                 if (result instanceof Promise) {
-                    const validation = result.then((violation) => {
-                        if (validationEpoch[key] !== epoch) {
-                            return pendingValidation[key] ?? validationState[key].value;
-                        }
-                        if (field.source.value !== value) {
-                            return api.validateField(key);
-                        }
-                        commitValidationState(key, violation);
-                        return violation;
-                    }).finally(() => {
-                        if (pendingValidation[key] === validation) {
-                            pendingValidation[key] = undefined;
-                        }
-                    });
+                    const validation = result
+                        .then((violation) => {
+                            if (validationEpoch[key] !== epoch) {
+                                return pendingValidation[key] ?? validationState[key].value;
+                            }
+                            if (field.source.value !== value) {
+                                return api.validateField(key);
+                            }
+                            commitValidationState(key, violation);
+                            return violation;
+                        })
+                        .finally(() => {
+                            if (pendingValidation[key] === validation) {
+                                pendingValidation[key] = undefined;
+                            }
+                        });
                     pendingValidation[key] = validation;
                     return validation;
                 }

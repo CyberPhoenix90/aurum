@@ -1,4 +1,4 @@
-import { Aurum, Renderable, css } from '@aurum/html';
+import { Aurum, Renderable, css } from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { Dialog } from './dialog.js';
 
@@ -6,33 +6,33 @@ export interface ContextMenuProps {}
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, highlightColor1: highlight1 } = theme;
 const style = css`
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            background-color: ${color1};
-            user-select: none;
-            padding: 4px 0;
-            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    background-color: ${color1};
+    user-select: none;
+    padding: 4px 0;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 
-            ul {
-                margin-block-start: 0em;
-                list-style: none;
-                margin-block-end: 0em;
-                padding-inline-start: 0px;
-                min-width: 100px;
-            }
+    ul {
+        margin-block-start: 0em;
+        list-style: none;
+        margin-block-end: 0em;
+        padding-inline-start: 0px;
+        min-width: 100px;
+    }
 
-            li {
-                &:hover {
-                    background-color: ${highlight1};
-                }
-            }
+    li {
+        &:hover {
+            background-color: ${highlight1};
+        }
+    }
 
-            li > * {
-                padding: 5px 5px 5px 15px;
-                cursor: pointer;
-            }
-        `;
+    li > * {
+        padding: 5px 5px 5px 15px;
+        cursor: pointer;
+    }
+`;
 
 export function ContextMenu(props: ContextMenuProps, children: Renderable[]) {
     return (

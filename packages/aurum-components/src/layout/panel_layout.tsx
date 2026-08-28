@@ -12,7 +12,7 @@ import {
     StyleType,
     Renderable,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import {
     PanelContent,
@@ -117,41 +117,19 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
             ? bottom.props?.size
             : new DataSource(bottom?.props?.size ?? getValueOf(bottom?.props?.minSize) ?? getValueOf(bottom?.props?.maxSize) ?? 0);
 
-    const leftDockminSize =
-        left?.props?.minSize instanceof DataSource
-            ? left.props?.minSize
-            : new DataSource(left?.props?.minSize ?? 0);
+    const leftDockminSize = left?.props?.minSize instanceof DataSource ? left.props?.minSize : new DataSource(left?.props?.minSize ?? 0);
     //@ts-ignore
-    const topDockminSize =
-        top?.props?.minSize instanceof DataSource
-            ? top.props?.minSize
-            : new DataSource(top?.props?.minSize ?? 0);
-    const rightDockminSize =
-        right?.props?.minSize instanceof DataSource
-            ? right.props?.minSize
-            : new DataSource(right?.props?.minSize ?? 0);
-    const bottomDockminSize =
-        bottom?.props?.minSize instanceof DataSource
-            ? bottom.props?.minSize
-            : new DataSource(bottom?.props?.minSize ?? 0);
+    const topDockminSize = top?.props?.minSize instanceof DataSource ? top.props?.minSize : new DataSource(top?.props?.minSize ?? 0);
+    const rightDockminSize = right?.props?.minSize instanceof DataSource ? right.props?.minSize : new DataSource(right?.props?.minSize ?? 0);
+    const bottomDockminSize = bottom?.props?.minSize instanceof DataSource ? bottom.props?.minSize : new DataSource(bottom?.props?.minSize ?? 0);
 
-    const leftDockmaxSize =
-        left?.props?.maxSize instanceof DataSource
-            ? left.props?.maxSize
-            : new DataSource(left?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
+    const leftDockmaxSize = left?.props?.maxSize instanceof DataSource ? left.props?.maxSize : new DataSource(left?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
     //@ts-ignore
-    const topDockmaxSize =
-        top?.props?.maxSize instanceof DataSource
-            ? top.props?.maxSize
-            : new DataSource(top?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
+    const topDockmaxSize = top?.props?.maxSize instanceof DataSource ? top.props?.maxSize : new DataSource(top?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
     const rightDockmaxSize =
-        right?.props?.maxSize instanceof DataSource
-            ? right.props?.maxSize
-            : new DataSource(right?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
+        right?.props?.maxSize instanceof DataSource ? right.props?.maxSize : new DataSource(right?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
     const bottomDockmaxSize =
-        bottom?.props?.maxSize instanceof DataSource
-            ? bottom.props?.maxSize
-            : new DataSource(bottom?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
+        bottom?.props?.maxSize instanceof DataSource ? bottom.props?.maxSize : new DataSource(bottom?.props?.maxSize ?? Number.MAX_SAFE_INTEGER);
 
     return (
         <div style={props.style} class={combineClass(cancellationToken, style, props.class)}>
@@ -191,41 +169,41 @@ export function PanelComponent(props: PanelProps, children: AurumElementModel<an
 function generateStyle(props: PanelProps) {
     const { baseFontColor: fontColor, themeColor3: color3, themeColor2: color2 } = theme;
     return css`
-                color: ${fontColor};
-                border-color: ${color3};
-                background-color: ${color2};
-                width: 100%;
-                height: 100%;
+        color: ${fontColor};
+        border-color: ${color3};
+        background-color: ${color2};
+        width: 100%;
+        height: 100%;
 
-                .left-dock,
-                .top-dock,
-                .right-dock,
-                .bottom-dock,
-                .panel-content {
-                    overflow: auto;
-                    position: relative;
-                }
+        .left-dock,
+        .top-dock,
+        .right-dock,
+        .bottom-dock,
+        .panel-content {
+            overflow: auto;
+            position: relative;
+        }
 
-                .left-dock {
-                    float: left;
-                }
+        .left-dock {
+            float: left;
+        }
 
-                .right-dock {
-                    float: right;
-                }
+        .right-dock {
+            float: right;
+        }
 
-                .vertical-handle {
-                    cursor: ew-resize;
-                    width: ${props.dragHandleThickness ?? 2}px;
-                    background-color: ${color3};
-                    height: 100%;
-                }
+        .vertical-handle {
+            cursor: ew-resize;
+            width: ${props.dragHandleThickness ?? 2}px;
+            background-color: ${color3};
+            height: 100%;
+        }
 
-                .horizontal-handle {
-                    cursor: ns-resize;
-                    height: ${props.dragHandleThickness ?? 2}px;
-                    background-color: ${color3};
-                    width: 100%;
-                }
-            `;
+        .horizontal-handle {
+            cursor: ns-resize;
+            height: ${props.dragHandleThickness ?? 2}px;
+            background-color: ${color3};
+            width: 100%;
+        }
+    `;
 }

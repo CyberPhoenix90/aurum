@@ -1,13 +1,6 @@
-import { ArrayDataSource, Aurum, CancellationToken, DataSource, Renderable } from '@aurum/html';
+import { ArrayDataSource, Aurum, CancellationToken, DataSource, Renderable } from '@aurumjs/html';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-    AurumCanvas,
-    AurumElipse,
-    AurumGroup,
-    AurumImage,
-    AurumRectangle,
-    LargeContentBox
-} from '../src/aurum-canvas.js';
+import { AurumCanvas, AurumElipse, AurumGroup, AurumImage, AurumRectangle, LargeContentBox } from '../src/aurum-canvas.js';
 
 describe('canvas rendering', () => {
     let token: CancellationToken | undefined;
@@ -67,7 +60,12 @@ describe('canvas rendering', () => {
 
     it('renders additions and removals from reactive collections', async () => {
         const children = new ArrayDataSource<Renderable>();
-        token = Aurum.attach(<AurumCanvas width={20} height={20}>{children}</AurumCanvas>, target);
+        token = Aurum.attach(
+            <AurumCanvas width={20} height={20}>
+                {children}
+            </AurumCanvas>,
+            target
+        );
 
         children.push(<AurumRectangle x={2} y={2} width={5} height={5} fillColor="blue" />);
         await nextFrame();
@@ -184,15 +182,7 @@ describe('canvas rendering', () => {
         let draws = 0;
         token = Aurum.attach(
             <AurumCanvas width={20} height={20}>
-                <AurumRectangle
-                    x={1}
-                    y={1}
-                    width={5}
-                    height={5}
-                    fillColor="red"
-                    readWidth={width}
-                    onPreDraw={() => draws++}
-                />
+                <AurumRectangle x={1} y={1} width={5} height={5} fillColor="red" readWidth={width} onPreDraw={() => draws++} />
             </AurumCanvas>,
             target
         );

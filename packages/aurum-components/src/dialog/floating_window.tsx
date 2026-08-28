@@ -1,4 +1,17 @@
-import { Aurum, AurumComponentAPI, AurumElementModel, ClassType, css, DataSource, keyframes, Renderable, StyleType, combineClass, dsMap, getValueOf } from '@aurum/html';
+import {
+    Aurum,
+    AurumComponentAPI,
+    AurumElementModel,
+    ClassType,
+    css,
+    DataSource,
+    keyframes,
+    Renderable,
+    StyleType,
+    combineClass,
+    dsMap,
+    getValueOf
+} from '@aurumjs/html';
 import { Button } from '../input/button.js';
 import { theme } from '../theme/theme.js';
 
@@ -8,76 +21,76 @@ const fadeIn = keyframes`
 `;
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor0: color0, themeColor1: color1, themeColor4: color4 } = theme;
 const style = css`
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: fixed;
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    box-shadow: 0px 0px 8px 1px black;
+    outline: none;
+
+    animation: ${fadeIn} 0.2s ease;
+
+    .floating-title {
+        font-size: 120%;
+        display: flex;
+        padding: 4px;
+        user-select: none;
+        justify-content: space-between;
+        background-color: ${color0};
+        min-height: 20px;
+
+        .window-actions {
+            & > * {
+                margin-left: 4px;
+            }
             display: flex;
-            flex-direction: column;
+        }
+    }
+
+    .floating-body {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-top: 1px solid ${color4};
+        border-left: 1px solid ${color4};
+        border-right: 1px solid ${color4};
+        border-bottom: 1px solid ${color4};
+        background-color: ${color1};
+
+        .row {
+            display: flex;
             justify-content: space-between;
-            position: fixed;
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            box-shadow: 0px 0px 8px 1px black;
-            outline: none;
+            margin-bottom: 8px;
+        }
+    }
 
-            animation: ${fadeIn} 0.2s ease;
+    .floating-footer {
+        background-color: ${color0};
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
 
-            .floating-title {
-                font-size: 120%;
-                display: flex;
-                padding: 4px;
-                user-select: none;
-                justify-content: space-between;
-                background-color: ${color0};
-                min-height: 20px;
-
-                .window-actions {
-                    & > * {
-                        margin-left: 4px;
-                    }
-                    display: flex;
-                }
+        .left {
+            align-self: flex-start;
+            display: flex;
+            & > * {
+                margin-right: 4px;
             }
+        }
 
-            .floating-body {
-                padding: 8px;
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-                border-top: 1px solid ${color4};
-                border-left: 1px solid ${color4};
-                border-right: 1px solid ${color4};
-                border-bottom: 1px solid ${color4};
-                background-color: ${color1};
-
-                .row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 8px;
-                }
+        .right {
+            align-self: flex-end;
+            display: flex;
+            & > * {
+                margin-left: 4px;
             }
-
-            .floating-footer {
-                background-color: ${color0};
-                padding: 4px;
-                display: flex;
-                flex-direction: column;
-
-                .left {
-                    align-self: flex-start;
-                    display: flex;
-                    & > * {
-                        margin-right: 4px;
-                    }
-                }
-
-                .right {
-                    align-self: flex-end;
-                    display: flex;
-                    & > * {
-                        margin-left: 4px;
-                    }
-                }
-            }
-        `;
+        }
+    }
+`;
 export interface FloatingWindowProps {
     x?: DataSource<number> | number;
     y?: DataSource<number> | number;

@@ -1,4 +1,4 @@
-import { CancellationToken, DataSource, EventEmitter } from '@aurum/rendering';
+import { CancellationToken, DataSource, EventEmitter } from '@aurumjs/rendering';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initializeZoomFeature } from '../src/components/features.js';
 import { resolveValues } from '../src/components/rendering.js';

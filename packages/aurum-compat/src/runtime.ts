@@ -5,8 +5,8 @@ import {
     type AurumComponentAPI,
     type PortalTarget,
     type Renderable as NativeRenderable
-} from '@aurum/html';
-import { ArrayDataSource, DataSource, type CancellationToken } from '@aurum/streams';
+} from '@aurumjs/html';
+import { ArrayDataSource, DataSource, type CancellationToken } from '@aurumjs/streams';
 import type {
     CompatElement,
     ComponentType,
@@ -328,11 +328,7 @@ export function useId(): string {
     return readHook<IdHook>('id', () => ({ kind: 'id', value: `:aurum-r${component.id}-h${hookIndex}:` })).value;
 }
 
-export function useSyncExternalStore<T>(
-    subscribe: (onStoreChange: () => void) => void | (() => void),
-    getSnapshot: () => T,
-    _getServerSnapshot?: () => T
-): T {
+export function useSyncExternalStore<T>(subscribe: (onStoreChange: () => void) => void | (() => void), getSnapshot: () => T, _getServerSnapshot?: () => T): T {
     const component = assertRendering('useSyncExternalStore');
     const snapshot = getSnapshot();
     const hook = readHook<ExternalStoreHook<T>>('external-store', () => ({
@@ -376,9 +372,7 @@ export function createContext<T>(defaultValue: T): Context<T> {
 
 export function useContext<T>(context: Context<T>): T {
     const component = assertRendering('useContext');
-    const value = component.environment.contexts.has(context)
-        ? (component.environment.contexts.get(context) as T)
-        : context._defaultValue;
+    const value = component.environment.contexts.has(context) ? (component.environment.contexts.get(context) as T) : context._defaultValue;
     component.nextContextDependencies.set(context, value);
     return value;
 }
@@ -497,7 +491,10 @@ function reconcileChildren(
         if (!retained.has(instance) && !next.includes(instance)) instance.dispose();
     }
 
-    synchronizeRenderables(source, next.map((instance) => instance.renderable));
+    synchronizeRenderables(
+        source,
+        next.map((instance) => instance.renderable)
+    );
     return next;
 }
 
@@ -567,7 +564,10 @@ class FragmentInstance implements MountedNode {
     protected children: MountedNode[] = [];
     protected disposed = false;
 
-    public constructor(protected element: InternalCompatElement, protected environment: ReconcileEnvironment) {
+    public constructor(
+        protected element: InternalCompatElement,
+        protected environment: ReconcileEnvironment
+    ) {
         this.key = element.key;
         this.renderable = this.source;
         this.children = reconcileChildren(this.children, element.props.children, environment, this.source);
@@ -623,12 +623,7 @@ class ProviderInstance implements MountedNode {
     private reconcile(): void {
         const contexts = new Map(this.environment.contexts);
         contexts.set(this.context, this.element.props.value);
-        this.children = reconcileChildren(
-            this.children,
-            this.element.props.children,
-            { ...this.environment, contexts },
-            this.source
-        );
+        this.children = reconcileChildren(this.children, this.element.props.children, { ...this.environment, contexts }, this.source);
     }
 
     public dispose(): void {
@@ -735,9 +730,7 @@ class ComponentInstance implements MountedNode {
         this.environment = environment;
         const memoMetadata = (value.type as MarkedComponent)[MEMO] as MemoMetadata<any> | undefined;
         if (memoMetadata && !contextChanged) {
-            const equal = memoMetadata.compare
-                ? memoMetadata.compare(previousElement.props, value.props)
-                : shallowEqual(previousElement.props, value.props);
+            const equal = memoMetadata.compare ? memoMetadata.compare(previousElement.props, value.props) : shallowEqual(previousElement.props, value.props);
             if (equal && previousElement.ref === value.ref) {
                 // A memoized component may hide a context consumer deeper in
                 // its retained output. Reconcile that output with the new
@@ -913,13 +906,66 @@ function shallowEqual(previous: Record<string, unknown>, next: Record<string, un
 }
 
 const svgTags = new Set([
-    'svg', 'animate', 'animateMotion', 'animateTransform', 'circle', 'clipPath', 'defs', 'desc', 'ellipse', 'feBlend',
-    'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
-    'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage',
-    'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
-    'feTurbulence', 'filter', 'foreignObject', 'g', 'image', 'line', 'linearGradient', 'marker', 'mask', 'metadata', 'mpath',
-    'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'set', 'stop', 'switch', 'symbol', 'text', 'textPath',
-    'title', 'tspan', 'use', 'view'
+    'svg',
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'circle',
+    'clipPath',
+    'defs',
+    'desc',
+    'ellipse',
+    'feBlend',
+    'feColorMatrix',
+    'feComponentTransfer',
+    'feComposite',
+    'feConvolveMatrix',
+    'feDiffuseLighting',
+    'feDisplacementMap',
+    'feDistantLight',
+    'feDropShadow',
+    'feFlood',
+    'feFuncA',
+    'feFuncB',
+    'feFuncG',
+    'feFuncR',
+    'feGaussianBlur',
+    'feImage',
+    'feMerge',
+    'feMergeNode',
+    'feMorphology',
+    'feOffset',
+    'fePointLight',
+    'feSpecularLighting',
+    'feSpotLight',
+    'feTile',
+    'feTurbulence',
+    'filter',
+    'foreignObject',
+    'g',
+    'image',
+    'line',
+    'linearGradient',
+    'marker',
+    'mask',
+    'metadata',
+    'mpath',
+    'path',
+    'pattern',
+    'polygon',
+    'polyline',
+    'radialGradient',
+    'rect',
+    'set',
+    'stop',
+    'switch',
+    'symbol',
+    'text',
+    'textPath',
+    'title',
+    'tspan',
+    'use',
+    'view'
 ]);
 const svgFactories = new Map<string, ReturnType<typeof DomNodeCreator<any>>>();
 
@@ -1157,18 +1203,58 @@ function normalizeClassName(value: unknown): string {
     if (value == null || value === false) return '';
     if (Array.isArray(value)) return value.filter(Boolean).join(' ');
     if (typeof value === 'object') {
-        return Object.keys(value as Record<string, unknown>).filter((key) => Boolean((value as Record<string, unknown>)[key])).join(' ');
+        return Object.keys(value as Record<string, unknown>)
+            .filter((key) => Boolean((value as Record<string, unknown>)[key]))
+            .join(' ');
     }
     return String(value);
 }
 
 const unitlessCSSProperties = new Set([
-    'animationIterationCount', 'aspectRatio', 'borderImageOutset', 'borderImageSlice', 'borderImageWidth', 'boxFlex',
-    'boxFlexGroup', 'boxOrdinalGroup', 'columnCount', 'columns', 'fillOpacity', 'flex', 'flexGrow', 'flexNegative',
-    'flexOrder', 'flexPositive', 'flexShrink', 'floodOpacity', 'fontWeight', 'gridArea', 'gridColumn', 'gridColumnEnd',
-    'gridColumnSpan', 'gridColumnStart', 'gridRow', 'gridRowEnd', 'gridRowSpan', 'gridRowStart', 'lineClamp', 'lineHeight',
-    'opacity', 'order', 'orphans', 'scale', 'stopOpacity', 'strokeDasharray', 'strokeDashoffset', 'strokeMiterlimit',
-    'strokeOpacity', 'strokeWidth', 'tabSize', 'widows', 'zIndex', 'zoom'
+    'animationIterationCount',
+    'aspectRatio',
+    'borderImageOutset',
+    'borderImageSlice',
+    'borderImageWidth',
+    'boxFlex',
+    'boxFlexGroup',
+    'boxOrdinalGroup',
+    'columnCount',
+    'columns',
+    'fillOpacity',
+    'flex',
+    'flexGrow',
+    'flexNegative',
+    'flexOrder',
+    'flexPositive',
+    'flexShrink',
+    'floodOpacity',
+    'fontWeight',
+    'gridArea',
+    'gridColumn',
+    'gridColumnEnd',
+    'gridColumnSpan',
+    'gridColumnStart',
+    'gridRow',
+    'gridRowEnd',
+    'gridRowSpan',
+    'gridRowStart',
+    'lineClamp',
+    'lineHeight',
+    'opacity',
+    'order',
+    'orphans',
+    'scale',
+    'stopOpacity',
+    'strokeDasharray',
+    'strokeDashoffset',
+    'strokeMiterlimit',
+    'strokeOpacity',
+    'strokeWidth',
+    'tabSize',
+    'widows',
+    'zIndex',
+    'zoom'
 ]);
 
 function cssPropertyName(property: string): string {
@@ -1184,9 +1270,8 @@ function serializeStyle(value: unknown): string {
     const declarations: string[] = [];
     for (const [property, raw] of Object.entries(value as Record<string, unknown>)) {
         if (raw == null || raw === '' || typeof raw === 'boolean') continue;
-        const normalized = typeof raw === 'number' && raw !== 0 && !unitlessCSSProperties.has(property) && !property.startsWith('--')
-            ? `${raw}px`
-            : String(raw);
+        const normalized =
+            typeof raw === 'number' && raw !== 0 && !unitlessCSSProperties.has(property) && !property.startsWith('--') ? `${raw}px` : String(raw);
         declarations.push(`${cssPropertyName(property)}:${normalized}`);
     }
     return declarations.join(';');
@@ -1211,20 +1296,34 @@ function attributeName(key: string, namespace: Namespace): string {
 }
 
 const booleanProperties = new Set([
-    'allowFullScreen', 'async', 'autoFocus', 'autoPlay', 'checked', 'controls', 'default', 'defer', 'disabled', 'formNoValidate',
-    'hidden', 'inert', 'itemScope', 'loop', 'multiple', 'muted', 'noModule', 'noValidate', 'open', 'playsInline', 'readOnly',
-    'required', 'reversed', 'selected'
+    'allowFullScreen',
+    'async',
+    'autoFocus',
+    'autoPlay',
+    'checked',
+    'controls',
+    'default',
+    'defer',
+    'disabled',
+    'formNoValidate',
+    'hidden',
+    'inert',
+    'itemScope',
+    'loop',
+    'multiple',
+    'muted',
+    'noModule',
+    'noValidate',
+    'open',
+    'playsInline',
+    'readOnly',
+    'required',
+    'reversed',
+    'selected'
 ]);
 const enumeratedBooleanProperties = new Set(['contentEditable', 'draggable', 'spellCheck', 'translate']);
 
-function setDOMProperty(
-    node: HTMLElement | SVGElement,
-    key: string,
-    value: unknown,
-    namespace: Namespace,
-    _initial: boolean,
-    _previous: unknown
-): void {
+function setDOMProperty(node: HTMLElement | SVGElement, key: string, value: unknown, namespace: Namespace, _initial: boolean, _previous: unknown): void {
     const name = attributeName(key, namespace);
     const stringBooleanAttribute = key.startsWith('aria-') || key.startsWith('data-');
     if (value == null) {
@@ -1353,12 +1452,7 @@ class CompatRoot implements Root {
     public render(children: ReactNode): void {
         if (this.unmounted) throw new Error('Cannot render into an unmounted Aurum compat root');
         performWork(() => {
-            this.children = reconcileChildren(
-                this.children,
-                children,
-                { contexts: EMPTY_CONTEXT, namespace: 'html' },
-                this.source
-            );
+            this.children = reconcileChildren(this.children, children, { contexts: EMPTY_CONTEXT, namespace: 'html' }, this.source);
             if (!this.token) {
                 this.container.replaceChildren();
                 const model = NativeAurum.factory(CompatRootBoundary, { root: this }) as NativeRenderable;

@@ -9,7 +9,7 @@ import {
     StyleType,
     createLifeCycle,
     dsMap
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { SimplifiedKeyboardEvent, SimplifiedMouseEvent, SimplifiedWheelEvent } from './common_props.js';
 import { AurumOffscreenCanvas } from './offscreen_canvas.js';

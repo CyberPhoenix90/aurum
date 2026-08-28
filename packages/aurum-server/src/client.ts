@@ -1,5 +1,5 @@
-import { CancellationToken } from '@aurum/streams';
-import { RemoteMessage, RemoteProtocol, createRemoteMessage } from '@aurum/remote/protocol';
+import { CancellationToken } from '@aurumjs/streams';
+import { RemoteMessage, RemoteProtocol, createRemoteMessage } from '@aurumjs/remote/protocol';
 import ws from 'ws';
 import { Session } from './session.js';
 
@@ -89,10 +89,13 @@ export class Client<T> {
         }
         if (this.connection.bufferedAmount > this.transport.maxBufferedAmount) {
             if (!this.flushTimer) {
-                this.flushTimer = setTimeout(() => {
-                    this.flushTimer = undefined;
-                    this.flush();
-                }, Math.max(1, this.transport.batchDelayMs));
+                this.flushTimer = setTimeout(
+                    () => {
+                        this.flushTimer = undefined;
+                        this.flush();
+                    },
+                    Math.max(1, this.transport.batchDelayMs)
+                );
             }
             return;
         }
@@ -137,14 +140,7 @@ export class Client<T> {
     }
 
     private subscriptionMaps(): Array<Map<string, CancellationToken>> {
-        return [
-            this.mapdsSubscriptions,
-            this.dsSubscriptions,
-            this.adsSubscriptions,
-            this.ddsSubscriptions,
-            this.odsSubscriptions,
-            this.setdsSubscriptions
-        ];
+        return [this.mapdsSubscriptions, this.dsSubscriptions, this.adsSubscriptions, this.ddsSubscriptions, this.odsSubscriptions, this.setdsSubscriptions];
     }
 }
 

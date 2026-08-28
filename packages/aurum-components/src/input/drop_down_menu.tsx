@@ -14,68 +14,68 @@ import {
     resolveChildren,
     StyleType,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { Dialog } from '../dialog/dialog.js';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
 const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor0: color0, themeColor2: color2, primary } = theme;
 const menuStyle = css`
-            border-radius: 4px;
-            position: relative;
-            display: inline-flex;
-            justify-content: space-between;
-            border: 2px solid ${color2};
-            box-sizing: border-box;
-            border-style: inset;
-            padding: 4px;
-            font-family: ${fontFamily};
-            font-size: ${size};
-            outline: none;
-            color: ${highlightFont};
-            background-color: ${color0};
-            width: 200px;
-            user-select: none;
-            cursor: pointer;
+    border-radius: 4px;
+    position: relative;
+    display: inline-flex;
+    justify-content: space-between;
+    border: 2px solid ${color2};
+    box-sizing: border-box;
+    border-style: inset;
+    padding: 4px;
+    font-family: ${fontFamily};
+    font-size: ${size};
+    outline: none;
+    color: ${highlightFont};
+    background-color: ${color0};
+    width: 200px;
+    user-select: none;
+    cursor: pointer;
 
-            .invalid {
-                border-color: red;
-            }
+    .invalid {
+        border-color: red;
+    }
 
-            &:focus {
-                outline: ${primary} auto 5px;
-            }
-        `;
+    &:focus {
+        outline: ${primary} auto 5px;
+    }
+`;
 
 const { themeColor4: color4, highlightColor1 } = theme;
 const dropdownStyle = css`
-            position: relative;
-            display: inline-flex;
-            font-family: ${fontFamily};
-            font-size: ${size};
-            color: ${highlightFont};
-            border: 1px solid ${color4};
-            background-color: ${color0};
-            width: 200px;
-            user-select: none;
+    position: relative;
+    display: inline-flex;
+    font-family: ${fontFamily};
+    font-size: ${size};
+    color: ${highlightFont};
+    border: 1px solid ${color4};
+    background-color: ${color0};
+    width: 200px;
+    user-select: none;
 
-            ol {
-                margin: 0;
-                padding-left: 0;
-                width: 100%;
-                list-style: none;
-            }
+    ol {
+        margin: 0;
+        padding-left: 0;
+        width: 100%;
+        list-style: none;
+    }
 
-            li {
-                user-select: none;
-                padding-left: 4px;
-                cursor: pointer;
-            }
+    li {
+        user-select: none;
+        padding-left: 4px;
+        cursor: pointer;
+    }
 
-            li.highlight {
-                background-color: ${highlightColor1};
-            }
-        `;
+    li.highlight {
+        background-color: ${highlightColor1};
+    }
+`;
 
 export interface DropDownMenuProps<T, F extends object = Record<string, T>> {
     selectedValue?: BindableSource<T>;
@@ -104,11 +104,7 @@ export function DropDownMenu<T, F extends object = Record<string, T>>(props: Dro
     const isOpen = props.isOpen ?? new DataSource(false);
     const selectedIndex: MutableSource<number> =
         props.selectedIndex ??
-        (props.selectedValue
-            ? new DataSource(
-                  childSource.findIndex((c) => c.props.value === props.selectedValue.value)
-              )
-            : new DataSource(0));
+        (props.selectedValue ? new DataSource(childSource.findIndex((c) => c.props.value === props.selectedValue.value)) : new DataSource(0));
     const highlightIndex = new DataSource(selectedIndex.value);
 
     let root: HTMLDivElement;

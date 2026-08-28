@@ -1,7 +1,7 @@
 import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, Renderable } from '../rendering/aurum_element.js';
-import { GenericDataSource, ReadOnlyDataSource } from '@aurum/streams';
-import { dsMap, dsUnique } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
+import { GenericDataSource, ReadOnlyDataSource } from '@aurumjs/streams';
+import { dsMap, dsUnique } from '@aurumjs/streams';
+import { CancellationToken } from '@aurumjs/streams';
 
 export interface SwitchProps<T = boolean> {
     state: ReadOnlyDataSource<T>;

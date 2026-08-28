@@ -1,6 +1,6 @@
 Aurum-style scene graph management for Canvas 2D.
 
-Import the HTML-hosted component from `@aurum/canvas`. Renderer integrations that do not need an HTML intrinsic element can import the scene model, draw functions, drawable components, and `AurumOffscreenCanvas` from `@aurum/canvas/core`. The core entry point depends on `@aurum/rendering`; the HTML host is isolated in the main entry point.
+Import the HTML-hosted component from `@aurumjs/canvas`. Renderer integrations that do not need an HTML intrinsic element can import the scene model, draw functions, drawable components, and `AurumOffscreenCanvas` from `@aurumjs/canvas/core`. The core entry point depends on `@aurumjs/rendering`; the HTML host is isolated in the main entry point.
 
 Allows creating canvas drawings using familar concepts from Aurum.js
 Supports data sources for all attributes and dynamic scene graphs with array data sources
@@ -20,7 +20,7 @@ Supports data sources for all attributes and dynamic scene graphs with array dat
 
 ## Verification and performance
 
-`npm test -w @aurum/canvas` runs the browser-backed Canvas 2D behavior suite. `npm run benchmark -w @aurum/canvas` runs a repeatable CPU baseline for resolving and drawing 1,000 and 10,000 rectangle scene nodes. Benchmark numbers are machine-dependent; compare results on the same machine and runtime when evaluating renderer changes.
+`npm test -w @aurumjs/canvas` runs the browser-backed Canvas 2D behavior suite. `npm run benchmark -w @aurumjs/canvas` runs a repeatable CPU baseline for resolving and drawing 1,000 and 10,000 rectangle scene nodes. Benchmark numbers are machine-dependent; compare results on the same machine and runtime when evaluating renderer changes.
 
 Create canvas components just the way you create any aurum component:
 
@@ -39,8 +39,8 @@ function Triangle(props: { x: number; y: number }) {
 
 ```
 
-
 Reuse components that weren't even intended for use in the canvas:
+
 ```
 <AurumCanvas width="200" height="200">
 	<Switch state={triangular}>
@@ -55,6 +55,7 @@ Reuse components that weren't even intended for use in the canvas:
 ```
 
 Declarative animation and interaction support
+
 ```
 <AurumCanvas width="400" height="200">
 	<AurumRectangle

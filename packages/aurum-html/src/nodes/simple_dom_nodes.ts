@@ -1,5 +1,5 @@
 import { DomNodeCreator, HTMLNodeProps } from '../rendering/renderers/dom_adapter.js';
-import { AttributeValue, DataDrain } from '@aurum/streams';
+import { AttributeValue, DataDrain } from '@aurumjs/streams';
 
 export const Code = DomNodeCreator<HTMLNodeProps<HTMLElement>>('code');
 export const Div = DomNodeCreator<HTMLNodeProps<HTMLDivElement>>('div');

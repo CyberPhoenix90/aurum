@@ -13,7 +13,7 @@ npm run devtools:build
 Alternatively, build only the extension:
 
 ```sh
-npm run build --workspace @aurum/devtools-extension
+npm run build --workspace @aurumjs/devtools-extension
 ```
 
 Then open `chrome://extensions` in Chrome or Chromium, enable **Developer mode**, choose **Load unpacked**, and select `packages/aurum-devtools-extension/dist`. Open DevTools on an Aurum application and select the **Aurum** panel.
@@ -45,7 +45,7 @@ When the source next mutates, Chromium pauses at Aurum's synchronous mutation bo
 The extension discovers the registry at:
 
 ```ts
-globalThis[Symbol.for('@aurum/devtools')]
+globalThis[Symbol.for('@aurumjs/devtools')];
 ```
 
 It also understands `globalThis.__AURUM_DEVTOOLS__` as a compatibility fallback. Protocol version 1 provides:
@@ -70,8 +70,8 @@ If a foreign or older v1 implementation does not expose `runtimeId` or `revision
 ## Development
 
 ```sh
-npm test --workspace @aurum/devtools-extension
-npm run build --workspace @aurum/devtools-extension
+npm test --workspace @aurumjs/devtools-extension
+npm run build --workspace @aurumjs/devtools-extension
 ```
 
 After rebuilding, use the reload button for the unpacked extension on `chrome://extensions`, then reopen the inspected page's DevTools window.

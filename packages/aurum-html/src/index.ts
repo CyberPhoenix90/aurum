@@ -1,4 +1,4 @@
-export * from '@aurum/rendering';
+export * from '@aurumjs/rendering';
 export * from './nodes/input.js';
 export * from './nodes/select.js';
 export * from './nodes/simple_dom_nodes.js';

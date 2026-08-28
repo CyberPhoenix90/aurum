@@ -34,7 +34,7 @@ afterEach(() => {
     while (containers.length) containers.pop()!.remove();
 });
 
-describe('@aurum/compat reconciliation', () => {
+describe('@aurumjs/compat reconciliation', () => {
     it('preserves keyed DOM nodes and component state while reordering a list', () => {
         let reorder!: Dispatch<SetStateAction<string[]>>;
 
@@ -42,7 +42,9 @@ describe('@aurum/compat reconciliation', () => {
             const [clicks, setClicks] = useState(0);
             return (
                 <li data-id={id}>
-                    <button onClick={() => setClicks((value) => value + 1)}>{id}:{clicks}</button>
+                    <button onClick={() => setClicks((value) => value + 1)}>
+                        {id}:{clicks}
+                    </button>
                 </li>
             );
         }
@@ -50,7 +52,13 @@ describe('@aurum/compat reconciliation', () => {
         function List(): Aurum.JSX.Element {
             const [order, setOrder] = useState(['a', 'b', 'c']);
             reorder = setOrder;
-            return <ul>{order.map((id) => <Item key={id} id={id} />)}</ul>;
+            return (
+                <ul>
+                    {order.map((id) => (
+                        <Item key={id} id={id} />
+                    ))}
+                </ul>
+            );
         }
 
         const { container, root } = testRoot();
@@ -72,12 +80,7 @@ describe('@aurum/compat reconciliation', () => {
     it('preserves focus and selection while normalizing a controlled text input', () => {
         function Controlled(): Aurum.JSX.Element {
             const [value, setValue] = useState('abcd');
-            return (
-                <input
-                    value={value}
-                    onChange={(event) => setValue(event.currentTarget.value.toUpperCase())}
-                />
-            );
+            return <input value={value} onChange={(event) => setValue(event.currentTarget.value.toUpperCase())} />;
         }
 
         const { container, root } = testRoot();
@@ -115,26 +118,10 @@ describe('@aurum/compat reconciliation', () => {
         expect(calls).toEqual(['layout 1', 'effect 1']);
 
         act(() => root.render(<Subject value={2} />));
-        expect(calls).toEqual([
-            'layout 1',
-            'effect 1',
-            'layout cleanup 1',
-            'layout 2',
-            'effect cleanup 1',
-            'effect 2'
-        ]);
+        expect(calls).toEqual(['layout 1', 'effect 1', 'layout cleanup 1', 'layout 2', 'effect cleanup 1', 'effect 2']);
 
         root.unmount();
-        expect(calls).toEqual([
-            'layout 1',
-            'effect 1',
-            'layout cleanup 1',
-            'layout 2',
-            'effect cleanup 1',
-            'effect 2',
-            'layout cleanup 2',
-            'effect cleanup 2'
-        ]);
+        expect(calls).toEqual(['layout 1', 'effect 1', 'layout cleanup 1', 'layout 2', 'effect cleanup 1', 'effect 2', 'layout cleanup 2', 'effect cleanup 2']);
     });
 
     it('propagates context changes through a memoized intermediary', () => {
@@ -152,7 +139,11 @@ describe('@aurum/compat reconciliation', () => {
         function App(): Aurum.JSX.Element {
             const [theme, setTheme] = useState('light');
             updateTheme = setTheme;
-            return <Theme.Provider value={theme}><Bridge /></Theme.Provider>;
+            return (
+                <Theme.Provider value={theme}>
+                    <Bridge />
+                </Theme.Provider>
+            );
         }
 
         const { container, root } = testRoot();
@@ -180,21 +171,29 @@ describe('@aurum/compat reconciliation', () => {
 
         const Field = forwardRef<Handle, { label: string }>(function Field({ label }, ref): Aurum.JSX.Element {
             const inputRef = useRef<HTMLInputElement>(null);
-            useImperativeHandle(ref, () => ({
-                focus: () => inputRef.current?.focus(),
-                get node() { return inputRef.current; }
-            }), []);
+            useImperativeHandle(
+                ref,
+                () => ({
+                    focus: () => inputRef.current?.focus(),
+                    get node() {
+                        return inputRef.current;
+                    }
+                }),
+                []
+            );
             return <input ref={inputRef} defaultValue={label} />;
         });
 
         const { container, root } = testRoot();
-        act(() => root.render(
-            <>
-                <div ref={divRef}>object</div>
-                <span ref={callbackRef}>callback</span>
-                <Field ref={handleRef} label="field" />
-            </>
-        ));
+        act(() =>
+            root.render(
+                <>
+                    <div ref={divRef}>object</div>
+                    <span ref={callbackRef}>callback</span>
+                    <Field ref={handleRef} label="field" />
+                </>
+            )
+        );
 
         expect(divRef.current).toBe(container.querySelector('div'));
         expect(callbackValues).toEqual([container.querySelector('span')]);
@@ -211,9 +210,21 @@ describe('@aurum/compat reconciliation', () => {
     it('runs a callback ref cleanup return on unmount', () => {
         let cleanupCount = 0;
         const { root } = testRoot();
-        act(() => root.render(
-            <span ref={(node) => node ? () => { cleanupCount++; } : undefined}>cleanup</span>
-        ));
+        act(() =>
+            root.render(
+                <span
+                    ref={(node) =>
+                        node
+                            ? () => {
+                                  cleanupCount++;
+                              }
+                            : undefined
+                    }
+                >
+                    cleanup
+                </span>
+            )
+        );
         root.unmount();
         expect(cleanupCount).toBe(1);
     });
@@ -226,7 +237,11 @@ describe('@aurum/compat reconciliation', () => {
 
         function PortalChild({ label }: { label: string }): Aurum.JSX.Element {
             const [count, setCount] = useState(0);
-            return <button onClick={() => setCount((value) => value + 1)}>{label}:{count}</button>;
+            return (
+                <button onClick={() => setCount((value) => value + 1)}>
+                    {label}:{count}
+                </button>
+            );
         }
 
         function App(): Aurum.JSX.Element {

@@ -1,4 +1,4 @@
-import { CancellationToken, DataSource, EventEmitter, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '@aurum/streams';
+import { CancellationToken, DataSource, EventEmitter, ReadOnlyArrayDataSource, ReadOnlyDataSource } from '@aurumjs/streams';
 import { getAurumDevtoolsActiveComponent, traceAurumComponentRender } from '../devtools.js';
 
 export type RenderablePrimitive = string | number | bigint | boolean | null | undefined;
@@ -18,11 +18,7 @@ export type Renderable =
 
 export type ComponentResult = Renderable;
 
-export type AurumComponent<Props, Prerendered = Renderable> = (
-    props: Props,
-    children: Renderable[],
-    api: AurumComponentAPI<Prerendered>
-) => ComponentResult;
+export type AurumComponent<Props, Prerendered = Renderable> = (props: Props, children: Renderable[], api: AurumComponentAPI<Prerendered>) => ComponentResult;
 
 const aurumContextIdentity = Symbol('AurumContext');
 
@@ -133,17 +129,11 @@ export interface RenderSession {
     contextValuesShared?: boolean;
 }
 
-export type PrerenderStrategy<Prerendered = Renderable> = (
-    target: Renderable,
-    session: RenderSession
-) => Prerendered | Prerendered[];
+export type PrerenderStrategy<Prerendered = Renderable> = (target: Renderable, session: RenderSession) => Prerendered | Prerendered[];
 
 export function createRenderSession(parentSession?: RenderSession): RenderSession {
     const parentStack = parentSession?.devtoolsComponentStack;
-    const devtoolsParentComponent =
-        parentStack && parentStack.length > 0
-            ? parentStack[parentStack.length - 1]
-            : parentSession?.devtoolsParentComponent;
+    const devtoolsParentComponent = parentStack && parentStack.length > 0 ? parentStack[parentStack.length - 1] : parentSession?.devtoolsParentComponent;
     const session: RenderSession = {
         attachCalls: [],
         sessionToken: new CancellationToken(() => {

@@ -1,4 +1,4 @@
-# @aurum/vite-plugin
+# @aurumjs/vite-plugin
 
 Vite build policy for Aurum developer tooling. Development builds retain rich
 data-flow metadata such as source allocation stacks. Production
@@ -10,7 +10,7 @@ extension while omitting expensive metadata by default.
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { aurumDevtools } from '@aurum/vite-plugin';
+import { aurumDevtools } from '@aurumjs/vite-plugin';
 
 export default defineConfig({
     plugins: [aurumDevtools()]
@@ -19,11 +19,11 @@ export default defineConfig({
 
 The default `auto` policy resolves as follows:
 
-| Vite invocation | Aurum mode | Stack capture | Instrumentation |
-| --- | --- | --- | --- |
-| Development server | `debug` | Enabled | Enabled |
-| Production build | `production` | Disabled | Enabled |
-| Build with another mode | `debug` | Enabled | Enabled |
+| Vite invocation         | Aurum mode   | Stack capture | Instrumentation |
+| ----------------------- | ------------ | ------------- | --------------- |
+| Development server      | `debug`      | Enabled       | Enabled         |
+| Production build        | `production` | Disabled      | Enabled         |
+| Build with another mode | `debug`      | Enabled       | Enabled         |
 
 Instrumentation is not disabled in production. The extension can still show
 the live source and subscription graph, but names, creation locations, and
@@ -67,7 +67,7 @@ Aurum guards reads with `typeof`, so running its unbundled output in Node or
 using another bundler does not depend on globals provided by this plugin.
 
 Applications can inspect the resolved policy explicitly through a virtual
-module. Add `@aurum/vite-plugin/client` to the `types` array in the application's
+module. Add `@aurumjs/vite-plugin/client` to the `types` array in the application's
 TypeScript configuration if the virtual import is used.
 
 ```ts

@@ -1,4 +1,4 @@
-import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, configureAurumDevtools, getAurumDevtoolsRegistry } from '@aurum/streams';
+import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, configureAurumDevtools, getAurumDevtoolsRegistry } from '@aurumjs/streams';
 
 const registry = getAurumDevtoolsRegistry();
 configureAurumDevtools({ mode: 'debug', captureStacks: true, historyLimit: 100 });

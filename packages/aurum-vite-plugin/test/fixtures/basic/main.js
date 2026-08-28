@@ -1,5 +1,5 @@
 import config, { captureStacks, mode } from 'virtual:aurum-devtools/config';
-import { DataSource, getAurumDevtoolsRegistry } from '@aurum/streams';
+import { DataSource, getAurumDevtoolsRegistry } from '@aurumjs/streams';
 
 const compileTimeMode = typeof __AURUM_DEVTOOLS_MODE__ === 'undefined' ? 'missing' : __AURUM_DEVTOOLS_MODE__;
 const compileTimeStacks =

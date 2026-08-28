@@ -1,4 +1,4 @@
-import { ArrayDataSource, CancellationToken, DataSource } from '@aurum/streams';
+import { ArrayDataSource, CancellationToken, DataSource } from '@aurumjs/streams';
 import { assert, describe, it, vi } from 'vitest';
 import {
     AurumComponentAPI,
@@ -25,11 +25,7 @@ function element(name: string, props: Record<string, unknown> = {}, children: Re
     };
 }
 
-function component<T>(
-    factory: (props: T, children: Renderable[], api: AurumComponentAPI) => any,
-    props: T,
-    children: Renderable[] = []
-): AurumElementModel<T> {
+function component<T>(factory: (props: T, children: Renderable[], api: AurumComponentAPI) => any, props: T, children: Renderable[] = []): AurumElementModel<T> {
     return {
         [aurumElementModelIdentitiy]: true,
         name: factory.name,
@@ -45,19 +41,24 @@ describe('RenderTree', () => {
         const conditional = new DataSource<Renderable>(false);
         const tree = renderToTree(['before', false, true, conditional, 'after']);
 
-        assert.deepEqual(tree.roots.map((node) => node.text), ['before', undefined, 'after']);
+        assert.deepEqual(
+            tree.roots.map((node) => node.text),
+            ['before', undefined, 'after']
+        );
         assert.deepEqual(tree.roots[1].children, []);
 
         conditional.update('visible');
-        assert.deepEqual(tree.roots[1].children?.map((node) => node.text), ['visible']);
+        assert.deepEqual(
+            tree.roots[1].children?.map((node) => node.text),
+            ['visible']
+        );
         conditional.update(false);
         assert.deepEqual(tree.roots[1].children, []);
     });
 
     it('scopes context values to provider descendants', () => {
         const Theme = createContext('default');
-        const ReadTheme = (_props: object, _children: Renderable[], api: AurumComponentAPI): Renderable =>
-            api.readContext(Theme);
+        const ReadTheme = (_props: object, _children: Renderable[], api: AurumComponentAPI): Renderable => api.readContext(Theme);
         const provider = (value: string, children: Renderable[]) => component(Theme.Provider, { value }, children);
 
         const tree = renderToTree([
@@ -66,7 +67,10 @@ describe('RenderTree', () => {
             component(ReadTheme, {})
         ]);
 
-        assert.deepEqual(tree.roots.map((node) => node.text), ['default', 'outer', 'inner', 'default']);
+        assert.deepEqual(
+            tree.roots.map((node) => node.text),
+            ['default', 'outer', 'inner', 'default']
+        );
     });
 
     it('exposes a typed component handle only for the attached component lifetime', () => {
@@ -157,13 +161,19 @@ describe('RenderTree', () => {
         source.unshift('x');
         assert.equal(range.children[1], a);
         assert.equal(range.children[2], b);
-        assert.include(patches.map((patch) => patch.type), 'insert');
+        assert.include(
+            patches.map((patch) => patch.type),
+            'insert'
+        );
 
         patches.length = 0;
         source.swap(0, 2);
         assert.equal(range.children[0], b);
         assert.equal(range.children[2].text, 'x');
-        assert.include(patches.map((patch) => patch.type), 'move');
+        assert.include(
+            patches.map((patch) => patch.type),
+            'move'
+        );
     });
 
     it('distinguishes and moves duplicate primitive occurrences without user keys', () => {
@@ -186,21 +196,21 @@ describe('RenderTree', () => {
         source.merge(['d', 'c', 'b', 'a']);
 
         assert.deepEqual(range.children, initial.slice().reverse());
-        assert.deepEqual(range.children.map((node) => node.text), ['d', 'c', 'b', 'a']);
+        assert.deepEqual(
+            range.children.map((node) => node.text),
+            ['d', 'c', 'b', 'a']
+        );
     });
 
     it('disposes nested component and reactive lifetimes when a dynamic subtree is replaced', () => {
         let componentToken!: CancellationToken;
         let detached = false;
         const nestedSource = new DataSource<Renderable>('nested');
-        const child = component(
-            (_props: object, _children, api) => {
-                componentToken = api.cancellationToken;
-                api.onDetach(() => (detached = true));
-                return element('box', {}, [nestedSource]);
-            },
-            {}
-        );
+        const child = component((_props: object, _children, api) => {
+            componentToken = api.cancellationToken;
+            api.onDetach(() => (detached = true));
+            return element('box', {}, [nestedSource]);
+        }, {});
         const outer = new DataSource<Renderable>(element('container', {}, [child]));
         const tree = renderToTree(outer);
         const patches: RenderTreePatch[] = [];
@@ -304,9 +314,13 @@ describe('RenderTree', () => {
                 throw intrinsicFactoryError;
             }
         };
-        const passthrough = component((_props: object, children, api) => {
-            return api.prerender(children, createLifeCycle());
-        }, {}, [hostElement]);
+        const passthrough = component(
+            (_props: object, children, api) => {
+                return api.prerender(children, createLifeCycle());
+            },
+            {},
+            [hostElement]
+        );
         const tree = renderToTree(passthrough);
         assert.equal((tree.roots[0] as RenderTreeElementNode).tag, 'host-element');
 

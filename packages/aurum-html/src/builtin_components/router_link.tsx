@@ -1,15 +1,5 @@
-import { AurumComponentAPI, Renderable, createRouterHref, isRouteActive, navigate } from '@aurum/rendering';
-import {
-    ClassType,
-    DataDrain,
-    DataSource,
-    DataWriter,
-    ReadOnlyDataSource,
-    combineClass,
-    urlHashEmitter,
-    urlPathEmitter,
-    writeTo
-} from '@aurum/streams';
+import { AurumComponentAPI, Renderable, createRouterHref, isRouteActive, navigate } from '@aurumjs/rendering';
+import { ClassType, DataDrain, DataSource, DataWriter, ReadOnlyDataSource, combineClass, urlHashEmitter, urlPathEmitter, writeTo } from '@aurumjs/streams';
 import { AProps } from '../nodes/simple_dom_nodes.js';
 import { Aurum } from '../utilities/aurum.js';
 
@@ -80,11 +70,7 @@ export function RouterNavLink(props: RouterNavLinkProps, children: Renderable[],
     path.listenAndRepeat(updateActive, api.cancellationToken);
 
     return (
-        <RouterLink
-            {...linkProps}
-            class={combineClass(api.cancellationToken, baseClass as ClassType, activeClassSource)}
-            aria-current={ariaCurrent}
-        >
+        <RouterLink {...linkProps} class={combineClass(api.cancellationToken, baseClass as ClassType, activeClassSource)} aria-current={ariaCurrent}>
             {children}
         </RouterLink>
     );

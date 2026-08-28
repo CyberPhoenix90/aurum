@@ -1,5 +1,5 @@
-import { AurumComponentAPI, ReadOnlyDataSource, Renderable } from '@aurum/rendering';
-import { CancellationToken } from '@aurum/streams';
+import { AurumComponentAPI, ReadOnlyDataSource, Renderable } from '@aurumjs/rendering';
+import { CancellationToken } from '@aurumjs/streams';
 import { Aurum } from '../utilities/aurum.js';
 
 export type PortalTarget = HTMLElement | string | null | undefined;

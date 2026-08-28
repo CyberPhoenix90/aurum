@@ -7,11 +7,11 @@ import {
     registerAurumRenderBinding,
     Renderable,
     RenderSession
-} from '@aurum/rendering';
+} from '@aurumjs/rendering';
 import { AurumElement, Rendered, renderInternal } from '../dom_runtime.js';
-import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, DataSource } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
-import { AttributeValue, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurum/streams';
+import { AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED, DataSource } from '@aurumjs/streams';
+import { CancellationToken } from '@aurumjs/streams';
+import { AttributeValue, ClassType, DataDrain, MapLike, StyleType, writeTo } from '@aurumjs/streams';
 import { AurumDecorator } from '../../utilities/aurum.js';
 import { queueRenderUpdate, renderBatchState } from '../render_batch.js';
 
@@ -367,15 +367,7 @@ export function DomNodeCreator<T extends HTMLNodeProps<any>>(
         }
         if (AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED) registerAurumDomNode(node, api.cancellationToken, api.renderSession);
         if (props) {
-            processHTMLNodeInternal(
-                node,
-                props,
-                () => api.cancellationToken,
-                acceptedAttributes,
-                eventByProp,
-                api.renderSession,
-                bindAllValidAttributes
-            );
+            processHTMLNodeInternal(node, props, () => api.cancellationToken, acceptedAttributes, eventByProp, api.renderSession, bindAllValidAttributes);
         }
         //@ts-ignore
         const renderedChildren = renderInternal(children, api.renderSession);
@@ -488,11 +480,7 @@ function processHTMLNodeInternal(
 
         const attributeName = normalizeAttributeName(key);
         if (boundAttributes !== undefined && boundAttributes.has(attributeName)) continue;
-        if (
-            acceptedAttributes.has(attributeName) ||
-            key.includes('-') ||
-            (bindAllValidAttributes && isValidGenericHTMLAttribute(node, key, value))
-        ) {
+        if (acceptedAttributes.has(attributeName) || key.includes('-') || (bindAllValidAttributes && isValidGenericHTMLAttribute(node, key, value))) {
             assignSourceToDOM(node, value as AttributeValue, attributeName, getCleanUp, renderSession);
             (boundAttributes ??= new Set()).add(attributeName);
         }
@@ -604,7 +592,11 @@ function normalizeAttributeName(key: string): string {
     if (key.length > 4 && key.startsWith('aria')) {
         const fifthCharacter = key.charCodeAt(4);
         if (fifthCharacter >= 65 && fifthCharacter <= 90) {
-            return key.replace(/^aria/, 'aria-').replace(/([A-Z])/g, '-$1').toLowerCase().replace('aria--', 'aria-');
+            return key
+                .replace(/^aria/, 'aria-')
+                .replace(/([A-Z])/g, '-$1')
+                .toLowerCase()
+                .replace('aria--', 'aria-');
         }
     }
     return key;
@@ -621,12 +613,7 @@ function isValidGenericHTMLAttribute(node: HTMLElement, key: string, value: unkn
     return propertyNameForAttribute(attributeName) in node;
 }
 
-function bindClass(
-    node: HTMLElement,
-    value: ClassType | undefined,
-    getCleanUp: () => CancellationToken,
-    renderSession?: RenderSession
-): void {
+function bindClass(node: HTMLElement, value: ClassType | undefined, getCleanUp: () => CancellationToken, renderSession?: RenderSession): void {
     if (!value) return;
     if (typeof value === 'string') {
         node.setAttribute('class', value);
@@ -635,7 +622,7 @@ function bindClass(
     if (value instanceof DataSource) {
         const cleanUp = getCleanUp();
         registerAurumRenderBinding(value, node, 'class', cleanUp, renderSession);
-        const normalize = (next: unknown): string => Array.isArray(next) ? next.filter(Boolean).join(' ') : String(next ?? '');
+        const normalize = (next: unknown): string => (Array.isArray(next) ? next.filter(Boolean).join(' ') : String(next ?? ''));
         const updateClass = (next: unknown): void => {
             if (cleanUp.isCancelled) return;
             node.setAttribute('class', normalize(next));
@@ -668,12 +655,7 @@ function bindClass(
     }
 }
 
-function bindStyle(
-    node: HTMLElement,
-    value: StyleType | undefined,
-    getCleanUp: () => CancellationToken,
-    renderSession?: RenderSession
-): void {
+function bindStyle(node: HTMLElement, value: StyleType | undefined, getCleanUp: () => CancellationToken, renderSession?: RenderSession): void {
     if (!value) return;
     if (typeof value === 'string') {
         node.setAttribute('style', value);
@@ -717,13 +699,7 @@ export function aurumToHTML(content: Renderable, syncLifecycle?: AurumComponentA
     };
 }
 
-function assignSourceToDOM(
-    node: HTMLElement,
-    data: AttributeValue,
-    attributeName: string,
-    getCleanUp: () => CancellationToken,
-    renderSession?: RenderSession
-) {
+function assignSourceToDOM(node: HTMLElement, data: AttributeValue, attributeName: string, getCleanUp: () => CancellationToken, renderSession?: RenderSession) {
     const propertyName = propertyNameForAttribute(attributeName);
     const bindAsProperty = propertyBoundAttributes.has(attributeName.toLowerCase()) && propertyName in node;
     const assign = (value: string | number | boolean): void => {

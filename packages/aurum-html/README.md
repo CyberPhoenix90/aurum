@@ -1,11 +1,11 @@
-# @aurum/html
+# @aurumjs/html
 
 HTML nodes, DOM rendering, reactive styling, and HTML JSX types for Aurum. Import this package when a JSX module uses HTML or SVG intrinsic tags.
 
 ## Install
 
 ```sh
-npm install @aurum/html
+npm install @aurumjs/html
 ```
 
 Configure TypeScript to compile JSX through Aurum:
@@ -23,15 +23,15 @@ Configure TypeScript to compile JSX through Aurum:
 Then import `Aurum` from the HTML package in files that use intrinsic elements:
 
 ```tsx
-import { Aurum, DataSource } from '@aurum/html';
+import { Aurum, DataSource } from '@aurumjs/html';
 
 const message = new DataSource('Hello Aurum');
 Aurum.attach(<div>{message}</div>, document.body);
 ```
 
-Components that do not use HTML or SVG tags can depend on `@aurum/rendering`; reactive state without rendering can depend on `@aurum/streams` directly.
+Components that do not use HTML or SVG tags can depend on `@aurumjs/rendering`; reactive state without rendering can depend on `@aurumjs/streams` directly.
 
-With `@aurum/vite-plugin` in debug mode, the browser developer tools can trace
+With `@aurumjs/vite-plugin` in debug mode, the browser developer tools can trace
 component instances and reactive HTML content, class, style, and attribute
 bindings back to their source graph. These richer DOM relationships are not
 created in production mode; source topology and subscription information remain
@@ -71,14 +71,14 @@ Callbacks must be synchronous. Use batching for update bursts that touch the sam
 The browser benchmark suite covers initial rendering, primitive collections, collections of components, every public `ArrayDataSource` mutation method, and reactive child updates. Render-batching benchmarks compare the unbatched hot path, repeated writes to one binding, component replacement bursts, and updates to independent bindings. Merge benchmarks separately measure identical snapshots, retained-item rotations and reversals, interleaved subsequence filtering and restoration, 10% and 100% churn, collection growth, truncation to empty, and duplicate-heavy primitive and repeated-component-reference collections. A developer-tools matrix measures scalar updates, rendered collection merges, and component mounting in lean production (with the panel closed and open) and rich debug modes (with stack capture off and on), plus topology polling over 1,000 sources.
 
 ```sh
-npm run benchmark --workspace @aurum/html
+npm run benchmark --workspace @aurumjs/html
 ```
 
 Save a local baseline before a rendering change and compare afterward:
 
 ```sh
-npm run benchmark:save --workspace @aurum/html
-npm run benchmark:compare --workspace @aurum/html
+npm run benchmark:save --workspace @aurumjs/html
+npm run benchmark:compare --workspace @aurumjs/html
 ```
 
 Benchmarks run in headless Chromium. The baseline file is intentionally local so results are compared on the same machine and browser installation.
@@ -89,15 +89,15 @@ Benchmarks run in headless Chromium. The baseline file is intentionally local so
 
 The following before/after ratios were measured in headless Chromium with 1,000 rendered entries. Each benchmark performs an operation and restores the original state:
 
-| Mutation | Primitive entries | Component entries |
-| --- | ---: | ---: |
-| Replace one middle entry (`set`) | 24.3× | 1.4× |
-| Prepend then shift one entry | 177.9× | 17.5× |
-| Remove and restore 10 left entries | 91.3× | 3.1× |
-| Insert and remove 10 middle entries | 3.0× | 1.5× |
-| Remove and restore 10 middle entries | 2.7× | 1.6× |
-| Remove and restore one middle entry | 2.7× | 2.5× |
-| Remove and restore matching entries (`removeWhere`) | 3.8× | 2.0× |
+| Mutation                                            | Primitive entries | Component entries |
+| --------------------------------------------------- | ----------------: | ----------------: |
+| Replace one middle entry (`set`)                    |             24.3× |              1.4× |
+| Prepend then shift one entry                        |            177.9× |             17.5× |
+| Remove and restore 10 left entries                  |             91.3× |              3.1× |
+| Insert and remove 10 middle entries                 |              3.0× |              1.5× |
+| Remove and restore 10 middle entries                |              2.7× |              1.6× |
+| Remove and restore one middle entry                 |              2.7× |              2.5× |
+| Remove and restore matching entries (`removeWhere`) |              3.8× |              2.0× |
 
 Absolute results vary by machine; use the baseline commands above when changing these paths.
 
@@ -110,7 +110,7 @@ Reactive scalar attributes, classes, and styles subscribe directly to their sour
 All regular browser benchmarks compile with production module conditions and `__AURUM_DEVTOOLS_INSTRUMENTATION__` disabled. The developer-tools overhead matrix is intentionally separate because it needs instrumentation present:
 
 ```sh
-npm run benchmark:devtools --workspace @aurum/html
+npm run benchmark:devtools --workspace @aurumjs/html
 ```
 
 ### React TODO comparison
@@ -119,34 +119,34 @@ npm run benchmark:devtools --workspace @aurum/html
 
 Every mutation benchmark restores its own state inside the timed operation so every sample performs real equivalent DOM work; no sample relies on a one-time setup hook or degrades into a no-op. Suites are isolated so only the currently measured implementation retains its fixture in the DOM. On this machine, the comparison measured:
 
-| TODO workload | Faster implementation | Throughput difference |
-| --- | --- | ---: |
-| Mount and dispose 1,000 rows | Tie | 1.0× |
-| Append and remove 1,000 rows | Aurum | 1.1× |
-| Delete and restore 250 deterministic random rows | Aurum | 1.2× |
-| Filter 2,000 rows and restore the full list | Tie | 1.2× |
-| Clear and restore completed rows from 2,000 | Tie | 1.0× |
-| Toggle 250 deterministic random rows twice | Aurum | 9.2× |
-| Edit 250 deterministic random rows | Aurum | 12.0× |
+| TODO workload                                    | Faster implementation | Throughput difference |
+| ------------------------------------------------ | --------------------- | --------------------: |
+| Mount and dispose 1,000 rows                     | Tie                   |                  1.0× |
+| Append and remove 1,000 rows                     | Aurum                 |                  1.1× |
+| Delete and restore 250 deterministic random rows | Aurum                 |                  1.2× |
+| Filter 2,000 rows and restore the full list      | Tie                   |                  1.2× |
+| Clear and restore completed rows from 2,000      | Tie                   |                  1.0× |
+| Toggle 250 deterministic random rows twice       | Aurum                 |                  9.2× |
+| Edit 250 deterministic random rows               | Aurum                 |                 12.0× |
 
 Compared with the previous renderer and instrumented-production path on this machine, Aurum's 1,000-row mount/dispose time fell from 557 ms to 22 ms (25.7×), append/remove fell from 548 ms to 24 ms (23.2×), random delete/restore fell from 143 ms to 6.3 ms (22.8×), filtering fell from 779 ms to 32 ms (24.3×), and clear/restore fell from 408 ms to 15 ms (28.1×). This measures synchronous operation completion, not animation-frame consistency or input latency under a sustained stream. The retained-row toggle and edit cases are the closest workloads here to a streaming application, and those continue to favor Aurum. Run only this comparison with:
 
 ```sh
-npm run benchmark --workspace @aurum/html -- todo_app_comparison
+npm run benchmark --workspace @aurumjs/html -- todo_app_comparison
 ```
 
 The module also contains a low-sample 10× stress tier. Structural operations are slow enough that it uses three measured samples after one warmup; its ratios are directional and have wider error margins:
 
-| 10× TODO workload | React mean | Aurum mean | Faster implementation |
-| --- | ---: | ---: | ---: |
-| Append and remove 10,000 rows | 528 ms | 532 ms | Tie, 1.0× |
-| Delete and restore 2,500 deterministic random rows | 59 ms | 64 ms | Tie, 1.1× |
-| Filter 10,000 rows and restore the full list | 135 ms | 180 ms | React, 1.34× |
-| Toggle 2,500 deterministic random rows twice | 48 ms | 13 ms | Aurum, 3.7× |
-| Edit 2,500 deterministic random rows | 27 ms | 3.8 ms | Aurum, 6.9× |
+| 10× TODO workload                                  | React mean | Aurum mean | Faster implementation |
+| -------------------------------------------------- | ---------: | ---------: | --------------------: |
+| Append and remove 10,000 rows                      |     528 ms |     532 ms |             Tie, 1.0× |
+| Delete and restore 2,500 deterministic random rows |      59 ms |      64 ms |             Tie, 1.1× |
+| Filter 10,000 rows and restore the full list       |     135 ms |     180 ms |          React, 1.34× |
+| Toggle 2,500 deterministic random rows twice       |      48 ms |      13 ms |           Aurum, 3.7× |
+| Edit 2,500 deterministic random rows               |      27 ms |     3.8 ms |           Aurum, 6.9× |
 
 At 10× scale, React retains a smaller structural advantage while Aurum keeps its fine-grained update advantage. Run only the stress tier with:
 
 ```sh
-npm run benchmark --workspace @aurum/html -- todo_app_comparison -t "10× stress"
+npm run benchmark --workspace @aurumjs/html -- todo_app_comparison -t "10× stress"
 ```

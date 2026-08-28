@@ -1,5 +1,5 @@
-import { CancellationToken, DataSource } from '@aurum/streams';
-import { RemoteClient, WebSocketFactory } from '@aurum/remote';
+import { CancellationToken, DataSource } from '@aurumjs/streams';
+import { RemoteClient, WebSocketFactory } from '@aurumjs/remote';
 import WebSocket from 'ws';
 import { AurumServer } from '../src/server.js';
 

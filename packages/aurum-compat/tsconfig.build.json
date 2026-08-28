@@ -7,7 +7,7 @@
         "rootDir": "src",
         "outDir": "prebuilt/esnext",
         "jsx": "react-jsx",
-        "jsxImportSource": "@aurum/compat",
+        "jsxImportSource": "@aurumjs/compat",
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,

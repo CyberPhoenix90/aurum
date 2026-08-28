@@ -1,4 +1,4 @@
-import { ArrayDataSource, CancellationToken, CollectionChange, CollectionItemIdentity, DataSource, EventEmitter } from '@aurum/streams';
+import { ArrayDataSource, CancellationToken, CollectionChange, CollectionItemIdentity, DataSource, EventEmitter } from '@aurumjs/streams';
 import {
     AurumElementModel,
     aurumElementModelIdentitiy,
@@ -61,12 +61,7 @@ export type RenderTreePatch =
     | { type: 'set-text'; node: RenderTreeTextNode; previousValue: string; value: string }
     | { type: 'set-property'; node: RenderTreeElementNode; key: string; previousValue: unknown; value: unknown };
 
-export type RenderTreePropertyResolver = (
-    key: string,
-    value: unknown,
-    lifetime: CancellationToken,
-    node: RenderTreeElementNode
-) => unknown;
+export type RenderTreePropertyResolver = (key: string, value: unknown, lifetime: CancellationToken, node: RenderTreeElementNode) => unknown;
 
 export interface RenderTreeOptions {
     cancellationToken?: CancellationToken;
@@ -207,11 +202,7 @@ export interface HostedRender<Node> {
  * inspectable tree can consume RenderTree directly; hosts can use this helper
  * to receive the same incremental operations without implementing traversal.
  */
-export function renderToHost<Node>(
-    content: Renderable,
-    host: RendererHost<Node>,
-    options: RenderTreeOptions | CancellationToken = {}
-): HostedRender<Node> {
+export function renderToHost<Node>(content: Renderable, host: RendererHost<Node>, options: RenderTreeOptions | CancellationToken = {}): HostedRender<Node> {
     const tree = renderToTree(content, options);
     const nodes = new WeakMap<RenderTreeNode, Node>();
 
@@ -445,15 +436,7 @@ function renderArrayDataSource(
         for (let offset = 0; offset < values.length; offset++) {
             const entry = createEntry(values[offset], identities[offset]);
             entry.rendered = true;
-            entry.nodes = renderContent(
-                values[offset] as Renderable,
-                entry.scope.token,
-                range,
-                tree,
-                resolveProperty,
-                deferredRenderScope,
-                nodeIndex
-            );
+            entry.nodes = renderContent(values[offset] as Renderable, entry.scope.token, range, tree, resolveProperty, deferredRenderScope, nodeIndex);
             nodeIndex += entry.nodes.length;
             added.push(entry);
         }
@@ -508,11 +491,7 @@ function renderArrayDataSource(
                 return;
             }
         }
-        if (
-            desiredIdentities.length === entries.length &&
-            !tree.onPatch.hasSubscriptions() &&
-            !tree.onChange.hasSubscriptions()
-        ) {
+        if (desiredIdentities.length === entries.length && !tree.onPatch.hasSubscriptions() && !tree.onChange.hasSubscriptions()) {
             const entriesByIdentity = new Map(entries.map((entry) => [entry.identity, entry]));
             const desiredEntries = desiredIdentities.map((identity) => entriesByIdentity.get(identity));
             if (desiredEntries.every((entry): entry is ArrayRenderEntry => entry !== undefined)) {

@@ -1,10 +1,10 @@
-import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '@aurum/streams';
-import { dsMap, dsUnique } from '@aurum/streams';
-import { CancellationToken } from '@aurum/streams';
-import { aurumClassName, camelCaseToKebabCase } from '@aurum/streams';
-import { ClassType, StyleType, Styles } from '@aurum/streams';
-import { Data, DataWriter } from '@aurum/streams';
-import { isAurumStyleClass } from '@aurum/streams';
+import { ArrayDataSource, DataSource, MapDataSource, ReadOnlyDataSource } from '@aurumjs/streams';
+import { dsMap, dsUnique } from '@aurumjs/streams';
+import { CancellationToken } from '@aurumjs/streams';
+import { aurumClassName, camelCaseToKebabCase } from '@aurumjs/streams';
+import { ClassType, StyleType, Styles } from '@aurumjs/streams';
+import { Data, DataWriter } from '@aurumjs/streams';
+import { isAurumStyleClass } from '@aurumjs/streams';
 
 export function isDataWriter<T>(source: ReadOnlyDataSource<T>): source is ReadOnlyDataSource<T> & DataWriter<T> {
     return typeof (source as { write?: unknown }).write === 'function';
@@ -61,7 +61,7 @@ export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<s
     }
 }
 
-function buildClass(data: Array<string | import('@aurum/streams').AurumStyleClass | ReadOnlyDataSource<string>>, cleanUp: CancellationToken): string {
+function buildClass(data: Array<string | import('@aurumjs/streams').AurumStyleClass | ReadOnlyDataSource<string>>, cleanUp: CancellationToken): string {
     return data.reduce<string>((p, c) => {
         if (c == null) {
             return p;
@@ -87,7 +87,7 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
     } else if (data instanceof DataSource) {
         return data.transform(
             dsUnique(),
-            dsMap((value) => typeof value === 'string' ? value : serializeStyleSnapshot(value as Styles)),
+            dsMap((value) => (typeof value === 'string' ? value : serializeStyleSnapshot(value as Styles))),
             cleanUp
         );
     } else if (data instanceof MapDataSource) {

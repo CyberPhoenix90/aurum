@@ -18,7 +18,7 @@
     "scripts": {
         "build": "npm run build --workspaces --if-present",
         "test": "npm run test --workspaces --if-present",
-        "devtools:build": "npm run build --workspace @aurum/vite-plugin && npm run build --workspace @aurum/devtools-extension",
+        "devtools:build": "npm run build --workspace @aurumjs/vite-plugin && npm run build --workspace @aurumjs/devtools-extension",
         "test:install-browser": "playwright install chromium",
         "clean": "node scripts/clean.mjs",
         "package": "node scripts/prepare-pack.mjs && npm pack --workspaces --pack-destination artifacts"

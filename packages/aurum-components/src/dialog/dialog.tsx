@@ -1,4 +1,4 @@
-import { Aurum, AurumComponentAPI, ClassType, combineStyle, Renderable, StyleType } from '@aurum/html';
+import { Aurum, AurumComponentAPI, ClassType, combineStyle, Renderable, StyleType } from '@aurumjs/html';
 
 export interface DialogProps {
     class?: ClassType;

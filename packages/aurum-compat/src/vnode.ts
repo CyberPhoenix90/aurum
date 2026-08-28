@@ -1,11 +1,11 @@
 import type { CompatElement, ComponentType, Key, ReactNode, Ref } from './types.js';
 
-export const COMPAT_ELEMENT = Symbol.for('@aurum/compat.element');
-export const Fragment = Symbol.for('@aurum/compat.fragment');
-export const PORTAL = Symbol.for('@aurum/compat.portal');
-export const MEMO = Symbol.for('@aurum/compat.memo');
-export const FORWARD_REF = Symbol.for('@aurum/compat.forward-ref');
-export const CONTEXT_PROVIDER = Symbol.for('@aurum/compat.context-provider');
+export const COMPAT_ELEMENT = Symbol.for('@aurumjs/compat.element');
+export const Fragment = Symbol.for('@aurumjs/compat.fragment');
+export const PORTAL = Symbol.for('@aurumjs/compat.portal');
+export const MEMO = Symbol.for('@aurumjs/compat.memo');
+export const FORWARD_REF = Symbol.for('@aurumjs/compat.forward-ref');
+export const CONTEXT_PROVIDER = Symbol.for('@aurumjs/compat.context-provider');
 
 export interface InternalCompatElement<P = any, T = any> extends CompatElement<P, T> {
     readonly $$typeof: typeof COMPAT_ELEMENT;

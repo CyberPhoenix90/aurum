@@ -1,5 +1,5 @@
 declare module 'virtual:aurum-devtools/config' {
-    import type { AurumDevtoolsBuildConfig, ResolvedAurumDevtoolsMode } from '@aurum/vite-plugin';
+    import type { AurumDevtoolsBuildConfig, ResolvedAurumDevtoolsMode } from '@aurumjs/vite-plugin';
 
     export const mode: ResolvedAurumDevtoolsMode;
     export const captureStacks: boolean;

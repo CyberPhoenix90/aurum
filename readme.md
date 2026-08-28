@@ -2,13 +2,13 @@
 
 The framework is split into focused scoped packages:
 
-- `@aurum/streams` for reactive state and transformations
-- `@aurum/rendering` for the platform-neutral component engine
-- `@aurum/html` for HTML nodes and browser/string/VDOM adapters
-- `@aurum/remote` and `@aurum/server` for remote data sources and RPC
-- `@aurum/canvas` and `@aurum/components` for the higher-level libraries
-- `@aurum/vite-plugin` for debug/production developer-tool metadata policy
-- `@aurum/devtools-extension` for the Chromium DevTools data-flow inspector
+- `@aurumjs/streams` for reactive state and transformations
+- `@aurumjs/rendering` for the platform-neutral component engine
+- `@aurumjs/html` for HTML nodes and browser/string/VDOM adapters
+- `@aurumjs/remote` and `@aurumjs/server` for remote data sources and RPC
+- `@aurumjs/canvas` and `@aurumjs/components` for the higher-level libraries
+- `@aurumjs/vite-plugin` for debug/production developer-tool metadata policy
+- `@aurumjs/devtools-extension` for the Chromium DevTools data-flow inspector
 
 This repository uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for all packages.
 
@@ -31,7 +31,7 @@ Add the Vite plugin to an application to retain rich source, transformation,
 subscription, component, and render-binding metadata during development:
 
 ```ts
-import { aurumDevtools } from '@aurum/vite-plugin';
+import { aurumDevtools } from '@aurumjs/vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -61,4 +61,4 @@ extension page and open the **Aurum** panel in DevTools.
 npm run package
 ```
 
-This builds every workspace and writes publishable tarballs to `artifacts/`. To inspect one without publishing, run `npm pack --dry-run --workspace @aurum/html`.
+This builds every workspace and writes publishable tarballs to `artifacts/`. To inspect one without publishing, run `npm pack --dry-run --workspace @aurumjs/html`.

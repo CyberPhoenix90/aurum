@@ -1,17 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-    configureAurumDevtools,
-    DataSource,
-    getAurumDevtoolsRegistry,
-    resolveAurumDevtoolsNodeId
-} from '@aurum/streams';
-import {
-    AurumComponentAPI,
-    AurumElementModel,
-    aurumElementModelIdentitiy,
-    createLifeCycle,
-    Renderable
-} from '../src/rendering/aurum_element.js';
+import { configureAurumDevtools, DataSource, getAurumDevtoolsRegistry, resolveAurumDevtoolsNodeId } from '@aurumjs/streams';
+import { AurumComponentAPI, AurumElementModel, aurumElementModelIdentitiy, createLifeCycle, Renderable } from '../src/rendering/aurum_element.js';
 import { renderToTree } from '../src/rendering/render_tree.js';
 
 function component(
@@ -63,9 +52,7 @@ describe('renderer developer tooling', () => {
         message.update('updated');
         expect(getAurumDevtoolsRegistry().inspect(sourceId)?.version).toBe(1);
 
-        const rendererNodeIds = snapshot.nodes
-            .filter((node) => node.kind === 'component' || node.kind === 'render-binding')
-            .map((node) => node.id);
+        const rendererNodeIds = snapshot.nodes.filter((node) => node.kind === 'component' || node.kind === 'render-binding').map((node) => node.id);
         tree.dispose();
         const afterDispose = getAurumDevtoolsRegistry().getSnapshot();
         expect(afterDispose.nodes.filter((node) => rendererNodeIds.includes(node.id))).toEqual([]);
@@ -91,9 +78,7 @@ describe('renderer developer tooling', () => {
 
         expect(outer).toBeDefined();
         expect(independent).toBeDefined();
-        expect(snapshot.edges).not.toContainEqual(
-            expect.objectContaining({ source: outer?.id, target: independent?.id, kind: 'component-child' })
-        );
+        expect(snapshot.edges).not.toContainEqual(expect.objectContaining({ source: outer?.id, target: independent?.id, kind: 'component-child' }));
 
         outerTree.dispose();
         independentTree?.dispose();
@@ -119,9 +104,7 @@ describe('renderer developer tooling', () => {
         const child = snapshot.nodes.find((node) => node.kind === 'component' && node.name === 'ReactiveChild');
         expect(parent).toBeDefined();
         expect(child).toBeDefined();
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' }));
 
         tree.dispose();
     });
@@ -150,9 +133,7 @@ describe('renderer developer tooling', () => {
         const child = snapshot.nodes.find((node) => node.kind === 'component' && node.name === 'AsyncChild');
         expect(parent).toBeDefined();
         expect(child).toBeDefined();
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' }));
 
         tree.dispose();
     });
@@ -165,11 +146,7 @@ describe('renderer developer tooling', () => {
             return 'child';
         }
 
-        function PrerenderingParent(
-            _props: Record<string, never>,
-            _children: Renderable[],
-            api: AurumComponentAPI
-        ): Renderable {
+        function PrerenderingParent(_props: Record<string, never>, _children: Renderable[], api: AurumComponentAPI): Renderable {
             componentApi = api;
             return 'parent';
         }
@@ -183,9 +160,7 @@ describe('renderer developer tooling', () => {
         const child = snapshot.nodes.find((node) => node.kind === 'component' && node.name === 'PrerenderedChild');
         expect(parent).toBeDefined();
         expect(child).toBeDefined();
-        expect(snapshot.edges).toContainEqual(
-            expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' })
-        );
+        expect(snapshot.edges).toContainEqual(expect.objectContaining({ source: parent?.id, target: child?.id, kind: 'component-child' }));
 
         lifeCycle.onDetach();
         tree.dispose();
@@ -199,7 +174,11 @@ describe('renderer developer tooling', () => {
             return source;
         }
 
-        const before = new Set(getAurumDevtoolsRegistry().getSnapshot().nodes.map((node) => node.id));
+        const before = new Set(
+            getAurumDevtoolsRegistry()
+                .getSnapshot()
+                .nodes.map((node) => node.id)
+        );
         const tree = renderToTree(component(Component));
         const added = getAurumDevtoolsRegistry()
             .getSnapshot()

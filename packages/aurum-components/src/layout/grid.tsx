@@ -1,4 +1,4 @@
-import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI, css } from '@aurum/html';
+import { Aurum, Renderable, StyleType, ClassType, combineClass, AurumComponentAPI, css } from '@aurumjs/html';
 
 interface GridProps {
     columns?: number;

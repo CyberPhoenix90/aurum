@@ -1,4 +1,4 @@
-import { AurumComponentAPI, createLifeCycle, DataSource, dsUnique, ReadOnlyDataSource, Renderable } from '@aurum/rendering';
+import { AurumComponentAPI, createLifeCycle, DataSource, dsUnique, ReadOnlyDataSource, Renderable } from '@aurumjs/rendering';
 import { CommonProps } from '../common_props.js';
 import { ComponentModel, ComponentType } from '../component_model.js';
 
@@ -25,11 +25,7 @@ export interface TextComponentModel extends ComponentModel {
     lineHeight?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumText(
-    props: AurumTexteProps,
-    children: Renderable[],
-    api: AurumComponentAPI<string | ReadOnlyDataSource<string>>
-): TextComponentModel {
+export function AurumText(props: AurumTexteProps, children: Renderable[], api: AurumComponentAPI<string | ReadOnlyDataSource<string>>): TextComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

@@ -1,4 +1,4 @@
-import { Aurum } from '@aurum/rendering';
+import { Aurum } from '@aurumjs/rendering';
 import { describe, expect, it } from 'vitest';
 import { AurumGroup, AurumRectangle, ComponentType } from '../src/core.js';
 

@@ -1,17 +1,10 @@
-import {
-    Renderable,
-    RenderTree,
-    RenderTreeElementNode,
-    RenderTreeNode,
-    RenderTreePropertyResolver,
-    renderToTree
-} from '@aurum/rendering';
-import { CancellationToken } from '@aurum/streams';
+import { Renderable, RenderTree, RenderTreeElementNode, RenderTreeNode, RenderTreePropertyResolver, renderToTree } from '@aurumjs/rendering';
+import { CancellationToken } from '@aurumjs/streams';
 import { handleClass, handleStyle } from '../../nodes/rendering_helpers.js';
 
-/** @deprecated Use RenderTree from @aurum/rendering. */
+/** @deprecated Use RenderTree from @aurumjs/rendering. */
 export { RenderTree as VDOM };
-/** @deprecated Use RenderTreeNode from @aurum/rendering. */
+/** @deprecated Use RenderTreeNode from @aurumjs/rendering. */
 export type VDOMNode = RenderTreeNode;
 
 export const resolveHTMLRenderTreeProperty: RenderTreePropertyResolver = (

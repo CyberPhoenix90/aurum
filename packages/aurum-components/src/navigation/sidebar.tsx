@@ -10,7 +10,7 @@ import {
     resolveChildren,
     StyleType,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 export interface SidebarProps {
@@ -20,38 +20,38 @@ export interface SidebarProps {
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, highlightColor1: highlight, boxShadow } = theme;
 const style = css`
-            height: 100%;
-            width: 62px;
-            display: flex;
-            flex-direction: column;
-            background: ${color1};
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            box-shadow: ${boxShadow};
+    height: 100%;
+    width: 62px;
+    display: flex;
+    flex-direction: column;
+    background: ${color1};
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    box-shadow: ${boxShadow};
 
-            > ul {
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
+    > ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
 
-            .sidebar-item {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 64px;
-                height: 64px;
-                user-select: none;
-                cursor: pointer;
+    .sidebar-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 64px;
+        height: 64px;
+        user-select: none;
+        cursor: pointer;
 
-                &:hover {
-                    background: ${highlight};
-                }
+        &:hover {
+            background: ${highlight};
+        }
 
-                transition: all 300ms;
-            }
-        `;
+        transition: all 300ms;
+    }
+`;
 
 export function Sidebar(props: SidebarProps, children: Renderable[], api: AurumComponentAPI): Renderable {
     const resolvedChildren = resolveChildren(children, api.cancellationToken, (c) => (c as AurumElementModel<any>).factory === SidebarItem);

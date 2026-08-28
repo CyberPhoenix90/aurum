@@ -10,7 +10,7 @@ import {
     aurumElementModelIdentitiy,
     createLifeCycle,
     dsUnique
-} from '@aurum/rendering';
+} from '@aurumjs/rendering';
 import { AurumCanvasFeatures } from './canvas_feature_model.js';
 import { ComponentModel, ComponentType } from './component_model.js';
 import { BezierCurveComponentModel } from './drawables/aurum_bezier_curve.js';
@@ -171,10 +171,7 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
     subscribePointerEvent(props.onMouseUp, 'onMouseUp');
     subscribePointerEvent(props.onMouseClick, 'onMouseClick');
 
-    function subscribePointerEvent(
-        emitter: EventEmitter<SimplifiedMouseEvent>,
-        handler: 'onMouseDown' | 'onMouseUp' | 'onMouseClick'
-    ): void {
+    function subscribePointerEvent(emitter: EventEmitter<SimplifiedMouseEvent>, handler: 'onMouseDown' | 'onMouseUp' | 'onMouseClick'): void {
         emitter.subscribe((event) => {
             for (const target of hitTargets(event)) {
                 target[handler]?.(event, target);
@@ -411,7 +408,6 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             bindToken.addCancellable(() => lifeCycles.forEach((lifeCycle) => lifeCycle.onDetach()));
             invalidate(canvas);
         }
-
     }
 
     function invalidate(canvas: HTMLCanvasElement | OffscreenCanvas): void {

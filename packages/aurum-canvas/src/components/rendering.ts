@@ -1,4 +1,4 @@
-import { DataSource } from '@aurum/rendering';
+import { DataSource } from '@aurumjs/rendering';
 import { RectangleComponentModel } from './drawables/aurum_rectangle.js';
 import { StateComponentModel } from './drawables/state.js';
 import { TextComponentModel } from './drawables/aurum_text.js';
@@ -579,8 +579,7 @@ export function resolveValues(node: ComponentModel, props: string[], offsetX: nu
                 const rawProgress = progress;
                 progress = state.easing ? state.easing(rawProgress) : rawProgress;
                 const targetValue = deref((state as unknown as Record<string, any>)[key]);
-                result[key] =
-                    typeof baseValue === 'number' && typeof targetValue === 'number' ? baseValue + (targetValue - baseValue) * progress : targetValue;
+                result[key] = typeof baseValue === 'number' && typeof targetValue === 'number' ? baseValue + (targetValue - baseValue) * progress : targetValue;
                 if (rawProgress < 1) {
                     idle = false;
                 }

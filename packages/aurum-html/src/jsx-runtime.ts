@@ -1,4 +1,4 @@
-import type { Renderable } from '@aurum/rendering';
+import type { Renderable } from '@aurumjs/rendering';
 import { Aurum } from './utilities/aurum.js';
 
 export const Fragment = Aurum.fragment;
@@ -30,11 +30,7 @@ function createElement(
 }
 
 /** Automatic JSX production entry point backed directly by Aurum element models. */
-export function jsx(
-    type: string | ((props: any, children: Renderable[], api: any) => Renderable),
-    props: JSXProps | null,
-    key?: string | number
-): Renderable {
+export function jsx(type: string | ((props: any, children: Renderable[], api: any) => Renderable), props: JSXProps | null, key?: string | number): Renderable {
     return createElement(type, props, key);
 }
 

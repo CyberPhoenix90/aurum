@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/compat",
+    "name": "@aurumjs/compat",
     "version": "0.10.0",
     "description": "Optional React-shaped migration runtime backed by Aurum rendering and streams",
     "type": "module",
@@ -27,16 +27,20 @@
             "import": "./prebuilt/esnext/jsx-dev-runtime.js"
         }
     },
-    "files": ["prebuilt", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run",
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/html": "^0.10.0",
-        "@aurum/rendering": "^0.10.0",
-        "@aurum/streams": "^0.10.0"
+        "@aurumjs/html": "^0.10.0",
+        "@aurumjs/rendering": "^0.10.0",
+        "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
         "@vitest/browser": "^4.0.16",

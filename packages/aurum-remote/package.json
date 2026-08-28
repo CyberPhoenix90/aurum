@@ -1,5 +1,5 @@
 {
-    "name": "@aurum/remote",
+    "name": "@aurumjs/remote",
     "version": "0.10.0",
     "description": "Versioned remote transport and client for Aurum data sources",
     "type": "module",
@@ -15,14 +15,18 @@
             "import": "./prebuilt/esnext/protocol.js"
         }
     },
-    "files": ["prebuilt", "README.md", "LICENSE"],
+    "files": [
+        "prebuilt",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "test": "tsc -p tsconfig.test.json && vitest run",
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@aurum/streams": "^0.10.0"
+        "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
         "vitest": "^4.0.16"
@@ -32,7 +36,12 @@
         "url": "git+https://github.com/CyberPhoenix90/aurum.git",
         "directory": "packages/aurum-remote"
     },
-    "keywords": ["aurum", "websocket", "rpc", "reactive"],
+    "keywords": [
+        "aurum",
+        "websocket",
+        "rpc",
+        "reactive"
+    ],
     "author": "Joao Santos (CyberPhoenix)",
     "license": "MIT"
 }

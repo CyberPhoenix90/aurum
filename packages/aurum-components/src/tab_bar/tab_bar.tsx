@@ -10,41 +10,41 @@ import {
     resolveChildren,
     AurumElementModel,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 const { fontFamily, baseFontSize: size, baseFontColor: fontColor, themeColor1: color1, themeColor2: color2, themeColor3: color3 } = theme;
 const style = css`
-            height: 24px;
-            width: 100%;
-            display: flex;
-            background: ${color1};
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
+    height: 24px;
+    width: 100%;
+    display: flex;
+    background: ${color1};
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
 
-            .close {
-                margin-top: 7px;
-                margin-left: 7px;
-                margin-bottom: 7px;
-            }
+    .close {
+        margin-top: 7px;
+        margin-left: 7px;
+        margin-bottom: 7px;
+    }
 
-            .tab {
-                background: ${color3};
-                cursor: pointer;
-                padding: 2px 8px;
-                margin-right: 1px;
-                user-select: none;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                overflow: hidden;
-            }
+    .tab {
+        background: ${color3};
+        cursor: pointer;
+        padding: 2px 8px;
+        margin-right: 1px;
+        user-select: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
 
-            .selected {
-                font-weight: bold;
-                background: ${color2};
-            }
-        `;
+    .selected {
+        font-weight: bold;
+        background: ${color2};
+    }
+`;
 
 interface TabBarProps<T> {
     keyboardNavigation?: boolean;

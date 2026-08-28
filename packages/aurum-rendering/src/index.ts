@@ -1,4 +1,4 @@
-export * from '@aurum/streams';
+export * from '@aurumjs/streams';
 export * from './rendering/aurum_element.js';
 export * from './rendering/render_tree.js';
 export * from './devtools.js';

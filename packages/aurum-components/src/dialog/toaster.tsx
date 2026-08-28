@@ -12,40 +12,40 @@ import {
     combineStyle,
     StyleType,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 
 const toasterStyle = css`
-            display: flex;
-            width: 100%;
-            position: fixed;
-            top: 100%;
-            z-index: 10000;
-            transition: all 0.4s ease;
-        `;
+    display: flex;
+    width: 100%;
+    position: fixed;
+    top: 100%;
+    z-index: 10000;
+    transition: all 0.4s ease;
+`;
 
 const { fontFamily, heading3FontSize: size, baseFontColor: fontColor, themeColor2: color2, boxShadow, success, warning, error, highContrastFontColor } = theme;
 const toastStyle = css`
-            color: ${fontColor};
-            font-family: ${fontFamily};
-            font-size: ${size};
-            background-color: ${color2};
-            box-shadow: ${boxShadow};
-            margin: auto;
-            padding: 8px;
-            &.success {
-                background-color: ${success};
-                color: ${highContrastFontColor};
-            }
-            &.warn {
-                background-color: ${warning};
-                color: ${highContrastFontColor};
-            }
-            &.error {
-                background-color: ${error};
-                color: ${highContrastFontColor};
-            }
-        `;
+    color: ${fontColor};
+    font-family: ${fontFamily};
+    font-size: ${size};
+    background-color: ${color2};
+    box-shadow: ${boxShadow};
+    margin: auto;
+    padding: 8px;
+    &.success {
+        background-color: ${success};
+        color: ${highContrastFontColor};
+    }
+    &.warn {
+        background-color: ${warning};
+        color: ${highContrastFontColor};
+    }
+    &.error {
+        background-color: ${error};
+        color: ${highContrastFontColor};
+    }
+`;
 
 export interface ToasterProps {
     defaultToastActiveTime: number;
@@ -100,12 +100,15 @@ export function Toaster(props: ToasterProps, children: Renderable[], api: AurumC
             if (toast) {
                 activeToast.update(toast);
                 top.update(85);
-                api.cancellationToken.setTimeout(() => {
-                    top.update(100);
-                    api.cancellationToken.setTimeout(() => {
-                        activeToast.update(undefined);
-                    }, 400);
-                }, (toast as any as AurumElementModel<ToastProps>)?.props?.activeTime ?? props.defaultToastActiveTime);
+                api.cancellationToken.setTimeout(
+                    () => {
+                        top.update(100);
+                        api.cancellationToken.setTimeout(() => {
+                            activeToast.update(undefined);
+                        }, 400);
+                    },
+                    (toast as any as AurumElementModel<ToastProps>)?.props?.activeTime ?? props.defaultToastActiveTime
+                );
             }
         }
     }

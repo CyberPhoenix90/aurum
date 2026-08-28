@@ -15,49 +15,49 @@ import {
     resolveChildren,
     StyleType,
     css
-} from '@aurum/html';
+} from '@aurumjs/html';
 import { theme } from '../theme/theme.js';
 import { FormFieldName, FormType, getFormFieldSource } from '../form/form.js';
 
 const { fontFamily, baseFontSize: size, highlightFontColor: highlightFont, themeColor0: color0, themeColor2: color2, primary, highlightColor1 } = theme;
 const listStyle = css`
-            border-radius: 4px;
-            position: relative;
-            display: inline-flex;
-            justify-content: space-between;
-            border: 2px solid ${color2};
-            box-sizing: border-box;
-            border-style: inset;
-            padding: 4px;
-            font-family: ${fontFamily};
-            font-size: ${size};
-            outline: none;
+    border-radius: 4px;
+    position: relative;
+    display: inline-flex;
+    justify-content: space-between;
+    border: 2px solid ${color2};
+    box-sizing: border-box;
+    border-style: inset;
+    padding: 4px;
+    font-family: ${fontFamily};
+    font-size: ${size};
+    outline: none;
+    color: ${highlightFont};
+    background-color: ${color0};
+    width: 200px;
+    user-select: none;
+
+    ul {
+        width: 100%;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        width: 100%;
+        cursor: pointer;
+
+        &.highlight {
+            background-color: ${highlightColor1};
             color: ${highlightFont};
-            background-color: ${color0};
-            width: 200px;
-            user-select: none;
+        }
+    }
 
-            ul {
-                width: 100%;
-                list-style-type: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            li {
-                width: 100%;
-                cursor: pointer;
-
-                &.highlight {
-                    background-color: ${highlightColor1};
-                    color: ${highlightFont};
-                }
-            }
-
-            &:focus {
-                outline: ${primary} auto 5px;
-            }
-        `;
+    &:focus {
+        outline: ${primary} auto 5px;
+    }
+`;
 
 export interface ListSelectProps<T, F extends object = Record<string, T>> {
     selectedValue?: BindableSource<T>;
@@ -84,11 +84,7 @@ export function ListSelect<T, F extends object = Record<string, T>>(props: ListS
 
     const selectedIndex: MutableSource<number> =
         props.selectedIndex ??
-        (props.selectedValue
-            ? new DataSource(
-                  childSource.findIndex((c) => c.props.value === props.selectedValue.value)
-              )
-            : new DataSource(0));
+        (props.selectedValue ? new DataSource(childSource.findIndex((c) => c.props.value === props.selectedValue.value)) : new DataSource(0));
     let childContainer: HTMLUListElement;
 
     if (props.selectedValue) {
@@ -158,7 +154,9 @@ export function ListSelect<T, F extends object = Record<string, T>>(props: ListS
                 {childSource.map((e) => (
                     <li
                         class={
-                            selectedIndex.transform(dsMap<number, string>((v) => (childSource.indexOf(e) === v ? 'highlight' : ''))) as ReadOnlyDataSource<string>
+                            selectedIndex.transform(
+                                dsMap<number, string>((v) => (childSource.indexOf(e) === v ? 'highlight' : ''))
+                            ) as ReadOnlyDataSource<string>
                         }
                         onClick={() => {
                             update(selectedIndex, childSource.indexOf(e));

@@ -44,8 +44,8 @@ export function createPollExpression(clientId: string, fallbackRuntimeId: string
         const clientId = ${encodedClientId};
         const fallbackRuntimeId = ${encodedFallbackRuntimeId};
         const timeToLive = ${ttl};
-        const registryKey = Symbol.for('@aurum/devtools');
-        const bridgeKey = Symbol.for('@aurum/devtools-extension-bridge');
+        const registryKey = Symbol.for('@aurumjs/devtools');
+        const bridgeKey = Symbol.for('@aurumjs/devtools-extension-bridge');
         let registry;
         let previousHub;
         try { registry = globalThis[registryKey] || globalThis.__AURUM_DEVTOOLS__; } catch {}
@@ -413,8 +413,8 @@ export function createInspectExpression(nodeId: string): string {
     return String.raw`(() => {
         let registry;
         let bridge;
-        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
-        try { bridge = globalThis[Symbol.for('@aurum/devtools-extension-bridge')]; } catch {}
+        try { registry = globalThis[Symbol.for('@aurumjs/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        try { bridge = globalThis[Symbol.for('@aurumjs/devtools-extension-bridge')]; } catch {}
         if (!registry || typeof registry.inspect !== 'function') return undefined;
         try {
             const result = registry.inspect(${encodedId});
@@ -430,7 +430,7 @@ export function createHighlightExpression(nodeId: string, duration = 0): string 
     const normalizedDuration = Number.isFinite(duration) ? Math.max(0, Math.min(10_000, duration)) : 0;
     return String.raw`(() => {
         let registry;
-        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        try { registry = globalThis[Symbol.for('@aurumjs/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
         if (!registry || typeof registry.highlightDomNode !== 'function') return false;
         try { return registry.highlightDomNode(${encodedId}, ${normalizedDuration}) === true; }
         catch { return false; }
@@ -440,7 +440,7 @@ export function createHighlightExpression(nodeId: string, duration = 0): string 
 export function createClearHighlightExpression(): string {
     return String.raw`(() => {
         let registry;
-        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        try { registry = globalThis[Symbol.for('@aurumjs/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
         if (!registry || typeof registry.clearDomNodeHighlight !== 'function') return;
         try { registry.clearDomNodeHighlight(); } catch {}
     })()`;
@@ -450,7 +450,7 @@ export function createSetUpdateBreakpointExpression(nodeId: string, enabled: boo
     const encodedId = JSON.stringify(nodeId);
     return String.raw`(() => {
         let registry;
-        try { registry = globalThis[Symbol.for('@aurum/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
+        try { registry = globalThis[Symbol.for('@aurumjs/devtools')] || globalThis.__AURUM_DEVTOOLS__; } catch {}
         if (!registry || typeof registry.setUpdateBreakpoint !== 'function') return undefined;
         try { return registry.setUpdateBreakpoint(${encodedId}, ${enabled}) === true; }
         catch { return undefined; }
@@ -460,7 +460,7 @@ export function createSetUpdateBreakpointExpression(nodeId: string, enabled: boo
 export function createDisposeExpression(clientId: string): string {
     const encodedClientId = JSON.stringify(clientId);
     return String.raw`(() => {
-        const bridgeKey = Symbol.for('@aurum/devtools-extension-bridge');
+        const bridgeKey = Symbol.for('@aurumjs/devtools-extension-bridge');
         let hub;
         try { hub = globalThis[bridgeKey]; } catch {}
         if (!hub) return;
@@ -520,9 +520,10 @@ function evaluateInPage(expression: string): Promise<unknown> {
 }
 
 function createIdentifier(prefix: string): string {
-    const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    const randomPart =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     return `${prefix}-${randomPart}`;
 }
 

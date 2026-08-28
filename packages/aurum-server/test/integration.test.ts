@@ -1,19 +1,11 @@
-import {
-    ArrayDataSource,
-    CancellationToken,
-    DataSource,
-    DuplexDataSource,
-    MapDataSource,
-    ObjectDataSource,
-    SetDataSource
-} from '@aurum/streams';
-import { RemoteClient, RemoteProtocol, WebSocketFactory, WebSocketLike, createRemoteMessage } from '@aurum/remote';
+import { ArrayDataSource, CancellationToken, DataSource, DuplexDataSource, MapDataSource, ObjectDataSource, SetDataSource } from '@aurumjs/streams';
+import { RemoteClient, RemoteProtocol, WebSocketFactory, WebSocketLike, createRemoteMessage } from '@aurumjs/remote';
 import { afterEach, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { AurumServer } from '../src/server.js';
 import { Router } from '../src/router.js';
 
-describe('@aurum/server integration', () => {
+describe('@aurumjs/server integration', () => {
     const servers: AurumServer<any>[] = [];
     const clients: RemoteClient[] = [];
 
@@ -75,7 +67,15 @@ describe('@aurum/server integration', () => {
         object.set('value', 2);
         set.add('two');
         duplex.update('server');
-        await until(() => localScalar.value === 'two' && localArray.get(1) === 2 && localMap.get('two') === 2 && localObject.get('value') === 2 && localSet.has('two') && localDuplex.value === 'server');
+        await until(
+            () =>
+                localScalar.value === 'two' &&
+                localArray.get(1) === 2 &&
+                localMap.get('two') === 2 &&
+                localObject.get('value') === 2 &&
+                localSet.has('two') &&
+                localDuplex.value === 'server'
+        );
 
         object.delete('value');
         await until(() => !localObject.hasKey('value'));

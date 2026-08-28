@@ -1,4 +1,4 @@
-import { DataSource } from '@aurum/rendering';
+import { DataSource } from '@aurumjs/rendering';
 import { ComponentType } from '../src/components/component_model.js';
 import { RectangleComponentModel } from '../src/components/drawables/aurum_rectangle.js';
 import { renderRectangle } from '../src/components/rendering.js';
@@ -42,18 +42,21 @@ function createAnimatedScene(size: number): RectangleComponentModel[] {
 
 function createScene(size: number): RectangleComponentModel[] {
     const hovering = new DataSource(false);
-    return Array.from({ length: size }, (_, index): RectangleComponentModel => ({
-        type: ComponentType.RECTANGLE,
-        x: index % 100,
-        y: Math.floor(index / 100),
-        width: 4,
-        height: 4,
-        fillColor: '#000',
-        opacity: 1,
-        children: [],
-        animations: [],
-        readIsHovering: hovering
-    }));
+    return Array.from(
+        { length: size },
+        (_, index): RectangleComponentModel => ({
+            type: ComponentType.RECTANGLE,
+            x: index % 100,
+            y: Math.floor(index / 100),
+            width: 4,
+            height: 4,
+            fillColor: '#000',
+            opacity: 1,
+            children: [],
+            animations: [],
+            readIsHovering: hovering
+        })
+    );
 }
 
 function benchmark(label: string, operation: () => void): void {

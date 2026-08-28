@@ -1,4 +1,4 @@
-import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle, DataSource } from '@aurum/rendering';
+import { ReadOnlyDataSource, Renderable, AurumComponentAPI, createLifeCycle, DataSource } from '@aurumjs/rendering';
 import { ComponentModel, ComponentType } from '../component_model.js';
 import { CommonProps } from '../common_props.js';
 
@@ -15,7 +15,11 @@ export interface RegularPolygonComponentModel extends ComponentModel {
     radius?: number | ReadOnlyDataSource<number>;
 }
 
-export function AurumRegularPolygon(props: AurumRegularPolygonProps, children: Renderable[], api: AurumComponentAPI<ComponentModel>): RegularPolygonComponentModel {
+export function AurumRegularPolygon(
+    props: AurumRegularPolygonProps,
+    children: Renderable[],
+    api: AurumComponentAPI<ComponentModel>
+): RegularPolygonComponentModel {
     const lc = createLifeCycle();
     api.synchronizeLifeCycle(lc);
     if (props.onAttach) {

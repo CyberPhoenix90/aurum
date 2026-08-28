@@ -1,4 +1,4 @@
-# @aurum/streams
+# @aurumjs/streams
 
 Reactive data sources, collections, channels, operators, and cancellation primitives for Aurum. This package has no JSX or HTML API.
 
@@ -11,7 +11,7 @@ Every occurrence in an `ArrayDataSource` receives an opaque source-owned identit
 `DataSource.transform` composes synchronous and asynchronous operators without a fixed chain-length limit. Operator definitions are reusable: each attached pipeline receives isolated state and shares the transform's `CancellationToken` for timers, queues, subscriptions, and in-flight result suppression.
 
 ```ts
-import { CancellationToken, DataSource, dsDistinct, dsMapAsync, dsScan } from '@aurum/streams';
+import { CancellationToken, DataSource, dsDistinct, dsMapAsync, dsScan } from '@aurumjs/streams';
 
 const lifetime = new CancellationToken();
 const input = new DataSource<number>();
@@ -38,7 +38,7 @@ const selected = await selection.awaitValue((value) => value.length > 0, cancell
 `TreeDataSource` models an ordered, identity-based tree. Give it the property that contains each node's children; native arrays are normalized to `ArrayDataSource`s, including arrays in subtrees inserted later.
 
 ```ts
-import { CancellationToken, TreeDataSource } from '@aurum/streams';
+import { CancellationToken, TreeDataSource } from '@aurumjs/streams';
 
 const tree = new TreeDataSource('children', [{ id: 'root', children: [] }]);
 const cancellation = new CancellationToken();
@@ -57,7 +57,7 @@ The source owns a shallow copy of its initial record. `toObject()` and `toDataSo
 
 ## Developer tools protocol
 
-All stream primitives register with the Aurum inspector. In a browser page the registry is discoverable as both `globalThis.__AURUM_DEVTOOLS__` and `globalThis[Symbol.for('@aurum/devtools')]`; in server and non-browser runtimes it remains module-local and does not modify the global object. Every registry owns a stable `runtimeId`, and its monotonic `revision` lets clients skip unchanged snapshots.
+All stream primitives register with the Aurum inspector. In a browser page the registry is discoverable as both `globalThis.__AURUM_DEVTOOLS__` and `globalThis[Symbol.for('@aurumjs/devtools')]`; in server and non-browser runtimes it remains module-local and does not modify the global object. Every registry owns a stable `runtimeId`, and its monotonic `revision` lets clients skip unchanged snapshots.
 
 Production mode exposes only weak node identities, kinds, graph topology, versions, and subscription counts. Per-key subscription channels are combined as `keys`, while unknown channel names are combined as `other`. It never retains, walks, or exposes values, node names, relationship labels, annotations, or creation stacks, even while an inspector is connected. Debug mode adds those diagnostics, bounded event history, and safe serializable previews limited by depth, entries per container, and a shared node budget. The page-global registry is a frozen public facade; internal node records and weak targets are never attached to the page global.
 
@@ -77,17 +77,17 @@ Setting `__AURUM_DEVTOOLS_INSTRUMENTATION__` to `false` turns stream and rendere
 Custom renderers can participate without depending on stream internals:
 
 ```ts
-import {
-    emitAurumDevtoolsUpdate,
-    linkAurumDevtoolsNodes,
-    registerAurumDevtoolsNode
-} from '@aurum/streams';
+import { emitAurumDevtoolsUpdate, linkAurumDevtoolsNodes, registerAurumDevtoolsNode } from '@aurumjs/streams';
 
-const id = registerAurumDevtoolsNode(binding, {
-    kind: 'render-binding',
-    name: 'status text',
-    getValue: (target) => target.currentValue
-}, lifetime);
+const id = registerAurumDevtoolsNode(
+    binding,
+    {
+        kind: 'render-binding',
+        name: 'status text',
+        getValue: (target) => target.currentValue
+    },
+    lifetime
+);
 
 linkAurumDevtoolsNodes(statusSource, binding, { kind: 'render', label: 'text' }, lifetime);
 emitAurumDevtoolsUpdate(id, { kind: 'rendered', value: binding.currentValue });

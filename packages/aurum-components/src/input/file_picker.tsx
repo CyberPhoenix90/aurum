@@ -1,17 +1,17 @@
-import { Aurum, AurumComponentAPI, BindableSource, combineClass, css, DataSource, Renderable } from '@aurum/html';
+import { Aurum, AurumComponentAPI, BindableSource, combineClass, css, DataSource, Renderable } from '@aurumjs/html';
 import { TextField, TextFieldProps } from './text_field.js';
 import { Button } from './button.js';
 
 const pickerStyle = css`
-            display: flex;
-            .text-field {
-                width: 176px;
-            }
+    display: flex;
+    .text-field {
+        width: 176px;
+    }
 
-            button {
-                height: 24px;
-            }
-        `;
+    button {
+        height: 24px;
+    }
+`;
 
 export interface FilePickerProps<T extends object = Record<string, string>> extends Omit<TextFieldProps<T>, 'value'> {
     value: BindableSource<string>;

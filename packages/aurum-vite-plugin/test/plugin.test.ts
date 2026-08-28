@@ -121,14 +121,14 @@ describe('aurumDevtools', () => {
         expect(await load('\0virtual:someone-else/config')).toBeUndefined();
     });
 
-    it('integrates with a real Vite production build that includes @aurum/streams', async () => {
+    it('integrates with a real Vite production build that includes @aurumjs/streams', async () => {
         const result = await build({
             root: fileURLToPath(new URL('../../test/fixtures/basic', import.meta.url)),
             configFile: false,
             logLevel: 'silent',
             mode: 'production',
             plugins: [aurumDevtools()],
-            resolve: { alias: { '@aurum/streams': streamsSourceEntry } },
+            resolve: { alias: { '@aurumjs/streams': streamsSourceEntry } },
             build: {
                 minify: false,
                 write: false
@@ -148,14 +148,14 @@ describe('aurumDevtools', () => {
         expect(code).toContain('runtimeMode');
     });
 
-    it('can produce a metadata-rich diagnostic build that includes @aurum/streams', async () => {
+    it('can produce a metadata-rich diagnostic build that includes @aurumjs/streams', async () => {
         const result = await build({
             root: fileURLToPath(new URL('../../test/fixtures/basic', import.meta.url)),
             configFile: false,
             logLevel: 'silent',
             mode: 'production',
             plugins: [aurumDevtools({ mode: 'debug', captureStacks: true })],
-            resolve: { alias: { '@aurum/streams': streamsSourceEntry } },
+            resolve: { alias: { '@aurumjs/streams': streamsSourceEntry } },
             build: {
                 minify: false,
                 write: false
@@ -181,7 +181,7 @@ describe('aurumDevtools', () => {
             logLevel: 'silent',
             mode: 'production',
             plugins: [aurumDevtools({ mode: 'production', instrumentation: false })],
-            resolve: { alias: { '@aurum/streams': streamsSourceEntry } },
+            resolve: { alias: { '@aurumjs/streams': streamsSourceEntry } },
             build: {
                 minify: false,
                 write: false,
@@ -208,7 +208,7 @@ describe('aurumDevtools', () => {
             logLevel: 'silent',
             mode: 'production',
             plugins: [aurumDevtools()],
-            resolve: { alias: { '@aurum/streams': streamsSourceEntry } },
+            resolve: { alias: { '@aurumjs/streams': streamsSourceEntry } },
             build: {
                 minify: false,
                 write: false,
