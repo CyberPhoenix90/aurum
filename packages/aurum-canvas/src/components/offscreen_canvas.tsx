@@ -132,9 +132,10 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
     props.onMouseMove.subscribe((event) => {
         const nextHovered = new Set<ComponentModel>();
         const targets = hitTargets(event);
+        const targetSet = new Set(targets);
 
         for (const target of hovered) {
-            if (!targets.includes(target)) {
+            if (!targetSet.has(target)) {
                 target.readIsHovering.update(false);
                 target.onMouseLeave?.(event, target);
             }
@@ -153,7 +154,13 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
         }
 
         hovered = nextHovered;
-        const cursorTarget = [...nextHovered].find((target) => target.cursor !== undefined);
+        let cursorTarget: ComponentModel | undefined;
+        for (const target of nextHovered) {
+            if (target.cursor !== undefined) {
+                cursorTarget = target;
+                break;
+            }
+        }
         if (cursorTarget !== cursorOwner) {
             cursorOwner = cursorTarget;
             setCursor(cursorTarget ? deref(cursorTarget.cursor) : 'auto');
@@ -180,7 +187,14 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
 
     function hitTargets(event: SimplifiedMouseEvent): ComponentModel[] {
         const context = props.canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-        return paintOrder.filter((target) => isOnTopOf(event, target, context)).reverse();
+        const targets: ComponentModel[] = [];
+        for (let index = paintOrder.length - 1; index >= 0; index--) {
+            const target = paintOrder[index];
+            if (isOnTopOf(event, target, context)) {
+                targets.push(target);
+            }
+        }
+        return targets;
     }
 
     function setCursor(cursor: string): void {
@@ -480,7 +494,12 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             return;
         }
 
-        context.save();
+        // Groups draw nothing and change no context state, so they need no save/restore scope
+        // unless they apply color blending to their subtree.
+        const needsContextScope = child.type !== ComponentType.GROUP || child.colorBlending !== undefined;
+        if (needsContextScope) {
+            context.save();
+        }
         let idle = true;
         if (child.colorBlending !== undefined) {
             context.globalCompositeOperation = deref(child.colorBlending);
@@ -528,9 +547,16 @@ export function AurumOffscreenCanvas(props: AurumOffscreenCanvasProps, children:
             invalidate(context.canvas);
         }
 
-        for (const subChild of child.children ?? []) {
-            renderChild(context, subChild, deref(child.x) + offsetX, deref(child.y) + offsetY);
+        const subChildren = child.children;
+        if (subChildren !== undefined && subChildren.length > 0) {
+            const childOffsetX = deref(child.x) + offsetX;
+            const childOffsetY = deref(child.y) + offsetY;
+            for (const subChild of subChildren) {
+                renderChild(context, subChild, childOffsetX, childOffsetY);
+            }
         }
-        context.restore();
+        if (needsContextScope) {
+            context.restore();
+        }
     }
 }

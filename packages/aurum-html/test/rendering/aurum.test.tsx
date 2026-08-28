@@ -481,6 +481,26 @@ describe('Aurum', () => {
         assert((document.getElementById('target').firstChild.firstChild as HTMLDivElement).style.width === '20px');
     });
 
+    it('skips null and undefined values in map data source styles', () => {
+        const ds = new MapDataSource<string, string>();
+        ds.set('color', 'red');
+        ds.set('backgroundColor', null);
+
+        attachToken = Aurum.attach(
+            <div>
+                <p style={ds}>Hello World</p>
+            </div>,
+            document.getElementById('target')
+        );
+
+        const element = document.getElementById('target').firstChild.firstChild as HTMLParagraphElement;
+        assert.equal(element.style.color, 'red');
+        assert.equal(element.style.backgroundColor, '');
+
+        ds.set('backgroundColor', 'green');
+        assert.equal(element.style.backgroundColor, 'green');
+    });
+
     it('should accept map data sources for style', () => {
         const ds = new MapDataSource<string, string>();
         ds.set('color', 'red');

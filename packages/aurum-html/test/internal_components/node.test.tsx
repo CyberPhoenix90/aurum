@@ -61,7 +61,6 @@ describe('Nodes', () => {
         'aside',
         'audio',
         'em',
-        'heading',
         'iframe',
         'noscript',
         'option',

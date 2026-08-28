@@ -67,6 +67,10 @@ export abstract class AurumElement {
     }
 
     public attachToDom(node: HTMLElement, index: number): void {
+        this.attachToDomBefore(node, node.childNodes[index] ?? null);
+    }
+
+    public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
         if (this.hostNode) {
             throw new Error('Aurum Element is already attached');
         }
@@ -78,13 +82,8 @@ export abstract class AurumElement {
         this.contentStartMarker.owner = this;
         this.contentEndMarker = document.createComment('END Aurum Node ' + id);
         aurumElementDomBounds.set(this, [this.contentStartMarker, this.contentEndMarker]);
-        if (index >= node.childNodes.length) {
-            node.appendChild(this.contentStartMarker);
-            node.appendChild(this.contentEndMarker);
-        } else {
-            node.insertBefore(this.contentStartMarker, node.childNodes[index]);
-            node.insertBefore(this.contentEndMarker, node.childNodes[index + 1]);
-        }
+        node.insertBefore(this.contentStartMarker, referenceNode);
+        node.insertBefore(this.contentEndMarker, referenceNode);
     }
 
     protected getStartIndex(): number {
@@ -233,7 +232,7 @@ export abstract class AurumElement {
         this.linkHostChildren();
     }
 
-    private linkHostChildren(): void {
+    protected linkHostChildren(): void {
         if (!AURUM_DEVTOOLS_DEBUG_BUILD_ENABLED) return;
         linkAurumDomNodeChildren(
             this.hostNode,
@@ -348,6 +347,38 @@ interface ArrayRenderEntry {
     session?: RenderSession;
 }
 
+/**
+ * Marks the members of one longest strictly increasing subsequence.
+ * Entries flagged true can keep their DOM position during a reorder.
+ */
+function markLongestIncreasingSubsequence(sequence: readonly number[]): boolean[] {
+    const stable: boolean[] = new Array(sequence.length).fill(false);
+    if (sequence.length === 0) return stable;
+
+    const predecessors: number[] = new Array(sequence.length);
+    // Indices into sequence of the smallest known tail for each subsequence length.
+    const tails: number[] = [];
+    for (let index = 0; index < sequence.length; index++) {
+        const value = sequence[index];
+        let low = 0;
+        let high = tails.length;
+        while (low < high) {
+            const mid = (low + high) >> 1;
+            if (sequence[tails[mid]] < value) low = mid + 1;
+            else high = mid;
+        }
+        predecessors[index] = low > 0 ? tails[low - 1] : -1;
+        tails[low] = index;
+    }
+
+    let cursor = tails[tails.length - 1];
+    while (cursor !== -1) {
+        stable[cursor] = true;
+        cursor = predecessors[cursor];
+    }
+    return stable;
+}
+
 export class ArrayAurumElement extends AurumElement {
     private static readonly immediateContentCommit = ArrayAurumElement.prototype.handleNewContent;
     private entries: ArrayRenderEntry[] = [];
@@ -374,8 +405,8 @@ export class ArrayAurumElement extends AurumElement {
         super.dispose();
     }
 
-    public attachToDom(node: HTMLElement, index: number): void {
-        super.attachToDom(node, index);
+    public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
+        super.attachToDomBefore(node, referenceNode);
         //@ts-ignore
         this.contentStartMarker.dataSource = this.dataSource;
         //@ts-ignore
@@ -421,11 +452,6 @@ export class ArrayAurumElement extends AurumElement {
 
     private synchronizeChildren(): void {
         this.children = this.entries.map((entry) => entry.rendered);
-    }
-
-    private spliceEntries(index: number, amount: number, ...newEntries: ArrayRenderEntry[]): void {
-        const removed = this.entries.splice(index, amount, ...newEntries);
-        for (const entry of removed) entry.session?.sessionToken.cancel();
     }
 
     private removeEntriesFromDom(index: number, count: number): void {
@@ -647,6 +673,92 @@ export class ArrayAurumElement extends AurumElement {
         return false;
     }
 
+    /**
+     * Keyed reconciliation for arbitrary merges: retained entries forming a longest
+     * increasing subsequence of the previous order stay put, everything else is
+     * moved or inserted right-to-left against a stable anchor. DOM operations are
+     * proportional to the entries that actually changed position.
+     */
+    private applyMergeReconciliation(
+        desiredIdentities: readonly CollectionItemIdentity[],
+        desiredValues: readonly DOMRenderInput[],
+        attachCalls: Array<() => void>
+    ): void {
+        const entriesByIdentity = new Map(this.entries.map((entry) => [entry.identity, entry]));
+        const retainedEntries = new Set<ArrayRenderEntry>();
+        const desiredEntries: ArrayRenderEntry[] = new Array(desiredValues.length);
+        const isNewEntry: boolean[] = new Array(desiredValues.length);
+        for (let index = 0; index < desiredValues.length; index++) {
+            const retained = entriesByIdentity.get(desiredIdentities[index]);
+            if (retained !== undefined) {
+                desiredEntries[index] = retained;
+                isNewEntry[index] = false;
+                retainedEntries.add(retained);
+            } else {
+                desiredEntries[index] = this.renderEntry(desiredValues[index], desiredIdentities[index], attachCalls);
+                isNewEntry[index] = true;
+            }
+        }
+
+        const removedEntries: ArrayRenderEntry[] = [];
+        const previousIndexByEntry = new Map<ArrayRenderEntry, number>();
+        for (let index = 0; index < this.entries.length; index++) {
+            const entry = this.entries[index];
+            if (retainedEntries.has(entry)) {
+                previousIndexByEntry.set(entry, index);
+            } else {
+                removedEntries.push(entry);
+            }
+        }
+        if (removedEntries.length > 0) {
+            this.detachEntriesFromDom(removedEntries);
+        }
+
+        if (retainedEntries.size === 0 && desiredEntries.every((entry) => !(entry.rendered instanceof AurumElement))) {
+            const fragment = document.createDocumentFragment();
+            for (const entry of desiredEntries) fragment.appendChild(entry.rendered as Node);
+            this.hostNode.insertBefore(fragment, this.contentEndMarker);
+        } else {
+            const retainedDesiredIndices: number[] = [];
+            const previousOrder: number[] = [];
+            for (let index = 0; index < desiredEntries.length; index++) {
+                if (!isNewEntry[index]) {
+                    retainedDesiredIndices.push(index);
+                    previousOrder.push(previousIndexByEntry.get(desiredEntries[index]));
+                }
+            }
+            const stableFlags = markLongestIncreasingSubsequence(previousOrder);
+            const stableByDesiredIndex: boolean[] = new Array(desiredEntries.length).fill(false);
+            for (let sequenceIndex = 0; sequenceIndex < retainedDesiredIndices.length; sequenceIndex++) {
+                if (stableFlags[sequenceIndex]) stableByDesiredIndex[retainedDesiredIndices[sequenceIndex]] = true;
+            }
+
+            let anchor: Node = this.contentEndMarker;
+            for (let index = desiredEntries.length - 1; index >= 0; index--) {
+                const rendered = desiredEntries[index].rendered;
+                if (stableByDesiredIndex[index]) {
+                    anchor = this.firstDomNode(rendered);
+                    continue;
+                }
+                if (isNewEntry[index]) {
+                    if (rendered instanceof AurumElement) {
+                        rendered.attachToDomBefore(this.hostNode, anchor);
+                    } else {
+                        this.hostNode.insertBefore(rendered, anchor);
+                    }
+                } else {
+                    this.moveRenderedBefore(rendered, anchor);
+                }
+                anchor = this.firstDomNode(rendered);
+            }
+        }
+
+        this.entries = desiredEntries;
+        this.synchronizeChildren();
+        this.lastEndIndex = undefined;
+        this.linkHostChildren();
+    }
+
     private handleNewContent(change: CollectionChange<DOMRenderInput>): void {
         if (this.hostNode === undefined) {
             throw new Error('illegal state: Aurum element was not attched to anything');
@@ -696,30 +808,15 @@ export class ArrayAurumElement extends AurumElement {
                     break;
                 }
 
-                const entriesByIdentity = new Map(this.entries.map((entry) => [entry.identity, entry]));
-                let createdEntry = false;
-                const desiredEntries = change.newState.map((value, index) => {
-                    const retainedEntry = entriesByIdentity.get(desiredIdentities[index]);
-                    if (retainedEntry) return retainedEntry;
-                    createdEntry = true;
-                    return this.renderEntry(value, desiredIdentities[index], attachCalls);
-                });
-                if (createdEntry || desiredEntries.length !== this.entries.length) {
-                    const retained = new Set(desiredEntries);
-                    for (const entry of this.entries) {
-                        if (!retained.has(entry)) entry.session?.sessionToken.cancel();
-                    }
-                }
-                this.entries = desiredEntries;
+                this.applyMergeReconciliation(desiredIdentities, change.newState, attachCalls);
+                optimized = true;
                 break;
             }
             case 'remove':
             case 'removeLeft':
+            case 'removeRight':
                 this.removeEntriesFromDom(change.index, change.items.length);
                 optimized = true;
-                break;
-            case 'removeRight':
-                this.spliceEntries(change.index, change.items.length);
                 break;
             case 'append': {
                 this.insertEntries(this.entries.length, change.items, change.itemIdentities, attachCalls);
@@ -857,7 +954,9 @@ export class ArrayAurumElement extends AurumElement {
 
     private moveRenderedBefore(rendered: Rendered, referenceNode: Node): void {
         if (!(rendered instanceof AurumElement)) {
-            this.hostNode.insertBefore(rendered, referenceNode);
+            if (rendered.nextSibling !== referenceNode) {
+                this.hostNode.insertBefore(rendered, referenceNode);
+            }
             return;
         }
 
@@ -912,8 +1011,8 @@ export class SingularAurumElement extends AurumElement {
         super.dispose();
     }
 
-    public attachToDom(node: HTMLElement, index: number): void {
-        super.attachToDom(node, index);
+    public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
+        super.attachToDomBefore(node, referenceNode);
         //@ts-ignore
         this.contentStartMarker.dataSource = this.dataSource;
         //@ts-ignore
@@ -1004,8 +1103,8 @@ class StaticAurumElement extends AurumElement {
         this.children = children;
     }
 
-    public attachToDom(node: HTMLElement, index: number): void {
-        super.attachToDom(node, index);
+    public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
+        super.attachToDomBefore(node, referenceNode);
         this.updateDom();
     }
 

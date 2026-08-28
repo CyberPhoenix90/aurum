@@ -78,7 +78,7 @@ export interface AreaProps extends HTMLNodeProps<HTMLAreaElement> {
  */
 export const Area = DomNodeCreator<AreaProps>('area', [
     'alt',
-    'coors',
+    'coords',
     'download',
     'href',
     'hreflang',
@@ -174,7 +174,7 @@ export const Video = DomNodeCreator<VideoProps>(
         'playsinline'
     ],
     {
-        canPlay: 'onCanPlay',
+        canplay: 'onCanPlay',
         canplaythrough: 'onCanPlayThrough',
         complete: 'onComplete',
         durationchange: 'onDurationChange',
@@ -449,10 +449,6 @@ export const Head = DomNodeCreator<HTMLNodeProps<HTMLHeadElement>>('head');
  * @internal
  */
 export const Header = DomNodeCreator<HTMLNodeProps<HTMLElement>>('header');
-/**
- * @internal
- */
-export const Heading = DomNodeCreator<HTMLNodeProps<HTMLHeadingElement>>('heading');
 /**
  * @internal
  */
@@ -1015,7 +1011,7 @@ export interface LinearGradientProps extends SVGNodeProps {
     y2?: AttributeValue;
 }
 
-export const LinearGradient = DomNodeCreator<LinearGradientProps>('lineargradient', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
+export const LinearGradient = DomNodeCreator<LinearGradientProps>('linearGradient', ['x1', 'y1', 'x2', 'y2', ...commonSvgProps], undefined, undefined, true);
 
 export interface RadialGradientProps extends SVGNodeProps {
     cx?: AttributeValue;
@@ -1027,7 +1023,7 @@ export interface RadialGradientProps extends SVGNodeProps {
 }
 
 export const RadialGradient = DomNodeCreator<RadialGradientProps>(
-    'radialgradient',
+    'radialGradient',
     ['cx', 'cy', 'r', 'fx', 'fy', 'fr', ...commonSvgProps],
     undefined,
     undefined,

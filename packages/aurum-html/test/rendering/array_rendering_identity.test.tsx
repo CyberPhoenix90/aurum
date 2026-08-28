@@ -507,4 +507,74 @@ describe('ArrayDataSource rendering identity', () => {
         assert.strictEqual(rendered[2], initial[0]);
         assert.strictEqual(rendered[3], initial[1]);
     });
+
+    it('reverses merge entries while retaining every DOM node with minimal insertions', () => {
+        const sources = ['a', 'b', 'c', 'd', 'e'].map((key) => <span data-item={key}>{key}</span>);
+        const items = new ArrayDataSource<Renderable>(sources);
+        attachToken = Aurum.attach(<div>{items}</div>, document.getElementById('target'));
+        const before = renderedElements();
+
+        const container = document.querySelector<HTMLElement>('#target > div');
+        const insertBefore = container.insertBefore.bind(container);
+        let insertionCount = 0;
+        container.insertBefore = ((newNode: Node, referenceNode: Node | null) => {
+            insertionCount++;
+            return insertBefore(newNode, referenceNode);
+        }) as typeof container.insertBefore;
+        try {
+            items.merge(sources.slice().reverse());
+        } finally {
+            container.insertBefore = insertBefore;
+        }
+
+        const rendered = renderedElements();
+        assert.deepEqual(
+            rendered.map((node) => node.dataset.item),
+            ['e', 'd', 'c', 'b', 'a']
+        );
+        for (let index = 0; index < before.length; index++) {
+            assert.strictEqual(rendered[before.length - 1 - index], before[index]);
+        }
+        assert.equal(insertionCount, before.length - 1);
+    });
+
+    it('applies a shuffle with additions and removals while retaining surviving DOM nodes', () => {
+        const a = <span data-item="a">a</span>;
+        const b = <span data-item="b">b</span>;
+        const c = <span data-item="c">c</span>;
+        const d = <span data-item="d">d</span>;
+        const addedX = <span data-item="x">x</span>;
+        const addedY = <span data-item="y">y</span>;
+        const items = new ArrayDataSource<Renderable>([a, b, c, d]);
+        attachToken = Aurum.attach(<div>{items}</div>, document.getElementById('target'));
+        const [nodeA, nodeB, nodeC, nodeD] = renderedElements();
+
+        items.merge([d, addedX, b, addedY, a]);
+
+        const rendered = renderedElements();
+        assert.deepEqual(
+            rendered.map((node) => node.dataset.item),
+            ['d', 'x', 'b', 'y', 'a']
+        );
+        assert.strictEqual(rendered[0], nodeD);
+        assert.strictEqual(rendered[2], nodeB);
+        assert.strictEqual(rendered[4], nodeA);
+        assert.isFalse(nodeC.isConnected);
+    });
+
+    it('reverses reactive ranges as whole units and keeps them reactive', () => {
+        const values = [new DataSource<Renderable>('one'), new DataSource<Renderable>('two'), new DataSource<Renderable>('three')];
+        const items = new ArrayDataSource<Renderable>(values);
+        attachToken = Aurum.attach(<div>{items}</div>, document.getElementById('target'));
+        const container = document.querySelector<HTMLElement>('#target > div');
+        assert.equal(container.textContent, 'onetwothree');
+
+        items.merge([values[2], values[1], values[0]]);
+        assert.equal(container.textContent, 'threetwoone');
+
+        values[1].update('TWO');
+        assert.equal(container.textContent, 'threeTWOone');
+        values[0].update('ONE');
+        assert.equal(container.textContent, 'threeTWOONE');
+    });
 });

@@ -209,7 +209,7 @@ export const defaultEvents: MapLike<string> = {
     // Standard DOM-style aliases retained alongside Aurum's historical names.
     doubleclick: 'onDoubleClick',
     keydown: 'onKeyDown',
-    keyPress: 'onKeyPress',
+    keypress: 'onKeyPress',
     keyup: 'onKeyUp',
     contextmenu: 'onContextMenu',
     mousedown: 'onMouseDown',
@@ -469,7 +469,7 @@ function processHTMLNodeInternal(
     renderSession?: RenderSession,
     bindAllValidAttributes: boolean = false
 ): void {
-    const boundAttributes = new Set<string>();
+    let boundAttributes: Set<string> | undefined;
     for (const key of Object.keys(props)) {
         const value = (props as Record<string, unknown>)[key];
         if (value === undefined) continue;
@@ -487,14 +487,14 @@ function processHTMLNodeInternal(
         if (reservedIntrinsicProps.has(key) || typeof value === 'function') continue;
 
         const attributeName = normalizeAttributeName(key);
-        if (boundAttributes.has(attributeName)) continue;
+        if (boundAttributes !== undefined && boundAttributes.has(attributeName)) continue;
         if (
             acceptedAttributes.has(attributeName) ||
             key.includes('-') ||
             (bindAllValidAttributes && isValidGenericHTMLAttribute(node, key, value))
         ) {
             assignSourceToDOM(node, value as AttributeValue, attributeName, getCleanUp, renderSession);
-            boundAttributes.add(attributeName);
+            (boundAttributes ??= new Set()).add(attributeName);
         }
     }
 
@@ -520,7 +520,7 @@ export function createEventHandlers(node: HTMLElement, events: MapLike<string>, 
     }
 }
 
-const attributeAliases: Record<string, string> = {
+const attributeAliases: Record<string, string> = Object.assign(Object.create(null), {
     accessKey: 'accesskey',
     acceptCharset: 'accept-charset',
     autoComplete: 'autocomplete',
@@ -549,7 +549,7 @@ const attributeAliases: Record<string, string> = {
     strokeWidth: 'stroke-width',
     strokeLinecap: 'stroke-linecap',
     strokeLinejoin: 'stroke-linejoin'
-};
+});
 
 const propertyNamesByAttribute: Record<string, string> = {
     'accept-charset': 'acceptCharset',
@@ -600,8 +600,13 @@ const reservedIntrinsicProps = new Set(['children', 'class', 'className', 'decor
 
 function normalizeAttributeName(key: string): string {
     const alias = attributeAliases[key];
-    if (alias) return alias;
-    if (/^aria[A-Z]/.test(key)) return key.replace(/^aria/, 'aria-').replace(/([A-Z])/g, '-$1').toLowerCase().replace('aria--', 'aria-');
+    if (alias !== undefined) return alias;
+    if (key.length > 4 && key.startsWith('aria')) {
+        const fifthCharacter = key.charCodeAt(4);
+        if (fifthCharacter >= 65 && fifthCharacter <= 90) {
+            return key.replace(/^aria/, 'aria-').replace(/([A-Z])/g, '-$1').toLowerCase().replace('aria--', 'aria-');
+        }
+    }
     return key;
 }
 

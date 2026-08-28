@@ -250,6 +250,16 @@ function computeResult(fixed: string, sources: ReadOnlyDataSource<string>[], map
     return result;
 }
 
+const camelCaseToKebabCaseCache = new Map<string, string>();
+
 export function camelCaseToKebabCase(key: string): string {
-    return key.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+    let result = camelCaseToKebabCaseCache.get(key);
+    if (result === undefined) {
+        result = key.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+        // Keys are style/class property names, a small vocabulary in practice. The cap only guards against pathological dynamic keys.
+        if (camelCaseToKebabCaseCache.size < 10000) {
+            camelCaseToKebabCaseCache.set(key, result);
+        }
+    }
+    return result;
 }

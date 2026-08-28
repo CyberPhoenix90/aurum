@@ -246,6 +246,31 @@ describe('initial HTML rendering', () => {
     }
 });
 
+describe('styled element mounting', () => {
+    const styledElements = (
+        <div>
+            {Array.from({ length: 1_000 }, (_, index) => (
+                <span style={{ color: 'red', width: index, paddingLeft: 4 }} class={['item', 'row']}>
+                    {index}
+                </span>
+            ))}
+        </div>
+    );
+    bench(
+        'mount and dispose 1,000 elements with static style objects and class arrays',
+        () => mountForMeasurement(styledElements),
+        benchmarkOptions
+    );
+
+    const reactiveWidths = Array.from({ length: 1_000 }, () => new DataSource(10));
+    mountPersistent(<div>{reactiveWidths.map((width) => <span style={{ color: 'red', width }} />)}</div>);
+    let revision = 0;
+    bench('update all 1,000 reactive style object entries', () => {
+        revision++;
+        for (let index = 0; index < reactiveWidths.length; index++) reactiveWidths[index].update(10 + (revision % 2));
+    }, benchmarkOptions);
+});
+
 const primitiveValues: Renderable[] = Array.from({ length: 1_000 }, (_, index) => `item ${index}`);
 const componentValues = createModels(1_000);
 const createPrimitiveItems = (prefix: string, count: number): Renderable[] =>

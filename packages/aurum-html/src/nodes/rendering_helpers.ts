@@ -35,6 +35,18 @@ export function handleClass(data: ClassType, cleanUp: CancellationToken): Data<s
         const result = aurumClassName(data as any, cleanUp);
         return handleClass(result, cleanUp);
     } else {
+        let hasReactiveValue = false;
+        for (const i of data as Array<string | ReadOnlyDataSource<string>>) {
+            if (i instanceof DataSource) {
+                hasReactiveValue = true;
+                break;
+            }
+        }
+        // Fully static class lists need no reactive machinery.
+        if (!hasReactiveValue) {
+            return buildClass(data, cleanUp);
+        }
+
         const result = new DataSource<string>(buildClass(data, cleanUp));
 
         for (const i of data as Array<string | ReadOnlyDataSource<string>>) {
@@ -81,30 +93,42 @@ export function handleStyle(data: StyleType, cleanUp: CancellationToken): Data<s
     } else if (data instanceof MapDataSource) {
         return data.toEntriesArrayDataSource(cleanUp).reduce<string>(
             (p, c) => {
+                if (c[1] === undefined || c[1] === null) {
+                    return p;
+                }
                 return `${p}${camelCaseToKebabCase(c[0] as string)}:${transformStyle(c[0] as string, c[1])};`;
             },
             '',
             cleanUp
         );
     } else if (typeof data === 'object' && !Array.isArray(data)) {
-        const result = new ArrayDataSource<[string, string | number]>();
         const styles = data as Styles;
-        let index = 0;
+        let hasReactiveValue = false;
+        for (const i in styles) {
+            if (styles[i as keyof Styles] instanceof DataSource) {
+                hasReactiveValue = true;
+                break;
+            }
+        }
+        // Fully static style objects are the most common case and need no reactive machinery.
+        if (!hasReactiveValue) {
+            return serializeStyleSnapshot(styles);
+        }
+
+        const result = new DataSource<string>(serializeStyleSnapshot(styles));
         for (const i in styles) {
             const value = styles[i as keyof Styles];
             if (value instanceof DataSource) {
-                const myIndex = index;
-                result.push([i, value.value]);
-                (value as ReadOnlyDataSource<string | number>).listen((v) => {
-                    result.set(myIndex, [i, v]);
+                (value as ReadOnlyDataSource<string | number>).listen(() => {
+                    const serialized = serializeStyleSnapshot(styles);
+                    if (serialized !== result.value) {
+                        result.update(serialized);
+                    }
                 }, cleanUp);
-            } else if (value !== undefined) {
-                result.push([i, value as string | number]);
             }
-            index++;
         }
 
-        return result.reduce<string>((p, c) => `${p}${camelCaseToKebabCase(c[0])}:${transformStyle(c[0], c[1])};`, '', cleanUp);
+        return result;
     } else {
         return '';
     }

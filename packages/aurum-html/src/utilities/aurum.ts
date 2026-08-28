@@ -44,7 +44,6 @@ import {
     H6,
     Head,
     Header,
-    Heading,
     Hr,
     Html,
     HtmlProps,
@@ -233,7 +232,6 @@ const nodeMap = {
     aside: Aside,
     audio: Audio,
     em: Em,
-    heading: Heading,
     iframe: IFrame,
     noscript: NoScript,
     option: Option,
@@ -275,13 +273,18 @@ const nodeMap = {
     symbol: Symbol,
     use: Use,
     stop: Stop,
+    linearGradient: LinearGradient,
+    radialGradient: RadialGradient,
+    clipPath: ClipPath,
+    pattern: Pattern,
+    mask: Mask,
+    foreignObject: ForeignObject,
+    marker: Marker,
+    // Legacy all-lowercase aliases; SVG tag names are case-sensitive in the DOM.
     lineargradient: LinearGradient,
     radialgradient: RadialGradient,
     clippath: ClipPath,
-    pattern: Pattern,
-    mask: Mask,
-    foreignobject: ForeignObject,
-    marker: Marker
+    foreignobject: ForeignObject
 };
 
 const genericNodeFactories = new Map<string, any>();
@@ -524,7 +527,6 @@ export namespace Aurum {
             aside: HTMLNodeProps<HTMLElement>;
             audio: AudioProps;
             em: HTMLNodeProps<HTMLElement>;
-            heading: HTMLNodeProps<HTMLHeadingElement>;
             iframe: IFrameProps;
             noscript: HTMLNodeProps<HTMLElement>;
             option: OptionProps;
@@ -566,6 +568,8 @@ export namespace Aurum {
             symbol: SymbolProps;
             use: UseProps;
             stop: StopProps;
+            linearGradient: LinearGradientProps;
+            radialGradient: RadialGradientProps;
             lineargradient: LinearGradientProps;
             radialgradient: RadialGradientProps;
             clipPath: ClipPathProps;

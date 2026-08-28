@@ -23,6 +23,23 @@ for (const size of [1_000, 10_000]) {
     });
 }
 
+{
+    const scene = createAnimatedScene(10_000);
+    benchmark('resolve and draw 10,000 animated rectangles', () => {
+        for (const rectangle of scene) {
+            renderRectangle(context, rectangle, 0, 0);
+        }
+    });
+}
+
+function createAnimatedScene(size: number): RectangleComponentModel[] {
+    return createScene(size).map((rectangle) => ({
+        ...rectangle,
+        animationStates: [{ id: 'grow', width: 8, height: 8, transitionTime: 1_000_000_000 } as any],
+        animationTime: Date.now()
+    }));
+}
+
 function createScene(size: number): RectangleComponentModel[] {
     const hovering = new DataSource(false);
     return Array.from({ length: size }, (_, index): RectangleComponentModel => ({

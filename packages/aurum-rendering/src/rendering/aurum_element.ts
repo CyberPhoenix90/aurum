@@ -127,8 +127,10 @@ export interface RenderSession {
     devtoolsComponentStack?: object[];
     /** @internal Component inherited by a child render session or deferred render scope. */
     devtoolsParentComponent?: object;
-    /** @internal Context values inherited by descendant component sessions. */
-    contextValues: Map<AurumContext<unknown>, unknown>;
+    /** @internal Context values inherited by descendant component sessions. Absent until a context is provided. */
+    contextValues?: Map<AurumContext<unknown>, unknown>;
+    /** @internal When true, contextValues is borrowed by or from another session and must be cloned before writing. */
+    contextValuesShared?: boolean;
 }
 
 export type PrerenderStrategy<Prerendered = Renderable> = (
@@ -153,8 +155,12 @@ export function createRenderSession(parentSession?: RenderSession): RenderSessio
         tokens: [],
         devtoolsTargets: [],
         devtoolsParentComponent,
-        contextValues: new Map(parentSession?.contextValues)
+        // Copy-on-write: share the parent's context map instead of copying it for every session.
+        // Both sides clone before their next write, so each keeps snapshot semantics.
+        contextValues: parentSession?.contextValues,
+        contextValuesShared: parentSession?.contextValues !== undefined
     };
+    if (session.contextValuesShared) parentSession.contextValuesShared = true;
     return session;
 }
 
@@ -229,15 +235,23 @@ class DefaultAurumComponentAPI<Prerendered> implements AurumComponentAPI<Prerend
         if (context?.[aurumContextIdentity] !== true) {
             throw new Error('provideContext only accepts contexts created by createContext');
         }
-        this.renderSession.contextValues.set(context as AurumContext<unknown>, value);
+        const session = this.renderSession;
+        if (session.contextValues === undefined) {
+            session.contextValues = new Map();
+        } else if (session.contextValuesShared) {
+            session.contextValues = new Map(session.contextValues);
+            session.contextValuesShared = false;
+        }
+        session.contextValues.set(context as AurumContext<unknown>, value);
     }
 
     public readContext<T>(context: AurumContext<T>): T {
         if (context?.[aurumContextIdentity] !== true) {
             throw new Error('readContext only accepts contexts created by createContext');
         }
-        return this.renderSession.contextValues.has(context as AurumContext<unknown>)
-            ? (this.renderSession.contextValues.get(context as AurumContext<unknown>) as T)
+        const values = this.renderSession.contextValues;
+        return values !== undefined && values.has(context as AurumContext<unknown>)
+            ? (values.get(context as AurumContext<unknown>) as T)
             : context.defaultValue;
     }
 

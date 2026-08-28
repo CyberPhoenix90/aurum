@@ -70,6 +70,51 @@ describe('HTML intrinsic compatibility', () => {
         assert.equal(document.getElementById('no-class-name')!.getAttribute('class'), null);
     });
 
+    it('fires onKeyPress handlers for keypress events', () => {
+        const keys: string[] = [];
+        attachment = Aurum.attach(<div onKeyPress={(event) => keys.push(event.key)} />, document.getElementById('target')!);
+        document.querySelector('#target > div')!.dispatchEvent(new KeyboardEvent('keypress', { key: 'a' }));
+        assert.deepEqual(keys, ['a']);
+    });
+
+    it('fires onCanPlay handlers for video canplay events', () => {
+        let fired = 0;
+        attachment = Aurum.attach(<video onCanPlay={() => fired++} />, document.getElementById('target')!);
+        document.querySelector('#target > video')!.dispatchEvent(new Event('canplay'));
+        assert.equal(fired, 1);
+    });
+
+    it('binds the coords attribute of area elements', () => {
+        attachment = Aurum.attach(
+            <area shape="rect" coords="0,0,10,10" href="#region" alt="region" />,
+            document.getElementById('target')!
+        );
+        assert.equal(document.querySelector('area')!.getAttribute('coords'), '0,0,10,10');
+    });
+
+    it('creates case-sensitive SVG elements for gradients, clip paths, and foreign objects', () => {
+        attachment = Aurum.attach(
+            <svg>
+                <defs>
+                    <linearGradient id="case-lg">
+                        <stop offset="0" stop-color="red" />
+                    </linearGradient>
+                    <radialGradient id="case-rg" />
+                    <lineargradient id="case-lg-legacy" />
+                    <clipPath id="case-cp" />
+                </defs>
+                <foreignObject id="case-fo" width="10" height="10" />
+            </svg>,
+            document.getElementById('target')!
+        );
+
+        assert.instanceOf(document.getElementById('case-lg'), SVGLinearGradientElement);
+        assert.instanceOf(document.getElementById('case-rg'), SVGRadialGradientElement);
+        assert.instanceOf(document.getElementById('case-lg-legacy'), SVGLinearGradientElement);
+        assert.instanceOf(document.getElementById('case-cp'), SVGClipPathElement);
+        assert.instanceOf(document.getElementById('case-fo'), SVGForeignObjectElement);
+    });
+
     it('supports double-click and wheel aliases', () => {
         const events: string[] = [];
         attachment = Aurum.attach(

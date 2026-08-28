@@ -1,4 +1,6 @@
+import { DataSource } from '@aurum/rendering';
 import { RectangleComponentModel } from './drawables/aurum_rectangle.js';
+import { StateComponentModel } from './drawables/state.js';
 import { TextComponentModel } from './drawables/aurum_text.js';
 import { LineComponentModel } from './drawables/aurum_line.js';
 import { ElipseComponentModel } from './drawables/aurum_elipse.js';
@@ -128,16 +130,17 @@ export function renderElipse(
 
     child.onPreDraw?.(child.renderedState);
     context.globalAlpha = opacity;
-    const path2d = new Path2D();
+    let path2d: Path2D | undefined;
 
     if ((fillColor || strokeColor || deref(child.clip)) && rx > 0.01 && ry > 0.01 && (startAngle ?? 0) !== endAngle) {
+        path2d = new Path2D();
         path2d.ellipse(x, y, rx, ry, rotation ?? 0, startAngle ?? 0, endAngle ?? Math.PI * 2);
         child.renderedState.path = path2d;
     } else {
         child.renderedState.path = undefined;
     }
 
-    drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    drawLazyCanvasPath(child, context, path2d, fillColor, strokeColor);
 
     return idle;
 }
@@ -154,10 +157,11 @@ export function renderLine(
     updateOutput(child.readHeight, Math.abs(ty - y));
     child.renderedState = renderedState;
     child.onPreDraw?.(child.renderedState);
-    const path2d = new Path2D();
+    let path2d: Path2D | undefined;
 
     context.globalAlpha = opacity;
     if (fillColor || strokeColor) {
+        path2d = new Path2D();
         context.lineWidth = lineWidth;
         path2d.moveTo(x, y);
         path2d.lineTo(tx, ty);
@@ -166,7 +170,7 @@ export function renderLine(
         child.renderedState.path = undefined;
     }
 
-    drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    drawLazyCanvasPath(child, context, path2d, fillColor, strokeColor);
 
     return idle;
 }
@@ -183,8 +187,9 @@ export function renderQuadraticCurve(
     child.onPreDraw?.(child.renderedState);
 
     context.globalAlpha = opacity;
-    const path2d = new Path2D();
+    let path2d: Path2D | undefined;
     if (fillColor || strokeColor) {
+        path2d = new Path2D();
         path2d.moveTo(x, y);
         path2d.quadraticCurveTo(cx, cy, tx, ty);
         context.lineWidth = lineWidth;
@@ -193,7 +198,7 @@ export function renderQuadraticCurve(
         child.renderedState.path = undefined;
     }
 
-    drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    drawLazyCanvasPath(child, context, path2d, fillColor, strokeColor);
 
     return idle;
 }
@@ -210,8 +215,9 @@ export function renderBezierCurve(
     child.onPreDraw?.(child.renderedState);
 
     context.globalAlpha = opacity;
-    const path2d = new Path2D();
+    let path2d: Path2D | undefined;
     if (fillColor || strokeColor) {
+        path2d = new Path2D();
         path2d.moveTo(x, y);
         path2d.bezierCurveTo(cx, cy, c2x, c2y, tx, ty);
         context.lineWidth = lineWidth;
@@ -220,9 +226,27 @@ export function renderBezierCurve(
         child.renderedState.path = undefined;
     }
 
-    drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    drawLazyCanvasPath(child, context, path2d, fillColor, strokeColor);
 
     return idle;
+}
+
+/**
+ * Draws a lazily built path. When the shape is invisible, the Path2D allocation is skipped
+ * entirely unless clipping still requires one (clipping to an empty path hides all children).
+ */
+function drawLazyCanvasPath(
+    child: CommonProps,
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    path2d: Path2D | undefined,
+    fillColor: any,
+    strokeColor: any
+) {
+    if (path2d !== undefined) {
+        drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    } else if (deref(child.clip)) {
+        context.clip(new Path2D());
+    }
 }
 
 function drawCanvasPath(
@@ -257,7 +281,7 @@ export function renderPath(
     child.renderedState = renderedState;
     child.onPreDraw?.(child.renderedState);
 
-    let path2d: Path2D;
+    let path2d: Path2D | undefined;
     context.globalAlpha = opacity;
     if (path && (fillColor || strokeColor || deref(child.clip))) {
         context.lineWidth = lineWidth;
@@ -267,23 +291,25 @@ export function renderPath(
         child.renderedState.path = undefined;
     }
 
-    if (fillColor) {
-        context.translate(x, y);
-        context.fillStyle = fillColor;
-        context.fill(path2d);
-        context.translate(-x, -y);
-    }
-    if (strokeColor) {
-        context.translate(x, y);
-        context.strokeStyle = strokeColor;
-        context.stroke(path2d);
-        context.translate(-x, -y);
-    }
+    if (path2d !== undefined) {
+        if (fillColor) {
+            context.translate(x, y);
+            context.fillStyle = fillColor;
+            context.fill(path2d);
+            context.translate(-x, -y);
+        }
+        if (strokeColor) {
+            context.translate(x, y);
+            context.strokeStyle = strokeColor;
+            context.stroke(path2d);
+            context.translate(-x, -y);
+        }
 
-    if (deref(child.clip)) {
-        context.translate(x, y);
-        context.clip(path2d);
-        context.translate(-x, -y);
+        if (deref(child.clip)) {
+            context.translate(x, y);
+            context.clip(path2d);
+            context.translate(-x, -y);
+        }
     }
 
     return idle;
@@ -308,9 +334,10 @@ export function renderRegularPolygon(
     if (renderedState.sides < 3) {
         return idle;
     }
-    const path2d = new Path2D();
+    let path2d: Path2D | undefined;
 
     if (fillColor || strokeColor) {
+        path2d = new Path2D();
         let angle = 0;
         for (let i = 0; i < sides; i++) {
             angle += Math.PI / (sides / 2);
@@ -328,7 +355,7 @@ export function renderRegularPolygon(
         child.renderedState.path = undefined;
     }
 
-    drawCanvasPath(child, context, path2d, fillColor, strokeColor);
+    drawLazyCanvasPath(child, context, path2d, fillColor, strokeColor);
 
     return idle;
 }
@@ -476,86 +503,131 @@ export function renderRectangle(
     return idle;
 }
 
+interface ResolveKeyMetadata {
+    hasFillColor: boolean;
+    hasStrokeColor: boolean;
+    hasTx: boolean;
+    hasTy: boolean;
+    hasCx: boolean;
+    hasCy: boolean;
+    hasC2x: boolean;
+    hasC2y: boolean;
+    /** Object with every result key predeclared; cloning it gives each frame's result a stable shape. */
+    template: Record<string, any> & { idle: boolean; x: number; y: number };
+}
+
+// The key arrays are module constants, so per-array facts are computed once instead of per frame.
+const resolveKeyMetadata = new WeakMap<string[], ResolveKeyMetadata>();
+
+function metadataForKeys(keys: string[]): ResolveKeyMetadata {
+    let metadata = resolveKeyMetadata.get(keys);
+    if (metadata === undefined) {
+        const template: Record<string, any> & { idle: boolean; x: number; y: number } = { idle: true, x: 0, y: 0 };
+        for (const key of keys) {
+            template[key] = undefined;
+        }
+        template.x = 0;
+        template.y = 0;
+        metadata = {
+            hasFillColor: keys.includes('fillColor'),
+            hasStrokeColor: keys.includes('strokeColor'),
+            hasTx: keys.includes('tx'),
+            hasTy: keys.includes('ty'),
+            hasCx: keys.includes('cx'),
+            hasCy: keys.includes('cy'),
+            hasC2x: keys.includes('c2x'),
+            hasC2y: keys.includes('c2y'),
+            template
+        };
+        resolveKeyMetadata.set(keys, metadata);
+    }
+    return metadata;
+}
+
 export function resolveValues(node: ComponentModel, props: string[], offsetX: number, offsetY: number, applyOrigin: boolean = true): any {
-    const result: Record<string, any> & { idle: boolean; x: number; y: number } = {
-        idle: true,
-        x: 0,
-        y: 0
-    };
+    const metadata = metadataForKeys(props);
+    // Cloning the pre-shaped template keeps every result object monomorphic and avoids
+    // one hidden-class transition per key per shape per frame.
+    const result: Record<string, any> & { idle: boolean; x: number; y: number } = { ...metadata.template };
     let idle = true;
     const dynamicNode = node as unknown as Record<string, any>;
+    const animationStates = node.animationStates;
 
-    for (const key of props) {
-        const baseValue = deref(dynamicNode[key]);
-        const state = node.animationStates?.find((n) => (n as unknown as Record<string, any>)[key] != undefined);
-        if (state) {
-            let progress: number;
-            if (!state.transitionTime) {
-                progress = 1;
+    if (animationStates === undefined || animationStates.length === 0) {
+        for (const key of props) {
+            const raw = dynamicNode[key];
+            result[key] = raw instanceof DataSource ? raw.value : raw;
+        }
+    } else {
+        const now = Date.now();
+        for (const key of props) {
+            const baseValue = deref(dynamicNode[key]);
+            let state: StateComponentModel | undefined;
+            for (let index = 0; index < animationStates.length; index++) {
+                if ((animationStates[index] as unknown as Record<string, any>)[key] != undefined) {
+                    state = animationStates[index];
+                    break;
+                }
+            }
+            if (state) {
+                let progress: number;
+                if (!state.transitionTime) {
+                    progress = 1;
+                } else {
+                    progress = Math.min(1, (now - node.animationTime) / deref(state.transitionTime));
+                }
+                const rawProgress = progress;
+                progress = state.easing ? state.easing(rawProgress) : rawProgress;
+                const targetValue = deref((state as unknown as Record<string, any>)[key]);
+                result[key] =
+                    typeof baseValue === 'number' && typeof targetValue === 'number' ? baseValue + (targetValue - baseValue) * progress : targetValue;
+                if (rawProgress < 1) {
+                    idle = false;
+                }
             } else {
-                progress = Math.min(1, (Date.now() - node.animationTime) / deref(state.transitionTime));
+                result[key] = baseValue;
             }
-            const rawProgress = progress;
-            const easing = state.easing ?? ((value: number) => value);
-            progress = easing(rawProgress);
-            const targetValue = deref((state as unknown as Record<string, any>)[key]);
-            result[key] = typeof baseValue === 'number' && typeof targetValue === 'number' ? baseValue + (targetValue - baseValue) * progress : targetValue;
-            if (rawProgress < 1) {
-                idle = false;
-            }
-        } else {
-            result[key] = baseValue;
         }
     }
     result.x += offsetX;
     result.y += offsetY;
 
     if (applyOrigin) {
-        //@ts-ignore
         if (result.originX && result.width) {
-            //@ts-ignore
             result.x -= result.width * result.originX;
         }
 
-        //@ts-ignore
         if (result.originY && result.height) {
-            //@ts-ignore
             result.y -= result.height * result.originY;
         }
     }
 
-    if ('fillColor' in result && node.hoverFillColor && node.readIsHovering.value) {
+    if (metadata.hasFillColor && node.hoverFillColor && node.readIsHovering.value) {
         result.fillColor = deref(node.hoverFillColor);
     }
 
-    if ('strokeColor' in result && node.hoverStrokeColor && node.readIsHovering.value) {
+    if (metadata.hasStrokeColor && node.hoverStrokeColor && node.readIsHovering.value) {
         result.strokeColor = deref(node.hoverStrokeColor);
     }
 
-    if ('tx' in result) {
-        //@ts-ignore
+    if (metadata.hasTx) {
         result.tx += offsetX;
     }
-    if ('ty' in result) {
-        //@ts-ignore
+    if (metadata.hasTy) {
         result.ty += offsetY;
     }
 
-    if ('cx' in result) {
-        //@ts-ignore
+    if (metadata.hasCx) {
         result.cx += offsetX;
     }
-    if ('cy' in result) {
-        //@ts-ignore
+    if (metadata.hasCy) {
         result.cy += offsetY;
     }
 
-    if ('c2x' in result) {
-        //@ts-ignore
+    if (metadata.hasC2x) {
         result.c2x += offsetX;
     }
-    if ('c2y' in result) {
-        //@ts-ignore
+    if (metadata.hasC2y) {
         result.c2y += offsetY;
     }
     result.idle = idle;
