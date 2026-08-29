@@ -13,7 +13,7 @@ export function generateSuspenseTests(renderSuspense: (fallback?: Renderable, ch
 
     it('Should not add anything to the DOM', () => {
         attachToken = attachToTestRoot(renderSuspense());
-        assert(Array.from(getTestRoot().firstChild.childNodes).filter((e) => !(e instanceof Comment)).length === 0);
+        assert(Array.from(getTestRoot().firstChild.childNodes).filter((e) => !(e instanceof Comment) && !(e instanceof Text && e.data === "")).length === 0);
     });
 
     it('Should not suspend if content is not a promise', () => {

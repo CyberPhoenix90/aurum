@@ -73,7 +73,7 @@ describe('HTML intrinsic compatibility', () => {
     it('fires onKeyPress handlers for keypress events', () => {
         const keys: string[] = [];
         attachment = Aurum.attach(<div onKeyPress={(event) => keys.push(event.key)} />, document.getElementById('target')!);
-        document.querySelector('#target > div')!.dispatchEvent(new KeyboardEvent('keypress', { key: 'a' }));
+        document.querySelector('#target > div')!.dispatchEvent(new KeyboardEvent('keypress', { key: 'a', bubbles: true }));
         assert.deepEqual(keys, ['a']);
     });
 
@@ -122,7 +122,7 @@ describe('HTML intrinsic compatibility', () => {
             document.getElementById('target')!
         );
         const element = document.querySelector('#target > div')!;
-        element.dispatchEvent(new MouseEvent('dblclick'));
+        element.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
         element.dispatchEvent(new WheelEvent('wheel'));
         assert.deepEqual(events, ['double', 'wheel']);
     });

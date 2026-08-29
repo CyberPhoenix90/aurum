@@ -246,6 +246,16 @@ describe('initial HTML rendering', () => {
     }
 });
 
+describe('reactive text mounting', () => {
+    const labels = Array.from({ length: 1_000 }, (_, index) => new DataSource<Renderable>(`label ${index}`));
+    const reactiveTextElements = <div>{labels.map((label) => <span>{label}</span>)}</div>;
+    bench(
+        'mount and dispose 1,000 elements with reactive text children',
+        () => mountForMeasurement(reactiveTextElements),
+        benchmarkOptions
+    );
+});
+
 describe('styled element mounting', () => {
     const styledElements = (
         <div>

@@ -16,19 +16,17 @@ import { listenToRenderBatchState, queueRenderUpdate } from './render_batch.js';
 
 export type Rendered = AurumElement | HTMLElement | Text | SVGElement;
 type DOMRenderInput = Renderable | Rendered | DOMRenderInput[];
-const aurumElementDomBounds = new WeakMap<AurumElement, readonly [Comment, Comment]>();
-
 export abstract class AurumElement {
     public children: Rendered[];
     protected api: AurumComponentAPI<DOMPrerendered>;
     protected renderScope: RenderSession;
     private static id: number = 1;
 
-    protected contentStartMarker: Comment;
-    protected contentEndMarker: Comment;
+    // End-of-range comment anchor. Content always lives directly before it. A text-only
+    // SingularAurumElement aliases it to its Text node and an empty StaticAurumElement to
+    // its placeholder; the range start is resolved through `children` instead of a marker.
+    protected contentEndMarker: CharacterData;
     protected hostNode: HTMLElement;
-    protected lastStartIndex: number;
-    protected lastEndIndex: number;
     protected disposed: boolean = false;
 
     constructor(dataSource: ArrayDataSource<DOMRenderInput> | DataSource<DOMRenderInput> | undefined, api: AurumComponentAPI<DOMPrerendered>) {
@@ -60,7 +58,6 @@ export abstract class AurumElement {
 
         if (this.hostNode?.isConnected) {
             this.clearContent();
-            this.contentStartMarker.remove();
             this.contentEndMarker.remove();
         }
         this.disposed = true;
@@ -74,160 +71,84 @@ export abstract class AurumElement {
         if (this.hostNode) {
             throw new Error('Aurum Element is already attached');
         }
-        const id = AurumElement.id++;
 
         this.hostNode = node;
-        this.contentStartMarker = document.createComment('START Aurum Node ' + id);
-        //@ts-ignore
-        this.contentStartMarker.owner = this;
-        this.contentEndMarker = document.createComment('END Aurum Node ' + id);
-        aurumElementDomBounds.set(this, [this.contentStartMarker, this.contentEndMarker]);
-        node.insertBefore(this.contentStartMarker, referenceNode);
+        this.createContentMarkers();
         node.insertBefore(this.contentEndMarker, referenceNode);
     }
 
-    protected getStartIndex(): number {
-        return this.getWorkIndex() - 1;
+    protected createContentMarkers(): void {
+        this.contentEndMarker = document.createComment('Aurum Node ' + AurumElement.id++);
+        //@ts-ignore
+        this.contentEndMarker.owner = this;
     }
 
-    protected getWorkIndex(): number {
-        if (this.lastStartIndex !== undefined && this.hostNode.childNodes[this.lastStartIndex] === this.contentStartMarker) {
-            return this.lastStartIndex + 1;
-        }
-
-        for (let i = 0; i < this.hostNode.childNodes.length; i++) {
-            if (this.hostNode.childNodes[i] === this.contentStartMarker) {
-                this.lastStartIndex = i;
-                return i + 1;
+    /** First DOM node currently belonging to this element; its end anchor when it renders nothing. */
+    public firstNode(): Node {
+        for (const child of this.children) {
+            if (child === undefined || child === null) {
+                continue;
             }
+            return child instanceof AurumElement ? child.firstNode() : child;
         }
-
-        return -1;
+        return this.contentEndMarker;
     }
 
-    protected getLastIndex(): number {
-        if (this.lastEndIndex !== undefined && this.hostNode.childNodes[this.lastEndIndex] === this.contentEndMarker) {
-            return this.lastEndIndex;
-        }
-
-        for (let i = 0; i < this.hostNode.childNodes.length; i++) {
-            if (this.hostNode.childNodes[i] === this.contentEndMarker) {
-                this.lastEndIndex = i;
-                return i;
-            }
-        }
-
-        return -1;
+    /** Last DOM node belonging to this element; the stable end anchor for comment-bounded ranges. */
+    public lastNode(): Node {
+        return this.contentEndMarker;
     }
 
     protected abstract render(dataSource: DataSource<DOMRenderInput> | ArrayDataSource<DOMRenderInput>): void;
 
+    /**
+     * Removes this element's current content. Ownership is tracked in `children`, so only
+     * nodes this element rendered are touched; foreign nodes imperatively inserted into the
+     * range are left alone.
+     */
     protected clearContent(): void {
         if (this.hostNode === undefined) {
             throw new Error('illegal state: Aurum element was not attched to anything');
         }
 
-        let workIndex = this.getWorkIndex();
-        while (this.hostNode.childNodes[workIndex] !== this.contentEndMarker) {
-            if (!(this.hostNode.childNodes[workIndex] instanceof Comment)) {
-                this.hostNode.removeChild(this.hostNode.childNodes[workIndex]);
+        for (const child of this.children) {
+            if (child === undefined || child === null) {
+                continue;
+            }
+            if (child instanceof AurumElement) {
+                child.dispose();
             } else {
-                //@ts-ignore
-                if (this.hostNode.childNodes[workIndex].owner.disposed) {
-                    break;
-                }
-                //@ts-ignore
-                this.hostNode.childNodes[workIndex].owner.dispose();
+                child.remove();
             }
         }
     }
 
+    /**
+     * Inserts all children before the end marker. The content region is always empty when
+     * this runs (fresh attach or right after clearContent), so this is append-only: runs of
+     * plain nodes are committed as single fragments.
+     */
     protected updateDom(): void {
-        const workIndex = this.getWorkIndex();
-        if (
-            this.hostNode.childNodes[workIndex] === this.contentEndMarker &&
-            this.children.length > 0 &&
-            this.children.every((child) => child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement)
-        ) {
-            const fragment = document.createDocumentFragment();
-            for (const child of this.children) fragment.appendChild(child as Node);
-            const endIndex = this.getLastIndex();
-            this.hostNode.insertBefore(fragment, this.contentEndMarker);
-            this.lastEndIndex = endIndex + this.children.length;
-            this.linkHostChildren();
-            return;
-        }
-        let i: number;
-        let offset: number = 0;
-        for (i = 0; i < this.children.length; i++) {
-            const child = this.children[i];
+        const anchor = this.contentEndMarker;
+        let fragment: DocumentFragment | undefined;
+        for (const child of this.children) {
             if (child === undefined || child === null) {
-                offset--;
                 continue;
             }
-
-            if (child === this.hostNode.childNodes[i + workIndex + offset]) {
-                continue;
-            }
-
             if (child instanceof AurumElement) {
-                if (!child.hostNode) {
-                    child.attachToDom(this.hostNode, i + workIndex + offset);
+                if (fragment !== undefined) {
+                    this.hostNode.insertBefore(fragment, anchor);
+                    fragment = undefined;
                 }
-                if (child.getStartIndex() === i + workIndex + offset) {
-                    offset += child.getLastIndex() - i - offset - workIndex;
-                } else {
-                    let start = child.getStartIndex();
-                    let end = child.getLastIndex();
-
-                    for (let ptr = start, swapIteration = 0; ptr <= end; ptr++, swapIteration++) {
-                        const itemA = this.hostNode.childNodes[i + workIndex + offset + swapIteration];
-                        const itemB = this.hostNode.childNodes[ptr];
-                        const parentA = itemA.parentNode;
-                        const siblingA = itemA.nextSibling === itemB ? itemB : itemA.nextSibling;
-
-                        itemB.parentNode.insertBefore(itemA, itemB);
-                        parentA.insertBefore(itemB, siblingA);
-                    }
-                    offset += child.getLastIndex() - i - offset - workIndex;
-                }
-                continue;
-            }
-
-            if (
-                this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker &&
-                this.hostNode.childNodes[i + workIndex + offset] !== this.children[i] &&
-                this.hostNode.childNodes[i + workIndex + offset] !== (this.children[i + 1] as SingularAurumElement)?.contentStartMarker
-            ) {
-                if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
-                    this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
-                    if (this.hostNode.childNodes[i + workIndex + offset]) {
-                        this.lastEndIndex++;
-                        this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
-                    } else {
-                        this.lastEndIndex++;
-                        this.hostNode.appendChild(child);
-                    }
-                } else {
-                    throw invalidRenderableError(child);
-                }
+                child.attachToDomBefore(this.hostNode, anchor);
+            } else if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
+                (fragment ??= document.createDocumentFragment()).appendChild(child);
             } else {
-                if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
-                    if (this.hostNode.childNodes[i + workIndex + offset]) {
-                        this.lastEndIndex++;
-                        this.hostNode.insertBefore(child, this.hostNode.childNodes[i + workIndex + offset]);
-                    } else {
-                        this.lastEndIndex++;
-                        this.hostNode.appendChild(child);
-                    }
-                } else {
-                    throw invalidRenderableError(child);
-                }
+                throw invalidRenderableError(child as never);
             }
         }
-        while (this.hostNode.childNodes[i + workIndex + offset] !== this.contentEndMarker) {
-            this.lastEndIndex--;
-            this.hostNode.removeChild(this.hostNode.childNodes[i + workIndex + offset]);
+        if (fragment !== undefined) {
+            this.hostNode.insertBefore(fragment, anchor);
         }
         this.linkHostChildren();
     }
@@ -406,8 +327,6 @@ export class ArrayAurumElement extends AurumElement {
     public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
         super.attachToDomBefore(node, referenceNode);
         //@ts-ignore
-        this.contentStartMarker.dataSource = this.dataSource;
-        //@ts-ignore
         this.contentEndMarker.dataSource = this.dataSource;
     }
 
@@ -463,38 +382,28 @@ export class ArrayAurumElement extends AurumElement {
             }
             entry.session?.sessionToken.cancel();
         }
-        this.lastEndIndex = undefined;
+    }
+
+    /** DOM node before which content inserted at this entry position must land. */
+    private entryAnchorNode(index: number): Node {
+        if (index >= this.entries.length) return this.contentEndMarker;
+        return this.firstDomNode(this.entries[index].rendered);
     }
 
     private insertEntryGapBefore(entries: readonly ArrayRenderEntry[], anchorIndex: number): void {
         if (entries.length === 0) return;
 
-        const anchor = anchorIndex >= this.entries.length ? this.contentEndMarker : this.entries[anchorIndex].rendered;
+        const referenceNode = this.entryAnchorNode(anchorIndex);
         if (entries.every((entry) => !(entry.rendered instanceof AurumElement))) {
             const fragment = document.createDocumentFragment();
             for (const entry of entries) fragment.appendChild(entry.rendered as Node);
-            const referenceNode = anchor instanceof AurumElement ? this.hostNode.childNodes[this.getEntryDomIndex(anchorIndex)] : (anchor as Node);
             this.hostNode.insertBefore(fragment, referenceNode);
-            this.lastEndIndex = undefined;
             return;
         }
 
-        const targetIndex = this.getEntryDomIndex(anchorIndex);
-        for (let itemIndex = entries.length - 1; itemIndex >= 0; itemIndex--) {
-            this.attachRendered(entries[itemIndex].rendered, targetIndex);
+        for (const entry of entries) {
+            this.attachRenderedBefore(entry.rendered, referenceNode);
         }
-    }
-
-    private getEntryDomIndex(index: number): number {
-        if (index === 0) return this.getWorkIndex();
-        if (index >= this.entries.length) return this.getLastIndex();
-
-        const rendered = this.entries[index].rendered;
-        for (let domIndex = this.getWorkIndex(); domIndex < this.getLastIndex(); domIndex++) {
-            const node = this.hostNode.childNodes[domIndex];
-            if (node === rendered || (node as Comment & { owner?: AurumElement }).owner === rendered) return domIndex;
-        }
-        return this.getLastIndex();
     }
 
     private insertEntries(
@@ -503,28 +412,21 @@ export class ArrayAurumElement extends AurumElement {
         identities: readonly CollectionItemIdentity[] | undefined,
         attachCalls: Array<() => void>
     ): void {
-        const anchor = index >= this.entries.length ? this.contentEndMarker : this.entries[index].rendered;
-        const referenceNode = anchor instanceof AurumElement ? undefined : (anchor as Node);
+        // Node anchors stay valid no matter how earlier siblings change, so resolve once up front.
+        const referenceNode = this.entryAnchorNode(index);
         const newEntries = values.map((value, itemIndex) => this.renderEntry(value, identities?.[itemIndex], attachCalls));
-        // Ranges still require a numeric DOM position. Resolve it before changing
-        // the entry array, but avoid the scan for the overwhelmingly common case
-        // where both the inserted entries and their anchor are ordinary nodes.
-        const targetIndex = newEntries.some((entry) => entry.rendered instanceof AurumElement) ? this.getEntryDomIndex(index) : undefined;
         this.entries.splice(index, 0, ...newEntries);
         this.children.splice(index, 0, ...newEntries.map((entry) => entry.rendered));
 
         if (newEntries.length > 0 && newEntries.every((entry) => !(entry.rendered instanceof AurumElement))) {
             const fragment = document.createDocumentFragment();
             for (const entry of newEntries) fragment.appendChild(entry.rendered as Node);
-            this.hostNode.insertBefore(fragment, referenceNode ?? this.contentEndMarker);
-            this.lastEndIndex = undefined;
+            this.hostNode.insertBefore(fragment, referenceNode);
             return;
         }
 
-        // Insert before one stable anchor from right to left. This works for both
-        // single DOM nodes and comment-bounded AurumElement ranges.
-        for (let itemIndex = newEntries.length - 1; itemIndex >= 0; itemIndex--) {
-            this.attachRendered(newEntries[itemIndex].rendered, targetIndex as number);
+        for (const entry of newEntries) {
+            this.attachRenderedBefore(entry.rendered, referenceNode);
         }
     }
 
@@ -742,7 +644,6 @@ export class ArrayAurumElement extends AurumElement {
 
         this.entries = desiredEntries;
         this.synchronizeChildren();
-        this.lastEndIndex = undefined;
         this.linkHostChildren();
     }
 
@@ -816,11 +717,11 @@ export class ArrayAurumElement extends AurumElement {
                     this.entries[change.index] = newEntry;
                     this.children[change.index] = newEntry.rendered;
                 } else {
-                    const targetIndex = this.getEntryDomIndex(change.index);
+                    const referenceNode = this.entryAnchorNode(change.index + 1);
                     this.removeEntriesFromDom(change.index, 1);
                     this.entries.splice(change.index, 0, newEntry);
                     this.children.splice(change.index, 0, newEntry.rendered);
-                    this.attachRendered(newEntry.rendered, targetIndex);
+                    this.attachRenderedBefore(newEntry.rendered, referenceNode);
                 }
                 optimized = true;
                 break;
@@ -894,16 +795,14 @@ export class ArrayAurumElement extends AurumElement {
         return { identity, sourceValue, rendered: rendered as Rendered, session };
     }
 
-    private attachRendered(rendered: Rendered, targetIndex: number): number {
+    private attachRenderedBefore(rendered: Rendered, referenceNode: Node): void {
         if (rendered instanceof AurumElement) {
-            rendered.attachToDom(this.hostNode, targetIndex);
-            this.lastEndIndex = this.getLastIndex();
-            return this.lastEndIndex;
+            rendered.attachToDomBefore(this.hostNode, referenceNode);
+            return;
         }
         if (rendered instanceof HTMLElement || rendered instanceof Text || rendered instanceof SVGElement) {
-            this.hostNode.insertBefore(rendered, this.hostNode.childNodes[targetIndex]);
-            this.lastEndIndex++;
-            return targetIndex + 1;
+            this.hostNode.insertBefore(rendered, referenceNode);
+            return;
         }
         throw invalidRenderableError(rendered as never);
     }
@@ -925,11 +824,11 @@ export class ArrayAurumElement extends AurumElement {
     }
 
     private firstDomNode(rendered: Rendered): Node {
-        return rendered instanceof AurumElement ? aurumElementDomBounds.get(rendered)![0] : rendered;
+        return rendered instanceof AurumElement ? rendered.firstNode() : rendered;
     }
 
     private lastDomNode(rendered: Rendered): Node {
-        return rendered instanceof AurumElement ? aurumElementDomBounds.get(rendered)![1] : rendered;
+        return rendered instanceof AurumElement ? rendered.lastNode() : rendered;
     }
 
     private moveRenderedBefore(rendered: Rendered, referenceNode: Node): void {
@@ -940,7 +839,8 @@ export class ArrayAurumElement extends AurumElement {
             return;
         }
 
-        const [first, last] = aurumElementDomBounds.get(rendered)!;
+        const first = rendered.firstNode();
+        const last = rendered.lastNode();
         if (last.nextSibling === referenceNode) return;
         const afterLast = last.nextSibling;
         let node: Node = first;
@@ -966,11 +866,30 @@ export class ArrayAurumElement extends AurumElement {
     }
 }
 
+/** Values a reactive binding can show as a bare Text node: primitives render their text, everything else renders empty. */
+function isTextOnlyValue(value: unknown): boolean {
+    const type = typeof value;
+    return type === 'string' || type === 'number' || type === 'bigint' || type === 'boolean' || value === null || value === undefined;
+}
+
+function textOnlyValueToString(value: unknown): string {
+    const type = typeof value;
+    if (type === 'string') return value as string;
+    if (type === 'number' || type === 'bigint') return String(value);
+    return '';
+}
+
 export class SingularAurumElement extends AurumElement {
     private static readonly immediateContentCommit = SingularAurumElement.prototype.handleNewContent;
     private renderSession: RenderSession;
     private lastValue: DOMRenderInput;
     private dataSource: DataSource<DOMRenderInput>;
+    /**
+     * While the source only ever produced text-like values, the binding is a single Text node
+     * with no comment markers. It is promoted to a comment-bounded range the first time a
+     * non-primitive renderable appears, and stays a range from then on.
+     */
+    private textNode: Text | undefined;
     private readonly batchedContentCommit = (newValue: DOMRenderInput): void => {
         if (!this.disposed) SingularAurumElement.immediateContentCommit.call(this, newValue);
     };
@@ -988,13 +907,60 @@ export class SingularAurumElement extends AurumElement {
         }
         this.api.cancellationToken.cancel();
         if (this.disposed) return;
+        if (this.textNode !== undefined) {
+            if (this.hostNode?.isConnected) {
+                this.textNode.remove();
+            }
+            this.disposed = true;
+            return;
+        }
         super.dispose();
     }
 
     public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
+        const value = this.dataSource.value;
+        if (isTextOnlyValue(value)) {
+            this.attachAsText(node, referenceNode, value);
+            return;
+        }
         super.attachToDomBefore(node, referenceNode);
+        this.tagMarkers();
+    }
+
+    private attachAsText(node: HTMLElement, referenceNode: Node | null, value: DOMRenderInput): void {
+        if (this.hostNode) {
+            throw new Error('Aurum Element is already attached');
+        }
+        const text = document.createTextNode(textOnlyValueToString(value));
         //@ts-ignore
-        this.contentStartMarker.dataSource = this.dataSource;
+        text.owner = this;
+        //@ts-ignore
+        text.dataSource = this.dataSource;
+        this.hostNode = node;
+        this.textNode = text;
+        // The text node stands in for the end anchor so firstNode/lastNode resolve to it.
+        this.contentEndMarker = text;
+        node.insertBefore(text, referenceNode);
+        this.children = [text];
+        this.lastValue = value;
+    }
+
+    /**
+     * Promotion is deliberately one-way: a source that oscillates between text and elements
+     * would otherwise churn markers on every flip, and the range-mode text fast path already
+     * makes post-promotion text updates cheap.
+     */
+    private promoteToRange(): void {
+        const text = this.textNode;
+        this.textNode = undefined;
+        this.createContentMarkers();
+        this.tagMarkers();
+        this.hostNode.insertBefore(this.contentEndMarker, text);
+        text.remove();
+        this.children = [];
+    }
+
+    private tagMarkers(): void {
         //@ts-ignore
         this.contentEndMarker.dataSource = this.dataSource;
     }
@@ -1020,6 +986,14 @@ export class SingularAurumElement extends AurumElement {
     private handleNewContent(newValue: DOMRenderInput): void {
         if (this.lastValue === newValue) {
             return;
+        }
+        if (this.textNode !== undefined) {
+            if (isTextOnlyValue(newValue)) {
+                this.textNode.nodeValue = textOnlyValueToString(newValue);
+                this.lastValue = newValue;
+                return;
+            }
+            this.promoteToRange();
         }
         let optimized = false;
         if (this.children.length === 1 && this.children[0] instanceof Text) {
@@ -1075,7 +1049,9 @@ export class SingularAurumElement extends AurumElement {
 }
 
 /**
- * A lightweight range used only when an array entry has zero or multiple roots.
+ * A lightweight multi-root range used only when an array entry has zero or multiple roots.
+ * It owns no comment markers: its bounds resolve through its immutable children, and an
+ * empty entry keeps its position in the collection with a single empty text node.
  */
 class StaticAurumElement extends AurumElement {
     constructor(children: Rendered[], api: AurumComponentAPI<DOMPrerendered>) {
@@ -1083,9 +1059,63 @@ class StaticAurumElement extends AurumElement {
         this.children = children;
     }
 
+    public lastNode(): Node {
+        for (let index = this.children.length - 1; index >= 0; index--) {
+            const child = this.children[index];
+            if (child === undefined || child === null) {
+                continue;
+            }
+            return child instanceof AurumElement ? child.lastNode() : child;
+        }
+        return this.contentEndMarker;
+    }
+
+    public dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        if (this.hostNode?.isConnected) {
+            this.clearContent();
+            this.contentEndMarker?.remove();
+        }
+        this.disposed = true;
+    }
+
     public attachToDomBefore(node: HTMLElement, referenceNode: Node | null): void {
-        super.attachToDomBefore(node, referenceNode);
-        this.updateDom();
+        if (this.hostNode) {
+            throw new Error('Aurum Element is already attached');
+        }
+        this.hostNode = node;
+        if (this.children.length === 0) {
+            const placeholder = document.createTextNode('');
+            //@ts-ignore
+            placeholder.owner = this;
+            this.contentEndMarker = placeholder;
+            node.insertBefore(placeholder, referenceNode);
+            return;
+        }
+
+        let fragment: DocumentFragment | undefined;
+        for (const child of this.children) {
+            if (child === undefined || child === null) {
+                continue;
+            }
+            if (child instanceof AurumElement) {
+                if (fragment !== undefined) {
+                    node.insertBefore(fragment, referenceNode);
+                    fragment = undefined;
+                }
+                child.attachToDomBefore(node, referenceNode);
+            } else if (child instanceof HTMLElement || child instanceof Text || child instanceof SVGElement) {
+                (fragment ??= document.createDocumentFragment()).appendChild(child);
+            } else {
+                throw invalidRenderableError(child as never);
+            }
+        }
+        if (fragment !== undefined) {
+            node.insertBefore(fragment, referenceNode);
+        }
+        this.linkHostChildren();
     }
 
     protected render(): void {}

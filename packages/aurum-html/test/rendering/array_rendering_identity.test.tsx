@@ -116,7 +116,7 @@ describe('ArrayDataSource rendering identity', () => {
 
         const container = document.querySelector('#target > div');
         const comments = Array.from(container.childNodes).filter((node) => node instanceof Comment);
-        assert.lengthOf(comments, 2);
+        assert.lengthOf(comments, 1);
     });
 
     it('commits a consecutive append of single-root entries with one DOM insertion', () => {

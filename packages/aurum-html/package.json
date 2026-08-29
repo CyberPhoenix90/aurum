@@ -1,6 +1,6 @@
 {
     "name": "@aurumjs/html",
-    "version": "0.10.12",
+    "version": "0.10.13",
     "description": "HTML nodes, DOM rendering, styling, and HTML JSX types for Aurum",
     "type": "module",
     "main": "./prebuilt/esnext/index.js",

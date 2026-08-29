@@ -348,6 +348,90 @@ export const defaultAttributes: string[] = [
     'ariaValueText'
 ];
 
+/**
+ * Bubbling events dispatched through one document-level listener per type instead of one
+ * listener per element. Excluded on purpose: passive-sensitive types (wheel, touchstart,
+ * touchmove) where a non-passive document listener would hurt scrolling globally, and
+ * non-bubbling types (focus, blur, mouseenter/leave, scroll, media events).
+ * Note: programmatic dispatchEvent only reaches delegated handlers when the synthetic
+ * event is created with `bubbles: true`, matching how real user events behave.
+ */
+const delegatedEventTypes = new Set([
+    'click',
+    'dblclick',
+    'contextmenu',
+    'auxclick',
+    'mousedown',
+    'mouseup',
+    'mousemove',
+    'mouseover',
+    'mouseout',
+    'pointerdown',
+    'pointerup',
+    'pointermove',
+    'pointerover',
+    'pointerout',
+    'pointercancel',
+    'keydown',
+    'keyup',
+    'keypress',
+    'input',
+    'beforeinput',
+    'dragstart',
+    'drag',
+    'dragend',
+    'dragover',
+    'dragenter',
+    'dragleave',
+    'drop',
+    'copy',
+    'cut',
+    'paste',
+    'compositionstart',
+    'compositionupdate',
+    'compositionend'
+]);
+
+const delegatedHandlersByNode = new WeakMap<Node, Map<string, unknown[]>>();
+const installedDelegatedTypes = new Set<string>();
+
+function registerDelegatedHandler(node: Node, eventName: string, handler: unknown): void {
+    let nodeHandlers = delegatedHandlersByNode.get(node);
+    if (nodeHandlers === undefined) {
+        nodeHandlers = new Map();
+        delegatedHandlersByNode.set(node, nodeHandlers);
+    }
+    const handlers = nodeHandlers.get(eventName);
+    if (handlers === undefined) {
+        nodeHandlers.set(eventName, [handler]);
+    } else {
+        handlers.push(handler);
+    }
+    if (!installedDelegatedTypes.has(eventName)) {
+        installedDelegatedTypes.add(eventName);
+        document.addEventListener(eventName, dispatchDelegatedEvent);
+    }
+}
+
+function dispatchDelegatedEvent(event: Event): void {
+    let node: Node | null = event.target as Node | null;
+    while (node !== null && node !== document) {
+        const handlers = delegatedHandlersByNode.get(node)?.get(event.type);
+        if (handlers !== undefined) {
+            // Handlers observe the element they were registered on, like a direct listener would.
+            Object.defineProperty(event, 'currentTarget', { value: node, configurable: true });
+            for (const handler of handlers) {
+                writeTo(handler as never, event);
+            }
+        }
+        if (event.cancelBubble) {
+            break;
+        }
+        node = node.parentNode;
+    }
+    delete (event as { currentTarget?: unknown }).currentTarget;
+}
+
 export function DomNodeCreator<T extends HTMLNodeProps<any>>(
     nodeName: string,
     extraAttributes?: string[],
@@ -473,7 +557,14 @@ function processHTMLNodeInternal(
 
         const eventName = eventByProp.get(key);
         if (eventName !== undefined) {
-            if (value) node.addEventListener(eventName === 'doubleclick' ? 'dblclick' : eventName, (event) => writeTo(value as never, event));
+            if (value) {
+                const domEventName = eventName === 'doubleclick' ? 'dblclick' : eventName;
+                if (delegatedEventTypes.has(domEventName)) {
+                    registerDelegatedHandler(node, domEventName, value);
+                } else {
+                    node.addEventListener(domEventName, (event) => writeTo(value as never, event));
+                }
+            }
             continue;
         }
         if (reservedIntrinsicProps.has(key) || typeof value === 'function') continue;

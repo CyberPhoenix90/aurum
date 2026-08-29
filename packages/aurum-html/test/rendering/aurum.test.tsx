@@ -211,7 +211,7 @@ describe('Aurum', () => {
             document.getElementById('target')
         );
         clock.tick(100);
-        assert(document.getElementById('target').firstChild.childNodes.length === 4);
+        assert(document.getElementById('target').firstChild.childNodes.length === 2);
         assert((document.getElementById('target').firstChild as HTMLDivElement).innerText === 'State1Test2');
         ds.update('State2');
         assert((document.getElementById('target').firstChild as HTMLDivElement).innerText === 'State2Test2');
