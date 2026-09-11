@@ -25,7 +25,7 @@
         "@aurumjs/streams": "^0.10.0"
     },
     "devDependencies": {
-        "vitest": "^4.0.16"
+        "vitest": "^4.1.11"
     },
     "license": "MIT"
 }
