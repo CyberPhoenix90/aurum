@@ -33,7 +33,7 @@
     "devDependencies": {
         "@vitest/browser": "^4.0.16",
         "@vitest/browser-playwright": "^4.0.16",
-        "vitest": "^4.0.16"
+        "vitest": "^4.1.11"
     },
     "repository": {
         "type": "git",
