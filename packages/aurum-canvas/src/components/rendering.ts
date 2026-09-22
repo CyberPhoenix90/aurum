@@ -13,6 +13,7 @@ import { CommonProps } from './common_props.js';
 import { measureText } from './measure_text.js';
 import { ImageComponentModel } from './drawables/aurum_image.js';
 import { LargeContentBoxModel } from './drawables/large_content_box.js';
+import { LruCache } from './lru_cache.js';
 
 const regularPolygonKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'sides', 'radius', 'originX', 'originY'];
 const pathKeys = ['x', 'y', 'opacity', 'strokeColor', 'fillColor', 'path', 'lineWidth', 'originX', 'originY'];
@@ -40,7 +41,16 @@ const textKeys = [
 ];
 const rectangleKeys = ['x', 'y', 'width', 'height', 'opacity', 'strokeColor', 'fillColor', 'originX', 'originY'];
 const imageKeys = ['x', 'y', 'width', 'height', 'opacity', 'src', 'originX', 'originY'];
-const imageCache = new Map<string, { image: HTMLImageElement; loaded: boolean; invalidations: Set<() => void> }>();
+interface CachedImage {
+    image: HTMLImageElement;
+    loaded: boolean;
+    failed: boolean;
+    invalidations: Set<() => void>;
+}
+
+const imageCache = new LruCache<string, CachedImage>(128);
+// Eviction must not make a scene with more than 128 images reload on every frame.
+const nodeImages = new WeakMap<ImageComponentModel, { src: string; entry: CachedImage }>();
 
 export function renderImage(
     context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -54,13 +64,16 @@ export function renderImage(
     child.onPreDraw?.(renderedState);
 
     if (!renderedState.src || typeof Image === 'undefined') {
+        nodeImages.delete(child);
         return true;
     }
 
-    let cached = imageCache.get(renderedState.src);
+    const previous = nodeImages.get(child);
+    const shared = imageCache.get(renderedState.src);
+    let cached = previous?.src === renderedState.src ? previous.entry : shared;
     if (!cached) {
         const image = new Image();
-        cached = { image, loaded: false, invalidations: new Set() };
+        cached = { image, loaded: false, failed: false, invalidations: new Set() };
         imageCache.set(renderedState.src, cached);
         image.addEventListener('load', () => {
             cached.loaded = true;
@@ -69,12 +82,18 @@ export function renderImage(
             }
             cached.invalidations.clear();
         });
-        image.addEventListener('error', () => cached.invalidations.clear());
+        image.addEventListener('error', () => {
+            cached.failed = true;
+            cached.invalidations.clear();
+        });
         image.src = renderedState.src;
+    }
+    if (previous?.entry !== cached || previous.src !== renderedState.src) {
+        nodeImages.set(child, { src: renderedState.src, entry: cached });
     }
 
     if (!cached.loaded) {
-        cached.invalidations.add(invalidate);
+        if (!cached.failed) cached.invalidations.add(invalidate);
         return true;
     }
 

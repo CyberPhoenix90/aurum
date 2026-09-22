@@ -212,11 +212,14 @@ function computeBounds(
         if (!cancellationToken.isCancelled) {
             token = new CancellationToken();
             cancellationToken.addCancellable(token);
-            performBoundComputation(startTs, endTs, maxValue, rebuild, series, cancellationToken);
+            startTs.update(Number.MAX_SAFE_INTEGER);
+            endTs.update(Number.MIN_SAFE_INTEGER);
+            maxValue.update(Number.MIN_SAFE_INTEGER);
+            performBoundComputation(startTs, endTs, maxValue, rebuild, series, token);
         }
     }
 
-    performBoundComputation(startTs, endTs, maxValue, rebuild, series, cancellationToken);
+    performBoundComputation(startTs, endTs, maxValue, rebuild, series, token);
 
     return { startTs, endTs, maxValue };
 }
@@ -243,16 +246,21 @@ function performBoundComputation(
                 }
                 token.cancel();
             }
-        });
+            rebuild();
+        }, cancellationToken);
         series.onItemsAdded.subscribe((added) => {
             for (const item of added) {
-                tokenMap.set(item, new CancellationToken());
-                computeSerieBounds(item, startTs, endTs, maxValue, rebuild, tokenMap.get(item));
+                const token = new CancellationToken();
+                cancellationToken.addCancellable(token);
+                tokenMap.set(item, token);
+                computeSerieBounds(item, startTs, endTs, maxValue, rebuild, token);
             }
-        });
+        }, cancellationToken);
         for (const item of series.getData()) {
-            tokenMap.set(item, new CancellationToken());
-            computeSerieBounds(item, startTs, endTs, maxValue, rebuild, tokenMap.get(item));
+            const token = new CancellationToken();
+            cancellationToken.addCancellable(token);
+            tokenMap.set(item, token);
+            computeSerieBounds(item, startTs, endTs, maxValue, rebuild, token);
         }
     }
 }

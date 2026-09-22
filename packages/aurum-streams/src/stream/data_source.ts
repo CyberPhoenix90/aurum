@@ -2868,69 +2868,96 @@ export class SlicedArrayView<T> extends ArrayDataSource<T> {
 
 export class UniqueArrayView<T> extends ArrayDataSource<T> {
     constructor(parent: ArrayDataSource<T>, cancellationToken: CancellationToken = new CancellationToken(), name?: string, config?: ViewConfig) {
-        const initial = Array.from(new Set(parent.getData()));
-        super(initial, name);
-        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'unique' } });
-        let filteredItems: T[];
-        const synchronizeIdentities = () => {
-            const parentIdentities = parent.getItemIdentities();
-            const identities = this.data.map((value) => {
-                const index = parent.getData().findIndex((item) => item === value || Object.is(item, value));
-                return parentIdentities[index];
-            });
-            this.inheritNextIdentities(identities);
-            this.merge(this.data.slice());
+        const firstIdentities = () => {
+            const result = new Map<T, CollectionItemIdentity>();
+            const values = parent.getData();
+            const identities = parent.getItemIdentities();
+            for (let index = 0; index < values.length; index++) {
+                if (!result.has(values[index])) result.set(values[index], identities[index]);
+            }
+            return result;
         };
-        synchronizeIdentities();
+        const initial = firstIdentities();
+        super(Array.from(initial.keys()), name);
+        this.itemIdentities = Array.from(initial.values());
+        updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'unique' } });
 
         parent.listen((change) => {
-            if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+            if (config?.ignoredOperations?.includes(change.operationDetailed)) return;
+            if (change.operationDetailed === 'clear') {
+                this.clear();
                 return;
             }
 
+            // Map uses the same equality as Set, including NaN and signed zero.
+            const identities = firstIdentities();
+            let values = this.data.slice();
+            const existing = new Set(values);
             switch (change.operationDetailed) {
                 case 'removeLeft':
                 case 'removeRight':
                 case 'remove':
-                    for (const item of change.items) {
-                        if (!change.newState.includes(item)) this.remove(item);
-                    }
+                    values = values.filter((value) => identities.has(value));
                     break;
-                case 'clear':
-                    this.clear();
-                    return;
                 case 'prepend':
-                    filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
-                    if (filteredItems.length > 0) this.unshift(...filteredItems);
-                    break;
                 case 'append':
-                    filteredItems = change.items.filter((item) => !this.data.includes(item));
-                    if (filteredItems.length > 0) this.appendArray(filteredItems);
+                case 'insert': {
+                    const added = Array.from(new Set(change.items)).filter((value) => !existing.has(value));
+                    const index =
+                        change.operationDetailed === 'append' ? values.length :
+                        change.operationDetailed === 'prepend' ? 0 : Math.min(change.index, values.length);
+                    values = values.slice(0, index).concat(added, values.slice(index));
                     break;
-                case 'insert':
-                    filteredItems = change.items.filter((item, index) => change.items.indexOf(item) === index && !this.data.includes(item));
-                    if (filteredItems.length > 0) this.insertAt(Math.min(change.index, this.data.length), ...filteredItems);
-                    break;
+                }
                 case 'merge':
-                    this.merge(Array.from(new Set(parent.getData())));
+                    values = Array.from(identities.keys());
                     break;
                 case 'swap':
                     break;
                 case 'replace': {
-                    const targetStillExists = parent.includes(change.target);
-                    const replacementExists = this.data.includes(change.items[0]);
-                    if (!targetStillExists) {
-                        const targetIndex = this.indexOf(change.target);
-                        if (replacementExists) this.removeAt(targetIndex);
-                        else this.set(targetIndex, change.items[0]);
-                    } else if (!replacementExists) {
-                        this.insertAt(Math.min(change.index, this.data.length), change.items[0]);
+                    const replacement = change.items[0];
+                    if (!identities.has(change.target)) {
+                        const index = values.findIndex((value) => value === change.target || Object.is(value, change.target));
+                        if (index !== -1) {
+                            if (existing.has(replacement)) values.splice(index, 1);
+                            else values[index] = replacement;
+                        }
+                    } else if (!existing.has(replacement)) {
+                        values.splice(Math.min(change.index, values.length), 0, replacement);
                     }
                     break;
                 }
             }
-            synchronizeIdentities();
+            this.synchronize(values, values.map((value) => identities.get(value)));
         }, cancellationToken);
+    }
+
+    private synchronize(values: T[], identities: CollectionItemIdentity[]): void {
+        // Find the changed range once. A precise mutation carries its final identities,
+        // so subscribers never see temporary identities followed by a repair merge.
+        const unchanged = (previous: number, next: number) =>
+            this.itemIdentities[previous] === identities[next] &&
+            (this.data[previous] === values[next] || Object.is(this.data[previous], values[next]));
+        let start = 0;
+        while (start < identities.length && start < this.itemIdentities.length && unchanged(start, start)) start++;
+        let previousEnd = this.data.length;
+        let nextEnd = values.length;
+        while (previousEnd > start && nextEnd > start && unchanged(previousEnd - 1, nextEnd - 1)) {
+            previousEnd--;
+            nextEnd--;
+        }
+        if (start === previousEnd && start === nextEnd) return;
+        if (start === nextEnd) {
+            this.removeAt(start, previousEnd - start);
+        } else if (start === previousEnd) {
+            this.inheritNextIdentities(identities.slice(start, nextEnd));
+            const added = values.slice(start, nextEnd);
+            if (start === this.data.length) this.appendArray(added);
+            else this.insertAt(start, ...added);
+        } else {
+            this.inheritNextIdentities(identities);
+            this.merge(values);
+        }
     }
 }
 
@@ -2945,35 +2972,88 @@ export class SortedArrayView<T> extends ArrayDataSource<T> {
         name?: string,
         config?: ViewConfig
     ) {
-        const initial = parent.getData().slice().sort(comparator);
-        super(initial, name);
+        super([], name);
         updateAurumDevtoolsNode(this, { kind: 'array-view', metadata: { transformation: 'sort' } });
         this.parent = parent;
         this.comparator = comparator;
-        const synchronize = () => {
-            const pairs = parent
-                .getData()
-                .map((value, index) => ({ value, identity: parent.getItemIdentities()[index] }))
-                .sort((left, right) => this.comparator(left.value, right.value));
-            this.inheritNextIdentities(pairs.map((pair) => pair.identity));
-            this.merge(pairs.map((pair) => pair.value));
-        };
-        synchronize();
+        this.refresh();
+        let skippedChange = false;
 
         parent.listen((change) => {
             if (config?.ignoredOperations?.includes(change.operationDetailed)) {
+                skippedChange = true;
                 return;
             }
-
-            if (change.operationDetailed === 'clear') this.clear();
-            else synchronize();
+            if (change.operationDetailed === 'clear') {
+                skippedChange = false;
+                this.clear();
+                return;
+            }
+            // Reconcile bulk edits and skipped changes. Swaps also use merge so retained
+            // renderables move within comparator ties without being removed and remounted.
+            if (skippedChange || change.operationDetailed === 'merge' || change.operationDetailed === 'swap' || change.items.length > 32) {
+                skippedChange = false;
+                this.refresh();
+                return;
+            }
+            switch (change.operationDetailed) {
+                case 'remove':
+                case 'removeLeft':
+                case 'removeRight':
+                    this.removeIdentities(change.itemIdentities);
+                    break;
+                case 'replace':
+                    this.removeIdentities([change.targetIdentity]);
+                    this.insertSorted(change.items, change.itemIdentities);
+                    break;
+                case 'append':
+                case 'prepend':
+                case 'insert':
+                    this.insertSorted(change.items, change.itemIdentities);
+                    break;
+            }
         }, cancellationToken);
     }
 
+    private removeIdentities(identities: readonly CollectionItemIdentity[]): void {
+        const removed = new Set(identities);
+        for (let end = this.itemIdentities.length; end > 0;) {
+            if (!removed.has(this.itemIdentities[end - 1])) {
+                end--;
+                continue;
+            }
+            let start = end - 1;
+            while (start > 0 && removed.has(this.itemIdentities[start - 1])) start--;
+            this.removeAt(start, end - start);
+            end = start;
+        }
+    }
+
+    private insertSorted(values: readonly T[], identities: readonly CollectionItemIdentity[]): void {
+        const parentOrder = new Map(this.parent.getItemIdentities().map((identity, index) => [identity, index]));
+        for (let item = 0; item < values.length; item++) {
+            let start = 0;
+            let end = this.data.length;
+            while (start < end) {
+                const middle = (start + end) >>> 1;
+                const comparison = this.comparator(this.data[middle], values[item]);
+                const before =
+                    comparison < 0 ||
+                    (!(comparison > 0) && parentOrder.get(this.itemIdentities[middle]) < parentOrder.get(identities[item]));
+                if (before) start = middle + 1;
+                else end = middle;
+            }
+            this.inheritNextIdentities([identities[item]]);
+            if (start === this.data.length) this.appendArray([values[item]]);
+            else this.insertAt(start, values[item]);
+        }
+    }
+
     public refresh() {
+        const identities = this.parent.getItemIdentities();
         const pairs = this.parent
             .getData()
-            .map((value, index) => ({ value, identity: this.parent.getItemIdentities()[index] }))
+            .map((value, index) => ({ value, identity: identities[index] }))
             .sort((left, right) => this.comparator(left.value, right.value));
         this.inheritNextIdentities(pairs.map((pair) => pair.identity));
         this.merge(pairs.map((pair) => pair.value));

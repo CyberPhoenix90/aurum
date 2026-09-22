@@ -14,6 +14,23 @@ describe('@aurumjs/server integration', () => {
         await Promise.all(servers.splice(0).map((server) => server.close()));
     });
 
+    it('supports the create/ready lifecycle and normalized router management', async () => {
+        const server = AurumServer.create({ port: 0, onError: () => undefined });
+        servers.push(server);
+        await server.whenReady();
+        expect(server.address()).not.toBeNull();
+
+        const router = new Router();
+        server.exposeRouter('/api/', router);
+        expect(() => server.exposeRouter('api', new Router())).toThrow('Router api/ is already exposed');
+        expect(() => server.removeRouter('/')).toThrow('root router cannot be removed');
+        expect(() => server.removeRouter('missing')).not.toThrow();
+        server.removeRouter('/api/');
+        expect(() => server.exposeRouter('api', new Router())).not.toThrow();
+
+        await expect(Promise.all([server.close(), server.close()])).resolves.toHaveLength(2);
+    });
+
     it('synchronizes every supported source type over a real WebSocket', async () => {
         const server = await startServer();
         const scalar = new DataSource('one');

@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "moduleResolution": "Bundler",
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
         "rootDir": "src",
         "outDir": "prebuilt/esnext"
     },

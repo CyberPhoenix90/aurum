@@ -5,6 +5,7 @@ import {
     createClearHighlightExpression,
     createDisposeExpression,
     createHighlightExpression,
+    createInspectExpression,
     createPollExpression,
     createSetUpdateBreakpointExpression,
     normalizePollResult
@@ -27,6 +28,7 @@ interface MutableRegistry {
     revision?: number;
     getSnapshot(options?: { includeValues?: boolean }): Record<string, unknown>;
     subscribe(listener: (event: unknown) => void): () => void;
+    inspect?(nodeId: string): unknown;
     highlightDomNode?(nodeId: string, duration?: number): boolean;
     clearDomNodeHighlight?(): void;
     setUpdateBreakpoint?(nodeId: string, enabled: boolean): boolean;
@@ -267,6 +269,32 @@ describe('inspected-page bridge lifecycle', () => {
             ['source-1', true],
             ['source-1', false]
         ]);
+    });
+
+    it('inspects and serializes values through the shared page bridge', () => {
+        const { registry } = createRegistry({ runtimeId: 'runtime', revision: 1 });
+        const inspected: string[] = [];
+        registry.inspect = (nodeId): unknown => {
+            inspected.push(nodeId);
+            const value: Record<string, unknown> = { nodeId, missing: undefined };
+            value.circular = value;
+            return value;
+        };
+        const page = createPage(registry);
+        page.evaluate(createPollExpression('panel', 'fallback'));
+
+        expect(page.evaluate(createInspectExpression('node-"quoted"'))).toEqual({
+            nodeId: 'node-"quoted"',
+            circular: '[Circular]'
+        });
+        expect(inspected).toEqual(['node-"quoted"']);
+
+        registry.inspect = (): never => {
+            throw new Error('inspection failed');
+        };
+        expect(page.evaluate<{ inspectionError: string }>(createInspectExpression('broken')).inspectionError).toContain('inspection failed');
+        registry.inspect = undefined;
+        expect(page.evaluate(createInspectExpression('missing'))).toBeUndefined();
     });
 
     it('retries a failed subscription without losing snapshot inspection', () => {

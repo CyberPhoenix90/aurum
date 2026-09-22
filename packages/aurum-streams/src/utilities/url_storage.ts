@@ -49,8 +49,8 @@ export class UrlStorage implements Storage {
     private applyStateToUrl() {
         // Take the state and turn it into a parameter string and set it as the url
         const url = new URL(location.href);
-        for (const param of url.searchParams.entries()) {
-            url.searchParams.delete(param[0]);
+        for (const key of Array.from(url.searchParams.keys())) {
+            url.searchParams.delete(key);
         }
         for (const key in this.state) {
             url.searchParams.set(key, this.state[key]);

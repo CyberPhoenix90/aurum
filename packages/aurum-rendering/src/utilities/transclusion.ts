@@ -37,12 +37,16 @@ function process<T>(children: Renderable[]): Array<ArrayDataSource<T> | T[]> {
         if (child instanceof ArrayDataSource) {
             if (currentChunk.length) {
                 chunks.push(currentChunk);
-                currentChunk.length = 0;
+                currentChunk = [];
             }
             chunks.push(child as any as ArrayDataSource<T>);
         } else if (child instanceof DataSource) {
             currentChunk.push(child as unknown as T);
         } else if (Array.isArray(child)) {
+            if (currentChunk.length) {
+                chunks.push(currentChunk);
+                currentChunk = [];
+            }
             chunks.push(...process<T>(child));
         } else {
             currentChunk.push(child as unknown as T);

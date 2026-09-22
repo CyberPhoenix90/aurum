@@ -1,6 +1,20 @@
 import { ArrayDataSource, Aurum, CancellationToken, DataSource, Renderable } from '@aurumjs/html';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { AurumCanvas, AurumElipse, AurumGroup, AurumImage, AurumRectangle, LargeContentBox } from '../src/aurum-canvas.js';
+import {
+    AurumBezierCurve,
+    AurumCanvas,
+    AurumElipse,
+    AurumGroup,
+    AurumImage,
+    AurumLine,
+    AurumPath,
+    AurumQuadraticCurve,
+    AurumRectangle,
+    AurumRegularPolygon,
+    AurumText,
+    LargeContentBox,
+    State
+} from '../src/aurum-canvas.js';
 
 describe('canvas rendering', () => {
     let token: CancellationToken | undefined;
@@ -218,6 +232,121 @@ describe('canvas rendering', () => {
 
         expect(pixel(9, 4)).toEqual([255, 0, 0, 255]);
         expect(pixel(12, 4)).toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders every vector primitive and publishes their resolved geometry', () => {
+        const states: Record<string, any> = {};
+        token = Aurum.attach(
+            <AurumCanvas width={120} height={80}>
+                <AurumLine x={2} y={4} tx={28} ty={4} lineWidth={2} strokeColor="red" onPreDraw={(state) => (states.line = state)} />
+                <AurumQuadraticCurve
+                    x={32}
+                    y={12}
+                    cx={44}
+                    cy={0}
+                    tx={56}
+                    ty={12}
+                    strokeColor="green"
+                    onPreDraw={(state) => (states.quadratic = state)}
+                />
+                <AurumBezierCurve
+                    x={62}
+                    y={12}
+                    cx={68}
+                    cy={0}
+                    c2x={80}
+                    c2y={24}
+                    tx={88}
+                    ty={12}
+                    strokeColor="blue"
+                    onPreDraw={(state) => (states.bezier = state)}
+                />
+                <AurumPath x={2} y={20} path="M 0 0 L 20 0 L 10 16 Z" fillColor="purple" onPreDraw={(state) => (states.path = state)} />
+                <AurumRegularPolygon x={30} y={20} sides={5} radius={10} fillColor="orange" onPreDraw={(state) => (states.polygon = state)} />
+                <AurumText x={60} y={40} fontSize={14} fillColor="black" onPreDraw={(state) => (states.text = state)}>
+                    Aurum
+                </AurumText>
+            </AurumCanvas>,
+            target
+        );
+
+        expect(Object.keys(states).sort()).toEqual(['bezier', 'line', 'path', 'polygon', 'quadratic', 'text']);
+        expect(states.line.path).toBeInstanceOf(Path2D);
+        expect(states.quadratic.path).toBeInstanceOf(Path2D);
+        expect(states.bezier.path).toBeInstanceOf(Path2D);
+        expect(states.path.path).toBeInstanceOf(Path2D);
+        expect(states.polygon.path).toBeInstanceOf(Path2D);
+        expect(states.text.lines).toEqual(['Aurum']);
+        expect(states.text.realWidth).toBeGreaterThan(0);
+        expect(pixel(12, 4)[3]).toBeGreaterThan(0);
+    });
+
+    it('updates text content and clears cached wrapping measurements', async () => {
+        const text = new DataSource('one two');
+        const wrapWidth = new DataSource(200);
+        let state: any;
+        token = Aurum.attach(
+            <AurumCanvas width={120} height={60}>
+                <AurumText x={2} y={18} wrapWidth={wrapWidth} fillColor="black" onPreDraw={(value) => (state = value)}>
+                    {text}
+                </AurumText>
+            </AurumCanvas>,
+            target
+        );
+        expect(state.lines).toEqual(['one two']);
+
+        wrapWidth.update(20);
+        text.update('one two three');
+        await nextFrame();
+        expect(state.lines.length).toBeGreaterThan(1);
+        expect(state.text).toBe('one two three');
+    });
+
+    it('activates state nodes when a reactive state changes', async () => {
+        const state = new DataSource('idle');
+        token = Aurum.attach(
+            <AurumCanvas width={30} height={10}>
+                <AurumRectangle state={state} x={1} y={1} width={5} height={5} fillColor="red">
+                    <State id="moved" x={15} transitionTime={0} />
+                </AurumRectangle>
+            </AurumCanvas>,
+            target
+        );
+        expect(pixel(2, 2)).toEqual([255, 0, 0, 255]);
+
+        state.update('moved');
+        await nextFrame();
+        expect(pixel(2, 2)).toEqual([0, 0, 0, 0]);
+        expect(pixel(16, 2)).toEqual([255, 0, 0, 255]);
+    });
+
+    it('tracks hover entry, movement, exit, and cursor ownership', () => {
+        const calls: string[] = [];
+        token = Aurum.attach(
+            <AurumCanvas width={20} height={20}>
+                <AurumRectangle
+                    x={1}
+                    y={1}
+                    width={8}
+                    height={8}
+                    fillColor="red"
+                    hoverFillColor="blue"
+                    cursor="crosshair"
+                    onMouseEnter={() => calls.push('enter')}
+                    onMouseMove={() => calls.push('move')}
+                    onMouseLeave={() => calls.push('leave')}
+                />
+            </AurumCanvas>,
+            target
+        );
+        const canvas = getCanvas();
+
+        dispatchMouse('mousemove', 3, 3);
+        expect(calls).toEqual(['enter', 'move']);
+        expect(canvas.style.cursor).toBe('crosshair');
+        dispatchMouse('mousemove', 15, 15);
+        expect(calls).toEqual(['enter', 'move', 'leave']);
+        expect(canvas.style.cursor).toBe('auto');
     });
 
     function getCanvas(): HTMLCanvasElement {

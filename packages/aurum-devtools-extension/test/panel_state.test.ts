@@ -5,13 +5,18 @@ import {
     buildComponentTree,
     compactValue,
     createPanelRevision,
+    detailedValue,
     filterComponentTree,
     filterNodes,
+    isArrayDataSourceNode,
+    isComponentNode,
     isComponentTreeNode,
     isDataSourceNode,
+    isDomElementNode,
     layoutGraph,
     mergeEvents,
     navigateComponentTree,
+    nodeLabel,
     paginateItems,
     relatedGraphNodeIds,
     shouldPollPanel,
@@ -84,11 +89,32 @@ describe('panel state', () => {
         expect(isDataSourceNode(node('array', 'array-data-source'))).toBe(true);
         expect(isDataSourceNode(node('object', 'ObjectDataSource'))).toBe(true);
         expect(isDataSourceNode(node('component', 'component'))).toBe(false);
+        expect(isArrayDataSourceNode(node('array', 'array-data-source'))).toBe(true);
+        expect(isArrayDataSourceNode(node('scalar', 'data-source'))).toBe(false);
+    });
+
+    it('recognizes component and DOM tree kind aliases and labels unnamed nodes', () => {
+        expect(isComponentNode(node('component', 'aurum-component'))).toBe(true);
+        expect(isDomElementNode(node('html', 'HTML_Element'))).toBe(true);
+        expect(isDomElementNode(node('svg', 'svg-element'))).toBe(true);
+        expect(isComponentTreeNode(node('source', 'data-source'))).toBe(false);
+        expect(nodeLabel(node('named', 'component', 'Named'))).toBe('Named');
+        expect(nodeLabel(node('anonymous', 'component'))).toBe('component anonymous');
     });
 
     it('uses structured preview summaries in compact value labels', () => {
         expect(compactValue({ type: 'array', summary: 'Array(1,000)', size: 1000 })).toBe('Array(1,000)');
         expect(compactValue('abcdefghijklmnopqrstuvwxyz', 8)).toBe('abcdefg…');
+    });
+
+    it('formats detailed values and falls back safely for circular structures', () => {
+        const circular: Record<string, unknown> = {};
+        circular.self = circular;
+        expect(detailedValue(undefined)).toBe('undefined');
+        expect(detailedValue('plain text')).toBe('plain text');
+        expect(detailedValue({ value: 1 })).toBe('{\n  "value": 1\n}');
+        expect(detailedValue(circular)).toBe('[object Object]');
+        expect(compactValue(circular)).toBe('[object Object]');
     });
 
     it('extracts indexed ArrayDataSource items from structured value previews', () => {
@@ -97,6 +123,14 @@ describe('panel state', () => {
             arrayPreview({ type: 'array', summary: 'Array(3)', size: 3, entries: [{ key: '0', value: first }], truncated: true })
         ).toEqual({ size: 3, truncated: true, items: [{ index: '0', value: first }] });
         expect(arrayPreview({ summary: 'not an array' })).toBeUndefined();
+        expect(arrayPreview({ type: 'array', entries: [null, { value: 'item' }, { key: 4, value: 'next' }], size: Number.NaN })).toEqual({
+            size: 2,
+            truncated: false,
+            items: [
+                { index: '1', value: 'item' },
+                { index: '2', value: 'next' }
+            ]
+        });
     });
 
     it('builds a component and host DOM hierarchy without duplicating nested output nodes', () => {

@@ -19,6 +19,7 @@ const batchableTypes = new Set<RemoteProtocol>([
     RemoteProtocol.UPDATE_SET_DATASOURCE,
     RemoteProtocol.SUBSCRIPTION_ACK
 ]);
+const batchPrefix = JSON.stringify(createRemoteMessage(RemoteProtocol.BATCH)).slice(0, -1) + ',"messages":[';
 
 export class Client<T> {
     public readonly mapdsSubscriptions = new Map<string, CancellationToken>();
@@ -36,7 +37,7 @@ export class Client<T> {
     public messagesInWindow = 0;
     public messageWindowStartedAt = Date.now();
     private readonly transport: ClientTransportConfig;
-    private queue: RemoteMessage[] = [];
+    private queue: string[] = [];
     private queueBytes = 0;
     private flushTimer?: ReturnType<typeof setTimeout>;
     private disposed = false;
@@ -61,19 +62,26 @@ export class Client<T> {
         if (this.disposed || this.connection.readyState !== 1) {
             return;
         }
-        const message = createRemoteMessage(messageType, payload);
-        if (!batchableTypes.has(messageType)) {
-            this.flush();
-            this.sendNow(message);
+        // Capture the payload at enqueue time and reuse these exact bytes when flushing.
+        let encoded: string;
+        try {
+            encoded = JSON.stringify(createRemoteMessage(messageType, payload));
+        } catch (error) {
+            this.transport.onError(toError(error));
             return;
         }
-        const size = Buffer.byteLength(JSON.stringify(message));
+        if (!batchableTypes.has(messageType)) {
+            this.flush();
+            this.sendNow(encoded);
+            return;
+        }
+        const size = Buffer.byteLength(encoded);
         if (this.queueBytes + size > this.transport.maxQueueBytes) {
             this.transport.onError(new Error(`Client outbound queue exceeded ${this.transport.maxQueueBytes} bytes`));
             this.connection.close(1013, 'outbound queue limit exceeded');
             return;
         }
-        this.queue.push(message);
+        this.queue.push(encoded);
         this.queueBytes += size;
         if (!this.flushTimer) {
             this.flushTimer = setTimeout(() => {
@@ -102,7 +110,7 @@ export class Client<T> {
         const queued = this.queue;
         this.queue = [];
         this.queueBytes = 0;
-        this.sendNow(queued.length === 1 ? queued[0] : createRemoteMessage(RemoteProtocol.BATCH, { messages: queued }));
+        this.sendNow(queued.length === 1 ? queued[0] : batchPrefix + queued.join(',') + ']}');
     }
 
     public dispose(closeConnection = true): void {
@@ -111,6 +119,8 @@ export class Client<T> {
         }
         this.disposed = true;
         clearTimeout(this.flushTimer);
+        this.queue = [];
+        this.queueBytes = 0;
         for (const subscriptions of this.subscriptionMaps()) {
             for (const subscription of subscriptions.values()) {
                 subscription.cancel();
@@ -127,9 +137,9 @@ export class Client<T> {
         }
     }
 
-    private sendNow(message: RemoteMessage): void {
+    private sendNow(encoded: string): void {
         try {
-            this.connection.send(JSON.stringify(message), (error) => {
+            this.connection.send(encoded, (error) => {
                 if (error) {
                     this.transport.onError(error);
                 }

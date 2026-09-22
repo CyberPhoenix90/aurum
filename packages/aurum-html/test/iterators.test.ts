@@ -16,7 +16,7 @@ describe('Iterators', () => {
         let i = 0;
         for await (const p of promiseIterator(promises)) {
             expect(p.status).toEqual('fulfilled');
-            expect((p as PromiseFulfilledResult<number>).value).toBe([1, 2, 3][i]);
+            expect((p as { status: 'fulfilled'; value: number }).value).toBe([1, 2, 3][i]);
             i++;
         }
 
