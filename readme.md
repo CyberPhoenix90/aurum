@@ -14,7 +14,7 @@ This repository uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/works
 
 ## Development
 
-Node.js 20 or newer is required.
+Node.js 20.19.0 or later within Node 20, or Node.js 22.12.0 or newer is required (`^20.19.0 || >=22.12.0`).
 
 ```sh
 npm install
